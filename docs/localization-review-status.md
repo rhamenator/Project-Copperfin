@@ -13,13 +13,13 @@ is explicitly updated. `--write` preserves valid review links for entries whose
 source and translation hashes are unchanged. The normal check reports unresolved entries instead of
 mistaking populated keys for translated or verified text.
 
-Current status after the tenth Spanish and eighth Portuguese independently
+Current status after the tenth Spanish and ninth Portuguese independently
 reviewed correction batches (2026-11-03):
 
 | Locale | Populated | Changed translation candidates | Intentional source text | Unchanged/untriaged | Exact invariant exceptions | Independent AI reviewed | Human reviewed |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | es-419 | 3,146 | 3,068 | 75 | 0 | 3 | 2,836 | 0 |
-| pt-BR | 3,146 | 3,066 | 77 | 0 | 3 | 2,655 | 0 |
+| pt-BR | 3,146 | 3,066 | 77 | 0 | 3 | 2,732 | 0 |
 
 A changed candidate is **not** a verified translation. Equal source text needs
 an exact independent review explaining intentional use in that locale, or a

@@ -1,0 +1,629 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions",
+    "Independent Codex instance /root/review_en_gb_revisions"
+  ],
+  "scope": "77 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.BridgeFederationModeConflict",
+      "sourceSha256": "9597f9a998b2f5a7ef1a30f00c94929b4a5c9fa708c7aa5be4c6682af823798f",
+      "translationSha256": "e5fdc83956bc8655f006a8bc4c7364bb18c18491c3046af98b5b7a65930b16eb",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.DataPayloadMalformed",
+      "sourceSha256": "7ef1481db95ee6a5515c141431406f780b7f88e044dc4a1b5e03a71b26983ba4",
+      "translationSha256": "3b64c9bb55880666521679774c4b1f3f3dd8c352b2f4338436f96d28a83bde12",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.ExtensionPayloadMalformed",
+      "sourceSha256": "571406a5a81b2252c3f1cd2b83980354352661b2d070b5574edbfbe670ebb214",
+      "translationSha256": "131ca59094eac580b7cf18284aa1fb6aff26949cc257199a5ec5202dfa9eef70",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.FederationExecutionTargetRequired",
+      "sourceSha256": "11e75cc186b78a9d6e48d9ff1c90bf0dcfe257ed4ab6c4d6eaf786cc948fa449",
+      "translationSha256": "4a6d87634e40ac12cda9a4db6f5e3e46e7189b60107fbd6dfbf21ec29ac61360",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.ManifestVersionUnsupported",
+      "sourceSha256": "b041999d73b3a617ed415b98f6d5f600d391616a61bff3b1c78574c3611839aa",
+      "translationSha256": "7134100c2981029b15d955d87e88ac1e26fe6e11ad7771a4313f46d631f04205",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.PackagedAssetMissing",
+      "sourceSha256": "271fa48119e897d1f154e0ea1dd3ee27bbe45acc4654f87e03b966d5e1f24894",
+      "translationSha256": "84ad2cb735a50f4c158d75c8484ea7ea028519fd117b657b94513b7aa689963f",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.PackagedAssetSha256Mismatch",
+      "sourceSha256": "61d7dd5dccaadfe910fe863c224620746f9fc1a550f8666d3ffbaf834a0baad1",
+      "translationSha256": "51f5be0625549e1d039a3c35754594f6f737f9e60ad83be3c20297aa8fd53d27",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.SourceTooLarge",
+      "sourceSha256": "53f77d40a0646cd31ad091704e6a6765edeb6feaaf756cb76079bfb868047ea8",
+      "translationSha256": "8aeecb23897fde30e40f88b4f02578c421e2412e67cef2b4b9291de7e0037927",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Profile.Feature.Sandbox.Description",
+      "sourceSha256": "6f34a9c75de84ff48e852361063518b9f585a64297868235adc62a07dd86c6ec",
+      "translationSha256": "ac5abeb05151d76a199fbe98c33dc1e4fdae0a82addc8300c7e598ecd5a44ef9",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.WorkspaceAgent.Decision.TrustedUiRequired",
+      "sourceSha256": "263c2307c2be500588a87318831d7d3192bafe2283f0323ef9220882b489f9f3",
+      "translationSha256": "51f2a92b7cddc115d6eca17d45cbf98c7a334bc78a56de628a35b61cf2a4b919",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.ApplicationWizard.Description",
+      "sourceSha256": "a9ce42b72547b3a3f1cc74853db7e0baf005af8bc82a24e265afe33000977987",
+      "translationSha256": "080221aecc77b62fd87472aca2effd53444f17b72e2f29575c9ca2f841e0b19d",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.BuildDeploy.Title",
+      "sourceSha256": "58b0ca2d892a8df2c04e15890f93403fbbf95cbe3d3358a9203e17abce3abd69",
+      "translationSha256": "7c8b9cfdbd81808e2b01bd98b5f0f65fe0500a45778971439b2e9e13305c15d1",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "sourceSha256": "b23c5693d3c6ed78924f396314889ed460d877a35bdbcf499d37de1d0827f87a",
+      "translationSha256": "f2a82403b389c13081669e74d9d43881379cde07ce14db1360a525e4797fde10",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ClassDesigner.Title",
+      "sourceSha256": "28dc08c76281b6fe97ee145f00692123f3b6f0fd552d791cfdb15ae52fbccd6e",
+      "translationSha256": "9a13dc71759cde9b69f93ae53aa4a90e96eadf3a7a0527daed2d57bd82d73c0e",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.DataExplorer.Title",
+      "sourceSha256": "20128f6fd05e08f93b62858732b2ffb3659907e562305e1c63601b476a52564e",
+      "translationSha256": "9068a3e9c019c86b77a9fca0981b48acfb789749ed0a1ec15af92a4a4367d0a0",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "sourceSha256": "24960d25b4213ff02f98ae577305089930d86e84a27fbf0d92cbcb7ce07b9340",
+      "translationSha256": "eea54d8460269a46c2949d2013acea1e9d7106159cb0274d2978333940fcdcb9",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.Debugger.ParityScope",
+      "sourceSha256": "045815446805d268ae8913d029da6f71da2d3ab8cda7d089acb42d8ac8a1c5ca",
+      "translationSha256": "4083c5eb84d21af9f38fbe3d937bba1343b089acd0909c402cd589d2c0f0b011",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.Debugger.Title",
+      "sourceSha256": "1e1ee8f223b86a9742a5bc9b41ec6ea1f4608e0659466b5b630a9747ccf2a125",
+      "translationSha256": "d619e8bafa8c45f7b1854e404f32d97635018b65ee91a9a95623e128cc5f46d6",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.FormsDesigner.Title",
+      "sourceSha256": "5e808972951bc92dee2a307cd562c8b6d9844a152f39be2914c0698b5d889b44",
+      "translationSha256": "91f17e9a1a45117d64cc8958f91df10fe61f3ac686b79f709128435d1233fa40",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.IdeShell.ModernEditorDirection",
+      "sourceSha256": "9f91c0b8e9be857b60b6830bc0b5bde068204ffa48c5e7c5087737ed5603efbb",
+      "translationSha256": "2b61f079f1142281ecf30442aa7894ed7a8d8234dc49c9d183e97cd7c88b1283",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.IdeShell.Title",
+      "sourceSha256": "42590a56bac92a82cdcb131e71bdd11808adc7afd878847aef1a64988d898b10",
+      "translationSha256": "3d9e248adbd834cd40c56f76e687cf83c85ad6ab9d61699f6ab0a1b08464fc66",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.MenuDesigner.ModernEditorDirection",
+      "sourceSha256": "b43b0e24ba4e7f4ae9b3205c2e695048be8accf312e7e898e57ecb5d7131ae3d",
+      "translationSha256": "f631843dbecb47709e5ba142c6b24981cc68a60b856f32e849fbf2f700315aa7",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.MenuDesigner.Title",
+      "sourceSha256": "c3bfbd0513251b9ecff045d39412a77f536b85124fee6184403a60ac33a083d5",
+      "translationSha256": "d7e6dc835a522b32eba242be26bf38c0dca1e9c64335175b216151b5f287629e",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ModernEditorDirection",
+      "sourceSha256": "b3700317753f1e58c9dfdd453437da8189e36002602ceaef437026d7b3e5beca",
+      "translationSha256": "58ccf2124a6897460c7203334be1ef086a37568b634b7204dcfaf565d5233641",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ParityScope",
+      "sourceSha256": "acdf02e6ea6cd5ee0802f1fb3b8001b751262dcbd8695abc9196b3e14e82c015",
+      "translationSha256": "1edf99770f73a4ccf8d9da6fff576c927101eda70cb46964281bd29e44ad6725",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Title",
+      "sourceSha256": "2f75b00624f20f6572cc1dfdecd518afd73f1ac4445ca9aa22c04b96659b9b9a",
+      "translationSha256": "e3f0280effa890982439eaab8f69d7a44a236773759422c4c956c0a8e089a8ef",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ProjectManager.Title",
+      "sourceSha256": "0a6f51e8898aea3073805197fb1ca622a908f7fac07e587e0c7c77aab295d86b",
+      "translationSha256": "092120811d8862e697c07e460ca34ba9d7019ffae861aebbc42aa82d8d626741",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ReportDesigner.Title",
+      "sourceSha256": "f27e1ad46e3707361967f7167ccc9fb48ac0c33dcad649aecfe67c62e2ae2a87",
+      "translationSha256": "6e1e6091635add6fb9f01913ca9880f033d23dd73b1216294be92a062b6fd7b4",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ModernEditorDirection",
+      "sourceSha256": "54642c2f9fbab8537a7e5ced29c2377821ebc6425979e1fe56abaaabc29bf88e",
+      "translationSha256": "30724b34ca4c534db535c16a871c5eaf3a948b856906c5c168a93aaf4571e059",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Title",
+      "sourceSha256": "636d4ce4f0f45cd661e259358c6c4f0f4a7691dd757d5c1aaca5dab05f05eb5a",
+      "translationSha256": "f080d4366ce046da7483a40bbb252921dc71772345d0f2ac11d91f9c249db912",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
+      "sourceSha256": "7d9875022dae157558a7c1b8bec8905652f0c1dda7dc8cd7e7203ae64ce137d1",
+      "translationSha256": "acf38580aa09abb24ece5eb871b29ba4254b4de957a433f14272cb961d9ea320",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+      "sourceSha256": "daf2aefcbb4a0380c95917607d486f20abb87a79677a9e6aa224e9aa8960a9d5",
+      "translationSha256": "13933133409304d61e914b145d2e98679b838cb329aba51471d082100f9d502c",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.BuildTarget.VisualFoxProApplicationArchive",
+      "sourceSha256": "a1aece247f0a3c045fbb8963e61190af6abb383d786de5f11f345cce7a68c601",
+      "translationSha256": "69e0c4f4f0a5852004992c3c48f126d789282d6c296a3307ed13002d838e20e3",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.CheckBox.Description",
+      "sourceSha256": "3484358b43836bb9725af4ec067bc2072021560b258915e2946b7527ca0aa65c",
+      "translationSha256": "07bc4bb0f88f0a73db64661c687dce4454513075f70ff662acd9342ce87cc7e7",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.ComboBox.Description",
+      "sourceSha256": "364ee19ee04a4ba5e8932752c689e491c8271f7a3c5ecd714fc2843e15cb8446",
+      "translationSha256": "0ade4b0c735c892b165a13efc867f131c32bed53ae6db992b7682fa9a5b95b46",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Image.Description",
+      "sourceSha256": "e296559b0f1ee52a99c23eaf955683a50207089eae8928f64ec98bdd2afa1324",
+      "translationSha256": "1a60ce1506d44455235f6f1dfaba300ccfcd490ac20ae90bcfe407842c5ed30b",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Line.Description",
+      "sourceSha256": "4804ecfdabd5c6b140a54bab685ba686748e0e1135e8016334ee45f4d79f0d11",
+      "translationSha256": "5e66b93baf44ea72b6f5bb3dfe76f668f50f2cf259f492ce06557c51466a85db",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.ListBox.Description",
+      "sourceSha256": "d478b7405f5cfdf06c1ca07ffb2e220d4d70e3f311ab1ca939f77719cf9a3a6f",
+      "translationSha256": "1bea497d0bfaaf1520d60b5b3124805a36c0b551cc103b6c24d8782fec0e1618",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.OLEControl.Description",
+      "sourceSha256": "dc14978239a24e16eef90ef578b57ff7febcd733cbdf26188de6c937a4c619ad",
+      "translationSha256": "1ba4f249f8cd42b6db1077763e75af84cd136443632252d3942db39d81f9cf97",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired",
+      "sourceSha256": "0e8e01062545272ea59b0806c3c90bb58aceef2e5cb3bdcc3863a88b5c6e5557",
+      "translationSha256": "01be788a8a497d785036fddfa74e4e5e4b61ca356eb1987b64062210315d8a68",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired",
+      "sourceSha256": "a92b1fc831a15221db058316a3126097be0d9d73217cc4ef867d472ccd5129a2",
+      "translationSha256": "49fae988ad537f872b5307aec976710c77df7a0335ed63d2e061ed3eefceea7a",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired",
+      "sourceSha256": "cf9b90820b78dc153aae21e3ba1dabb3e556a3b89f47ff78c2afc70c499d2144",
+      "translationSha256": "95d2516872618cbd155429768c6a08aaf8896aff8ab72f9ce7ae56856bf0fed6",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "9f156ca065ca969f65f1e377f8f9c2c347f322f1f3f3262e6884db66e6ae70a1",
+      "translationSha256": "705fdcc1a3b06ded9518f5cf2ad3064c6d0bd7d05aa2aedb31a4831299d31054",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchDispatchCatalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "824397fd2fe5a93eea1751908b3438d6f82ed12ae8718f98da5f95d2035a0cbd",
+      "translationSha256": "8aed938409aa7b83bfc8dfb5b9df8eb33fdc6c5f7c6c438a9f75ec6901675053",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.AdmittedDispatchRequired",
+      "sourceSha256": "8cd3d263245653f8f5c33c575956765fe163c75f1ae6c6ab8192a124db0240b2",
+      "translationSha256": "e7cbba6381e7fa76684e2817c1e3172c624db148be2f5df79c0ebfbf80007581",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "6f6223a0cac2faf48a4d870f70840cc51ea9c3af57a6d6fd5d404705e4c33ced",
+      "translationSha256": "5870f42c2c9c4918a507a9749a22d52e56fd9fd1335272e9d94c573e3917e0b2",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "79394492b788a2afecd7de074441088f8efa1718bd2bc869c429385c98436119",
+      "translationSha256": "3e1d46ad9252ef1814b9d7ee38f3aa6ff34324e0c77646cbc5ca244a43a4bc71",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.AdmittedCreateOperationRequired",
+      "sourceSha256": "f00ce4d4fc3daa9dff2465fa2fbc21f26dcceaea3e38ef83572b56133aeefa98",
+      "translationSha256": "1f9ce74a7ffe009c47af794126f2cd2d23aee2638220741fa2f5c828dca042a1",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.DescriptorFieldValuesRequired",
+      "sourceSha256": "c7a10acaaf3a641cecc081c0969c7a31c58afb53e8f478c6a0e749a98cc01d21",
+      "translationSha256": "8e0545510ac4d61403451b3c3ce8609facebef7dfb699e89f8c842490a2d5bd8",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.PlannedObjectNameRequired",
+      "sourceSha256": "fe8fea162313ddfb9b3f1794eeb205c0567dfe9436e67ec4204130825767ee74",
+      "translationSha256": "eeebc534fbfd5da8429e3f36e0c095bd693ba58b322d685d893af8c0ca32c9c6",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "74c7affd3014e3f0aa1a687f1cf9af27924e0ef0101314717f0c797181cef1d2",
+      "translationSha256": "7f2bcca8e1e9b934f04b568cdf06becd210b907b38cadbb0a07253a8341f2acf",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch",
+      "sourceSha256": "b7026048fbc355ce5595cabe7ad829337793e8e44a49a6eb00dcd28cd2be99b4",
+      "translationSha256": "ae281d572cd8c3f62787ebddaf8fd9efc96477faf55df880b71cadbcd72d78e5",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.AdmittedDispatchRequired",
+      "sourceSha256": "5602ced6af3ad6836ef4a1ab755dd6ccbc06c458d98280d05ce3edc012e57513",
+      "translationSha256": "26b6fc8f716c026c6088775b27c413434fc29651e595813321c36f4345b57e63",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "43598e8302cc7752586c2975151cd4ea442eca9733fb8d90c98b6c873a1fa73e",
+      "translationSha256": "c231404a7ebe48d11eb7bc090a879df8c5b3330b73676d90e93c917ae5247fd2",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "2b0be28e32809f754df1490191fb78aaa23b0401ec49e35de9a83ba38105b7d0",
+      "translationSha256": "5027eee19f2a0f9f1623e6c88750bf3a89afdcc49a6cd9c5b7171726bb64c73f",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "14783a0655c8908e60de12d53d06613cb602676b7436be67e6bb154686fa73cd",
+      "translationSha256": "72ae049215f300315761785ec249a9ff30a45cddf1683a733ad44662d01b023a",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.SelectionDispatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "5756da3982f3ab8327986a631c3f9f673e1aa483f46199590107e43cd13a4449",
+      "translationSha256": "f046cafed2099c5ba3a3ab926cfc83c615ee873cd214a295f000c78bf636cf1f",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+      "sourceSha256": "989f84d5664e3c281d43cb317da858ab8afd7122c7e8f72394aeef49ef67efd2",
+      "translationSha256": "2817f52f505f8f18224cb76adaa7e8ecf30e13ae2e37b623675bfb1888791c3b",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.CommandTokenRequired",
+      "sourceSha256": "b7fa75aeb3ce23152fa1ae2041a81654618de71ad610f7f68088e67805e006d8",
+      "translationSha256": "50df1f9b780c355cdb08452435a9934f26c39ed7bb4df5651f127b36aa733386",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "a7cec89c39125368ea5d6bcc3aa2a804dc0cec347984c48982327bd12862029d",
+      "translationSha256": "d8cd2cb8d82f39f915d8a2b0ab9dea328ba86b3919d671aada38031426de7adf",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+      "sourceSha256": "9971965ab970b2981347302123dd346e74ddbdfc713562ceaf2690319df4ee9d",
+      "translationSha256": "e3bc36d9a3b8379a46ad05514a24784d26f576e639dbd852ced2bf7852e1e2e8",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "c1b27b3db483b45a1b8772cc1fc4128f430db046ff1e31b29682de1c7cacfdaa",
+      "translationSha256": "11f9c98b27f6708741c52c825388c9da07ed70883dee3ba1d4e16c025cf758dd",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+      "sourceSha256": "ec2b24ebc03a83c9ac3a657634d9e0339ec433ea4e9e969b58b2b36cbcaf2d6e",
+      "translationSha256": "8a02ce90b1721cba64c6eb000dabbb3ac29ba05446d0b575837816b0926326b8",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "3df1e9b252809b9952b7fed372001093e772a8af457eb103e6456ab8188627d5",
+      "translationSha256": "37c9ce94fab55f44ab710bbfe14ffb891aefd629af83edeba56812c21b14126b",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Error.AdmittedInvocationRequired",
+      "sourceSha256": "d762ea64f012d02af44c841ab51b422ca98b6ca042c2902be7b2e9982fcbb90c",
+      "translationSha256": "13955d819aba8453cbf35f66f1cedb6644dff9827186ab8499a02c84b0112bd6",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Error.CommandTokenRequired",
+      "sourceSha256": "c0f6e49676a118278ed027e99ea3ff00a12191b96f29232666f1516b5a7365d4",
+      "translationSha256": "a32a3fefc83f9aa10c04d5dfa34c31b06748327fa42efe6be357af8287273dc9",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "fa09008caa0554ae0e38e46f14216c4097ed5b4b599ab2f73cf2921caaebf2a1",
+      "translationSha256": "09ccd111382f6a562856de6ddce92dce9d0d10036c15a33851ce6137fce0e043",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Error.SelectionCatalogRequiresPalette",
+      "sourceSha256": "68efd98ab9b2bfc53093dbe23a5db20a989714f44dbe5f7104fce4f7a71dc760",
+      "translationSha256": "1ac6f913d83fee59a29d9e4d8769f3e2daa6a4c42abfe87f68ab09335e5471cd",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "064f210b5019fdd18d13288c52ec584540c70d32c207a00533a9dd03e082480b",
+      "translationSha256": "e0680dfef5cd0eb0b75bb45f85d6fb9c80bdda7332f413060b399be9ab7110f5",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired",
+      "sourceSha256": "5c79bb26f6daf12ca93f503afd46c2fd6a5422ca38a953033b46fca9030159ad",
+      "translationSha256": "d118867e635ba9277df1e9cfe9b6b5d5c24e04a67a22a2678695349502649574",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired",
+      "sourceSha256": "8b4c7b08583519302f4488d38a1fdb953d80c8635bf135fa5e29847a8b414641",
+      "translationSha256": "677fffb9f37122cc396308ec753a4a3c307ffd6292e17ed4559c404b8de6109f",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "34bebf3c46b81769178d087330e0e0893f2fd5556f5de7ec80715496d0867980",
+      "translationSha256": "c3689699bddbb1960e8baf09a4ed9a8d81a8bca25eb80be05fa42915b924ef7b",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.DispatchArgumentsRequired",
+      "sourceSha256": "d9119a62f3e7c0d2231265712bb25c8b21b832d6aa0eb49384bc8f99c94b0645",
+      "translationSha256": "e2bd3f3739cb8271c6e3397b96539a56c3805a7d3649cd3fa3fcd9dbfefc6cac",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "5ce8b7e0fb531fa34701e5609df9ea26ab56a566db0d02ed526c0370d59e0e27",
+      "translationSha256": "0a9f3afe5a72bf60e2337e0e32ccf72b437acae980981f6b5d26f2e013f491b7",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch",
+      "sourceSha256": "03f002c72008ef4f144fb4c7448b62ce157231abe1b16ce10729a8ae5214d9c2",
+      "translationSha256": "b73bc53b5e4e540051af99fa8f71a7f9acf476a74845f50c77fba4e47cd2aa64",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit",
+      "sourceSha256": "7ee0b70704637393001380715034d0ec144c6f3310d2ba39a0b07f0c8b62889a",
+      "translationSha256": "c930daf0f8ecb9df59ce8bbce7872058960f14688230406e5c78c38f0c848000",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxDispatch.Execution.Error.ExecutorRequired",
+      "sourceSha256": "d21cb0f3b71427ce0b92e0795c9c80f6f7af449f809d231555e2904aa35717bb",
+      "translationSha256": "3829aaa4aa72a531acd29e925c41d2f948b355c20ad2ee3a786958d0b3bc3b50",
+      "verdict": "accept",
+      "reason": "The proposal is faithful and acceptable Brazilian Portuguese for the technical context; placeholders and protected identifiers remain intact."
+    }
+  ]
+}
