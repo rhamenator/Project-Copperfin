@@ -23,7 +23,7 @@ assert.equal(Object.values(expected).reduce((sum, count) => sum + count, 0), 32)
 const identities = new Set();
 const contexts = new Map();
 for (const line of lines) {
-  const match = line.match(/^(ListBox|ComboBox)\|(COPPERFIN|VFP9)\|([12])\|([^|]+)\|([^|]+)\|completed=1\|/);
+  const match = line.match(/^(ListBox|ComboBox)\|(COPPERFIN|VFP9)\|([12])\|([^|]+)\|([^|]+)\|completed=1\|cphase=invoke\|/);
   assert(match, 'complete framed invocation');
   assert(Object.hasOwn(expected, match[4]), 'known group');
   const identity = match.slice(1, 6).join('|');

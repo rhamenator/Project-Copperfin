@@ -160,6 +160,32 @@ and Clang JUnit
 `faf96e698886359a0243dbbb6377bf212391d4e7252a399affeb09838a8c70fa`.
 Exact-head review and hosted integration remain mandatory before merge.
 
+## Review-fix checkpoint (2026-11-02)
+
+Automated review of the initial PR head found five bounded gaps. The repair
+keeps two-argument ListItem reads on the property-first, side-effect-free path
+and carries both typed selectors through that path instead of invoking the
+method dispatcher. The checked conversion now admits only a finite integral
+ordinary Numeric ID in `1..32767` that already exists on a coherent unbound
+RowSourceType-zero control; excluded selectors/configurations fall back to the
+legacy property route. Fractional quantization now derives from the exact
+binary value rather than the shared ROUND text conversion, without changing
+ROUND. The direct helper executable now fails on accumulated assertions, and
+the preservation audit requires the invoke phase.
+
+Focused GNU and Clang coverage passes the direct helper plus all four public
+class/mode/session shards per compiler. A fresh frozen-v2 strengthened 256-call
+preservation capture using fractional excluded columns is byte-identical
+between the retained pre-wire baseline and the review-fix candidate under both
+GNU and Clang at SHA-256
+`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`;
+all four framing audits pass and stderr is empty. This preliminary dirty-tree
+capture is retained at
+`build/listitem-column-native/preservation-v2-precommit-20261103/`; an
+exact-head repeat remains required. Fresh frozen-v5 broader qualification,
+hosted checks and clean exact-head authorized review also remain required
+before merge.
+
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
 
 Misuse severity is MEDIUM. The procedural delta is deliberately narrow: only

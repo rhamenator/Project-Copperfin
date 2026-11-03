@@ -7,6 +7,7 @@
 #include "localized_text.h"
 #include "prg_compatibility_error.h"
 #include "prg_engine_numeric_functions.h"
+#include "prg_numeric_value_display.h"
 
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <charconv>
 #include <cmath>
 #include <ctime>
 #include <cstring>
@@ -2828,9 +2830,34 @@ std::optional<std::int32_t> checked_listitem_numeric_argument(
 // followed by integer projection. This is a decimal conversion rule, not a
 // binary epsilon. Width and SET DECIMALS at read time are controlled out.
 // Metadata-free or non-Real fractional payloads remain fail-closed in VFP9
-// mode. This helper stays UNUSED by production until both original-suite gates
-// complete. Exact64 and NaN/nonfinite behavior derives from the #5611/#6776
-// checked-conversion parent, not unsupported native syntax.
+// mode. Production use is limited to the separately gated ListItem
+// supplied-column consumer. Exact64 and NaN/nonfinite behavior derives from
+// the #5611/#6776 checked-conversion parent, not unsupported native syntax.
+namespace {
+std::optional<std::int64_t> checked_listitem_column_binary_quantized_projection(
+    const double value, const unsigned decimals) {
+    // Binary64's nearest non-integral neighbor to an integer is at least
+    // 2^-53 away. Half-away rounding at 16 or more decimal places therefore
+    // cannot cross an integer boundary, so the existing binary projection is
+    // already exact for this consumer's integer result.
+    if (decimals > 15U) return vfp9_numeric_to_int32(value);
+    const auto quantized = detail::numeric_display_exact_fixed_half_away(value, decimals);
+    if (!quantized.has_value()) return std::nullopt;
+    const auto point = quantized->text.find('.');
+    const auto integral_text = quantized->text.substr(0U, point);
+    std::uint64_t magnitude = 0U;
+    const auto parsed = std::from_chars(
+        integral_text.data(), integral_text.data() + integral_text.size(), magnitude);
+    if (parsed.ec != std::errc{} || parsed.ptr != integral_text.data() + integral_text.size() ||
+        magnitude > (std::uint64_t{1} << 53U)) {
+        return std::nullopt;
+    }
+    const double integral = std::signbit(value)
+        ? -static_cast<double>(magnitude) : static_cast<double>(magnitude);
+    return vfp9_numeric_to_int32(integral);
+}
+} // namespace
+
 std::optional<std::int32_t> checked_listitem_column_numeric_argument(
     const PrgValue& value, const NumericBehavior behavior) {
     if (value.is_null || (value.kind != PrgValueKind::number &&
@@ -2853,12 +2880,11 @@ std::optional<std::int32_t> checked_listitem_column_numeric_argument(
                 value.numeric_metadata->decimal_places > 306U) {
                 return std::nullopt;
             }
-            const auto quantized = round_decimal_value_checked(
-                value.number_value, static_cast<int>(value.numeric_metadata->decimal_places + 2U));
-            if (!quantized.has_value()) return std::nullopt;
-            const auto projected = vfp9_numeric_to_int32(make_number_value(*quantized));
-            return projected >= 1 && projected <= upper
-                ? std::optional<std::int32_t>(static_cast<std::int32_t>(projected))
+            const auto projected = checked_listitem_column_binary_quantized_projection(
+                value.number_value, value.numeric_metadata->decimal_places + 2U);
+            if (!projected.has_value()) return std::nullopt;
+            return *projected >= 1 && *projected <= upper
+                ? std::optional<std::int32_t>(static_cast<std::int32_t>(*projected))
                 : std::nullopt;
         }
     }

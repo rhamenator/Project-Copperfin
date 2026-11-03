@@ -32,5 +32,12 @@ preservation capture may not add requirements, repair excluded routes, weaken
 the original/fixed106 evidence, or treat current output as parity. Both source
 trees, the frozen harness, compile commands, linked library inventories,
 statuses, stderr, complete raw outputs and before/after hashes must be retained.
+The review-fix v2 harness uses fractional column `2.5` for the excluded
+first-selector and binding/RST cases, so an accidental checked-column route
+cannot hide behind the same integral result as the legacy path. It also
+requires every captured row to prove `cPhase=invoke`. The original manifest
+and receipts remain immutable; `preservation-inputs-v2.sha256` freezes this
+strengthened harness and runner.
+
 Only after both SAME-compiler comparisons and independent framing audits return
 zero may development contracts and broader qualification proceed.

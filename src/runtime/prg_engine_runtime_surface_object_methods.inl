@@ -978,10 +978,11 @@ std::optional<PrgValue> read_native_list_control_item_cell_numeric(
 }
 
 // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001;
-// VR-5611-LISTITEM-COLUMN-NUMERIC-001/002. The first selector deliberately
-// retains the pre-existing explicit-column conversion and precedence. Only the
-// supplied second Numeric/exact selector is migrated to the recovered checked
-// conversion. Materialization continues to precede conversion.
+// VR-5611-LISTITEM-COLUMN-NUMERIC-001/002. The checked second-selector
+// conversion is admitted only for an existing ordinary Numeric item ID on a
+// coherent, unbound RowSourceType=0 control. Every excluded first selector,
+// binding and incoherent state returns to the pre-existing property route.
+// Materialization continues to precede conversion.
 std::optional<PrgValue> read_native_list_control_item_cell_supplied_column_numeric(
     RuntimeOleObjectState& runtime_object,
     const PrgValue& item_id,
@@ -995,9 +996,34 @@ std::optional<PrgValue> read_native_list_control_item_cell_supplied_column_numer
     }
 
     materialize_native_list_control_rows(runtime_object);
-    const long long requested_item_id = std::llround(value_as_number(item_id));
-    if (requested_item_id < 1LL) {
-        return make_string_value("");
+    const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+    const auto control_source = runtime_object.properties.find("controlsource");
+    const bool materialized_unbound =
+        (row_source_type == runtime_object.properties.end() ||
+         (!row_source_type->second.is_null &&
+          ((row_source_type->second.kind == PrgValueKind::number &&
+            row_source_type->second.number_value == 0.0) ||
+           (row_source_type->second.kind == PrgValueKind::int64 &&
+            row_source_type->second.int64_value == 0) ||
+           (row_source_type->second.kind == PrgValueKind::uint64 &&
+            row_source_type->second.uint64_value == 0U)))) &&
+        (control_source == runtime_object.properties.end() ||
+         (!control_source->second.is_null &&
+          control_source->second.kind == PrgValueKind::string &&
+          trim_copy(control_source->second.string_value).empty())) &&
+        runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_rows.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_item_data.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_selected.size() == runtime_object.collection_items.size();
+    if (!materialized_unbound || item_id.is_null || item_id.kind != PrgValueKind::number ||
+        !std::isfinite(item_id.number_value) || item_id.number_value < 1.0 ||
+        item_id.number_value > 32767.0 ||
+        std::trunc(item_id.number_value) != item_id.number_value) {
+        return std::nullopt;
+    }
+    const auto requested_item_id = static_cast<long long>(item_id.number_value);
+    if (!find_native_list_control_row_by_item_id(runtime_object, requested_item_id).has_value()) {
+        return std::nullopt;
     }
 
     const auto checked_column = checked_listitem_column_numeric_argument(column, behavior);

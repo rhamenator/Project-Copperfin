@@ -1,5 +1,35 @@
 # Agent Handoff
 
+## Active slice — PR #7238 ListItem supplied-column review repair (2026-11-03)
+
+This section supersedes the stale retained-division "Active slice" below. Work
+in `/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin` on
+branch `fix/listitem-column-read-5611`; PR #7238 is open. Pushed head
+`5bf6884c0f4dbcfdb73a7e0c822103140f16a365` has green hosted checks but does
+not have a clean exact-head authorized review. Claude was requested first and
+did not respond; old-head Codex and Copilot review findings are actionable.
+
+The uncommitted bounded repair keeps two-selector ListItem reads on the
+property-first, side-effect-free native-property path and transports both raw
+typed selectors. Checked conversion is admitted only for a finite integral
+ordinary Numeric ID in `1..32767` that exists on a coherent unbound
+RowSourceType-zero control; every excluded selector/configuration falls back
+to the legacy property route. Fractional supplied-column quantization now uses
+the exact binary value in a separate consumer helper without changing shared
+ROUND. The direct helper test exits nonzero on accumulated assertions, and the
+preservation audit now requires the invoke phase.
+
+Fresh focused GNU and Clang lanes each pass the helper plus all four public
+class/mode/session shards. Frozen preservation v2 preliminary GNU and Clang
+baseline/fixed captures are all byte-identical at SHA-256
+`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`,
+with passing audits and empty stderr; ignored evidence is at
+`build/listitem-column-native/preservation-v2-precommit-20261103/`. NEXT:
+freeze broader v5, create a signed+DCO checkpoint, rerun preservation v2 at
+that exact head, execute the fresh broader gate as host capacity permits,
+update durable receipts, push, and request Claude review on the new exact
+head. Do not resolve review conversations until the pushed fix is verified.
+
 ## Active Numeric compatibility workstream — 2026-10-29
 
 Owner resumed #5611/#6776/#7189; all remain OPEN and owner-authored. `main` is

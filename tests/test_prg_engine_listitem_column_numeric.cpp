@@ -62,6 +62,10 @@ int main() {
     const double near_nine = 9.0 - 563.0 * std::ldexp(1.0, -49);
     check(attributed(near_nine, 2U), 8, 9, "near nine decimal2 quantized");
     check(attributed(near_nine, 12U), 8, 8, "near nine decimal12 retained");
+    check(attributed(9.0 - 3.0 * std::ldexp(1.0, -49), 12U), 8, 8,
+        "binary near nine decimal12 retained");
+    check(attributed(1.0 - std::ldexp(1.0, -53), 14U), {}, {},
+        "binary near one decimal14 retained");
     check(attributed(1.49, 2U), 1, 1, "one point four nine");
     check(attributed(1.5, 1U), 1, 1, "one point five");
     check(attributed(1.9, 1U), 1, 1, "one point nine");
@@ -79,6 +83,11 @@ int main() {
     check(make_number_value(std::numeric_limits<double>::infinity()), {}, {}, "infinity");
     check(make_string_value("2"), {}, {}, "Character");
     check(make_currency_value(20000), {}, {}, "Currency");
+
+    if (const int failures = copperfin::test_support::test_failures(); failures != 0) {
+        std::cerr << failures << " ListItem supplied-column conversion assertion(s) failed\n";
+        return 1;
+    }
 
     std::cout << "ListItem supplied-column decimal conversion foundation passed\n";
     return 0;

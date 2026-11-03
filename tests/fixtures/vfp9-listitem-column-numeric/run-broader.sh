@@ -6,9 +6,9 @@ set -u
 root=/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin
 cd "$root" || exit 2
 fixture=tests/fixtures/vfp9-listitem-column-numeric
-manifest="$fixture/broader-inputs-v4.sha256"
+manifest="$fixture/broader-inputs-v5.sha256"
 evidence=build/listitem-column-native
-broader="$evidence/broader"
+broader="$evidence/broader-v5"
 mkdir -p "$broader/tmp" || exit 2
 chmod 700 "$broader/tmp" || exit 2
 [ -z "$(git status --porcelain --untracked-files=no)" ] || exit 3
@@ -26,7 +26,7 @@ for compiler in gcc clang; do
       [ "$(< "$evidence/hostile-$compiler-$mode-$session.status")" = 0 ] || exit 4
     done
   done
-  [ "$(< "$evidence/preservation/preservation-fixed-$compiler.cmp.status")" = 0 ] || exit 4
+  [ "$(< "$evidence/preservation-v2/preservation-fixed-$compiler.cmp.status")" = 0 ] || exit 4
 done
 [ "$(< "$evidence/contracts/development-contracts.status")" = 0 ] || exit 4
 sha256sum -c "$manifest" > "$broader/inputs-preflight.log" || exit 5

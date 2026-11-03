@@ -21,7 +21,7 @@ if [ "$phase" = baseline ]; then
 else
  [ "$product_root" = "$candidate_root" ] || exit 6
 fi
-sha256sum -c "$fixture/preservation-inputs.sha256" > "$evidence/preservation-$phase-$compiler_name-inputs-before.log" || exit 7
+sha256sum -c "$fixture/preservation-inputs-v2.sha256" > "$evidence/preservation-$phase-$compiler_name-inputs-before.log" || exit 7
 mapfile -t libraries < <(rg --files "$product_root/build/listitem-column-$compiler_name" -g '*.a' | LC_ALL=C sort)
 [ "${#libraries[@]}" = 9 ] || exit 8
 sha256sum "${libraries[@]}" > "$evidence/preservation-$phase-$compiler_name-libraries.sha256"
@@ -55,7 +55,7 @@ result=$?; printf '%s\n' "$result" > "$evidence/preservation-$phase-$compiler_na
 [ "$result" = 0 ] || exit 11
 sha256sum -c "$evidence/preservation-$phase-$compiler_name-libraries.sha256" \
  > "$evidence/preservation-$phase-$compiler_name-libraries-after.log" || exit 12
-sha256sum -c "$fixture/preservation-inputs.sha256" \
+sha256sum -c "$fixture/preservation-inputs-v2.sha256" \
  > "$evidence/preservation-$phase-$compiler_name-inputs-after.log" || exit 12
 sha256sum "$evidence/preservation-$phase-$compiler_name.out" \
  > "$evidence/preservation-$phase-$compiler_name.out.sha256"

@@ -2,7 +2,8 @@
         RuntimeOleObjectState &runtime_object,
         const std::string &property_name,
         const Frame &source_frame,
-        const PrgValue *raw_selector)
+        const PrgValue *raw_selector,
+        const PrgValue *raw_secondary_selector)
     {
         const std::string normalized_property_name = normalize_identifier(property_name);
         if (normalized_property_name.empty())
@@ -362,9 +363,29 @@
                     list_cell->row_slot,
                     list_cell->column_slot);
             }
+            // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: preserve property-first,
+            // side-effect-free routing while carrying the supplied column's
+            // exact payload/kind/metadata past selector text formatting.
+            if (raw_selector != nullptr && raw_secondary_selector != nullptr &&
+                selector_open != std::string::npos &&
+                normalized_property_name.substr(0U, selector_open) == "listitem")
+            {
+                const auto& set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto behavior = mode != set_state.end() &&
+                    normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                if (auto typed_value = read_native_list_control_item_cell_supplied_column_numeric(
+                        runtime_object, *raw_selector, *raw_secondary_selector, behavior);
+                    typed_value.has_value())
+                {
+                    return *typed_value;
+                }
+            }
             // RQ-CF-PRG-LISTITEM-NUMERIC-001: raw one-selector identity,
             // implicit column 1; textual GETPEM and explicit columns stay old.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "listitem")
             {
                 const auto& set_state = current_set_state();
