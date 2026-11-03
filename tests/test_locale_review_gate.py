@@ -68,6 +68,29 @@ def main() -> None:
         assert stale.returncode != 0 and "changed since status" in stale.stdout
         write_json(root / "resources/locales/de-DE/strings.json", translated)
         (root / "resources/locales/inventory.txt").write_text(
+            "version 1\nen-US source\nde-DE unreviewed\nde-AT overlay de-DE\nqps-ploc pseudo\n",
+            encoding="utf-8")
+        overlay_path = root / "resources/locales/de-AT/strings.json"
+        write_json(overlay_path, {})
+        overlay_ledger = run(root, "--write")
+        assert overlay_ledger.returncode == 0, overlay_ledger.stdout + overlay_ledger.stderr
+        pending = run(root, "--release")
+        assert pending.returncode != 0 and "regional review evidence is missing" in pending.stdout
+        regional = {"locale": "de-AT", "parent": "de-DE",
+                    "parentCatalogSha256": hashlib.sha256(
+                        (root / "resources/locales/de-DE/strings.json").read_bytes()).hexdigest(),
+                    "overlayCatalogSha256": hashlib.sha256(overlay_path.read_bytes()).hexdigest(),
+                    "reviewerType": "independent AI", "model": "test-reviewer",
+                    "sessions": ["test-regional-session"], "verdict": "accept",
+                    "residualUncertainty": "Synthetic fixture only"}
+        write_json(root / "docs/localization-reviews/de-AT-regional.json", regional)
+        inherited = run(root, "--release")
+        assert inherited.returncode == 0, inherited.stdout + inherited.stderr
+        (root / "resources/locales/de-DE/strings.json").write_text(
+            json.dumps(translated, indent=2) + "\n", encoding="utf-8")
+        stale_parent = run(root, "--release")
+        assert stale_parent.returncode != 0 and "regional review evidence is stale" in stale_parent.stdout
+        (root / "resources/locales/inventory.txt").write_text(
             "version 1\nen-US source\nde-DE unreviewed\nfr-FR unreviewed\nqps-ploc pseudo\n",
             encoding="utf-8")
         missing = run(root, "--release")

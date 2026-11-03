@@ -19,19 +19,27 @@ share/copperfin/locales/
 Each `strings.json` file is a UTF-8 JSON object with stable semantic keys and localized string values. Use keys such as `Command.Build`, `Diagnostic.ExpectedTokenBeforeToken`, or `Inspect.Usage`; do not use English prose as lookup keys.
 
 `resources/locales/inventory.txt` is the versioned list of every packaged
-catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`.
+catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`
+or `<locale> overlay <parent>`.
 The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
 catalog awaiting the separate per-entry release gate), and `pseudo`
-(only test-only `qps-ploc`). Adding a locale requires a complete catalog and
-an inventory entry in the same change. The catalog generator, native parity
+(only test-only `qps-ploc`). An `overlay` contains only keys that differ from
+its previously declared same-language parent; the runtime resolves missing
+keys through that parent and then `en-US`. Adding a full locale requires a
+complete catalog and an inventory entry in the same change. The catalog generator, native parity
 test, and installer contract reject undeclared directories or declared catalogs
 with missing keys, blank values, changed placeholders, invalid UTF-8, or
 missing/changed installed artifacts. `unreviewed` reports review status, not
 content completeness; equal key counts do not establish translation quality.
+An overlay requires exact parent/overlay hashes and independent regional
+review evidence before the strict release gate can pass, including when the
+overlay has no changed strings.
 
 The source-of-truth locale is `en-US`. Populated but not yet release-ready
 catalogs exist for `en-GB`, `es-419`, and `pt-BR`; `qps-ploc` is test-only.
 A complete catalog and inventory entry do not by themselves make a language pack ready.
+The planned global left-to-right regional scope and deferred UI work are
+recorded in `docs/localization-target-scope.md` and its pinned CLDR manifest.
 
 ## Locale Selection
 

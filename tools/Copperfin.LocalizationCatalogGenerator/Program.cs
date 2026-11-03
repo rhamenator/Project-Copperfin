@@ -31,8 +31,9 @@ if (inventoryLines.Count < 3 || inventoryLines[0] != "version 1")
 {
     throw new InvalidDataException("Locale inventory requires version 1 and declared catalogs.");
 }
-var locales = new Dictionary<string, string>(StringComparer.Ordinal);
-var inventoryPattern = new Regex("^(?<locale>[a-z][A-Za-z0-9-]*) (?<role>source|unreviewed|pseudo)$");
+var locales = new Dictionary<string, (string Role, string? Parent)>(StringComparer.Ordinal);
+var inventoryPattern = new Regex(
+    "^(?<locale>[a-z][A-Za-z0-9-]*) (?<role>source|unreviewed|overlay|pseudo)(?: (?<parent>[a-z][A-Za-z0-9-]*))?$");
 foreach (var line in inventoryLines.Skip(1))
 {
     var match = inventoryPattern.Match(line);
@@ -42,8 +43,9 @@ foreach (var line in inventoryLines.Skip(1))
     }
     var locale = match.Groups["locale"].Value;
     var role = match.Groups["role"].Value;
+    var parent = match.Groups["parent"].Success ? match.Groups["parent"].Value : null;
     if (locale.Contains("--", StringComparison.Ordinal) || locale.EndsWith("-", StringComparison.Ordinal) ||
-        !locales.TryAdd(locale, role))
+        !locales.TryAdd(locale, (role, parent)))
     {
         throw new InvalidDataException($"Invalid or duplicate locale inventory entry: {locale}");
     }
@@ -51,9 +53,16 @@ foreach (var line in inventoryLines.Skip(1))
     {
         throw new InvalidDataException($"Unexpected source or pseudo locale: {locale}");
     }
+    if ((role == "overlay") != (parent is not null) ||
+        (parent is not null && (parent == locale || !locales.TryGetValue(parent, out var parentEntry) ||
+         parentEntry.Role is "pseudo" or "source" ||
+         !string.Equals(locale.Split('-')[0], parent.Split('-')[0], StringComparison.Ordinal))))
+    {
+        throw new InvalidDataException($"Overlay parent must be a previously declared target of the same language: {locale}");
+    }
 }
-if (locales.Count(entry => entry.Value == "source") != 1 ||
-    locales.Count(entry => entry.Value == "pseudo") != 1 ||
+if (locales.Count(entry => entry.Value.Role == "source") != 1 ||
+    locales.Count(entry => entry.Value.Role == "pseudo") != 1 ||
     !locales.ContainsKey("en-US") || !locales.ContainsKey("qps-ploc"))
 {
     throw new InvalidDataException("Locale inventory requires one en-US source and one qps-ploc pseudo catalog.");
@@ -153,7 +162,7 @@ foreach (var locale in locales)
         "qps-ploc" => CopperfinLocalization.PseudoLocale,
         _ => null
     };
-    if (managedLocale is null && !checkOnly)
+    if (managedLocale is null && !checkOnly && locale.Value.Role != "overlay")
     {
         throw new InvalidDataException(
             $"Generating an unmanaged locale catalog is unsupported: {locale.Key}; use --check to validate it");
@@ -208,16 +217,23 @@ foreach (var locale in locales)
 
     if (checkOnly)
     {
-        if (existingValues.Count != sourceEntries.Count)
+        if (locale.Value.Role != "overlay" && existingValues.Count != sourceEntries.Count)
         {
             throw new InvalidDataException($"Catalog key count differs from en-US: {locale.Key}");
         }
         foreach (var source in sourceEntries)
         {
-            if (!existingValues.TryGetValue(source.Key, out var localized) ||
-                string.IsNullOrWhiteSpace(localized))
+            if (!existingValues.TryGetValue(source.Key, out var localized))
             {
-                throw new InvalidDataException($"Catalog key is missing or blank: {locale.Key}/{source.Key}");
+                if (locale.Value.Role == "overlay")
+                {
+                    continue;
+                }
+                throw new InvalidDataException($"Catalog key is missing: {locale.Key}/{source.Key}");
+            }
+            if (string.IsNullOrWhiteSpace(localized))
+            {
+                throw new InvalidDataException($"Catalog key is blank: {locale.Key}/{source.Key}");
             }
             if (!Placeholders(source.Value).SequenceEqual(Placeholders(localized), StringComparer.Ordinal))
             {

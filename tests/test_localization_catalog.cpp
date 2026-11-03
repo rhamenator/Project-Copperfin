@@ -173,6 +173,14 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
         temp_root,
         "sr-Latn",
         "{\"Script.Message\":\"Serbian Latin exact locale\"}\n");
+    write_catalog(
+        temp_root,
+        "de",
+        "{\"Base.Message\":\"Deutsche Basismeldung\",\"Regional.Message\":\"Deutsche Standardmeldung\"}\n");
+    write_catalog(
+        temp_root,
+        "de-DE",
+        "{\"Regional.Message\":\"Deutsche regionale Meldung\"}\n");
 
     const auto traditional_taiwan =
         copperfin::localization::load_catalogs(temp_root, "ZH_hANT_tw");
@@ -191,6 +199,13 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
             serbian_latin.translate("Script.Message") == "Serbian Latin exact locale" &&
             serbian_latin.translate("Fallback.Message") == "English fallback",
         "#3894: canonical script-only directories should load on case-sensitive filesystems");
+    const auto german_germany = copperfin::localization::load_catalogs(temp_root, "de-DE");
+    expect(
+        german_germany.fallback_chain == std::vector<std::string>({"de-DE", "de", "en-US"}) &&
+            german_germany.translate("Regional.Message") == "Deutsche regionale Meldung" &&
+            german_germany.translate("Base.Message") == "Deutsche Basismeldung" &&
+            german_germany.translate("Fallback.Message") == "English fallback",
+        "#2348: sparse German regional overlay should inherit base and source entries");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -359,16 +374,25 @@ void test_product_locale_catalogs_have_key_parity() {
         return;
     }
     std::set<std::string> declared_locales;
+    std::set<std::string> overlay_locales;
     std::size_t source_count = 0U;
     std::size_t pseudo_count = 0U;
     while (std::getline(inventory, inventory_line)) {
         std::istringstream fields(inventory_line);
         std::string locale;
         std::string role;
+        std::string parent;
         std::string extra;
         fields >> locale >> role;
+        if (role == "overlay") {
+            fields >> parent;
+        }
         const bool valid = !(fields >> extra) &&
-            (role == "source" || role == "unreviewed" || role == "pseudo") &&
+            (role == "source" || role == "unreviewed" || role == "overlay" || role == "pseudo") &&
+            (role != "overlay" || (!parent.empty() && parent != locale &&
+                parent != "en-US" && parent != "qps-ploc" &&
+                declared_locales.contains(parent) &&
+                locale.substr(0U, locale.find('-')) == parent.substr(0U, parent.find('-')))) &&
             locale == copperfin::localization::normalize_locale(locale) &&
             locale.find("/") == std::string::npos &&
             locale.find("\\") == std::string::npos &&
@@ -381,6 +405,9 @@ void test_product_locale_catalogs_have_key_parity() {
         if (role == "source") {
             ++source_count;
             expect(locale == "en-US", "#7072: en-US must be the only source locale");
+        }
+        if (role == "overlay") {
+            overlay_locales.insert(locale);
         }
         if (role == "pseudo") {
             ++pseudo_count;
@@ -414,14 +441,18 @@ void test_product_locale_catalogs_have_key_parity() {
         if (!localized.ok) {
             continue;
         }
-        expect(
-            localized.entries.size() == english.entries.size(),
-            "product " + locale + " catalog should contain the same number of keys as en-US");
+        if (!overlay_locales.contains(locale)) {
+            expect(
+                localized.entries.size() == english.entries.size(),
+                "product " + locale + " catalog should contain the same number of keys as en-US");
+        }
         for (const auto& entry : english.entries) {
             const std::string& key = entry.first;
-            expect(
-                localized.entries.contains(key),
-                "product " + locale + " catalog should contain en-US key " + key);
+            if (!overlay_locales.contains(locale)) {
+                expect(
+                    localized.entries.contains(key),
+                    "product " + locale + " catalog should contain en-US key " + key);
+            }
             const auto localized_entry = localized.entries.find(key);
             if (localized_entry != localized.entries.end()) {
                 expect(

@@ -45,6 +45,26 @@ function(check_install should_pass case_name expected_error)
 endfunction()
 
 check_install(TRUE "valid fifth locale" "")
+set(overlay_inventory "version 1\nen-US source\nes-419 unreviewed\npt-BR unreviewed\nfr-FR unreviewed\nde unreviewed\nde-DE overlay de\nqps-ploc pseudo\n")
+file(WRITE "${source_locales}/inventory.txt" "${overlay_inventory}")
+file(WRITE "${installed_locales}/inventory.txt" "${overlay_inventory}")
+foreach(locale IN ITEMS de de-DE)
+    file(MAKE_DIRECTORY "${source_locales}/${locale}" "${installed_locales}/${locale}")
+endforeach()
+file(WRITE "${source_locales}/de/strings.json" "{\"test\":\"Hallo\"}\n")
+file(WRITE "${source_locales}/de-DE/strings.json" "{}\n")
+foreach(locale IN ITEMS de de-DE)
+    file(COPY_FILE "${source_locales}/${locale}/strings.json" "${installed_locales}/${locale}/strings.json")
+endforeach()
+check_install(TRUE "valid sparse regional overlay" "")
+string(REPLACE "de-DE overlay de" "de-DE overlay fr-FR" wrong_parent_inventory "${overlay_inventory}")
+file(WRITE "${source_locales}/inventory.txt" "${wrong_parent_inventory}")
+file(WRITE "${installed_locales}/inventory.txt" "${wrong_parent_inventory}")
+check_install(FALSE "cross-language overlay parent" "Overlay parent has a different language")
+file(WRITE "${source_locales}/inventory.txt" "${inventory}")
+file(WRITE "${installed_locales}/inventory.txt" "${inventory}")
+file(REMOVE_RECURSE "${source_locales}/de" "${source_locales}/de-DE"
+    "${installed_locales}/de" "${installed_locales}/de-DE")
 execute_process(
     COMMAND "${CMAKE_COMMAND}" "-DINSTALL_ROOT=${installed_root}"
         -P "${CMAKE_CURRENT_LIST_DIR}/run_locale_catalog_install_contract_check.cmake"
