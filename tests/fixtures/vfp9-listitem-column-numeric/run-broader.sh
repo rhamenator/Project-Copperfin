@@ -6,9 +6,9 @@ set -u
 root=/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin
 cd "$root" || exit 2
 fixture=tests/fixtures/vfp9-listitem-column-numeric
-manifest="$fixture/broader-inputs-v5.sha256"
+manifest="$fixture/broader-inputs-v6.sha256"
 evidence=build/listitem-column-native
-broader="$evidence/broader-v5"
+broader="$evidence/broader-v6"
 mkdir -p "$broader/tmp" || exit 2
 chmod 700 "$broader/tmp" || exit 2
 [ -z "$(git status --porcelain --untracked-files=no)" ] || exit 3

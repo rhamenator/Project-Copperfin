@@ -30,6 +30,18 @@ that exact head, execute the fresh broader gate as host capacity permits,
 update durable receipts, push, and request Claude review on the new exact
 head. Do not resolve review conversations until the pushed fix is verified.
 
+Nov3 04:24UTC: signed+DCO head `7f9a11c953a2721ac5f47a73272386cd8c5d9ee9`
+is pushed. Exact-head preservation v2 passes all GNU/Clang baseline/fixed
+lanes byte-identically with the SHA above and zero-status audits/comparisons.
+The first frozen-v5 GNU broader lane passed 130/131 in 793.56s; only
+`test_prg_engine_runtime_surface_functions` failed because the transported
+second raw selector let the pre-existing one-selector `List` hook consume
+two-column List reads. The Clang follow-on was stopped before tests when I/O
+pressure spiked. The bounded uncommitted fix requires `raw_secondary_selector
+== nullptr` for that List hook. NEXT run the single failed test, freeze a v6
+successor manifest/runner while retaining v5 receipts, sign+DCO/push, rerun
+exact-head preservation, then run broader v6.
+
 ## Active Numeric compatibility workstream — 2026-10-29
 
 Owner resumed #5611/#6776/#7189; all remain OPEN and owner-authored. `main` is

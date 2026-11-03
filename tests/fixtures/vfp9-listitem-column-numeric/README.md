@@ -186,6 +186,14 @@ exact-head repeat remains required. Fresh frozen-v5 broader qualification,
 hosted checks and clean exact-head authorized review also remain required
 before merge.
 
+The first frozen-v5 GNU broader run passed 130/131 tests. Its sole failure,
+`test_prg_engine_runtime_surface_functions`, exposed that the newly transported
+second raw selector also allowed the existing one-selector `List` hook to
+consume ordinary two-column `List(row, column)` reads and return column one.
+The repair makes that hook explicitly one-selector-only, matching the already
+guarded ListItem hook. The failed v5 receipt remains retained; a successor
+manifest is required before either broader compiler lane is repeated.
+
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
 
 Misuse severity is MEDIUM. The procedural delta is deliberately narrow: only

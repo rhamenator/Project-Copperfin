@@ -340,7 +340,8 @@
             // display row before legacy text/cell resolution. Explicit columns,
             // textual GETPEM and unsupported types retain the old path.
             const auto selector_open = normalized_property_name.find_first_of("([");
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "list")
             {
                 const auto& set_state = current_set_state();
