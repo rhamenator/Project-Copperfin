@@ -63,6 +63,20 @@ execute_process(
 if(NOT catalog_result EQUAL 0)
     message(FATAL_ERROR "Managed localization catalog parity check failed")
 endif()
+find_program(COPPERFIN_LOCALE_PYTHON NAMES python3 python REQUIRED)
+execute_process(
+    COMMAND "${COPPERFIN_LOCALE_PYTHON}"
+        "${SOURCE_DIR}/tests/test_locale_catalog_generator_inventory.py"
+        "${DOTNET_EXECUTABLE}"
+        "${SOURCE_DIR}/tools/Copperfin.LocalizationCatalogGenerator/Copperfin.LocalizationCatalogGenerator.csproj"
+        "${SOURCE_DIR}"
+        "${test_configuration}"
+    WORKING_DIRECTORY "${SOURCE_DIR}"
+    RESULT_VARIABLE inventory_fixture_result
+)
+if(NOT inventory_fixture_result EQUAL 0)
+    message(FATAL_ERROR "Synthetic fifth-locale catalog checks failed")
+endif()
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_build("vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj")

@@ -1,0 +1,1 @@
+- 2026-11-03: Add a versioned locale inventory and make managed, native, and installer checks cover every declared catalog, including newly added language packs (#7072).
