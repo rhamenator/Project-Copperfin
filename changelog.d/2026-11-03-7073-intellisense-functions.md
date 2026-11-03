@@ -1,0 +1,1 @@
+- 2026-11-03: Localize 22 IntelliSense function descriptions in each Latin American Spanish and Brazilian Portuguese catalog, with independent AI review evidence and selected-locale completion checks.

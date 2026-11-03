@@ -12,13 +12,13 @@ is explicitly updated. `--write` preserves valid review links for entries whose
 source and translation hashes are unchanged. The normal check reports unresolved entries instead of
 mistaking populated keys for translated or verified text.
 
-Current status after localizing four documented IntelliSense examples in each
-language (2026-11-03):
+Current status after localizing four documented IntelliSense examples and 22
+IntelliSense function descriptions in each language (2026-11-03):
 
 | Locale | Populated | Changed translation candidates | Unchanged/untriaged | Exact invariant exceptions | Independent AI reviewed | Human reviewed |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| es-419 | 3,146 | 2,925 | 218 | 3 | 4 | 0 |
-| pt-BR | 3,146 | 2,923 | 220 | 3 | 4 | 0 |
+| es-419 | 3,146 | 2,947 | 196 | 3 | 26 | 0 |
+| pt-BR | 3,146 | 2,945 | 198 | 3 | 26 | 0 |
 
 A changed candidate is **not** a verified translation. Equal source text is
 untriaged unless its exact key and source value appear in
@@ -53,7 +53,9 @@ Info tests. Claude Sonnet 5.5 independently reviewed all eight corrected
 entries in three read-only passes; the third accepted clearer
 CreateObject wording after review feedback. Exact source/translation hashes, session provenance,
 decisions and residual uncertainty are retained in
-`docs/localization-reviews/2026-11-03-intellisense-claude.json`. No native
+`docs/localization-reviews/2026-11-03-intellisense-claude.json`. The 44 function
+descriptions have separate exact-hash acceptance and disclosed limitations in
+`docs/localization-reviews/2026-11-03-intellisense-functions-claude.json`. No native
 speaker or qualified human has reviewed either complete
 pack. Phrasing, technical terminology, regional variation, tone, formality,
 accessibility, layout and screenshots remain open. Independent AI advice may

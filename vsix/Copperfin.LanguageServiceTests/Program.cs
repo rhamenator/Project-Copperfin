@@ -310,8 +310,10 @@ internal static partial class Program
         {
             foreach (var example in new[]
             {
-                (Locale: "es-419", Use: "Comando: abre una tabla, una tabla libre o un cursor, o cierra uno con USE IN."),
-                (Locale: "pt-BR", Use: "Comando: abre uma tabela, uma tabela livre ou um cursor, ou fecha um deles com USE IN.")
+                (Locale: "es-419", Use: "Comando: abre una tabla, una tabla libre o un cursor, o cierra uno con USE IN.",
+                    AliasFunction: "Devuelve el alias actual o el alias de un área de trabajo específica si se pasa un argumento."),
+                (Locale: "pt-BR", Use: "Comando: abre uma tabela, uma tabela livre ou um cursor, ou fecha um deles com USE IN.",
+                    AliasFunction: "Retorna o alias atual ou o alias de uma área de trabalho indicada quando recebe um argumento.")
             })
             {
                 Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", example.Locale);
@@ -322,6 +324,14 @@ internal static partial class Program
                     $"#7073: {example.Locale} USE completion should localize prose and preserve VFP identity");
                 Expect(FoxProIntelliSenseCatalog.DescribeToken("USE") == example.Use,
                     $"#7073: {example.Locale} USE Quick Info should show the selected-language prose");
+                var function = FoxProIntelliSenseCatalog.BuildEntries(null, string.Empty, "ALIAS")
+                    .SingleOrDefault(entry => entry.DisplayText == "ALIAS()" && entry.Kind == "function");
+                Expect(function is not null && function.Description == example.AliasFunction,
+                    $"#7073: {example.Locale} ALIAS() completion should localize prose and retain function identity");
+                var bof = FoxProIntelliSenseCatalog.BuildEntries(null, string.Empty, "BOF")
+                    .SingleOrDefault(entry => entry.DisplayText == "BOF()" && entry.Kind == "function");
+                Expect(bof is not null && bof.Description.Contains(".T.", StringComparison.Ordinal),
+                    $"#7073: {example.Locale} BOF() completion should preserve the VFP logical token");
             }
         }
         finally
