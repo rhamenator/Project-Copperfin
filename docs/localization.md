@@ -30,8 +30,8 @@ missing/changed installed artifacts. `unreviewed` reports review status, not
 content completeness; equal key counts do not establish translation quality.
 
 The source-of-truth locale is `en-US`. Populated but not yet release-ready
-catalogs exist for `es-419` and `pt-BR`; `qps-ploc` is test-only. A complete
-catalog and inventory entry do not by themselves make a language pack ready.
+catalogs exist for `en-GB`, `es-419`, and `pt-BR`; `qps-ploc` is test-only.
+A complete catalog and inventory entry do not by themselves make a language pack ready.
 
 ## Locale Selection
 

@@ -20,6 +20,13 @@ internal static partial class Program
         }
 
         var catalogRoot = Path.Combine(repositoryRoot, "resources", "locales");
+        var british = new CopperfinLocalization("en_GB", catalogRoot);
+        Expect(british.Locale == CopperfinLocalization.BritishEnglishLocale &&
+               british.Text("Licensing.Error.NoFields") == "The licence file has no fields." &&
+               british.Text("StudioHost.LaunchParse.ObjectAssignment.FillColor") == "fill-colour" &&
+               british.Text("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message") ==
+                   "Failed to analyse PRG source: file could not be opened.",
+            "#2348: managed en-GB lookup should render British prose from the shared catalog");
         var spanish = new CopperfinLocalization("es-419", catalogRoot);
         Expect(spanish.Text("Studio.OpenDialogTitle") == "Abrir activo de Copperfin",
             "standalone Studio should consume the installed Spanish shared catalog");

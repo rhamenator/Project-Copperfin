@@ -13,6 +13,7 @@ namespace Copperfin.VisualStudio;
 internal sealed class CopperfinLocalization
 {
     public const string DefaultLocale = "en";
+    public const string BritishEnglishLocale = "en-GB";
     public const string SpanishLatinAmericaLocale = "es-419";
     public const string PortugueseBrazilLocale = "pt-BR";
     public const string PseudoLocale = "qps-ploc";
@@ -20,6 +21,7 @@ internal sealed class CopperfinLocalization
     public static readonly IReadOnlyList<string> SupportedLocales = new[]
     {
         DefaultLocale,
+        BritishEnglishLocale,
         SpanishLatinAmericaLocale,
         PortugueseBrazilLocale,
         PseudoLocale
@@ -2773,6 +2775,10 @@ internal sealed class CopperfinLocalization
         }
 
         var normalized = (requestedLocale ?? string.Empty).Trim().Replace('_', '-');
+        if (normalized.Equals(BritishEnglishLocale, StringComparison.OrdinalIgnoreCase))
+        {
+            return BritishEnglishLocale;
+        }
         if (normalized.Equals(DefaultLocale, StringComparison.OrdinalIgnoreCase) ||
             normalized.StartsWith(DefaultLocale + "-", StringComparison.OrdinalIgnoreCase))
         {

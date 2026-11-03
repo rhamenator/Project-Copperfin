@@ -1,0 +1,1215 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "claude-sonnet-5-5",
+  "mode": "Claude Code CLI print mode with tools disabled",
+  "sessions": [
+    "6fb756cd-f9e3-4e10-b49b-0bf8be12689d",
+    "91ea7027-5e07-4238-9708-faad0fd5c2e2"
+  ],
+  "scope": "149 en-US to en-GB changed values; first pass reviewed full exact list and held 60 label-like values; second pass accepted the groups with supplied consumer evidence.",
+  "entries": [
+    {
+      "locale": "en-GB",
+      "key": "AssetEditor.Property.Color",
+      "sourceSha256": "6b73191a0a4b67420e61d51c9f207c35277eaf18fbbf5beb52a320a23fe09653",
+      "translationSha256": "3a9dfa58df63e0dda962a147a6cea86cc5294a5e859d89ddfa8e74a977fedf5d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "AssetEditor.Summary.License",
+      "sourceSha256": "af825cf90693d7965000e80b29a20de0e522ce0181dc0b0e435f1bed2b6c2b91",
+      "translationSha256": "42b4fb88ee3a81831c8c1b1b7d7523aac1ac4f327ee84c33a681d3f7bef9719b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Error.CatalogMissing",
+      "sourceSha256": "c8c15400c0e2b81baf61506e7fe0120cb13e6fbe50795130dfb8f3dc918f4f67",
+      "translationSha256": "d7a809c275d4df3b16d9d739733c134e93e42829069a97ede92eff688f2e5715",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "LanguageService.IntelliSense.Set.MultiLocks",
+      "sourceSha256": "34d02d0bc0245d7e1b22bd61fed390c57748831baca5d94e6b6f6ec986ca3954",
+      "translationSha256": "1c2de6c3d6f2ea3c8cb94b6dfb1af5b1bbc6ab60aa74ebe9b1c9698032433fae",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.ExpectedCommaOrObjectEnd",
+      "sourceSha256": "ab4531502cfc53360467809b796ef3926ac7b1a9d277bce89a03469624eb8684",
+      "translationSha256": "70f753f0a41a868cd4954b30c8de937c434ad31fe3cebbcf361b2365658f576d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.FileNotFoundAtConfiguredPath",
+      "sourceSha256": "5c5e58df366d6cd3c8432b69457e1601291c4b4490df946f7c6c33e96d1d9f80",
+      "translationSha256": "42875043717f9e8818de75c5b6600bedde99fbd70402b10d73636d9dbbc294a6",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.FileOpenFailed",
+      "sourceSha256": "275d3eae5e31592e90ff0a51fd8f6ff81c67d6599eae146eaa350a571d887aa8",
+      "translationSha256": "c0ae111175aacda5653f1c88167eddf95192adca58065fbfad1bd011186e4a5e",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.IntegerFieldOutOfRange",
+      "sourceSha256": "41905c8ac282a7bae0af3af936b90e41acd6a3f5fd3ec5ff9bf9f007be6afee3",
+      "translationSha256": "597a81aacc3a3108ce4e78b8c203c370e2cf37bed47669978a384eff52f1ad74",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "sourceSha256": "f6781ca59c75dfbf71a74c9f6e057dcbcb3142e03faf24c5f5041beaa636dee0",
+      "translationSha256": "fd37fd11b1cd1388f25693576b23455f9dcb9029e00a5c06826fcad1587c2ef2",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.MissingRequiredField",
+      "sourceSha256": "06480546c7e299a0ae4f3e2889aa7c3c367c68e9b94555ea5fcc40228d2505d8",
+      "translationSha256": "44abead5895cae635c6e491c6fa844df545fb36726fc228434ed34739781a0ee",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.NoFields",
+      "sourceSha256": "01a271cdc095c201255e8a61b776896a06485decae18e39fb77f5f62160cb144",
+      "translationSha256": "8051b24b1b0ce2c34c0adc4593b5be079b760a8ee0b58d61f1051c30b52e536f",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.PerpetualVersionMissing",
+      "sourceSha256": "247b6fe0f06bf34e54882a98010c78fcdc1e990942333b11a4e12fd06cde0ae0",
+      "translationSha256": "d3a83766187f584188c9ebfbd9e9cd7dfb3528494cd4bf5751743b3f411c9786",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.SubscriptionExpiryInvalid",
+      "sourceSha256": "03cccd05f1d333829be9cda78cb7e56869ec45fd9211d80155865f023ee85381",
+      "translationSha256": "d602d56185aabd41bfd215f7945d81b5eb15e6db1f4085053cd4b978e6768f88",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Licensing.Error.SubscriptionExpiryMissing",
+      "sourceSha256": "d21b00fdd05e6cc48a9be73af37f6f3cc5dd74459717cddbe0f82e8cebf30611",
+      "translationSha256": "2502d13b2866123b159b6f58b35b80b5db3e8e3ad17c217b3bc505e364d516aa",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied",
+      "sourceSha256": "8e4883e8f2a464a2def6919562686d756d6cde29bd62243b4a4cae94c41772b5",
+      "translationSha256": "fb1d647270a6805966cd6edff0c2c39b9194afc659ef26f39054f8291dbc73b9",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetInteropDecision.ExternalIoDenied",
+      "sourceSha256": "a6f939ac631101ccb893cf54c9f80d183166c3fa032fc1eaeed38cbe83457cb3",
+      "translationSha256": "5cb7a91575d142850c9491afbde3d5f6f6e46e70dbd9a4de47d1fa8ee049f9a7",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied",
+      "sourceSha256": "923ebca35234950ddb9e9412c13a2528f689635770e71e4de073f8b787397b8e",
+      "translationSha256": "68d5a8cf64d28868d7de0b7803c3b85cbe2dc65af58f1872b58aafd23c892078",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetInteropDecision.SecretAccessDenied",
+      "sourceSha256": "cb50911a7eb8075fed57b22041705f928df65e46ad039fc3aa635e71e3d677c1",
+      "translationSha256": "56a67383fe7ae765a68b14e0a48505b15e0841a6cdc1acb0a073e4f6223b03d0",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Rationale",
+      "sourceSha256": "e6043b7e9943b3dc483c6f6c464c1ba507c02be21ce2b4e1cc932569e4036167",
+      "translationSha256": "ef70b9d4b40c4fe42750a296360249b3ce51c180cfa22369f0c1e921cbf8f1f2",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Rationale",
+      "sourceSha256": "61fa1a2d7461188e5138b724b0f272586cbf64c0783be5fdf366d5c3175ab008",
+      "translationSha256": "daf3b4391b30699ec320b401dfe47539a2773d1f71540c51a5746c0cfcaa06c4",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Title",
+      "sourceSha256": "1322306de82705180a88030b783f7661b9da47f2b0cd73e897061a613bebe8fe",
+      "translationSha256": "b63f797c96a6f68def3b4a4d10af5fed9705294e1ea3bb58ed233b8313aabd49",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale",
+      "sourceSha256": "620e4fb48f56f4a4ccaea3b8308b04438f47fb30153e4a7b507564bbe0a95831",
+      "translationSha256": "601315e632d5470b0194b0e2e190141fcab60745f4f4a2867cf822223a2864ed",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.CommandUndo.Error.JournalInitializeFailed",
+      "sourceSha256": "591f5586333813f1f6318871510538cdeab865489807f549525c5be28fe25f3c",
+      "translationSha256": "75477d08d03184bc1cf3f48bc404fcfee4a9a1c5da9ad39d79232d9606ab1439",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback",
+      "sourceSha256": "ff2c7211826ccd673c6a874b7f3d7e081d9503e23bc0e041f5c3a555c1d35d57",
+      "translationSha256": "7e15aad5dff133f85db5e62bf88d0ab2f9d79d8b11b8793a0f083fb80cf6cecf",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",
+      "sourceSha256": "479d8d14eb8aca2c162de6a33beabe7e1639276b20b291fec2e69e1c6382bdf9",
+      "translationSha256": "400e93df195c9fda1c12eaae0948b5890d441f8425167d579913d80e3b78b198",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.Transaction.Error.JournalInitializeFailed",
+      "sourceSha256": "0986e7dd9b958631fbe3596a7e93d78448ef87e5115d68ca0cf840e2f21d054a",
+      "translationSha256": "3c8aa769264283cca6808be9e93507a5b562be2ca2032d4a35ebb8f48ae39f4d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+      "sourceSha256": "85f4c52080d037c0f9d9a6c23234846c187be9f06f47dd16b0efadaa316ff7a8",
+      "translationSha256": "0f1ca16217fe4b43bae0fd98f3308bfb01bca6a36339b4fc2f8ce65e4fa83987",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Security.ExternalProcessPolicy.Error.ExecutableChangedAfterAuthorization",
+      "sourceSha256": "45a3fa4e493b6131a7ad05df56404487e25f9f03637052435d268b42601039d3",
+      "translationSha256": "098413ec732c141b13e756fda49e51e5ab3c8474d8857e405c6d57b02ac61c60",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Security.ExternalProcessPolicy.Error.WindowsOnly",
+      "sourceSha256": "aec26fcfd523faa485ed55699b1c7ad7014d871ac0b0c187a4296bd3e6c800c8",
+      "translationSha256": "0719bb8d5d5ddbc24e364e61620d23237b4b5fc24beceeb26d7571a00e885b9b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.Builder.GridBuilder.Description",
+      "sourceSha256": "9d91b2797926e4d91aada3e7f1f2bdfc5629d9d97a53c1e9c8eeb79e85931345",
+      "translationSha256": "d5f1ea95df0076b8fa731844cba771f918a03212833444d138b26efe74fae597",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+      "sourceSha256": "7a530f543633df4b8afefc429bcd9591b10e1fe06ab92652f913e1fd75863410",
+      "translationSha256": "3b45a4ff99566f624b69edee4244be2f7d1fafcb429f85b8a7b89b928c9fae26",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.CommandTokenRequired",
+      "sourceSha256": "2d5bea6fa2329d26e66f7fba127e646c23970530bad83ffab2a494de6850fbec",
+      "translationSha256": "80eab79c902c7dcc27e3cdbed05d51a5e26bd79f188c24a6ecaeb4f26aa24ce9",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+      "sourceSha256": "4c8305c7c9a796ab7fa09b88091436308dad626f9360e576022608eba8e9f6f4",
+      "translationSha256": "96ab8652402292640bbb13c1c7e94d68b07891f660bbc014469af57eac47f41a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.EntryPointRequired",
+      "sourceSha256": "3bd012d0aab5e7bd34fa9de6deea78c98956ec5bb599479dd81c5d3311e63c91",
+      "translationSha256": "07a69ce92b20fef56f7964a2775f117b3af63188fad52b3a7a2774821ec71bc6",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "e91537ff49b009eadb5b761e08cfebb43668bb22f91d72500af616c001abbf54",
+      "translationSha256": "f5baa1e55267e6565decebf02c60697e39b47b3e832ec51b6d2a763ab5ea267e",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+      "sourceSha256": "120feca7284cb6cc3ee52cb7c20fa768854c232bf732019e7d46358a3c00562e",
+      "translationSha256": "8120d2d3fd5dae19928b8d60163ec4ebc0d4c644b2cbbaaafa66f514b44818ff",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.ValidatedBuilderIdRequired",
+      "sourceSha256": "31b4ddf307c4441b0345c439a50ae41d6dc3302aef7dd7e2e96c233efa7b1992",
+      "translationSha256": "e5c252cb4d73a359f43e2cfd11aff5f01a24e2da4a07320f7c5bca4d740e0a53",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.Error.DispatchCatalogRequiresBuilder",
+      "sourceSha256": "a7c046dde242f0ed64b2accd92229c29e488af65dcf205dff21f91f4a30050fd",
+      "translationSha256": "1effe55e681adcc957ac20cf3c65b7b1a6fb36f2362dcd420917823b1aaae0b2",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder",
+      "sourceSha256": "8fa9b1d2106f2aaf4db1e80bc00ff038925fc85a6ffce76732c9a3244e3cd2f2",
+      "translationSha256": "f2e5d08da092d80cedb7511776a317c48c9a810246ddd0571b16bbef2b7e2d48",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder",
+      "sourceSha256": "0f5c906614ef78c6030fecd231fe7290a8a1345645e788b2978be489ed747de6",
+      "translationSha256": "7239ca836147ee03460e179612eaafd3b04e3e2dbc09b0182410fd607877bc2d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.BuilderRegistry.Error.LaunchCatalogRequiresBuilder",
+      "sourceSha256": "3c1210123a9ee63c088c285dab0362d80cc4d7df46936b80b7c71d2bc9c77ffb",
+      "translationSha256": "1886f429b193fe321930ec6e56724e58940b1018bdeab68db6c30da8da4fcf5a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+      "sourceSha256": "6a293f2a7834ab42a6fd6ab78851ab6b8e79f4e132f95d9dad2ac0a0aecd8d4e",
+      "translationSha256": "d92797f841cfbae7648e2ecd0a3abf2f436d76d18d6935de4702060c08aaf022",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.ErrorFreeDispatchRequired",
+      "sourceSha256": "0312c7b0929588bd9983f09527f48e56811552dbcdd91cf734ac76d0eb5225e7",
+      "translationSha256": "c52c092dad13800d5bb7d26a8b53afa4ffad14e6342a6055e44455de898e122a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "f9dfee1c6b3593ca4e85886c7cb3b37329fb3b441f28abff9c80a8af94848697",
+      "translationSha256": "20a1e4cc5d3d33b4c2f4666e3ed3a63c0a0fb66b8e070074fa26f1659fcbbe37",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.NonDryRunDispatchRequired",
+      "sourceSha256": "918be7f268720b1d0b23b2670db6f5cc7a4b9775062b5715b0446e16893396b9",
+      "translationSha256": "4f77efa533b4020708697aecfb464cf0f4ccf90fe90e96c49dbed8e9fa6a6241",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedBuilderDispatchesRequired",
+      "sourceSha256": "fba239601d0402f42a9ebb7f16e9e557df2ef71134bd193fd0a9b3b65ece52ea",
+      "translationSha256": "5b0a3a32f56c61dfe4c5c97f5af1f9a51d716809c0f53b5dc1e12d3202bee254",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedEditorDispatchesRequired",
+      "sourceSha256": "0945fdb38423b8f8b6858a9b6f31adadc9561f95f7828fc1e674337e3934a974",
+      "translationSha256": "3f3dbd17998cd1216f39073f60d1c1ec41bcc5cc60fd10ceb3dae6a25f98fc69",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedToolboxDispatchRequired",
+      "sourceSha256": "eb0a10c3566dcdb86eb8aa5cc518547379720b9b187c9bac70390d1b04b5083f",
+      "translationSha256": "1454d34f66c626d586e33a139b4887b850254831e08b3e21c33991a2e19af287",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorAction.Error.LaunchCatalogRequiresAction",
+      "sourceSha256": "36c85f964a409aac8a32238f3633c401bb1634518d8b85727b665b264b238b70",
+      "translationSha256": "fea8c9b7ff2fdbe82d6413949180b4b45cbb29862decd8daac2c9bb7109a2dc5",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+      "sourceSha256": "5611e59bb77601b2a79c5c8c70af4a694763aa69ceaaa56a49a5f67f5f06361f",
+      "translationSha256": "f002c3fa2b9effb8124dbdb5f97b388a0546a5ba7d2fee50a634451947920652",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.CatalogEntry.Error.CommandTokenRequired",
+      "sourceSha256": "bd57fa122e7aeae13cee6aa2990d83be3f79029a6a981c7d431251d7f60e8503",
+      "translationSha256": "45b250455523a501cf277357957a2260fa2f53d0d76d4121f661bd0b3825b7d5",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+      "sourceSha256": "339731c3e276e8f49eae41c95103251af6647947417e22db4f67bad10bba8449",
+      "translationSha256": "11f6a0776becc1dafa058c16ac924d5a8673f029fa63329ad6ff20ec6d5439fd",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "fcbaf9f34d9be7472a1ee3b3465fd6f63c0dd6a8673629cfe3bf66b2db132970",
+      "translationSha256": "c23283583b8d30f9656f34dcf7e189e650d8e5ab1ebb9f1fee161f1d64664045",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+      "sourceSha256": "7532a9c1c9735363302afac3d8fba74ed4eb01aa457200c0a8970123cb511a97",
+      "translationSha256": "67d359643252f3e2895134d00c53ad9e3e05437d63ebdedc02a25e9a71d1287b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.CatalogEntry.Error.ValidatedActionIdRequired",
+      "sourceSha256": "da37396339e8ab2e56670b16cddeade298385b7c70e6f54e5e736e69269ac414",
+      "translationSha256": "9668f97895ed8777d1dc8072a03017fac29fcbd36dfba5de29aff750c0b7a83e",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.Error.DispatchCatalogRequiresAction",
+      "sourceSha256": "71a7f186c2095c5a091f5a126ea12bfe15ab654815743d611d1d31bc992da1de",
+      "translationSha256": "24f8988fed956f06f319546a82db75beff35a70b8a5bf00d2fb60e3e4b8b2fd7",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionDispatch.Error.ExecutionCatalogRequiresAction",
+      "sourceSha256": "fdf99813f57ec298d9a45b66541a9079a1e92395d0117570138102a9bbd0b455",
+      "translationSha256": "da5626d5383575e965feaf5a0927c19889138de4404d9d3fe639dd70b41632f4",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction",
+      "sourceSha256": "c08de77b0aa179da2b40c5eedb11af51613ded3ef2d844d90141f88651633b4c",
+      "translationSha256": "7f3de020d1c696b262651a65b0ad7953db33232e79be77ee76b1e5fc00d203e7",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProductSubsystem.FormsDesigner.ModernEditorDirection",
+      "sourceSha256": "6e19ce3baf39f3c9cfea9af934785645bd142d4c9bc4a55169e10af48ceee21e",
+      "translationSha256": "4d6d8361db2798a0f9d993ddd47bf3056705ff9cc7b744c2303a1851aeb8c146",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ParityScope",
+      "sourceSha256": "908d9499ecf4802a8509d247fc1093200c846ecc5c63ef63f9e32f356cf28023",
+      "translationSha256": "e368929ddb6b2a5ea60e5023b58341ea415d656c8637a7270f7ceddd53de3f23",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
+      "sourceSha256": "7d9875022dae157558a7c1b8bec8905652f0c1dda7dc8cd7e7203ae64ce137d1",
+      "translationSha256": "a8ed0ae4a3ef6618ac2c149c2b629ff02e88d282aa58d6c23ee20a681a1743f5",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.SelectionBuilderDispatch.Error.DispatchCatalogRequiresBuilder",
+      "sourceSha256": "060fd397cf3e2340ca0cfedc21a5710c937b95e1e58a58976ada6af20bb38159",
+      "translationSha256": "638781b252aea0770c681c2ccd6aef8ae6659305e2d799ab3e92d3eaf613d324",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder",
+      "sourceSha256": "2effebc2897e911c9e098302ddaab203d12d4aeaf6ebba63fad3e8edddb008fd",
+      "translationSha256": "bf5c87bad05e12d4e746891685afcb1449b65c8f7c96fba307c7a41cce2b666f",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder",
+      "sourceSha256": "4dda749a7966c94fccb9ee9e90bba12bd9161e5967bd8081fd8b26e611e70cf4",
+      "translationSha256": "ee639a09538a2f5750d9e280f3629d6d587500758d8cb35052abe3d3d82a3d93",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder",
+      "sourceSha256": "bc24f91a01e90044bf57bd249def9434e8bd965689ab36bc9a92ad2872631a8e",
+      "translationSha256": "850a3a1c2af1620e08235f691fb8bd435b13817b5fe4cc590ffcc4d80e015c9c",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.Toolbox.Item.CheckBox.Description",
+      "sourceSha256": "3484358b43836bb9725af4ec067bc2072021560b258915e2946b7527ca0aa65c",
+      "translationSha256": "ba845264d9b73603a192382b7cf6353003dcb3a3e8b412e7a7922ce98bf887ea",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.BatchCatalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "2a2669d69c0b9e245b2db4f4ed1ce008d3b17bac09a53599cfc6326dc90269d2",
+      "translationSha256": "251167a7c19d9ac880f1993aff59ec43542a45eb2f3e9df3366c60a52458a601",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.BatchDispatchCatalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "824397fd2fe5a93eea1751908b3438d6f82ed12ae8718f98da5f95d2035a0cbd",
+      "translationSha256": "cddb8e16dc87cf596ac0699c4ae7b8eab1955c610154ecf08ab15e57936e7ef4",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.Catalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "903ce566010a633246af2bd0d7bf8be5c4b80b09f3bb14d7a07be8e546c054f7",
+      "translationSha256": "e3cfc7e4db0427f31fae0bedaebd372f69f44f2f653b8fcb41ebdabc458a3669",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.SelectionBatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "59b52a2efa976b4da43a20ba02402f6ab9762429cdd51a2b681ac3bd817a4e76",
+      "translationSha256": "4a9be232d1e530e602207cde1565f7babfb53b840cd88040bc208753713622f3",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "14783a0655c8908e60de12d53d06613cb602676b7436be67e6bb154686fa73cd",
+      "translationSha256": "1e372952ca9c1c7d5f43a88db08e952db2cf60797e526857dcd262494d392e15",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.SelectionCatalog.Error.PaletteRequired",
+      "sourceSha256": "4357405801cb068f6e3e8862ad53fb39cd383fdf03529a802803811faf69bf30",
+      "translationSha256": "4f334d579c49387d802108b5bf18252e107fa5c13aa5a851b86dd594f492b3f9",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxCreation.SelectionDispatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "5756da3982f3ab8327986a631c3f9f673e1aa483f46199590107e43cd13a4449",
+      "translationSha256": "abf3b1a6cccce4235b38f4f26d8cee701675be87deb2808a014462ce16d785b0",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+      "sourceSha256": "989f84d5664e3c281d43cb317da858ab8afd7122c7e8f72394aeef49ef67efd2",
+      "translationSha256": "e584fbcfb1567859a9cc41581772a70816fb4a67a77247dce25193dd329dbadc",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.CommandTokenRequired",
+      "sourceSha256": "b7fa75aeb3ce23152fa1ae2041a81654618de71ad610f7f68088e67805e006d8",
+      "translationSha256": "aa1a53eb70467c4146b16092bef1412555e59b97955d21532882e1781f4b685b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "a7cec89c39125368ea5d6bcc3aa2a804dc0cec347984c48982327bd12862029d",
+      "translationSha256": "25d8e61d25bb72ea94b06a2e96113b369613a0d667a3dcd563e2d69f46fd0f8a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+      "sourceSha256": "9971965ab970b2981347302123dd346e74ddbdfc713562ceaf2690319df4ee9d",
+      "translationSha256": "e24d93ae3625169202943b406d14b22791584a7c24e40fc85ff3bbd1d8b6e8d5",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "c1b27b3db483b45a1b8772cc1fc4128f430db046ff1e31b29682de1c7cacfdaa",
+      "translationSha256": "80db9c080f9f5153559ea741ba9cefb2ad5c9f52d76b32493331cbd5b8838c0b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+      "sourceSha256": "ec2b24ebc03a83c9ac3a657634d9e0339ec433ea4e9e969b58b2b36cbcaf2d6e",
+      "translationSha256": "eda6c0514dd284913eeb37d6871a0a181e48ad9965a5a903eec83625078e644a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.CatalogEntry.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "3df1e9b252809b9952b7fed372001093e772a8af457eb103e6456ab8188627d5",
+      "translationSha256": "0a97bf8bbea44d87e899c96955419805b8cd094a5021e30055e171c86edc7ea0",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxDispatch.Error.SelectionCatalogRequiresPalette",
+      "sourceSha256": "68efd98ab9b2bfc53093dbe23a5db20a989714f44dbe5f7104fce4f7a71dc760",
+      "translationSha256": "a9c10acdc28436353e2a31b2a59a55779450355cdf093b0a653996caed209e9d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxInvocationAdmission.Error.CatalogRequiresItemMetadata",
+      "sourceSha256": "5e93e3bd179fd2df793e508f490e1c101bc3d34f3b0662fa41f9757048c0599a",
+      "translationSha256": "d6066960c6b976faa026bc21058e8536ebd926341abbad82b1772b3ec721f9eb",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette",
+      "sourceSha256": "eb4226a4803fa46643b851b1e39b77906429f4aedba62cc078d4697d454da2d2",
+      "translationSha256": "461dd5cd34c26c8e47a5cb6b08c19d358fa5ee06a85346cd7c8a0b28f995b738",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenter",
+      "sourceSha256": "57afb0caad2390523d75eed7d10ae1df825a2c341a54e1740975ca809c7c7898",
+      "translationSha256": "a4779d714f5afc6175c2a0b1fce27922dfb54f7c2607742d1b9b89d9da3c2915",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenterTitle",
+      "sourceSha256": "8d105c0c8e9e4a28d3a98776958f684817e37fab6d5cd0a1c819ea6c9519a929",
+      "translationSha256": "9a280e75bc04b5f07e514c8e4e107f6764df7c0f5bf255227cfbe4b930f0fc0c",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "05a1c9c321ee914642c43217e896b2bbb960b2cb904316eb1c6be953efa9ff75",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "sourceSha256": "d1701cd37ba2b079230b26a3301bb236ae7dc11b36aca0b21568a0b4cb97b766",
+      "translationSha256": "5917e272d923242cbb192607fc0746cca42f80c7c64db89dd65b9513c54e5dcb",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "248c56ffd7d029040cd0c6d289f517b71831dc7c9547fdd41a4c47bb689aa1c3",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "sourceSha256": "5598b8b46f6dee4030996bf7c6d956e707ed4525839897af96f3262894215d0f",
+      "translationSha256": "d4fd37ff6931dd023761ebb7584bf18437415da0dd1f266f904eec76fe63d6ad",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "sourceSha256": "2c295feede12610805a3ca63514f0f730b3e8d0401e71876d78672e3f431183f",
+      "translationSha256": "a58e9df8e2c9775f7176a17d9aea4d8f9672da29808aa18efb6b84cb94181e1e",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "sourceSha256": "991b3a7b4f4480c84a4df600c975bfa78409e661873865e85a15fca8c0686e03",
+      "translationSha256": "de4656a3bd87673f7d4fedc8a92dde5df61c83995bb9f440b3a020f577583556",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "sourceSha256": "782c06964ce188f0f765f0242dafd9671ca6771f2a9601107f74ba265711cfbc",
+      "translationSha256": "33301b498e2da55d11367c009dbc8f321c5fa306f120b22b96dcaf22f09e1bbd",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "sourceSha256": "5db0ad82f9301b5f0215a2d24f618574da4fb48cd2887cd118ef0903ae455c0b",
+      "translationSha256": "663175063a15de4caf23b709bbbd98c6c3d801b073a17e0f1f2b24fc29ed0d8b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "sourceSha256": "835408f4c3598b0104109c58dcd28411df1b87a013f8ff2bce22a327838605fe",
+      "translationSha256": "87d23363988ddef52c56b6b2f861d0d36beec68a6514c3b3e7ad1560082ed4da",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "sourceSha256": "cc18d014cba048748078dd91d2bf48dc8679fce1acb4f00bab920e98b018b57b",
+      "translationSha256": "517d9d06f4cf0858ad790c84c40d3a8d8e19b818cf861364ab2502d9559ad51d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "sourceSha256": "b63c87cd1d1975a0d7a56da083e2f22f7d04c9de725dded42cb5a723726473e8",
+      "translationSha256": "d92fb9619916da740832d7ab8d5c7b9510fdbfd1f03d1352f82847dd3d8e7c08",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "sourceSha256": "e32bb3144d721dc8721edf1e65eff4bba61414f21b9e5a7c129eae13cdc58f1e",
+      "translationSha256": "c1de1df9f29030377247cffbb0213441f99e8978c059379e5c35a02cb26f9536",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "sourceSha256": "0ba497bcaac024b53bb36829fae9e4bb5999a93edf44cb10d9c3eafa0b84dd53",
+      "translationSha256": "ab6babfabf1bd8325f989a3e05a34e5b4b2114266800c0d0dbcdff3d67cce43b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "sourceSha256": "a1935c9fd202318f97f8ff8670382510fe91b8c2c431318cf9b1773c431d12f8",
+      "translationSha256": "abad99ee349b94cb971671c9c09f31ddb33a6b25c73cc5d6892027ba646b5b51",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "sourceSha256": "5563a9f02cb5508c682d05175cdcc1a871ef1932d731551249998d7058383b55",
+      "translationSha256": "4f5338806c76e06b19c026fd18b7502ff5a53c8e88ec52c6ff1f4d9483e6a1a1",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "sourceSha256": "41ef944040935aa7de9470ebe42a02902d865033dd6707ca9e83e8655d171581",
+      "translationSha256": "fd500800e19d321c8891e80809fb43b6fd992b69fcbe13778f7ffe8c5b0f048f",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "c85a4c719172afb564638673cb529f8bfca50646f267fdbdeb44538d3c360390",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "sourceSha256": "cad419e6012bae9a0c8bfbca2fbb539c7a1dd98eb20bb0caccad751d0dff5c57",
+      "translationSha256": "108dc097a469ce85a7e79047d31ddb4d1a7b75597e1810e28741edd59cbc0723",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "ed1d10d266b3681c5c9e73e8818398b67a368d54b442b15d3f1c8eaacf91f555",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "sourceSha256": "39247fc8d9b001be65247c08859d7678db77c6d1e3d645124cbf657dbf97a55a",
+      "translationSha256": "0220465eb28d7f2464a1d9b0028f684bb525e67ecd0df1c7fd3583881a960e0b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "be03157961bac67b4b416d7b74333b78ce55dd647a52ff60c71bcdc8d901859a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "sourceSha256": "ccdaa4598fb12369c40d81a64a71512d4ce91141647491603f3cfdd5c465a423",
+      "translationSha256": "33ec910dedcd08c4e46e32b5e113f3db32a533a39f1ee20837c443a73c3f7e97",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "sourceSha256": "38665025eb74534dd5be8301135ce33c2f37c5f9a37e4b013a028da6ffd1f290",
+      "translationSha256": "8dc63783425037fc049304bf7001189a95bad429178dfba491882f3dc6a51a7e",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "sourceSha256": "27a99894a5440c9c73dbb2b519ee119d7dfc9504e83afc7aaffc77e8cf00cc40",
+      "translationSha256": "3656dd9947af1feeccaaafe61ed6d9b78487d264bdc6b4180bb3000460d6515d",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "sourceSha256": "48a31e8385c4b3e01d1aebd19f1c8b671b1c00b189193f950856d9d4c9e1c774",
+      "translationSha256": "cd94982b152205b0d3d784662195bac35f179977c3bbd1eb32495c973b126e28",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "sourceSha256": "8e5c8f9aefee8e94db020fdadb779945be742374bb3accab0ab3a244dfc82d85",
+      "translationSha256": "a33bde73098741b8399071dd49d5d8f8caef079937b3a20d18deecab80c47f68",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "sourceSha256": "5ecc07c94c4c3b134bfb263f61267bcd9e98a841a407a6fe7a299fd2eeb411b6",
+      "translationSha256": "49755bc313c50d1085b25116e9c6a9ca1974a7cd202335306f2d92f0ff6ebdf8",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "sourceSha256": "41b483a1b287bc5c82255feda67c67a112227142be1b74a594dd2677008ff2dc",
+      "translationSha256": "fe58dad5e540cfd0919c7140c4208b349c738b2822c3cf78358e643f79d045f4",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "sourceSha256": "f01f293e34b33fe0563e7cd932cfb9c713730a159146fe8519ca2c9524218fb1",
+      "translationSha256": "b865cd4f1096299abac3607520e601dce26bf6dc37a4192c4d593d51a4cec0a0",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "sourceSha256": "dff3d8e2c66a38c0fd441664660442a58921377834317546d261663ff7bb1a5a",
+      "translationSha256": "4adfbc31b31a1d80e416e4a8a6054f18f37298a74d000c5ec4c0943ae3816fd6",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "sourceSha256": "054bd5dbac7b64512629c317a517cd0d7c568ff32be804e1f0c47f7032453c28",
+      "translationSha256": "8bca5457d39f640bb7a6a7227f94fa1dd940a0001bd0f7bc7a3dd837df429aff",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "sourceSha256": "bfde0831a997a43609484c06d20a480baa27e4c7f5721e400a4a0dcbbff89fce",
+      "translationSha256": "faff55d8c461c6dd7f3007490932f25ada16085a5761ca44b0f7b8a3718384ea",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "sourceSha256": "e5196af519ac45071921258c9e57337828d7d19c6e7628b64ac5c7a39100c1b9",
+      "translationSha256": "be6c8d9e5e4befe11fcad5b9c601f6348b847d3538ce0d231b703dab7a846eeb",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "sourceSha256": "6b94ee60c81f30b47f56de68a7c5756810dc3f11e12de785b7d5f86d0622c441",
+      "translationSha256": "c432677798fc8009f1387252bc3f9a0b993112c17944e0d16f720a6813f3e305",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "sourceSha256": "4de423619f0df3af761a8a5886e421351d1669c8346c52b5e4a65a12b5d74cc1",
+      "translationSha256": "899e3eeacf9153d676a4583370d380708861e50d9403cea8af870e1eb7163ca8",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "sourceSha256": "0fedcd8a4c644709a892103f8d7aba80e57810123469e7d5fbd9424ac73772f5",
+      "translationSha256": "a3e252348eb7aac99b3c79ad77283047578cf0518539cca78e7b94af33f61170",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "sourceSha256": "5c79febe70a68746314c7f1a101f66e59fe13a37ebcff4a8a4dbd82c3556c6e9",
+      "translationSha256": "5cdd434318279f9654cd8e7d82149efc0e546e6767b94fb6a44060140599b529",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "sourceSha256": "f1d882ade25b3977a8d6fc68848b423a89e23d14235c94e6e9e3987509d50add",
+      "translationSha256": "caad27c845004c4c8bf08e115fb39aafa596d5e2faa825cc6b94955829546558",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared",
+      "sourceSha256": "968d351381e8d9b8af7a58d7f00e3f2d4d20653125e131d6c2090ef1fc0dbf04",
+      "translationSha256": "9c1cdbfe97c755824117df07745c26057577d2163f581ace1a1043ac3d702d1a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AssetInspector.Error.DbcPropertiesDecodeFailed",
+      "sourceSha256": "96a8932fed5ed921856d743e882310ed6ec3a721baa0f33f236f609c74eadb5f",
+      "translationSha256": "27760288f4db163c4377843799eceef6774bc1c793d0a7c96b9e794cb04f17ac",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AssetInspector.Error.DbcTableEscapesDirectory",
+      "sourceSha256": "0c0ecfa16703da736254ec0c13c95300943c9468fe3805044c6df5ef3900d98c",
+      "translationSha256": "7c872096bb8872d47ff6c3daa666dd905aba31505a0a4a5ce3edffb036cab475",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AssetInspector.Error.DbcTableNameUnsafe",
+      "sourceSha256": "29ddc939e2bd42e1baa7f4b6a52ad2c2e8ee8693f2701aa5e34b76f46afda58a",
+      "translationSha256": "fdefc25520943069d03da826afc112efddbaba102a7a08a9da6b3b3a02f884a1",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AssetInspector.Validation.DbcCatalogEmpty",
+      "sourceSha256": "0ab9f05aad68fc5998febc7b24eae55382d5b695bab364daf6ecf8ca045c5bad",
+      "translationSha256": "0d3d389b34910d0954d290fdebc1fc54b87a0b41bdba8339e6f0489809d99012",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AssetInspector.Validation.DbcCatalogParseFailed",
+      "sourceSha256": "96c36ef238285c25a3030b4d1709d53878f1bc1d983cb3580a4fd2549ee7eca0",
+      "translationSha256": "61cd2ab90f8a7fabab59c692a6544d4b17303c0712147c800e66e0621419f3c1",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.AutoCenter",
+      "sourceSha256": "57afb0caad2390523d75eed7d10ae1df825a2c341a54e1740975ca809c7c7898",
+      "translationSha256": "a4779d714f5afc6175c2a0b1fce27922dfb54f7c2607742d1b9b89d9da3c2915",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.BackColor",
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "05a1c9c321ee914642c43217e896b2bbb960b2cb904316eb1c6be953efa9ff75",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.BorderColor",
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "248c56ffd7d029040cd0c6d289f517b71831dc7c9547fdd41a4c47bb689aa1c3",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledBackColor",
+      "sourceSha256": "5585423fec738873d51269c2b9be882f32040949e8c23fa6f7ec58486ccb0546",
+      "translationSha256": "8ef7db64e59414f7d578093adcb8508ab1f9ee960eb4fe5bb318262c17fc6fca",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledForeColor",
+      "sourceSha256": "3c06ddb5398e7fa53a86ca56fb28f7e2523455a33c1907d0f9a3ba7f060b6e06",
+      "translationSha256": "187e6fc06183804f67bc06c1dfa14aa802b47d7e32790bc55b83c80c0a08b8fa",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledItemBackColor",
+      "sourceSha256": "c63c14580b5f13b51b6cc582513072c06c10d92cd7f9c381c007ebb6e52f147c",
+      "translationSha256": "56dc57fcc45977085f1ab8f0b08a2d39ff36b87a9e120e6de95637921bc7018e",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledItemForeColor",
+      "sourceSha256": "6109f1de4317e17eae45d09c68630ab8e205e4d90a7b8abc2ab867ccb8b6b2ca",
+      "translationSha256": "4513371da36f38c45d43e2a8489edc8db9409d8e3cf3a374bd45df3121736b5a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicBackColor",
+      "sourceSha256": "d63bb5ff4398dd5b5c3700eebbef13d1bf381337cd0e4380a8160ae49db730e7",
+      "translationSha256": "13614b01926ff5ce0527ec85e9196f76841996be87d4eabb93ba3cad33608b7f",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicForeColor",
+      "sourceSha256": "d908cc3b7650d2854b750b1bea30f06a81d7e2e909d1083a1f557e5a61ccfa46",
+      "translationSha256": "b2db450ac01f712a55f53136c05ac0ab0926b6d371a210ec6644185ab9d1037b",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.FillColor",
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "c85a4c719172afb564638673cb529f8bfca50646f267fdbdeb44538d3c360390",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.ForeColor",
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "ed1d10d266b3681c5c9e73e8818398b67a368d54b442b15d3f1c8eaacf91f555",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.GridLineColor",
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "be03157961bac67b4b416d7b74333b78ce55dd647a52ff60c71bcdc8d901859a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightBackColor",
+      "sourceSha256": "12eb7fd3777afa400043072854be687c072a7f8a009c0dfac88d2197d552345a",
+      "translationSha256": "cee220b601fa2867b86abf6b3f33b966e4ef39cf93551e2cc32e1526dacf4180",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightForeColor",
+      "sourceSha256": "d1908f533c1b4a6151a15685f099873de593ed03853633c18933d93243387180",
+      "translationSha256": "9fb8ae89d1ec94e321ce271e239a0019987575ccdc53d9d0a8e0b6559038d8bd",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.ItemBackColor",
+      "sourceSha256": "11e4f54e96af2267372b1d2b8fc2e42bb8e9abe29b39a738afd5901f4dfd4b83",
+      "translationSha256": "2456cfd5877afbe8398361021ae66aa1634a7670c2c4655f96318203c95c2f4a",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.ItemForeColor",
+      "sourceSha256": "5e07d5387437c2bb843195638b1b4170ffe6f04fcd6a7985178964e80c126add",
+      "translationSha256": "2bceca27469b86cf7fdc276f7f9e2021eb51de128d63e11348f53481d72e64d3",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedBackColor",
+      "sourceSha256": "a952088d1378a79c1fb45a2e34d0362dfb3d8b269af820d8e14fcf4ea618ad31",
+      "translationSha256": "e40c4fb42aab0e1da3c928093addd508fadafeb6ce42ac769cd97eec8ad55fa7",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedForeColor",
+      "sourceSha256": "e865e193cf06c4e039038ea29f49f1a691eca8681b0ef0bc20ec666d3e111ac0",
+      "translationSha256": "206c8fb272ded08973bc57ec7862359196918b3b34faee0078ed6461f53499a8",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedItemBackColor",
+      "sourceSha256": "baf75d75b6731d54dc23f285cf3afb114f873b517202df0927138b41f3cef9cf",
+      "translationSha256": "70eddd7632b0ae06e1f25815402baf02b51a40ae0a78d26c818d40e32993cd82",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    },
+    {
+      "locale": "en-GB",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedItemForeColor",
+      "sourceSha256": "c7bc8cc8060736496a3423aaa2045921b09b9309887747936d53e118af886ee4",
+      "translationSha256": "c298f5b32decc746601202de175590a078f7dc14755826138bbd91955908f877",
+      "verdict": "accept",
+      "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
+    }
+  ],
+  "residualUncertainty": [
+    "I have not seen the code. The 60 identifier-like entries (LaunchParse and PropertyLabel) cannot be settled without checking how they are consumed (parsed, matched or only displayed).",
+    "Whether 'catalog' is a fixed term in the product's code or documentation is unknown.",
+    "This is an independent automated review. It is not native-speaker or human certification, and nuances of register and house style may remain.",
+    "I counted the supplied array at 149 entries, which matches changedEntryCount.",
+    "The evidence covers FillColor, FillColorTitle, Property.Color and the catalogue prose pattern. That the same pattern holds for all 40 LaunchParse values and all 20 PropertyLabel values is your statement, and I haven't verified it independently.",
+    "I haven't seen other consumers such as tests or snapshots that compare localized strings, logs or telemetry that record the label text, or external tools that parse help output. Any of these could depend on the old spelling.",
+    "This is not native-speaker or human linguistic certification. It is a consistency judgment based on the code evidence you supplied."
+  ],
+  "limits": "Second-pass verdict on 60 label-like values was by group and relied on supplied source-consumer evidence, not independent code inspection. No native-speaker or human certification."
+}
