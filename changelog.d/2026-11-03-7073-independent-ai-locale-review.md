@@ -1,0 +1,1 @@
+- 2026-11-03: Record exact-string independent AI review for the existing en-GB, es-419, and pt-BR catalogs, including the approved exact invariant names and independently checked British English revisions. The en-GB text ledger is complete; es-419 and pt-BR retain unresolved wording and remain behind the strict release gate (#7073).

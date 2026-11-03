@@ -1,0 +1,1628 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "mode": "Read-only independent batch review; Claude Code CLI tools disabled or separate Codex agent as named by model",
+  "sessions": [
+    "codex:/root/review_pt_revisions/batch-044",
+    "codex:/root/review_pt_revisions/batch-045",
+    "codex:/root/review_pt_revisions/batch-046",
+    "codex:/root/review_pt_revisions/batch-047",
+    "codex:/root/review_pt_revisions/batch-048",
+    "codex:/root/review_pt_revisions/batch-049",
+    "codex:/root/review_pt_revisions/batch-050",
+    "codex:/root/review_pt_revisions/batch-051",
+    "codex:/root/review_pt_revisions/batch-052",
+    "codex:/root/review_pt_revisions/batch-053",
+    "codex:/root/review_pt_revisions/batch-054",
+    "codex:/root/review_pt_revisions/batch-055",
+    "codex:/root/review_pt_revisions/batch-056",
+    "codex:/root/review_pt_revisions/batch-057",
+    "codex:/root/review_pt_revisions/batch-058"
+  ],
+  "scope": "First-pass review of exact pt-BR catalog strings. Only accept verdicts appear here; revise verdicts remain unreviewed.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarText",
+      "sourceSha256": "2dc92965d3666b2beca094824e96e8049e642a05ef9161d8bc9905ed9628e074",
+      "translationSha256": "45b86996ad44ded0fcfd2376a18a95ff95c19a4b1a1276a0a467559d7711e9b2",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle",
+      "sourceSha256": "d7b49b13fa2fe6ecfb9aa625efd22059db024c4975f16f0b765df0a80b0d07ae",
+      "translationSha256": "02898a3aeb991e32eee6699aaa219b12be5103e5402b3c99e665a9dd5bd6a9cd",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "sourceSha256": "cb86eb2d914d37df6857c3cfe4827b5f770b01a86578120618b0b21572160be8",
+      "translationSha256": "06521aac8158a3c23b6409d198b052dc2fe5ec7939a123869235731c3384867c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "sourceSha256": "7e744141b40ea5501412e42c8b40fd0b05f1608aa2e4073944ccccbd82f24ee8",
+      "translationSha256": "ebf8ff724ba19d306d45df08c7929b3148c3fb142ba85230ae9c7ad016faeed1",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipText",
+      "sourceSha256": "6ad8aa19ab96e33e79ed5223bf59a666e39ee0b5eba3dc3a8569a875da17b8bf",
+      "translationSha256": "480765de4da9d255ff7c49eba6bf2faef9b293b6b24ecb5a8e39ce35849facfa",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle",
+      "sourceSha256": "209f2ad0b80e5c1e277af09f8e8c0defeaffb597514820c6398cf61104b763f2",
+      "translationSha256": "d5447623d862d8cb07fb1139262e949fd9c7c3b0077ba56620571afc76e70b39",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Visibility",
+      "sourceSha256": "7d2fb3da93a013ce41e4eb531e0bb78e245939e05984a6a8dea49113becc347c",
+      "translationSha256": "781bf2b6768ca7875b2d4450a88728a0a9040744cc29d073b90e992e218472f2",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.VisibilityTitle",
+      "sourceSha256": "7448611d5f93aa8acac6a06d76c00b3f23d985bd7fbedbc771409a85ad4a23c5",
+      "translationSha256": "7cf471fb71aa60b4923e79283b69e39b010e07ec648501375efb2eae3dbdfee2",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelp",
+      "sourceSha256": "0e8e5b3e4b386056af1e33b7c312741ffa62262a5318067172af36d601c66ad0",
+      "translationSha256": "cccd4b800e106a50ddd29abc623f6c50c2acded6796197c71d405cb5a9e699b2",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId",
+      "sourceSha256": "fcc3ca44ad7d3e2168fe0673cc1b703d82e2348c59259ae24af5e3bc5699019b",
+      "translationSha256": "8389e84117ac10c7ee691dfe29e0741b8188979443ba3cff38d04342eeada03c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+      "sourceSha256": "a8ee23732a04abaa28ed119773cb8e624010d3fe33f2de02e45e090f5235a517",
+      "translationSha256": "cc4b58797333e49a269a9dd930268d16595b78919244a165ce5f261d792683f5",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowStateTitle",
+      "sourceSha256": "058de4e9bab5748fc60c4c95e4ca8cccf40191a558cefea72c9a30d7a7bb95ee",
+      "translationSha256": "b0211fc0d1dd254e61ce811df1f5cf357b3f425cffa1c0a98ec3e3dd63996b58",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectCommand.Rename",
+      "sourceSha256": "9e84869d369b2a5336f6aa599b6e91116cc3d761827ef5f4b90841b8848ec35e",
+      "translationSha256": "6637f6994686ccd9864737f333861c3c5a3bf52b1978ee39622edc2013c6f1e8",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reorder",
+      "sourceSha256": "625dbdd35aabb2660d888511e35dd11bb111f6ca9fc68258e31b7c1fedc230d9",
+      "translationSha256": "6b74636bf6f4b31dda391c3df45d159de207364a663c76670f10811095e43ebc",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.PropertyCommand.Clear",
+      "sourceSha256": "913a4cb91be20332f3559f8070255d7ac3e6228bb423f4441551d3f783e7d4f4",
+      "translationSha256": "42a5560004fb4ef7a497872133563ecef6a507744e1160a81b4ac96d1f878932",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.PropertyCommand.Rename",
+      "sourceSha256": "9e84869d369b2a5336f6aa599b6e91116cc3d761827ef5f4b90841b8848ec35e",
+      "translationSha256": "6637f6994686ccd9864737f333861c3c5a3bf52b1978ee39622edc2013c6f1e8",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.PropertyCommand.Update",
+      "sourceSha256": "2937013f2181810606b2a799b05bda2849f3e369a20982a4138f0e0a55984ce4",
+      "translationSha256": "57b266ab39f86f1495f7499d642b9f6c016950952bc03fd8e56c686af3f08562",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.SelectionContextAllowedValues",
+      "sourceSha256": "9b0485ba6c5b5feebac5c88499e8e52187daa1bf63686c80ae72484eead7ad07",
+      "translationSha256": "aa7fab9bbac36e19d0ebb9c5e1f392d40b0c711a38c16efa734f52961b1e8fbd",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Selector.Root",
+      "sourceSha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2",
+      "translationSha256": "2a28015f54317b64ee6616a0069a0808ae0579eaf91856ecd6c92132a1a59e6f",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Selector.Target",
+      "sourceSha256": "34a04005bcaf206eec990bd9637d9fdb6725e0a0c0d4aebf003f17f4c956eb5c",
+      "translationSha256": "81f0418a6c11ec20f08ed1816c1073641a442af0d2759326a96e3b6b01b3f718",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Value.Value",
+      "sourceSha256": "cd42404d52ad55ccfa9aca4adc828aa5800ad9d385a0671fbcbf724118320619",
+      "translationSha256": "6adcc016448d707c1d16827459aee1f5c37621a9a747d3c5feb9f80877e3d495",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "8e04773c84eb2902a975e89c882950c22492417c64e9d794dabbc99c80ee0216",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "7048dbc13345e9ae9ee7769fb4301bef264c464e07c318b8fecbdc10c5946d0e",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Error.MissingValue",
+      "sourceSha256": "327992075416d8ed43958355b72b5e477104f4082a0739d5dc794ac85a5a39fa",
+      "translationSha256": "ca297def9c1b6415c288d82e2cab29201804dde150cfaf1fe4754614dbcaa1db",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Label.Fallback",
+      "sourceSha256": "5c7ee2074b65853f71fc5a01ce194ff26deedf6daacdb715c6beefdfd3f31b35",
+      "translationSha256": "d282ead8a7297e086c31fd3040d77a612ebb174f753d3753d7cbcc56bda58395",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Label.Selected",
+      "sourceSha256": "d7cbbb688b2e506c022e95cef8c4f629a29b9b36a6e50324e70dff466dbb95af",
+      "translationSha256": "457b0718849a7534ead5bcb7084736bcbd9eb59a37eb95f67ec23205328c3936",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "3deacb22efa358f5b5d984a6fb5b8cbccd6a8c9c5ef868376933d5858bfe7d3c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "ae45fce28306366bad18d1c1e8fd3904679a0ad9346294f40b3ffb1bdeffef97",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "c7b00186b324fec9e2985e5d4c80abf558d4a1ff11241d44516f7bafaceabea9",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "14e2e531fed07e5894c0694ff57da978dfa6570eeca04bee7fc32bb231685be1",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "sourceSha256": "0081be3546939e08397453ba775a755e6cffa1e180015c0a088cc624f378016b",
+      "translationSha256": "9ee7d53c06412c54518fe07d60f5d3af180a03753fe3a05a7c4a9ce8ced64fc7",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "3deacb22efa358f5b5d984a6fb5b8cbccd6a8c9c5ef868376933d5858bfe7d3c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.NoAssetPath",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "fb65b53b3d6fb59899c4f3a3adb369f6982652bb4e8917000f1eb71fdfa32bb7",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxContext",
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "ae45fce28306366bad18d1c1e8fd3904679a0ad9346294f40b3ffb1bdeffef97",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "c7b00186b324fec9e2985e5d4c80abf558d4a1ff11241d44516f7bafaceabea9",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.Usage.Alternate",
+      "sourceSha256": "9e42d01811094feb497ece1a5eb9e3890f36f7ec0ec01df3a4805d5970bc5141",
+      "translationSha256": "58822d5f34933160f287ddf5c936091fa9745321c9d7211c2edc1c100b352603",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.Usage.Primary",
+      "sourceSha256": "3ca5332dd77af375721ea31a6bc973fb648ea42cf3f87386bd7eef9948da3bac",
+      "translationSha256": "746b55fcde10c5b77e65fc750b237d4e27f4437094c0ced91e9601281ff709c9",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.BooleanValue",
+      "sourceSha256": "d7ecf2c72e42b999788cd29ac4fc79a08d795c379907252a86de5166a77fb9c3",
+      "translationSha256": "5992f4c369daeed06ff5b377bed2aad1b8ee627f8779e99a95c3c805accb62cc",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "3deacb22efa358f5b5d984a6fb5b8cbccd6a8c9c5ef868376933d5858bfe7d3c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoAssetPath",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "fb65b53b3d6fb59899c4f3a3adb369f6982652bb4e8917000f1eb71fdfa32bb7",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "3deacb22efa358f5b5d984a6fb5b8cbccd6a8c9c5ef868376933d5858bfe7d3c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.NoAssetPath",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "fb65b53b3d6fb59899c4f3a3adb369f6982652bb4e8917000f1eb71fdfa32bb7",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
+      "sourceSha256": "7ca227a11f73ec843c2bdd055f49793a0cdc2773a2837125b98926de3f6891d0",
+      "translationSha256": "f8fe3c70bde32ee2cc7030752a95dea3667e50de49ab6ec6f37c7ae72a5cdc76",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "14e2e531fed07e5894c0694ff57da978dfa6570eeca04bee7fc32bb231685be1",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "3deacb22efa358f5b5d984a6fb5b8cbccd6a8c9c5ef868376933d5858bfe7d3c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoAssetPath",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "fb65b53b3d6fb59899c4f3a3adb369f6982652bb4e8917000f1eb71fdfa32bb7",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyClears",
+      "sourceSha256": "f17a0c0321c8d6962bae6bf201b34ae4bb96ab73e8d6027ac313f4312c88f257",
+      "translationSha256": "863a2c73b5d7e7ab035b39c3d848b820a03932c8d8de0cf9cee91b935050607c",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyMoves",
+      "sourceSha256": "16e3b0ce41dd25224c7b218bc2fdfac4885188c72aab809dfb00423da5770661",
+      "translationSha256": "d62b1979f97ab890996bfe420b36a279330707cd62c2f508ace13817a3b05b79",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyName",
+      "sourceSha256": "4f5b0a7174fb1e86bb8895dfc65363c68440b38cc764bdaa6e4b232c89aa3664",
+      "translationSha256": "69212453e8c6335b5e41496d0da053bafd3a02f554d29eac749447eb55ee1b71",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyReorders",
+      "sourceSha256": "48b94294209cb715c7e28e47e9bca96f9a7a7352ce16433f066985e3a775a215",
+      "translationSha256": "1c6af8f432eb5eb0aca70ecb52217462dca1a799fe1cb1b54f771c266d030e47",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
+      "sourceSha256": "50cdbbebad0d8904dd71213cff5fd08b5493b6856ea7fcfb9357366b2cf8a5be",
+      "translationSha256": "ef4327b4865bf8a71be20651c483b111834438b06177ec647a9dc03183f4dacb",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.Command.BuildProject",
+      "sourceSha256": "ba34cc7ae6f596ebcc6eabf6e7a137fde6861b1e5505a2d55953fed687c14dee",
+      "translationSha256": "a503f1ddde08d6638a0ef627fb2c6d1a9fcd5a8a30b64a13e2d4ba98f19de1c6",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.Command.DebugProject",
+      "sourceSha256": "9aabfddbcc7b7f5b19d834e9a26e0c0f217dce57d51f09ae41f622b124463fa6",
+      "translationSha256": "281bcc053a5aa75ef76f45b60172744033447b18eb9ddbaf170598af28fcde75",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.Command.OpenInStudio",
+      "sourceSha256": "b4e8381a95a13bc7704ff290b4c6c72bdb6cc4b8df6cb65e1cf3bea49a3474c8",
+      "translationSha256": "1642d806ba1615a37565f79ef9d2876864c094979fdfb080cb28be0a322977de",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.Command.RunProject",
+      "sourceSha256": "36fc412e4b4d1d7be109568ef7fed2c517b9585399c43764a542c7e27a261b77",
+      "translationSha256": "7b48a5be90a4c6d60bce396c9c3b7395fdf19546f908a1431233f3eae74233de",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.CommandWindow.Ready",
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "45a489c52210c29b3325844d351da0f1a826f083c90be2389c61b2d9aa1de5d0",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.CommandWindow.SendTooltip",
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "66b72e684ff6bfb29148cffe8aa60a1f75836f4788438366d19dcede9e7d9cd1",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.CommandWindow.Title",
+      "sourceSha256": "60b3687da026a54e208bf196e39d43b4c3b5a331c109c3f14b5b760d3f349f0c",
+      "translationSha256": "fc7d8ac82feccad7908de03bc82a61c3220236b3550a0b468589b577632f2c80",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.CommandWindow.Unavailable",
+      "sourceSha256": "09cfc5e1e84e3a96def219129ff43c03e2fff63e6904810a7c3703a421e04b50",
+      "translationSha256": "f48998aa8510531f9a5962ba3d2963e36637b9b307d2924ee3cdb8f102828811",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.Package.Description",
+      "sourceSha256": "eceaf968cd64706a76c655b025e91703842dc75e4229ec5e60f575104eff663f",
+      "translationSha256": "1e9dca1af9cf2dbc38648c8f951308695628f10f97e85e99999e8d88cc8cc52a",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.Package.Name",
+      "sourceSha256": "abfd26c0bf4f1406af85c2a5d4eefd32987c6aa8c07a2ee390ec04243dea6cfd",
+      "translationSha256": "b05092b4b837c18e0d2d5d9f343f764e171a781671257b70c5b1237a686fc05f",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.TerminalWindow.Exited",
+      "sourceSha256": "f4b09df85ba493f94976c9ede225bc876f5aed678a2899ed5c4c1df0c93d7ddd",
+      "translationSha256": "a9d252125dabfe9c5685673ce88749ca5f13e7eb3b2d07fdbc5548395c361896",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.TerminalWindow.Ready",
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "45a489c52210c29b3325844d351da0f1a826f083c90be2389c61b2d9aa1de5d0",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.TerminalWindow.SendTooltip",
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "66b72e684ff6bfb29148cffe8aa60a1f75836f4788438366d19dcede9e7d9cd1",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.TerminalWindow.Title",
+      "sourceSha256": "9a380e6c3e2802d1c80db452c055f848f6ba40835f4c144123d694b9d857742d",
+      "translationSha256": "743fce72c7aa4ab639fb35181ee45158e94acb35273e864117353dcde5e40eb1",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.TerminalWindow.Unavailable",
+      "sourceSha256": "886c3b9c5c49652e1d5760e16acc1e29111432044384b7fab8b0686ea0fc43fb",
+      "translationSha256": "944785b56ba3bfaf6f5d9047b832a2a7cf260b34e7f8d196007624540d3a4724",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.UnbalancedBlock",
+      "sourceSha256": "25e886e5f36c424481d3cce50c4b9548ab5b8f3828d63094f95adbb187814a5b",
+      "translationSha256": "dc595c28b0aacef513cc56559e6e29a5981d07e89f507c0948e9c81eb1cc5067",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.NoClauseRows",
+      "sourceSha256": "d5a43bafa771ee58c9c5ed66c62c8d8f9f72321b2e3c1b947754554e25636c3b",
+      "translationSha256": "4cc9bebb91f0c500ca15db4e7470bf0d81ac42b29fafa7f28ffc566a1367ac16",
+      "verdict": "accept",
+      "reason": "Second-instance review found the source meaning and technical tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseIiiMemo",
+      "sourceSha256": "91ea262622545669c954e81fb34c14838203fbb26321a298482d29e86821a18c",
+      "translationSha256": "1191937c2019fd1143d98aa5468d37bf4fbe3ca9dda08a49eb5f4eb1504c8dec",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseIvMemo",
+      "sourceSha256": "14d49e04a1692b25ff9c772c5fc53f1edd599f410316c2dfea85bcf20d329b39",
+      "translationSha256": "e16dc9529a01159b401b3c155e463f35b116fc7334b57e81884c6ddd77ef8e67",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseIvMemoSql",
+      "sourceSha256": "2a2c6f708257b9f7e70e99733417f53b17bc35e140cd12a7f76f10235c9a46af",
+      "translationSha256": "a807b5c608859dd168bbbf743850be3acb4aee2aedd68b24834e3f194c98b5f2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseIvSqlTable",
+      "sourceSha256": "32ff67b72758550096ce4a9e89ee9622fbb7c0f0a4032af5eb037fec2e796bc4",
+      "translationSha256": "1bdd20924524e0cc7906299d6e2d5ee4e259456de5f9da740ac915566395fced",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseIvSystemFile",
+      "sourceSha256": "db2b9c8ffe9cc935f1b10504b973c4f16b22e970a0a69433e61eccb6f3399164",
+      "translationSha256": "584ea19e545263b6b40a414eebcd208e2d0f79e717a1a711cbba1a39c06e4b87",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.FoxProMemo",
+      "sourceSha256": "a9cd10a4b67050207ca90df9c7b5344e4cc8388245c2e68aa0a4c6534fc115ca",
+      "translationSha256": "0bd313b2fdd98531ce9917582b365522da07753eb84de083c2f8e15e784a97d4",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.Unknown",
+      "sourceSha256": "b764cdc0eab7137467211272fa539f1260d1bf2e71bcf6ff3bdc960f5c16aa14",
+      "translationSha256": "f08f3414e973f2a6d9ea825f8e592f5b5c97175369010c2d419abbf5e44d2e59",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.VisualFoxProAutoincrement",
+      "sourceSha256": "049dd47983775ec988a109f2f7c99adc59f3e2780847f79d4b8d8b83f525fc2f",
+      "translationSha256": "493cec5cdc178d9e7841f7eacf2d10aefff48ace306181365119e2d158350bfc",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.DateFieldWidthInvalid",
+      "sourceSha256": "4c622b9d7163362bb6638cb53b1d08281cea02d3701f5ac4726d1c4c4f1149ca",
+      "translationSha256": "085d45540407c775d1e263392cf3d735bc04ff884b2ef8a9de63c0f496456c13",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.DateTimeValueInvalid",
+      "sourceSha256": "cb5c4281cb71893686bce0b0dadb4ba3b510f1a1960aecc873341df4fa6f45fe",
+      "translationSha256": "5d3d5016d5b0c5b7ef4237b136a603de228090c5f44167a8f6897a6ca1210bb2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.DateValueInvalid",
+      "sourceSha256": "9316202aa22557bca6774b96fb397ce0931eb548b092ae0ab0a07fa64d18b687",
+      "translationSha256": "d4d45c3e8d2cd80d36c44fb40d3392266316a85ab4fe2efc315e939cf8d7c638",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.DoubleFieldWidthInvalid",
+      "sourceSha256": "5809aa500f4f050eca74ec270033b497b658a0a0584cb6943bcc66366a43fd4c",
+      "translationSha256": "b846f7aa08d7dd56cdb1f9f073ab2d4ecb1039a5266494a14e39c3184af5c588",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.EightByteFieldWidthInvalid",
+      "sourceSha256": "4d711f6aeb75693137c7086b89f777b5478f25ed45b7f0683446de2b8e311efd",
+      "translationSha256": "cac04474b060a8eb7701a26aba393cd23e3274a9fffc6d8f3879181955da51a5",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.FieldLengthRequired",
+      "sourceSha256": "927602036cae8556f2352c8a1372bb03e6a5906c7a2eecaa51adb6f32ba3493d",
+      "translationSha256": "0f6398c7745d45a76556692b7060120510d72377c7dc276f323505735a4ec980",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.IntegerFieldWidthInvalid",
+      "sourceSha256": "6d7e275657abbd5bdb89cdee4ddeed855bc3bc39543a84b87490905b1126d5ca",
+      "translationSha256": "ae9fb3dd579306f16d927186ddcd2c310a2c42c56b70e26f5d6afcf11a531781",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.IntegerValueInvalid",
+      "sourceSha256": "09e2a768ad3fa400ff32dcba4541c5617f3a26b1cf5ba42f6ee465a586d351b4",
+      "translationSha256": "14d8c62280046451b5f6041686d85dd5ff0f0eb6be2d1526c38d7f2848d1e93a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.LogicalValueInvalid",
+      "sourceSha256": "33f82970b5875b4d76cba10ee19aecdd9d1724cdec41125c70f9a4892f29810b",
+      "translationSha256": "86f03266536d6b4423d9bdf7f84fbf9c6211c6357ba14ce841bf85e3c19a7803",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.MemoFieldWidthTooSmall",
+      "sourceSha256": "fe2c4910c19c115cc1c8a37052a4dae4c7883d340abcd7668bfc0d0ffbc39ad5",
+      "translationSha256": "6e7a79336e91035b780a8f6aa24af1af71e1d32168b6f2a3bdc6c7238e8588af",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RecordFieldCountMismatch",
+      "sourceSha256": "dbc9c31f076d09574c9b68ff4ae5069a61d45c8d3d35e265bc57d0e1ee8a6674",
+      "translationSha256": "e2dc317938d6448ff88f78e5c5b31d824fcee244db66736141e93d32cd0139e7",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RecordLayoutExceedsSize",
+      "sourceSha256": "df331d724b027161e3a9fb866306c4b7075c489b1fbf913777086489d1ecf174",
+      "translationSha256": "c3fc20047158525b6df2224cf084f06cb5d146095e4fd1565a5f685bda74af3c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RequestedRecordCountTooLarge",
+      "sourceSha256": "d180b59e4ab316834be579f7449d87e33289c43969e6be25b58228dac36d1664",
+      "translationSha256": "3494f14e61e336bfe8ebc1f57c44376d644bf6f12d14db1b012a48d7944c1f58",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.VqFieldWidthTooSmall",
+      "sourceSha256": "5873ddf3468bfd217f8d7a18b236c198576c385d807a5c3b9ac0779921e16e96",
+      "translationSha256": "97f1bc6516307039756bdcdbf112f3de68b3bbc70aa97ef25c8e88d9a69371db",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Geometry.GridHeightPositiveRequired",
+      "sourceSha256": "1afb896c70c528970d5651a1310bc4979da717c3317101868f7c621003253f70",
+      "translationSha256": "73cc9455b5c3c084e1fdd6c390e59a727ed357409e1f7ee12c863f65cf02421a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Geometry.GridWidthPositiveRequired",
+      "sourceSha256": "740aaecfc992d2484c833db0a09f23cdadb41336245535023f9389d8cb7e2fab",
+      "translationSha256": "7ce32f203633692dedbff1d29a9d1e76eee9d0cc69dedc3916b9469316f0b8a1",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Geometry.HorizontalNudgeDeltaRequired",
+      "sourceSha256": "f3626f9ed83845e4391fbd6513586429e048fc0051315210d3b55924bc269010",
+      "translationSha256": "1fbb6b4d7af02d871fe05459efb8854e032731a2846dacbdba917cfaa3b931f9",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Geometry.VerticalNudgeDeltaRequired",
+      "sourceSha256": "6c6683ece3a9e046415680e2764181f16707e0543a6caec69a192a8194cba393",
+      "translationSha256": "b9b61effad793e0f3c9b6b1b4ca8d8575558f0b63560a8d9011c9c05868f5510",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Identity.FieldsRequired",
+      "sourceSha256": "3a7e42ee0cfbbe53c7941166889311062053386e8912991a06da757d00c799b6",
+      "translationSha256": "9754ee257e368268a2240998fedb110da7e15eb62050c7e4b492922a0e40e0cf",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.AlignmentTargetsRequired",
+      "sourceSha256": "f11b69951f5b9807122d6936ebb95128ebbabc2b853fc34f7670f6e52a53365f",
+      "translationSha256": "2230861641e8b2f5bce7b869f46fc31c8ba203d0d49e24860ff2a8164cf64ff9",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.FieldValuesRequired",
+      "sourceSha256": "1afc792f3a200e44ffe3f48ca0e0a78695b24740a3370e35ba72bb847fea39b5",
+      "translationSha256": "2cb5b540e6bda89f62151699cebd1324a28e9702c027878c1b386fdeadbfb707",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.GroupContainerFieldsRequired",
+      "sourceSha256": "6f77aefa63118aa6e441c0c8ba475b34a64d1afc2755ae5cc65296ea526557e0",
+      "translationSha256": "8a08b8e93b469a4fc8948f5fab1a3e88735618833ab9ec43cbdaee401b374e5f",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.GroupSelectionRequired",
+      "sourceSha256": "dd78f6641ef202f99c49848810c1b82f13c7be31c3dc16486d4144e99e54632a",
+      "translationSha256": "3430ec47a5d49c8cc1e9e5bf5dc9c6adfee09862c8ed9b9021e02891af65f1b2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.NameNotFound",
+      "sourceSha256": "a99041fc37ea97dbeab38047d366de605801beb06a25f7ebf8b01cae0e11bca7",
+      "translationSha256": "9a3466d6dbb69f9dc8eeaaf5ff95f0ade539e1bb0b044fbee7f112377db79f5d",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.NameRequired",
+      "sourceSha256": "6467636d4733e8d7a884ceeecd1e255c0468e98869f0607e6525cf5be117a039",
+      "translationSha256": "725f47e01efe71623c38f5fde8d9cc11c72dceefbfbf52769b3571bff4154b3a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.NudgeSelectionRequired",
+      "sourceSha256": "32f3157573a8fb349c9f11a06de92408512b0c3e61381405e9afd2df194fa1ce",
+      "translationSha256": "8f942c08ac7a8b4debdff962f148175dc4291b5b50af68d237fd64134b6eb046",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.ParentSelectorRequired",
+      "sourceSha256": "f085bd7d457d052d37c1b2f47550880c512f3789112ef3002d3745491949f56a",
+      "translationSha256": "59edce7f9770358be2bbeb7753856bcc3605ab962197908f1215d2752b4c4b7f",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.ReorderBatchRequired",
+      "sourceSha256": "4f96db45b8ee0cdfa49f72cd2fec8cb3007c5848acd23170d15f582eb179d43f",
+      "translationSha256": "eb63727826ff7b1f84e59fb3780f077666c6fb44664019cfa7ae463d55356f28",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.ResizeTargetsRequired",
+      "sourceSha256": "4fda6527ea579a7358c89d603776e4a2cbaab0f4080396e068ad308ccee97358",
+      "translationSha256": "967d8d77aca5cca402b279ffd1734b81e1c9d88e9a163759790edad0df7845dc",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.SnapSelectionRequired",
+      "sourceSha256": "1112d9a1deff70f24225f69b2d3542135ecce06e9e053aaada83712b9a6bd79e",
+      "translationSha256": "0e9d0f8a0751ed6896c237cf6c541897be1aaa01652654a70e6ac8cf9755f5e3",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, placeholders, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Object.TargetSelectorRequired",
+      "sourceSha256": "33c8cd100f44a4465260c9910a5792bdb375091f54f21ef6cffc8469a76892f8",
+      "translationSha256": "27ec249db3731e39f06730769c3cd09be1b639c178d6cd89fdd62002fccbf46a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Operation.AssetPathRequired",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "fb65b53b3d6fb59899c4f3a3adb369f6982652bb4e8917000f1eb71fdfa32bb7",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.ClearBatchRequired",
+      "sourceSha256": "f17a0c0321c8d6962bae6bf201b34ae4bb96ab73e8d6027ac313f4312c88f257",
+      "translationSha256": "863a2c73b5d7e7ab035b39c3d848b820a03932c8d8de0cf9cee91b935050607c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.MoveBatchRequired",
+      "sourceSha256": "16e3b0ce41dd25224c7b218bc2fdfac4885188c72aab809dfb00423da5770661",
+      "translationSha256": "d62b1979f97ab890996bfe420b36a279330707cd62c2f508ace13817a3b05b79",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.NameRequired",
+      "sourceSha256": "4f5b0a7174fb1e86bb8895dfc65363c68440b38cc764bdaa6e4b232c89aa3664",
+      "translationSha256": "69212453e8c6335b5e41496d0da053bafd3a02f554d29eac749447eb55ee1b71",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.RelativeNameRequired",
+      "sourceSha256": "61807ccc822ac18daed16ff40084a827f1ec3a5c600718800ddea84faceedbd7",
+      "translationSha256": "200471cb84e6c2d5fd2e710b1653f8eaed940754d8f2b26e0e91d854bb8d7619",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.TargetNameRequired",
+      "sourceSha256": "50cdbbebad0d8904dd71213cff5fd08b5493b6856ea7fcfb9357366b2cf8a5be",
+      "translationSha256": "ef4327b4865bf8a71be20651c483b111834438b06177ec647a9dc03183f4dacb",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.AddLineFeeds",
+      "sourceSha256": "89420b625adfdc7fed157514fdcb24b85324c2132809e63b5b4deda79db1f11b",
+      "translationSha256": "f2c73b772c1cb8ebf83a7a0406fcecddfc5be732e994370d909d15f0390b6995",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.AllowRowSizing",
+      "sourceSha256": "e097a6012d420e74e093b0a530d36a528a70dc940abea45ed79dc1b5022e5b28",
+      "translationSha256": "c4e3cd8616eeb2410bd4a3c2aa2a21a2fa271263c71df4859cc337f150396bea",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.AlwaysOnBottom",
+      "sourceSha256": "142e75c1b0b8ff8a1a7122f9377ee09a0844b7a07646fbd1a89da37ee5b7ea07",
+      "translationSha256": "c406bf6e8ccdaa250503d1962b0ebfcbd76696de1180936d53dea216ecddec70",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.AlwaysOnTop",
+      "sourceSha256": "fc1fe7e1ee204465ff1aa8da2dddec2f32c47966cded86db8d924d0983a7075d",
+      "translationSha256": "b81cd84a290b80e3e78b8aea90be1516d495553a13c905b26640570cb1024a5d",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BackColor",
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "7a5e11e5e72acd3ab204d97e467f78d69943cb00774835da75475ccd8d7cf754",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BackStyle",
+      "sourceSha256": "8a7a132e8d5a70abeefd53ce3f9b03ac22b33cc5c52db4df1f86c7715c632988",
+      "translationSha256": "460c8f4cae2aba88fa885cb64bb51c6625316a04edf2b34d0694941f192f5878",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BindControls",
+      "sourceSha256": "7f603664413d55c8bc9acf02d03a19ae2ec2738a82fb6944efc4bab48bea0a18",
+      "translationSha256": "4febeac890f7f18439fa6d551bd3f9f0592baece82a42a677d98e9139ebfe682",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BorderColor",
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "5c3c3d7e7bf37937eae816ca6913a7b72fca29d3fae37d88092e23ad88ea0b94",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BorderStyle",
+      "sourceSha256": "852d12ee4870f2267e514c49c11779f30d7e45b5fdfd1e0e886a62e5f4a9ce47",
+      "translationSha256": "dabf9eaed3bc277ab63a5d3c49b931af66ab7a5421bc3e489ae0f1fb978cbe3d",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BorderWidth",
+      "sourceSha256": "385a872760e7ab4fcc48da36a57630f0b22dc7de39c0bcc8ebcf3c4c6b9b68ac",
+      "translationSha256": "1e7f85f7d5d55bf3be38dae0584d53a76752fdbdd82e1e26dccbd3f304ea4399",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BoundColumn",
+      "sourceSha256": "38917df282470a2e2f85b9d86a8cf4b381869264d1ac50130d713dfbb6e12067",
+      "translationSha256": "803e953af787ec2caaf476b4cde8b9b8183990963c8873370efd0b34a319e94a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.BufferMode",
+      "sourceSha256": "16793a65e0cfda0414031efc214e4dca811321f75354f4d54a00439a161be866",
+      "translationSha256": "58e6bb60da5b0cf3f597469c264076d0b00201b77791ba08c8d86a19fcd773f5",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ChildOrder",
+      "sourceSha256": "f4e758aa396881d1861e4ce75adcff7a0fa9b14b1b2f19fb7b37e33cbcd1ab87",
+      "translationSha256": "3c60f7bdfa53e62fd5896d18236eb95dcc3d6a2ec2686922bbb01136e1ed669a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnCount",
+      "sourceSha256": "f566c722fb27ed6934fdae56e8e5fe2263022518d9588a9285dded885a247fbe",
+      "translationSha256": "721091305e64fba5c8cbbf7f9175fce3d24be54fdaddfdcab0c4d98527e23430",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnLines",
+      "sourceSha256": "85154c5a81f5cba33c2bc958805fe3d83e7ea923e4de5ec0720d889fab31e6c1",
+      "translationSha256": "8c88096e95431fac6ff2837ecebae3e3252bf85c8133fdb247ee6f8784e03b91",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnOrder",
+      "sourceSha256": "9af5b34f260e3973c0b87c6e78aefbc83ffdaa4bb39561688b74baef6577c986",
+      "translationSha256": "9d9d8dbb3039ef12a333b4089610872d56018cde167b13a5d628766f98b25214",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnWidths",
+      "sourceSha256": "12af2b925d300a376adc9506f674814fa94d680a3da65d8635d550e6c9ffcac1",
+      "translationSha256": "e8b40249ab897995226f2a69441c624128f300cf97d06600bc267c5101c66718",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ControlBox",
+      "sourceSha256": "bf2501139f0afd8187156370051c0101764676fb351043307220f09de7e63d96",
+      "translationSha256": "30cb58c3f810c50bf9bc906881472c976af4d703765770a976fdc3ea89edf4ea",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ControlSource",
+      "sourceSha256": "7703ab882568c5f5a7a6f6e20d5126012d56df90f0c912dfff45de3caf3cb95e",
+      "translationSha256": "279a46a6b62453aa013ece3e660f8d6991d857335b18dd25591570d42ad19428",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.CurrentControl",
+      "sourceSha256": "cf50274fee2abb8d013f07b2ff0d1d1d8f7333c705746e9addd56ed45a55f085",
+      "translationSha256": "d1e37b04b9bf781df5451950d71a1dffb2fc677cefba464616bb66889068fbcc",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.Curvature",
+      "sourceSha256": "ce97e449f49f6dfbe3f9acdb172fac5489099bf62b908d501cb466f359d91508",
+      "translationSha256": "12b9dde2af70a08507a90a4f862442c3f76f0798c555470478f4b66f91cd392c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledBackColor",
+      "sourceSha256": "5585423fec738873d51269c2b9be882f32040949e8c23fa6f7ec58486ccb0546",
+      "translationSha256": "deccdd24e4558175c6864e8e12e6731b42c488a729ddc17f14ff23f1080e22a8",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledForeColor",
+      "sourceSha256": "3c06ddb5398e7fa53a86ca56fb28f7e2523455a33c1907d0f9a3ba7f060b6e06",
+      "translationSha256": "82146d00279447c117bc269d2a4838a090b0d21c212728293cea5b21e263714e",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledItemBackColor",
+      "sourceSha256": "c63c14580b5f13b51b6cc582513072c06c10d92cd7f9c381c007ebb6e52f147c",
+      "translationSha256": "f7bfb236c8203a68abac1bb0ef488b0ec1742154984c5aac39257da31711a4c0",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledItemForeColor",
+      "sourceSha256": "6109f1de4317e17eae45d09c68630ab8e205e4d90a7b8abc2ab867ccb8b6b2ca",
+      "translationSha256": "b6dd324f306f30c1bc02a276e4555a0961f5613256c5fce6858422406b3224c1",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledPicture",
+      "sourceSha256": "d0c6e4b30eb31a07e7ed1d52bacf99b8e245617f0612dc52bf8d27676c29019b",
+      "translationSha256": "639a0f183f49368e5a0e72032d4824db574f58f72469b1cb2cb8b21188ee065b",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DisplayValue",
+      "sourceSha256": "0baeaa6ef801384ff09dbad3b5fe96cab284b83c5d9285ae4c9944f4f1e7eede",
+      "translationSha256": "bcf6726b0dbda4efa1d0920497418855efb7bb944869373f972f99459ec32f02",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DownPicture",
+      "sourceSha256": "01413d021e746c95e435f5ed20bd56ecfacd32f3834f7ccae7b2bf6c5acbd1b1",
+      "translationSha256": "624868bb630acb8b33b305403ce1bc4978c9b7b9836f934ad6ce36b0d09cfecc",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DragMode",
+      "sourceSha256": "b7e5d0033079baa78b199b347b23ea9e80f6a7264659693fed26870d726c1259",
+      "translationSha256": "9e48b48f86c6358b8fa3d1a2c1a203e05ecfb43fa57b70d080800d9a1b073f4b",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DrawMode",
+      "sourceSha256": "2b3668b473e5231961b0cf44549b27d0c5f9e2305cc9f209b96e1e55ae61337f",
+      "translationSha256": "d2440b1133b29fb4097a584c60b1cccd3d057dda594a1e835a053141b917d1e9",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DrawStyle",
+      "sourceSha256": "3cd2b8b9dcc3bb69e413892aa74c0d121cb77bbb526985e5157375d4a232d51c",
+      "translationSha256": "25f05308948f7ed662015898b272b697a4ed4149af68f6bc4ae2e068abfdafbe",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.DrawWidth",
+      "sourceSha256": "08fe70d46780dd5b07d65e003da881999dc4ead0fb2113a47110ca691b305b20",
+      "translationSha256": "c1517e6c5f4aadc658204660a7d84086429dbf30c047aa86e34e5413101cb276",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FillColor",
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "fa27b8ba1a4bdcfda04f22f13f8cfedc1203e11f18002e4dba66de15ef09e8b7",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FillStyle",
+      "sourceSha256": "3e53aca5eac738d4893cd18cf4204872394356d3b7f20f064bcb41365095e035",
+      "translationSha256": "526f03d7a4f62baa9b7a6bbc32579091fb0aefce3a896fcc730f6ad2b7531093",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontBold",
+      "sourceSha256": "1dd8892a47d05cc903811b9cb71712aec68e4679b46088024c4d71c84c724d40",
+      "translationSha256": "fa88850cc9186d3a975d64b73d5ff4568c45634d33782e11c65bf20989dff7f2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontName",
+      "sourceSha256": "a6ac2c76d05355f0c2cc0e6c0412fd46689ef0d9274bab205e08525353415fb9",
+      "translationSha256": "2d74d8b6ca97d340cfb2a66056525416b63e2ffe04ff1533d85d64348d01ae44",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontOutline",
+      "sourceSha256": "f89020fd4bafe74991e69a7d988da1ca89ee04cce251cc8c5c6674b204e7b8e1",
+      "translationSha256": "88faa1ab20d239466bab71daa7b7bcce2e138b0f7834b6de72bc707323e39853",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontShadow",
+      "sourceSha256": "bbe4fee1d692af7c63103300a02fff7e2d8d637e8d661bf6ecf6cb7513880901",
+      "translationSha256": "19f0923547aa4447a1d99468503dc2ae2704faae9df5bab2faee0475b4a1664f",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontSize",
+      "sourceSha256": "f320119eda6dec0aaefe4b3ee3c42cda1da760dd4405c50bf3ce758e1408e2ed",
+      "translationSha256": "e9b58dfa7218efd9d21211276b04828194c173363fc018d042d4756858125deb",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontStrikethru",
+      "sourceSha256": "0d62615a8c94c5075128acc6879d272e196da6470d2101ed73bef8e6ee3fa3a4",
+      "translationSha256": "35ea3865ed550543abc65e9421b8e49e4e7771c009257aa29d3bfec54aaf1b93",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.FontUnderline",
+      "sourceSha256": "37687e24f60b3c0f16694236821eae8c52ed3941b7ff8aaf5fb3bb7fd452dfe3",
+      "translationSha256": "36c231905a9b4fb0d7ca064572b2ea42c135a7f0daeca7095e39771702a80955",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ForeColor",
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "3b48f601dc8ff42617c8aeea69846ec8b0e9c52cd6ccf9ec32db46a7fa0e0924",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.Format",
+      "sourceSha256": "e904c9ccfa425ff0b055d2c533462314d35a529b055e8abe41d49bb46d827427",
+      "translationSha256": "aa32c15eaf920e0f14b773b26807f28e56c4c35af53f036fd56b3f767e9134b1",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.GridLineColor",
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "4373d41384b87d207e7b47cb9e6f42e39d33fcd046f6cd112eb10799d379a96f",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.GridLineWidth",
+      "sourceSha256": "303a9a98a85189558fd6b44d9cc969a98701f5f19457732f82c34957a9e9fef3",
+      "translationSha256": "b024c57c4f14f89ae0c641e5a195b406d5e22b4b2bcf055e28c62f992784efe6",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.GridLines",
+      "sourceSha256": "d0983396b0ae41f455674fb7cd47eab3d3c8f8edeb94e8c7cef823c1040a4cd8",
+      "translationSha256": "13ac26056c9a4cd4ae01ffb533c7cad67d7809357134b737b9ed314c2027d3c4",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.HelpContextID",
+      "sourceSha256": "318d8f7fe67849f5b7c05965edecc078de605704da4f79351c079064a84e112e",
+      "translationSha256": "65fd5181d8ebc96e1873540c1455674c7557a72c883afbc25d9d2677c1a4560b",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightBackColor",
+      "sourceSha256": "12eb7fd3777afa400043072854be687c072a7f8a009c0dfac88d2197d552345a",
+      "translationSha256": "241fcd452244f023fd0f6e564e8c6307994d1f6f3eef8e8106d73e806b4b81e0",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightForeColor",
+      "sourceSha256": "d1908f533c1b4a6151a15685f099873de593ed03853633c18933d93243387180",
+      "translationSha256": "a28812425b587d1d247c49605183775188207d567fec4c7f9364fb42ece7b6db",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightStyle",
+      "sourceSha256": "c954ca80c7f519b8cba113c09c3183a0c983501dcaad63f78dab077c9d0f67ea",
+      "translationSha256": "43b32d9c40957600b6c6ca083f734047e1c9355c6e0959f9e2be358eed08f51a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.IncrementalSearch",
+      "sourceSha256": "6a32dd9987b799c3ec6e42e842254388a8bced7ee33107eae029fe891b62a671",
+      "translationSha256": "5c864d717e3176f0a8cebc8979bdf9e38b4385f5bca1b49d11a0ef97b03db1eb",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.InitialSelectedAlias",
+      "sourceSha256": "cc711e94d73da4c4ded3d19e4b77ddacd297ebb98c016c65d249a6d7d0122f90",
+      "translationSha256": "f4e827c30d16c581ff157d08589a8df9a526658d3246511706c0e97eb03c8504",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.IntegralHeight",
+      "sourceSha256": "9c9c9cdce2d966da53e262befbc5c2e60177d4b1efe0510438c898e688616bfa",
+      "translationSha256": "7fbd8603868290ffb4290edba28c180772c10d117c1b13a18ea2fb812ca62d63",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ItemBackColor",
+      "sourceSha256": "11e4f54e96af2267372b1d2b8fc2e42bb8e9abe29b39a738afd5901f4dfd4b83",
+      "translationSha256": "3035969bfe1f3bbd2393c20ceb71083b8c8529bc47fa05e9d36e83482eda2f9b",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ItemForeColor",
+      "sourceSha256": "5e07d5387437c2bb843195638b1b4170ffe6f04fcd6a7985178964e80c126add",
+      "translationSha256": "0f6c08d1ec8698e35db0638b9c3dae634577ee5e29780e8913c78a530b2fbb4c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.LeftColumn",
+      "sourceSha256": "454454bdd567bf09ac659a2c1e6dd3b12db1f1418d5d54317cbe517b5eece322",
+      "translationSha256": "75416668f4a54b92d7446feeab9ca43ec475fec14b5060c6bd048a6d2c86187d",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ListItemID",
+      "sourceSha256": "3bd60fdee6372994eb9c94b49ff23fd47a490b632b04cb05ef85c15ecd6df7d6",
+      "translationSha256": "824cfe91e6d7009159c2158b13295f8bf8fd8c825311411ce7051ff769c70df6",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.LockColumns",
+      "sourceSha256": "bb074b6be1df481bd77d0415c542310d7c6f0cbf51b492b251b7fad552b2640f",
+      "translationSha256": "762b0c6619ceb1c3a35d7dde89e0ff2506ae3f4ebd43f6551c365fd82fd6235f",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.LockScreen",
+      "sourceSha256": "988353ed6ef25580e1d10ba2a78f70d6f7dfe0f9a07d6953a41f536043b62b09",
+      "translationSha256": "3593340a802d7d092fe1b1fdb50fee8f9d495358eba1a84f0c199612c7fc5559",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.MousePointer",
+      "sourceSha256": "a40f00aab9bbce3309b3c77f451820b735029d9777073546a50d5dbedf876595",
+      "translationSha256": "1d75e23db2d20e270cde88ab6041556252066ac888158224198bf4fa71bb2bc1",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.OLEDragMode",
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "00269878f93b9c0e14e8680d281d189766c15eb07cd7a94dcb9eeeeb783b916c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.OLEDragPicture",
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "d862585406b397c5b8636992043579d299241d45880f3f9372c9d5a4195098c6",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.Picture",
+      "sourceSha256": "2cea274d0bedc39ec4ab6ba9e59ec889e3ed6fb56a1cf088a64d9b383378dc97",
+      "translationSha256": "d36c5a99bcb87f6fe05a40e1f96285bc56211e24c18ce9b4af10e4d6e97621fa",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.PictureMargin",
+      "sourceSha256": "7192e6e5c5ee8df4698d1c7d321c9c4bee99ddb089607cd312a16068b7210b68",
+      "translationSha256": "2b2656623a8c27a956e9dc99f598a211bddd36a190b326011adaac4ed3a382a7",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.RecordMark",
+      "sourceSha256": "ec0176654248a2274e24dbad48a425f7b4940ec4c169a90e9ca4ca0222dc6f45",
+      "translationSha256": "270c0889ee4acf59009c5c93676fa67389240de7885d50e1a758d5e20a3ce7f5",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.RecordSource",
+      "sourceSha256": "10d4feea9a08a54e7211bd87230ba138bf4b6813841d67cb4ccec04c73a63692",
+      "translationSha256": "30f2a8284edfb854a389e2104b342e2d3874bcb37d2f8e784fa19cf11166a811",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.RecordSourceType",
+      "sourceSha256": "bc41763b9c1ab33018029e38603b6712ac13eb956e76645f327116d4ba1bedcc",
+      "translationSha256": "5584fab1c488c73abb436fc8ebee2620dec7b3a8009062b6802949d556dc508c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.RowHeight",
+      "sourceSha256": "81b4d0362eb3361c7c236ee0430a7012786aee4cf95e3c3f5b95aa5f5ac89a4a",
+      "translationSha256": "574cb1ab8e2dd0757afc17828912a229183ee806779ce295708871211c51d2c4",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.RowSource",
+      "sourceSha256": "50f01f1d98210e72ad86c6f10314248c5d084a9b0ec3568455f45ee14be412ec",
+      "translationSha256": "61774767d5c89e21f520cbee907e4c41669fedb16b2879b11a9e23771a852b9a",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.RowSourceType",
+      "sourceSha256": "7dad7cb40c65e8b9ad33338cd1eff054b7fd15ff4493d6729d14daac033478aa",
+      "translationSha256": "a5e7a2f13e578a43035e8d1154cab234527718dc997b82935da7183c7f77694c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ScaleMode",
+      "sourceSha256": "f28b02dff319e414653a7aaa087935fc88301f970eba2d19a7ed992bc1224b21",
+      "translationSha256": "015519e84c5a98e3cbbfd152f79655506ccdbad90ba08f7708676b83fdfe52ec",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ScrollBars",
+      "sourceSha256": "9dda07aa660121e91f394cf85a1f6018a8de3868bc7ac9e3b6c57eae4f4602cd",
+      "translationSha256": "e02419c9dbcd2c9a0c2af8886518fcde66b75fd004abcd1c0587c67e5a2bb8b9",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedBackColor",
+      "sourceSha256": "a952088d1378a79c1fb45a2e34d0362dfb3d8b269af820d8e14fcf4ea618ad31",
+      "translationSha256": "d180098f96526e5b6c7fe8cf9ed96b8f05c09d3ca7ed15156423cd0a4c9acc89",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedForeColor",
+      "sourceSha256": "e865e193cf06c4e039038ea29f49f1a691eca8681b0ef0bc20ec666d3e111ac0",
+      "translationSha256": "770b96581de32210bc0a9aa450c3bc9f720402d8d30058fe77853607a85e3562",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedItemBackColor",
+      "sourceSha256": "baf75d75b6731d54dc23f285cf3afb114f873b517202df0927138b41f3cef9cf",
+      "translationSha256": "bbd2e580ab88e48c2187c9df8d3f62e536ab6071d28914100b01b9a942e75b30",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedItemForeColor",
+      "sourceSha256": "c7bc8cc8060736496a3423aaa2045921b09b9309887747936d53e118af886ee4",
+      "translationSha256": "a91c54acc0da027ca774d787c6d1cb386d5208fa032c35244984c7383f12c8e3",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ShowWindow",
+      "sourceSha256": "4ee0c5cae7662b168ec5859a29dc9e431960690640f9417fa760c224321e0848",
+      "translationSha256": "d76a1732880843b5c8018a85e8e0ff8c9c7140b8d5469d1afea3fa5088b43ab4",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.Sparse",
+      "sourceSha256": "d7af78c1f4c4a2defc54302095df328cc37c57ae94b7b45fb62a1a437eb3dcc3",
+      "translationSha256": "902d8c8bfbd64f4e6ba8f0ca0746de9dd6c4e08b86f6b6a1fcc7927bf3c4d6ab",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.SpecialEffect",
+      "sourceSha256": "5b159fe91e0009d47abf46665ef7829bc6f74a51335d815b1981829cd4f78b14",
+      "translationSha256": "c03255bf77cce6a06d024fcf76794a7efc80c115d0830d7ef0df1a7aecbc65c2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.StatusBarText",
+      "sourceSha256": "2dc92965d3666b2beca094824e96e8049e642a05ef9161d8bc9905ed9628e074",
+      "translationSha256": "45b86996ad44ded0fcfd2376a18a95ff95c19a4b1a1276a0a467559d7711e9b2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.Style",
+      "sourceSha256": "cb86eb2d914d37df6857c3cfe4827b5f770b01a86578120618b0b21572160be8",
+      "translationSha256": "06521aac8158a3c23b6409d198b052dc2fe5ec7939a123869235731c3384867c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.ToolTipText",
+      "sourceSha256": "6ad8aa19ab96e33e79ed5223bf59a666e39ee0b5eba3dc3a8569a875da17b8bf",
+      "translationSha256": "46e0549fd34c0f5f402148c41544b3aa73578fe899d1b1ca5cefe3b4e93ee2ca",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.WhatsThisHelp",
+      "sourceSha256": "0e8e5b3e4b386056af1e33b7c312741ffa62262a5318067172af36d601c66ad0",
+      "translationSha256": "cccd4b800e106a50ddd29abc623f6c50c2acded6796197c71d405cb5a9e699b2",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.WhatsThisHelpID",
+      "sourceSha256": "fcc3ca44ad7d3e2168fe0673cc1b703d82e2348c59259ae24af5e3bc5699019b",
+      "translationSha256": "8389e84117ac10c7ee691dfe29e0741b8188979443ba3cff38d04342eeada03c",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.WindowState",
+      "sourceSha256": "a8ee23732a04abaa28ed119773cb8e624010d3fe33f2de02e45e090f5235a517",
+      "translationSha256": "cc4b58797333e49a269a9dd930268d16595b78919244a165ce5f261d792683f5",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.PropertyLabel",
+      "sourceSha256": "d0655d644d05e70a3a9a1b961d5c8a048f45d899824fb606cd82ee37147fca0a",
+      "translationSha256": "380a047d5154cdc90bbcf094a3f928fe306ac22e210553e72c199211ec2e819e",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.RenamePropertyLabel",
+      "sourceSha256": "7dd3c1ee03756c58d58bff9af3867604d7afed73e4030f99032de1eaa64d71c9",
+      "translationSha256": "ee5c19be11bafd31c95da10fb20b9def07964d0081f1af7100ce459ce5896a95",
+      "verdict": "accept",
+      "reason": "Independent pt-BR review found the meaning, regional wording, and technical tokens faithful."
+    }
+  ],
+  "residualUncertainty": "AI text review cannot certify native-speaker cultural suitability, machine contract safety, or rendered UI behavior.",
+  "limits": "All rejected or uncertain proposals remain blocked pending correction and fresh review."
+}

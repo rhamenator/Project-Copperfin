@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions/invariant-exceptions-2026-11-03"
+  ],
+  "scope": "Independent exact-value invariant review against current en-US and en-GB/es-419/pt-BR catalogs",
+  "residualUncertainty": "Text and call-site review only; no VFP application file inventory or rendered UI verification. Each verdict applies only to the exact hashed catalog values.",
+  "entries": [
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "sourceSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "translationSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "verdict": "accept",
+      "reason": "The value is exclusively a list of VFP application filenames; changing spelling or case would misidentify the referenced .app files."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "sourceSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "translationSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "verdict": "accept",
+      "reason": "The value is exclusively a list of VFP application filenames; those file identifiers should remain exact in every locale."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+      "sourceSha256": "032a6b31f51913e4a6d49a36f5afaf4e35a09ecac4db0a4ed01a2acf5654bda1",
+      "translationSha256": "032a6b31f51913e4a6d49a36f5afaf4e35a09ecac4db0a4ed01a2acf5654bda1",
+      "verdict": "accept",
+      "reason": "Visual FoxPro is a product name, while varbinary and varchar are field type identifiers; translating either would weaken the exact DBF version label."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "sourceSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "translationSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "verdict": "accept",
+      "reason": "The value is exclusively a list of VFP application filenames; changing spelling or case would misidentify the referenced .app files."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "sourceSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "translationSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "verdict": "accept",
+      "reason": "The value is exclusively a list of VFP application filenames; those file identifiers should remain exact in every locale."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+      "sourceSha256": "032a6b31f51913e4a6d49a36f5afaf4e35a09ecac4db0a4ed01a2acf5654bda1",
+      "translationSha256": "032a6b31f51913e4a6d49a36f5afaf4e35a09ecac4db0a4ed01a2acf5654bda1",
+      "verdict": "accept",
+      "reason": "Visual FoxPro is a product name, while varbinary and varchar are field type identifiers; translating either would weaken the exact DBF version label."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "sourceSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "translationSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "verdict": "accept",
+      "reason": "The value is exclusively a list of VFP application filenames; changing spelling or case would misidentify the referenced .app files."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "sourceSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "translationSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "verdict": "accept",
+      "reason": "The value is exclusively a list of VFP application filenames; those file identifiers should remain exact in every locale."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+      "sourceSha256": "032a6b31f51913e4a6d49a36f5afaf4e35a09ecac4db0a4ed01a2acf5654bda1",
+      "translationSha256": "032a6b31f51913e4a6d49a36f5afaf4e35a09ecac4db0a4ed01a2acf5654bda1",
+      "verdict": "accept",
+      "reason": "Visual FoxPro is a product name, while varbinary and varchar are field type identifiers; translating either would weaken the exact DBF version label."
+    }
+  ]
+}
