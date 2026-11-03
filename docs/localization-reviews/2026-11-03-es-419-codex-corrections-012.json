@@ -1,0 +1,261 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "GPT-6 Codex",
+  "sessions": [
+    "Codex /root/review_en_gb_revisions",
+    "/root/review_pt_revisions"
+  ],
+  "scope": "31 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "Studio.Builder.LabelWizard.Description",
+      "sourceSha256": "f0ff234bdd771fbf72b7ceff3efcab0e2b7a334a5f48c60da94b5bb7cdb787c9",
+      "translationSha256": "b341d5bcf311dfc407fbe8e91ec6d9e8e92345425d253d66324d508b7a6239d4",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.ListBox.Description",
+      "sourceSha256": "d478b7405f5cfdf06c1ca07ffb2e220d4d70e3f311ab1ca939f77719cf9a3a6f",
+      "translationSha256": "5ca9b5b8c9c7c3ed8ae0c9035afc5bfc9bed216a3268bde3fd4ca111296657d6",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchCatalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "2a2669d69c0b9e245b2db4f4ed1ce008d3b17bac09a53599cfc6326dc90269d2",
+      "translationSha256": "1eaf510efd8ce49d957d2c2afacd3d08a83e39ea9de0437a4803e7673789c149",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired",
+      "sourceSha256": "0e8e01062545272ea59b0806c3c90bb58aceef2e5cb3bdcc3863a88b5c6e5557",
+      "translationSha256": "1ec9686ed9cf46f464f1a8e36c84e37dea6bdface718265cb7ba849f61c74042",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired",
+      "sourceSha256": "e1bce58ca552e5a6b52dae23ddeb12ac12c614d576b4e7afcec6aa5c47b7f0d0",
+      "translationSha256": "18aa2a8b346af3ad0ee514c5872070fc2fec8391aea3cb247d2eb7e5b12a2f4c",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired",
+      "sourceSha256": "a92b1fc831a15221db058316a3126097be0d9d73217cc4ef867d472ccd5129a2",
+      "translationSha256": "11d227eb0fea6f87097b9ae6190f63650474827d871397c1d9a6ffcbc6df630b",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired",
+      "sourceSha256": "4c39107b428e65fced6d9e3145a6c047e537c977da347e2bf55aefe15af85957",
+      "translationSha256": "f0cffab74e354c86fe9cf56bb07f8344af57d96e906e58ac1db48dcc9cb0258a",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired",
+      "sourceSha256": "cf9b90820b78dc153aae21e3ba1dabb3e556a3b89f47ff78c2afc70c499d2144",
+      "translationSha256": "2521ef77337dbf7823fbe3c508185587e33e5df9ae0cd8ae96f6ae29cb5d3601",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "9f156ca065ca969f65f1e377f8f9c2c347f322f1f3f3262e6884db66e6ae70a1",
+      "translationSha256": "092776ad897bf02d2ac9beae8ae79c05aef277b1f8280445070118cef622e901",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchDispatchCatalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "824397fd2fe5a93eea1751908b3438d6f82ed12ae8718f98da5f95d2035a0cbd",
+      "translationSha256": "b8a86b17f93e57873ab2cd8cf3c600a8d9db1ee42b60f829890d8c01aa58afa3",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.AdmittedDispatchRequired",
+      "sourceSha256": "8cd3d263245653f8f5c33c575956765fe163c75f1ae6c6ab8192a124db0240b2",
+      "translationSha256": "686cbd143927fab45bb9847c8c723880dbf2a4fe00ff3fbff5010a8897fc1087",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.AssetPathRequired",
+      "sourceSha256": "04611c551e9219ee3880f2f12a7b34582a2488202d8851dd7014a772d10e53f6",
+      "translationSha256": "4cd0e9b6f3d045c47cbb2f804fc3e6681936cc29769c686a85bcfc0bc289d0f6",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "6f6223a0cac2faf48a4d870f70840cc51ea9c3af57a6d6fd5d404705e4c33ced",
+      "translationSha256": "9c15246718798eb5e0d7d6ca1dd2cdb50fb107843945fc7d84a4e7279c396ea0",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.BatchFromDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "79394492b788a2afecd7de074441088f8efa1718bd2bc869c429385c98436119",
+      "translationSha256": "e280c6ac0258caf3471c81eb2fab2a9e170dbfa7e0c5704648d84f1661c388ee",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Catalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "903ce566010a633246af2bd0d7bf8be5c4b80b09f3bb14d7a07be8e546c054f7",
+      "translationSha256": "a5e0f8ae1b9dee64fc64c810297155ee91fc3acf61949d9f21a11f76c6f6adfd",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.AdmittedCreateOperationRequired",
+      "sourceSha256": "f00ce4d4fc3daa9dff2465fa2fbc21f26dcceaea3e38ef83572b56133aeefa98",
+      "translationSha256": "083c82ce0fda395dee32caafdca75ef8f0c2b55d2b1fc8bea71049b91efd5759",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.AssetPathRequired",
+      "sourceSha256": "8ea8db692c1a7a195c5f17b664841f937c3f863fee853e1001233a5c21fc4d2a",
+      "translationSha256": "8ecfb85f8a23736df35741893c885aab812b790139288f9483c014365438d38c",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.DescriptorFieldValuesRequired",
+      "sourceSha256": "c7a10acaaf3a641cecc081c0969c7a31c58afb53e8f478c6a0e749a98cc01d21",
+      "translationSha256": "1131e5ce416ebd136192337c85623131f1a83b1a9217a8c8e8cf6b9cae14832f",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.PlannedObjectNameRequired",
+      "sourceSha256": "fe8fea162313ddfb9b3f1794eeb205c0567dfe9436e67ec4204130825767ee74",
+      "translationSha256": "984b3d6aa0a1fdc673c76552db81956fa2a4153d1569127ca2a580ad43cdbaf0",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Dispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "74c7affd3014e3f0aa1a687f1cf9af27924e0ef0101314717f0c797181cef1d2",
+      "translationSha256": "028fd79cae5c82e8872e257ab7c314987489edce705a9fbc14bb008032f1dcd4",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch",
+      "sourceSha256": "b7026048fbc355ce5595cabe7ad829337793e8e44a49a6eb00dcd28cd2be99b4",
+      "translationSha256": "99a3bbdd9fdfed3e6d5cc1433c97902cb27b2506dcc7236f5e7bc3a999e6b885",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.AdmittedDispatchRequired",
+      "sourceSha256": "5602ced6af3ad6836ef4a1ab755dd6ccbc06c458d98280d05ce3edc012e57513",
+      "translationSha256": "5c863dff039208fa0a3e8d252ac58cf64a68928cd14163eb71411e5e1f16179a",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.AssetPathRequired",
+      "sourceSha256": "c5b188c1b99e486df571aab666df843eea8ccb12216f959c2b5d1187746b2700",
+      "translationSha256": "cde1fbf17a950d75e244277d9af7943b225948660ca090ef34ba51e92b9c8b4a",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "43598e8302cc7752586c2975151cd4ea442eca9733fb8d90c98b6c873a1fa73e",
+      "translationSha256": "23fa5f284692c3c045cbe27748574e35437b9751f06069106641e1856f9097fe",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.FromDispatch.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "2b0be28e32809f754df1490191fb78aaa23b0401ec49e35de9a83ba38105b7d0",
+      "translationSha256": "1eaa6f7f3d3727e5a39fc2fc702a0b419ceedcb400648faf2160b4b4dcf4b557",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.SelectionBatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "59b52a2efa976b4da43a20ba02402f6ab9762429cdd51a2b681ac3bd817a4e76",
+      "translationSha256": "b2d783926388550d210cf97e41ae0e851c5e7daef043cd209edf04440d0cb024",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "14783a0655c8908e60de12d53d06613cb602676b7436be67e6bb154686fa73cd",
+      "translationSha256": "5b209094e7e2d84a79684aaa9d4d35fc6e59141e77712283f18cf54c0e1e87d2",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.SelectionBatchPlan.Error.PaletteRequired",
+      "sourceSha256": "33ee127514a7a035778074e4821e11c403b6c4c4db17dd96ad4b50bbd6faaa3f",
+      "translationSha256": "a3a060e2a1ff1b5c025f2e331e50f6877b3e81c06c746bfe5257f739938727a9",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.SelectionCatalog.Error.PaletteRequired",
+      "sourceSha256": "4357405801cb068f6e3e8862ad53fb39cd383fdf03529a802803811faf69bf30",
+      "translationSha256": "27255d86785a516744780754d5a55ac77b0066bb860bfe76665b3ac5f6d0fcc8",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.SelectionDispatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "5756da3982f3ab8327986a631c3f9f673e1aa483f46199590107e43cd13a4449",
+      "translationSha256": "d790693a98c60d6dbe0843a547adf4463fe09a944f4be57a72952b3b98c1e8b4",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ToolboxCreation.SelectionPlan.Error.PaletteRequired",
+      "sourceSha256": "6d2e360cf21923064a0d2ac1fbcfc53ba94671a0a784894282f31142085c235c",
+      "translationSha256": "26c4d94c0d7f59d87e6d8de1d4afc9683f29e1b1529f4d87c235ce30c99c60fe",
+      "verdict": "accept",
+      "reason": "Proposal corrects Spanish orthography or terminology while preserving source meaning and protected syntax."
+    }
+  ]
+}
