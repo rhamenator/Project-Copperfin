@@ -21,7 +21,7 @@ Each `strings.json` file is a UTF-8 JSON object with stable semantic keys and lo
 `resources/locales/inventory.txt` is the versioned list of every packaged
 catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`.
 The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
-catalog whose wording has not passed qualified human review), and `pseudo`
+catalog awaiting the separate per-entry release gate), and `pseudo`
 (only test-only `qps-ploc`). Adding a locale requires a complete catalog and
 an inventory entry in the same change. The catalog generator, native parity
 test, and installer contract reject undeclared directories or declared catalogs
@@ -29,7 +29,9 @@ with missing keys, blank values, changed placeholders, invalid UTF-8, or
 missing/changed installed artifacts. `unreviewed` reports review status, not
 content completeness; equal key counts do not establish translation quality.
 
-The source-of-truth locale is `en-US`. Placeholder catalogs currently exist for `es-419`, `pt-BR`, and `qps-ploc`. The Spanish and Portuguese catalogs are not production-ready language packs until a separate reviewed language-pack issue says so.
+The source-of-truth locale is `en-US`. Populated but not yet release-ready
+catalogs exist for `es-419` and `pt-BR`; `qps-ploc` is test-only. A complete
+catalog and inventory entry do not by themselves make a language pack ready.
 
 ## Locale Selection
 
@@ -95,12 +97,16 @@ The `test_localization` CTest entry is the technical catalog gate. It compares e
 
 Passing the technical gate does not approve a regional language pack. For v1.0,
 the owner accepted independent AI linguistic review with disclosed limits on
-2026-11-03. Before `es-419` or `pt-BR` is marked production-ready, record
+2026-11-03. Before any target locale is marked production-ready, record
 per-entry source and translation identity, independent review provenance,
 regional references where useful, terminology decisions, regional suitability,
 tone/formality, euphemism/directness, offensive-wording concerns, and residual
 uncertainty with release evidence. AI review is not native-speaker or human
-cultural certification. Any unresolved source-identical prose, stale review,
+cultural certification. Every source-identical value outside the narrow
+exact-invariant list must be translated or have independent, exact-text review
+explaining why the source wording is intentional in that locale. The ledger
+records this as `intentional-source-text`. Any unresolved source-identical
+prose, stale review,
 or known runtime leak blocks promotion. A qualified human review remains
 valuable but is not the v1.0 release gate under this owner decision.
 

@@ -8,8 +8,21 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-LOCALES = ("es-419", "pt-BR")
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
+
+
+def reviewed_locales() -> tuple[str, ...]:
+    lines = (ROOT / "resources" / "locales" / "inventory.txt").read_text(
+        encoding="utf-8").splitlines()
+    if not lines or lines[0] != "version 1":
+        raise ValueError("Unsupported or missing locale inventory version")
+    entries = [line.split(" ") for line in lines[1:]]
+    if any(len(entry) != 2 for entry in entries):
+        raise ValueError("Malformed locale inventory")
+    locales = tuple(locale for locale, role in entries if role not in ("source", "pseudo"))
+    if len(locales) != len(set(locales)) or not locales:
+        raise ValueError("Locale inventory has duplicate or no reviewed locales")
+    return locales
 
 
 def digest(value: str) -> str:
@@ -67,7 +80,7 @@ def main() -> int:
             raise ValueError(f"Invariant exception source changed: {key}")
     failures = []
     evidence_cache = {}
-    for locale in LOCALES:
+    for locale in reviewed_locales():
         translated = load_catalog(locale)
         if translated.keys() != source.keys():
             raise ValueError(f"Catalog key mismatch: {locale}")
@@ -92,6 +105,11 @@ def main() -> int:
                     "reviewProvenance": None,
                 }
                 old = previous_entries.get(key)
+                if (status == "untriaged" and isinstance(old, dict) and
+                        old.get("sourceSha256") == record["sourceSha256"] and
+                        old.get("translationSha256") == record["translationSha256"] and
+                        old.get("translationStatus") == "intentional-source-text"):
+                    record["translationStatus"] = "intentional-source-text"
                 if (isinstance(old, dict) and old.get("sourceSha256") == record["sourceSha256"] and
                         old.get("translationSha256") == record["translationSha256"] and
                         old.get("reviewStatus") in ("ai-reviewed", "human-reviewed") and
@@ -105,7 +123,8 @@ def main() -> int:
         if (ledger.get("version") != 1 or ledger.get("locale") != locale or
                 not isinstance(entries, dict) or entries.keys() != source.keys()):
             raise ValueError(f"Malformed or incomplete review ledger: {locale}")
-        counts = {"candidate": 0, "untriaged": 0, "invariant": 0, "ai-reviewed": 0, "human-reviewed": 0}
+        counts = {"candidate": 0, "untriaged": 0, "invariant": 0,
+                  "intentional-source-text": 0, "ai-reviewed": 0, "human-reviewed": 0}
         for key, record in ledger["entries"].items():
             if not isinstance(record, dict):
                 failures.append(f"{locale}/{key}: review record must be an object")
@@ -117,7 +136,7 @@ def main() -> int:
                 continue
             status = record.get("translationStatus")
             review = record.get("reviewStatus")
-            if status not in ("candidate", "untriaged", "invariant") or review not in (
+            if status not in ("candidate", "untriaged", "invariant", "intentional-source-text") or review not in (
                     "unreviewed", "ai-reviewed", "human-reviewed"):
                 failures.append(f"{locale}/{key}: invalid status")
                 continue
@@ -125,6 +144,9 @@ def main() -> int:
                 failures.append(f"{locale}/{key}: invariant exception mismatch")
             if status == "untriaged" and translated[key] != source[key]:
                 failures.append(f"{locale}/{key}: changed value marked untriaged")
+            if status == "intentional-source-text" and (
+                    translated[key] != source[key] or review == "unreviewed"):
+                failures.append(f"{locale}/{key}: intentional source text requires unchanged value and review")
             if status == "candidate" and translated[key] == source[key]:
                 failures.append(f"{locale}/{key}: source-identical value marked translated candidate")
             if review != "unreviewed" and not isinstance(record.get("reviewProvenance"), str):
@@ -166,7 +188,9 @@ def main() -> int:
             if review in ("ai-reviewed", "human-reviewed"):
                 counts[review] += 1
         print(f"{locale}: {len(source)} populated; {counts['candidate']} translation candidates; "
-              f"{counts['untriaged']} unchanged/untriaged; {counts['invariant']} exact invariants; "
+              f"{counts['untriaged']} unchanged/untriaged; "
+              f"{counts['intentional-source-text']} intentional source text; "
+              f"{counts['invariant']} exact invariants; "
               f"{counts['ai-reviewed']} AI-reviewed; {counts['human-reviewed']} human-reviewed")
         if args.release and (counts["untriaged"] or counts["ai-reviewed"] + counts["human-reviewed"] != len(source)):
             failures.append(f"{locale}: translation triage or independent review incomplete")
