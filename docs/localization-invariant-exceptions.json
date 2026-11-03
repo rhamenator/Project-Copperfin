@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "sourceValue": "objectbrowser.app, browser.app, Foxref.app",
+      "reason": "VFP application filenames are invariant identifiers."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "sourceValue": "Toolbox.app, taskpane.app, gallery.app",
+      "reason": "VFP application filenames are invariant identifiers."
+    },
+    {
+      "key": "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+      "sourceValue": "Visual FoxPro varbinary/varchar",
+      "reason": "The product name and field type names are invariant identifiers."
+    }
+  ]
+}

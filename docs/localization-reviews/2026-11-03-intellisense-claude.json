@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "claude-sonnet-5-5",
+  "mode": "Claude Code CLI print mode with tools disabled",
+  "sessions": [
+    "a61f28a2-5a56-4c6a-85a2-3a599f025b6e",
+    "5e9bf211-1f2d-48f7-ac9d-f1210fb38c89"
+  ],
+  "scope": "Four IntelliSense descriptions in es-419 and pt-BR only; first pass requested two revisions, second pass accepted them.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.Use",
+      "sourceSha256": "c116cc9118f2d5e19043637568973f5e92c8f719a594e4c74717eb55f1b7c497",
+      "translationSha256": "d23646827cadf87513e365082fde8270b459e472a86becccf94ad1dc69113316",
+      "verdict": "accept",
+      "reason": "Faithful and natural. USE IN preserved. 'tabla libre' and 'cursor' are standard in Spanish VFP docs. Neutral Latin American register."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.In",
+      "sourceSha256": "3c6da4b6af7e4fca2b70bdf2eccf3a7e1745e08b5084cd1f8c513126c6b2bbed",
+      "translationSha256": "5d92739ce65c012badd226f95d7be842576046da028f6216479559ba5c76e664",
+      "verdict": "accept",
+      "reason": "Accurate. 'Palabra clave' is standard; 'área de trabajo' matches Spanish VFP terminology; 'alias' kept; tokens 'USE IN' and 'GO ... IN' unchanged."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.Set",
+      "sourceSha256": "93ec157093f49627ffa52a83bc4e73373092196ecff890cb26b08c809630915a",
+      "translationSha256": "9781f29a039bfb4956a81992e9d89279635d3edcfb54f3d275564431d93edd06",
+      "verdict": "accept",
+      "reason": "Meaning preserved, all four tokens (SAFETY, DELETED, EXCLUSIVE, TALK) intact. 'Estado de ejecución' is a natural rendering of 'runtime state'. Optional: 'como' instead of 'por ejemplo' would mirror the source's 'such as' more closely, but the current wording is fine."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.CreateObject",
+      "sourceSha256": "5c5ccb9464a9de5156c7d2a823a78fb772a2ccad9f0868ba3bdfa3295c2e08be",
+      "translationSha256": "8ec867999b24754ab5e7e68b468b82bc5b2f8c54a528df232db6b7da310b13a2",
+      "verdict": "accept",
+      "reason": "Semantically faithful: 'Función que activa un objeto de automatización COM o Copperfin' conveys function-style activation of an automation object. 'Activa' fits the activation sense (alternatives: 'crea', 'instancia'). 'Automatización' is standard in Latin American technical Spanish. COM and Copperfin are unchanged. Neutral, with no Spain-specific forms (no vosotros, no 'ordenador')."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Use",
+      "sourceSha256": "c116cc9118f2d5e19043637568973f5e92c8f719a594e4c74717eb55f1b7c497",
+      "translationSha256": "936fca6476afdc6b12314f408fe89433e0ad991d04e49cd21d55590caad3a681",
+      "verdict": "accept",
+      "reason": "Faithful and natural in Brazilian Portuguese. 'Tabela livre', 'cursor', and 'fecha um deles' are idiomatic and correct; USE IN preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.In",
+      "sourceSha256": "3c6da4b6af7e4fca2b70bdf2eccf3a7e1745e08b5084cd1f8c513126c6b2bbed",
+      "translationSha256": "7de1be909713d52b64359fcdca7b9b66c81a4f3792182f10da73c14c7b4c9a74",
+      "verdict": "accept",
+      "reason": "Accurate. 'Palavra-chave' is the correct pt-BR hyphenated form; 'área de trabalho' is standard VFP terminology; tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Set",
+      "sourceSha256": "93ec157093f49627ffa52a83bc4e73373092196ecff890cb26b08c809630915a",
+      "translationSha256": "89e33bca0dfb5b0bc64f5d1bf67d2302ca2c30f3c1bd405fe660e003ad071b46",
+      "verdict": "accept",
+      "reason": "Meaning and all four tokens preserved. 'Estado de execução' is natural and 'como' mirrors 'such as' well."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.CreateObject",
+      "sourceSha256": "5c5ccb9464a9de5156c7d2a823a78fb772a2ccad9f0868ba3bdfa3295c2e08be",
+      "translationSha256": "6c7af28cfaf444726266c7143983e6a399a441e20e342d81b0bf54ab9d3086ab",
+      "verdict": "accept",
+      "reason": "Faithful and natural for Brazilian Portuguese: 'Função que ativa um objeto de automação COM ou Copperfin.' 'Ativa' matches 'activation'. 'Automação' is the usual Brazilian technical term, as in 'Automação COM'. COM and Copperfin are unchanged. It uses no European Portuguese forms."
+    }
+  ],
+  "residualUncertainty": "Moderate-low. This is an independent automated review, not human or native-speaker certification. Main uncertainty: whether the two CreateObject revisions are needed versus stylistic preference, and whether the project's glossary mandates specific terms (e.g., 'área de trabajo', 'tabla libre') that I could not check against Microsoft's official localized VFP documentation. A native-speaker VFP developer should confirm before release. 'Activa/ativa' is a literal rendering of 'activation'. Some Microsoft-style docs use 'crea/cria' or 'instancia/instancia' for CreateObject. I judged the literal version acceptable because it matches the source wording. The source says 'Function-style', which both translations compress to 'Función/Função que…'. This is acceptable, but a reviewer who wants the 'style' nuance kept might prefer 'de estilo de función' or 'em estilo de função'. This is an independent automated linguistic review. It is not human or native-speaker certification.",
+  "limits": "No human or native-speaker cultural certification. Official localized VFP terminology was not independently verified."
+}

@@ -412,6 +412,14 @@ add_test(
 )
 
 find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
+if(COPPERFIN_PYTHON3_EXECUTABLE)
+    add_test(
+        NAME test_locale_review_status
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/scripts/check_locale_review_status.py"
+    )
+    set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;release")
+endif()
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
 if(COPPERFIN_POWERSHELL_EXECUTABLE AND COPPERFIN_POWERSHELL_EXECUTABLE MATCHES "^/snap/bin/")

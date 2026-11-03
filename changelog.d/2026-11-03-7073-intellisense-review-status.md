@@ -1,0 +1,1 @@
+- 2026-11-03: Localize four previously English IntelliSense descriptions in es-419 and pt-BR and add per-entry source, translation, and review status with a strict release-report mode (#7073).
