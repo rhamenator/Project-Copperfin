@@ -8,8 +8,8 @@ value may enter a release ledger.
 
 | Locale | First-pass strings | Independently accepted | Needs revision |
 | --- | ---: | ---: | ---: |
-| `de-DE` | 600 of 3,146 | 579 | 21 |
-| `fr-FR` | 520 of 3,146 | 477 | 43 |
+| `de-DE` | 760 of 3,146 | 728 | 32 |
+| `fr-FR` | 680 of 3,146 | 615 | 65 |
 | `it-IT` | 320 of 3,146 | 295 | 25 |
 | `es-ES` | 160 of 3,146 | 156 | 4 |
 | `pt-PT` | 160 of 3,146 | 158 | 2 |
