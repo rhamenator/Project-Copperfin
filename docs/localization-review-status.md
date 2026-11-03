@@ -3,12 +3,13 @@
 The `es-419` and `pt-BR` catalogs have complete key presence (3,146 entries each)
 but remain unreviewed language packs. `docs/localization-reviews/<locale>.json`
 records, for every key, the SHA-256 of the en-US source and current translation,
-source status, translation status, and independent review status/provenance.
+source status, translation status, and independent review status/provenance. Hashes detect stale source or translation text; metadata in a repository file does not authenticate that a model session occurred.
 `scripts/check_locale_review_status.py` validates those snapshots in normal
-CTest. Its `--release` mode fails while unchanged values are untriaged or any
-entry lacks independent review; it is currently expected to fail. A source or
+CTest. Its explicit `--release` mode fails while unchanged values are untriaged or any
+entry, including a justified invariant, lacks independent review; it is currently expected to fail. The normal CTest uses the `review-status` label and is not a production-readiness verdict. A source or
 translation edit invalidates the associated recorded evidence until that entry
-is explicitly updated. The normal check reports unresolved entries instead of
+is explicitly updated. `--write` preserves valid review links for entries whose
+source and translation hashes are unchanged. The normal check reports unresolved entries instead of
 mistaking populated keys for translated or verified text.
 
 Current status after localizing four documented IntelliSense examples in each

@@ -21,8 +21,15 @@ def load_catalog(locale: str) -> dict[str, str]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_object(path: Path, label: str) -> dict:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a JSON object: {path}")
+    return data
+
+
 def exceptions() -> dict[str, str]:
-    data = json.loads((ROOT / "docs" / "localization-invariant-exceptions.json").read_text(encoding="utf-8"))
+    data = load_object(ROOT / "docs" / "localization-invariant-exceptions.json", "Invariant exceptions")
     if data.get("version") != 1:
         raise ValueError("Unsupported invariant exception version")
     result = {}
@@ -67,12 +74,16 @@ def main() -> int:
         path = STATUS_ROOT / f"{locale}.json"
         if args.write:
             STATUS_ROOT.mkdir(parents=True, exist_ok=True)
+            previous = load_object(path, "Review ledger") if path.exists() else {}
+            previous_entries = previous.get("entries", {})
+            if not isinstance(previous_entries, dict):
+                raise ValueError(f"Malformed review ledger entries: {path}")
             records = {}
             for key in sorted(source):
                 value = translated[key]
                 status = ("invariant" if key in invariant and value == source[key]
                           else "untriaged" if value == source[key] else "candidate")
-                records[key] = {
+                record = {
                     "sourceSha256": digest(source[key]),
                     "sourceStatus": "current",
                     "translationSha256": digest(value),
@@ -80,12 +91,25 @@ def main() -> int:
                     "reviewStatus": "unreviewed",
                     "reviewProvenance": None,
                 }
+                old = previous_entries.get(key)
+                if (isinstance(old, dict) and old.get("sourceSha256") == record["sourceSha256"] and
+                        old.get("translationSha256") == record["translationSha256"] and
+                        old.get("reviewStatus") in ("ai-reviewed", "human-reviewed") and
+                        isinstance(old.get("reviewProvenance"), str)):
+                    record["reviewStatus"] = old["reviewStatus"]
+                    record["reviewProvenance"] = old["reviewProvenance"]
+                records[key] = record
             write_ledger(path, {"version": 1, "locale": locale, "entries": records})
-        ledger = json.loads(path.read_text(encoding="utf-8"))
-        if ledger.get("version") != 1 or ledger.get("locale") != locale or ledger["entries"].keys() != source.keys():
+        ledger = load_object(path, "Review ledger")
+        entries = ledger.get("entries")
+        if (ledger.get("version") != 1 or ledger.get("locale") != locale or
+                not isinstance(entries, dict) or entries.keys() != source.keys()):
             raise ValueError(f"Malformed or incomplete review ledger: {locale}")
         counts = {"candidate": 0, "untriaged": 0, "invariant": 0, "ai-reviewed": 0, "human-reviewed": 0}
         for key, record in ledger["entries"].items():
+            if not isinstance(record, dict):
+                failures.append(f"{locale}/{key}: review record must be an object")
+                continue
             if (record.get("sourceSha256") != digest(source[key]) or
                     record.get("translationSha256") != digest(translated[key]) or
                     record.get("sourceStatus") != "current"):
@@ -103,7 +127,7 @@ def main() -> int:
                 failures.append(f"{locale}/{key}: changed value marked untriaged")
             if status == "candidate" and translated[key] == source[key]:
                 failures.append(f"{locale}/{key}: source-identical value marked translated candidate")
-            if review != "unreviewed" and not record.get("reviewProvenance"):
+            if review != "unreviewed" and not isinstance(record.get("reviewProvenance"), str):
                 failures.append(f"{locale}/{key}: reviewed status lacks provenance")
             elif review != "unreviewed":
                 provenance = record["reviewProvenance"]
@@ -114,12 +138,25 @@ def main() -> int:
                     failures.append(f"{locale}/{key}: invalid review provenance path")
                 else:
                     if evidence_name not in evidence_cache:
-                        evidence_cache[evidence_name] = json.loads(
-                            (STATUS_ROOT / evidence_name).read_text(encoding="utf-8"))
+                        evidence_cache[evidence_name] = load_object(
+                            STATUS_ROOT / evidence_name, "Review evidence")
                     evidence = evidence_cache[evidence_name]
+                    evidence_entries = evidence.get("entries")
+                    if not isinstance(evidence_entries, list) or any(
+                            not isinstance(entry, dict) for entry in evidence_entries):
+                        raise ValueError(f"Malformed review evidence entries: {evidence_name}")
+                    if (not isinstance(evidence.get("date"), str) or not evidence["date"].strip() or
+                            not isinstance(evidence.get("scope"), str) or not evidence["scope"].strip()):
+                        raise ValueError(f"Review evidence lacks date or scope: {evidence_name}")
                     matching = [entry for entry in evidence.get("entries", [])
                                 if entry.get("locale") == locale and entry.get("key") == key]
                     expected_reviewer = "independent AI" if review == "ai-reviewed" else "human"
+                    if review == "ai-reviewed" and (
+                            not isinstance(evidence.get("model"), str) or not evidence["model"].strip() or
+                            not isinstance(evidence.get("sessions"), list) or not evidence["sessions"] or
+                            any(not isinstance(session, str) or not session.strip()
+                                for session in evidence["sessions"])):
+                        raise ValueError(f"AI review evidence lacks model or session metadata: {evidence_name}")
                     if (evidence.get("reviewerType") != expected_reviewer or
                             len(matching) != 1 or matching[0].get("verdict") != "accept" or
                             matching[0].get("sourceSha256") != record["sourceSha256"] or
@@ -141,4 +178,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, json.JSONDecodeError) as error:
+        print(f"FAIL: {error}")
+        raise SystemExit(1) from None

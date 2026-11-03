@@ -411,14 +411,15 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_installer_artifact_policy_contract_check.cmake
 )
 
-find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
+find_package(Python3 COMPONENTS Interpreter QUIET)
+set(COPPERFIN_PYTHON3_EXECUTABLE "${Python3_EXECUTABLE}")
 if(COPPERFIN_PYTHON3_EXECUTABLE)
     add_test(
         NAME test_locale_review_status
         COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/scripts/check_locale_review_status.py"
     )
-    set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;release")
+    set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;review-status")
 endif()
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
