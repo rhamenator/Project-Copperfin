@@ -99,10 +99,19 @@ def main() -> None:
                 "version 1\nen-US unreviewed\nde unreviewed\nqps-ploc pseudo\n",
                 "version 1\nen-US source\nde unreviewed\nqps-ploc unreviewed\n",
                 "version 1\nen-US source\nde unreviewed\nde-AT overlay de-DE\nqps-ploc pseudo\n",
-                "version 1\nen-US source\nde unreviewed\nde-u unreviewed\nde-u-co overlay de-u\nqps-ploc pseudo\n"):
+                "version 1\nen-US source\nde unreviewed\nde-u unreviewed\nde-u-co overlay de-u\nqps-ploc pseudo\n",
+                "version 1\nen-US source\nde unreviewed\npt-BR unreviewed\npt overlay pt-BR\nqps-ploc pseudo\n"):
             (root / "resources/locales/inventory.txt").write_text(inventory, encoding="utf-8")
             invalid = run(root, "--release")
             assert invalid.returncode != 0, inventory
+        write_json(root / "resources/locales/es-419/strings.json", translated)
+        for regional in ("es-MX", "es-Latn-MX"):
+            write_json(root / f"resources/locales/{regional}/strings.json", {})
+            (root / "resources/locales/inventory.txt").write_text(
+                "version 1\nen-US source\nde unreviewed\nes-419 unreviewed\n"
+                f"{regional} overlay es-419\nqps-ploc pseudo\n", encoding="utf-8")
+            valid = run(root, "--write")
+            assert valid.returncode == 0, valid.stdout + valid.stderr
     print("Locale release review gate fixture passed")
 
 

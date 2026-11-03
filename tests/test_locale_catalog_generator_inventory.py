@@ -89,6 +89,19 @@ def main() -> int:
             f"{synthetic}-u unreviewed\n{synthetic}-u-co overlay {synthetic}-u\n")
         (locales / "inventory.txt").write_text(singleton_inventory, encoding="utf-8")
         check(False, "skipped extension parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        for regional in ("es-MX", "es-Latn-MX"):
+            regional_path = locales / regional / "strings.json"
+            regional_path.parent.mkdir(exist_ok=True)
+            regional_path.write_text('{}\n', encoding="utf-8")
+            regional_inventory = overlay_inventory.replace(
+                "qps-ploc pseudo\n", f"{regional} overlay es-419\nqps-ploc pseudo\n")
+            (locales / "inventory.txt").write_text(regional_inventory, encoding="utf-8")
+            check(True, f"Latin American {regional} parent")
+            shutil.rmtree(regional_path.parent)
+        portuguese_inventory = overlay_inventory.replace(
+            "qps-ploc pseudo\n", "pt overlay pt-BR\nqps-ploc pseudo\n")
+        (locales / "inventory.txt").write_text(portuguese_inventory, encoding="utf-8")
+        check(False, "neutral Portuguese cannot overlay Brazil", "Overlay parent must be a previously declared runtime fallback ancestor")
         chained_inventory = overlay_inventory.replace(
             "qps-ploc pseudo\n", f"{overlay_locale}-AT overlay {overlay_locale}\nqps-ploc pseudo\n")
         (locales / "inventory.txt").write_text(chained_inventory, encoding="utf-8")

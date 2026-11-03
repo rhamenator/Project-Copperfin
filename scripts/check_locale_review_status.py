@@ -30,8 +30,10 @@ def reviewed_locales() -> dict[str, tuple[str, str | None]]:
                 (role == "source" and locale != "en-US") or
                 (role == "pseudo" and locale != "qps-ploc") or
                 (parent is not None and (parent not in locales or
-                 roles[parent] == "overlay" or not locale.startswith(parent + "-") or
-                 len(parent.rsplit("-", 1)[-1]) == 1))):
+                 roles[parent] == "overlay" or not (
+                     (locale.startswith(parent + "-") and
+                      len(parent.rsplit("-", 1)[-1]) != 1) or
+                     (parent == "es-419" and is_latin_american_spanish(locale)))))):
             raise ValueError(f"Invalid locale inventory entry: {line}")
         declared.add(locale)
         roles[locale] = role
@@ -41,6 +43,17 @@ def reviewed_locales() -> dict[str, tuple[str, str | None]]:
             sum(role == "pseudo" for role in roles.values()) != 1:
         raise ValueError("Locale inventory requires reviewed locales, en-US source, and qps-ploc pseudo")
     return locales
+
+
+def is_latin_american_spanish(locale: str) -> bool:
+    parts = locale.split("-")
+    if parts[0] != "es" or len(parts) < 2:
+        return False
+    region_index = 2 if len(parts[1]) == 4 and parts[1].isascii() and parts[1].isalpha() else 1
+    return len(parts) > region_index and parts[region_index] in {
+        "AR", "BO", "BR", "BZ", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
+        "JP", "MX", "NI", "PA", "PE", "PR", "PY", "SV", "US", "UY", "VE", "419",
+    }
 
 
 def digest(value: str) -> str:

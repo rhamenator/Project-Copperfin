@@ -138,6 +138,16 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
             std::vector<std::string>({"es-Latn-MX", "es-Latn", "es-419", "es", "en-US"}),
         "#3894: script-qualified Spanish should preserve the Latin American fallback contract");
     const std::vector<std::string> pseudo_chain = locale_fallback_chain("qPs-pLoC");
+    const auto mexico_chain = locale_fallback_chain("es-MX");
+    const auto script_mexico_chain = locale_fallback_chain("es-Latn-MX");
+    const auto neutral_portuguese_chain = locale_fallback_chain("pt");
+    expect(
+        std::find(mexico_chain.begin(), mexico_chain.end(), "es-419") != mexico_chain.end() &&
+            std::find(script_mexico_chain.begin(), script_mexico_chain.end(), "es-419") !=
+                script_mexico_chain.end() &&
+            std::find(neutral_portuguese_chain.begin(), neutral_portuguese_chain.end(), "pt-BR") ==
+                neutral_portuguese_chain.end(),
+        "#2348/#7074: regional overlay parents must agree with native fallback");
     expect(
         locale_fallback_chain("es-ES") == std::vector<std::string>({"es-ES", "es", "en-US"}) &&
             locale_fallback_chain("es-Latn-ES") ==
@@ -394,14 +404,16 @@ void test_product_locale_catalogs_have_key_parity() {
         if (role == "overlay") {
             fields >> parent;
         }
+        const auto fallback_chain = copperfin::localization::locale_fallback_chain(locale);
+        const bool parent_is_runtime_ancestor =
+            (locale.starts_with(parent + "-") || parent == "es-419") &&
+            std::find(fallback_chain.begin(), fallback_chain.end(), parent) != fallback_chain.end();
         const bool valid = !(fields >> extra) &&
             (role == "source" || role == "unreviewed" || role == "overlay" || role == "pseudo") &&
             (role != "overlay" || (!parent.empty() && parent != locale &&
                 parent != "en-US" && parent != "qps-ploc" &&
                 declared_locales.contains(parent) && !overlay_locales.contains(parent) &&
-                locale.starts_with(parent + "-") &&
-                (parent.rfind('-') == std::string::npos ||
-                    parent.size() - parent.rfind('-') != 2U))) &&
+                parent_is_runtime_ancestor)) &&
             locale == copperfin::localization::normalize_locale(locale) &&
             locale.find("/") == std::string::npos &&
             locale.find("\\") == std::string::npos &&
