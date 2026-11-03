@@ -1073,7 +1073,7 @@ internal static partial class Program
             (Arguments: new[] { @"C:\Samples\form.scx", "--not-a-startup-option" },
              Expected: "El argumento de inicio de Copperfin Studio '"),
             (Arguments: new[] { @"C:\Samples\invoice.frx", "--unique-id", "invoice-guid" },
-             Expected: "Los selectores de inicio se aplican solo a activos de formulario y biblioteca de clases.")
+             Expected: "Los selectores de inicio solo se aplican a recursos de formulario y de biblioteca de clases.")
         };
 
         foreach (var testCase in cases)
