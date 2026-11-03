@@ -150,6 +150,14 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
     expect(
         locale_fallback_chain("es-AR") ==
             std::vector<std::string>({"es-AR", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-US") ==
+                std::vector<std::string>({"es-US", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-BR") ==
+                std::vector<std::string>({"es-BR", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-BZ") ==
+                std::vector<std::string>({"es-BZ", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-JP") ==
+                std::vector<std::string>({"es-JP", "es-419", "es", "en-US"}) &&
             locale_fallback_chain("es-419") ==
                 std::vector<std::string>({"es-419", "es", "en-US"}) &&
             locale_fallback_chain("es-MX-x-ES") ==

@@ -46,6 +46,8 @@ Fallback is deterministic:
 ```text
 es-MX -> es-MX -> es-419 -> es -> en-US
 es-AR -> es-AR -> es-419 -> es -> en-US
+es-US -> es-US -> es-419 -> es -> en-US
+es-Latn-419 -> es-Latn-419 -> es-Latn -> es-419 -> es -> en-US
 es-ES -> es-ES -> es -> en-US
 es-Latn-ES -> es-Latn-ES -> es-Latn -> es -> en-US
 pt-BR -> pt-BR -> pt -> en-US
@@ -54,9 +56,11 @@ fr-CA -> fr-CA -> fr -> en-US
 unknown -> unknown -> en-US
 ```
 
-Only an explicit Spanish region in the Latin American region set uses `es-419`:
-AR, BO, CL, CO, CR, CU, DO, EC, GT, HN, MX, NI, PA, PE, PR, PY, SV, UY,
-and VE. A script subtag before the region does not change that decision.
+An explicit Spanish region uses `es-419` when it is in the
+[CLDR `es_419` parent-locale set](https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml):
+AR, BO, BR, BZ, CL, CO, CR, CU, DO, EC, GT, HN, JP, MX, NI, PA, PE, PR,
+PY, SV, US, UY, and VE. The numeric region `419` also uses that catalog.
+A script subtag before the region does not change that decision.
 `es-ES`, regionless Spanish, and Spanish with other regional subtags use their
 exact/script/language catalogs and then `en-US`; they do not inherit the Latin
 American pack. This is a fallback policy, not an assertion that `es-419` is
