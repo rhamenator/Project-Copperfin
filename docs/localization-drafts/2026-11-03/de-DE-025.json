@@ -1,0 +1,328 @@
+{
+  "session": "3659cce5-b4ec-4a66-8b97-7f7e3a1fa959",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "Runtime.Package.Error.NativeWrapperCMakeMissing",
+      "source": "Native wrapper CMake metadata is missing."
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
+      "source": "native wrapper primary-output build failed"
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
+      "source": "native wrapper primary-output configure failed"
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing",
+      "source": "native wrapper primary-output build did not materialize the requested output path."
+    },
+    {
+      "key": "Runtime.Package.Error.OpenFileFailed",
+      "source": "Unable to open file: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PackageRollbackFailed",
+      "source": "Unable to restore the previous package after materialization failed: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PackageTransactionStartFailed",
+      "source": "Unable to start transactional package replacement: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PlanInvalid",
+      "source": "Package plan is not valid."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactAmbiguous",
+      "source": "Multiple generated-launcher artifacts match the required package identity: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactMissing",
+      "source": "Required generated-launcher artifact is missing: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+      "source": "Generated-launcher artifact is not a direct regular file: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+      "source": "Generated-launcher artifact was renamed or replaced during read: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactUnexpected",
+      "source": "Unexpected generated-launcher artifact is present: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.OutputNameReserved",
+      "source": "Package output name conflicts with a reserved Copperfin artifact: {outputName} conflicts with {reservedName}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairPathRejected",
+      "source": "Runtime and debug manifest destinations must be direct regular files in the package root: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairPublishFailed",
+      "source": "Unable to publish the package manifest pair atomically: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairRollbackFailed",
+      "source": "Unable to restore the previous package manifest pair: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairStageFailed",
+      "source": "Unable to stage the package manifest pair: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairTransactionCollision",
+      "source": "A reserved manifest-transaction path is not owned by Copperfin: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PrimaryOutputMissing",
+      "source": "Primary-output finalization requires the materialized output path to exist."
+    },
+    {
+      "key": "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput",
+      "source": "Primary-output builds are only supported for library-output packages."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathEmpty",
+      "source": "Runtime host source path is empty."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile",
+      "source": "Runtime host source path does not point to a regular file."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathResolveFailed",
+      "source": "Unable to resolve runtime host source path."
+    },
+    {
+      "key": "Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath",
+      "source": "Security-enabled packaging requires an absolute runtime host source path."
+    },
+    {
+      "key": "Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName",
+      "source": "Security-enabled packaging requires canonical runtime host binary name."
+    },
+    {
+      "key": "Runtime.Package.Error.SourceFileMissing",
+      "source": "Source file does not exist: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.WriteFileFailed",
+      "source": "Unable to write file: {path}"
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+      "source": "Failed to analyze PRG source: file could not be opened."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message",
+      "source": "Likely infinite loop: DO WHILE condition is always true and no EXIT/RETURN path was found."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message",
+      "source": "DO WHILE block is missing ENDDO."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.FieldNotFound",
+      "source": "TOTAL field was not found: {fieldName}"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.OnFieldNotFound",
+      "source": "TOTAL ON field was not found"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.OnlyNumericFields",
+      "source": "TOTAL only supports numeric FIELDS in the first pass"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresLocalTableBackedCursor",
+      "source": "TOTAL requires a local table-backed cursor"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresNumericField",
+      "source": "TOTAL requires at least one numeric field to total"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresOnField",
+      "source": "TOTAL requires an ON field"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresSelectedWorkArea",
+      "source": "TOTAL requires a selected work area"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresToTarget",
+      "source": "TOTAL requires a TO target"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.TargetWorkAreaNotFound",
+      "source": "TOTAL target work area not found"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Runtime.Package.Error.NativeWrapperCMakeMissing",
+      "translation": "Die CMake-Metadaten des nativen Wrappers fehlen."
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
+      "translation": "Build der primären Ausgabe des nativen Wrappers fehlgeschlagen"
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
+      "translation": "Konfiguration der primären Ausgabe des nativen Wrappers fehlgeschlagen"
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing",
+      "translation": "Der Build der primären Ausgabe des nativen Wrappers hat den angeforderten Ausgabepfad nicht erzeugt."
+    },
+    {
+      "key": "Runtime.Package.Error.OpenFileFailed",
+      "translation": "Datei kann nicht geöffnet werden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PackageRollbackFailed",
+      "translation": "Das vorherige Paket konnte nach dem Fehlschlag der Materialisierung nicht wiederhergestellt werden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PackageTransactionStartFailed",
+      "translation": "Der transaktionale Paketaustausch kann nicht gestartet werden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PlanInvalid",
+      "translation": "Der Paketplan ist ungültig."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactAmbiguous",
+      "translation": "Mehrere generierte Launcher-Artefakte entsprechen der erforderlichen Paketidentität: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactMissing",
+      "translation": "Das erforderliche generierte Launcher-Artefakt fehlt: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+      "translation": "Das generierte Launcher-Artefakt ist keine direkte reguläre Datei: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+      "translation": "Das generierte Launcher-Artefakt wurde während des Lesens umbenannt oder ersetzt: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactUnexpected",
+      "translation": "Ein unerwartetes generiertes Launcher-Artefakt ist vorhanden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.OutputNameReserved",
+      "translation": "Der Name der Paketausgabe steht in Konflikt mit einem reservierten Copperfin-Artefakt: {outputName} steht in Konflikt mit {reservedName}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairPathRejected",
+      "translation": "Ziele für Runtime- und Debug-Manifest müssen direkte reguläre Dateien im Paketstamm sein: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairPublishFailed",
+      "translation": "Das Paket-Manifestpaar kann nicht atomar veröffentlicht werden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairRollbackFailed",
+      "translation": "Das vorherige Paket-Manifestpaar kann nicht wiederhergestellt werden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairStageFailed",
+      "translation": "Das Paket-Manifestpaar kann nicht bereitgestellt werden: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairTransactionCollision",
+      "translation": "Ein reservierter Manifest-Transaktionspfad gehört nicht Copperfin: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.PrimaryOutputMissing",
+      "translation": "Für den Abschluss der primären Ausgabe muss der materialisierte Ausgabepfad vorhanden sein."
+    },
+    {
+      "key": "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput",
+      "translation": "Builds der primären Ausgabe werden nur für Pakete mit Bibliotheksausgabe unterstützt."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathEmpty",
+      "translation": "Der Quellpfad des Runtime-Hosts ist leer."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile",
+      "translation": "Der Quellpfad des Runtime-Hosts verweist nicht auf eine reguläre Datei."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathResolveFailed",
+      "translation": "Der Quellpfad des Runtime-Hosts kann nicht aufgelöst werden."
+    },
+    {
+      "key": "Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath",
+      "translation": "Für die Paketierung mit aktivierter Sicherheit ist ein absoluter Quellpfad des Runtime-Hosts erforderlich."
+    },
+    {
+      "key": "Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName",
+      "translation": "Für die Paketierung mit aktivierter Sicherheit ist der kanonische Name der Runtime-Host-Binärdatei erforderlich."
+    },
+    {
+      "key": "Runtime.Package.Error.SourceFileMissing",
+      "translation": "Die Quelldatei existiert nicht: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.WriteFileFailed",
+      "translation": "Datei kann nicht geschrieben werden: {path}"
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+      "translation": "Analyse des PRG-Quellcodes fehlgeschlagen: Die Datei konnte nicht geöffnet werden."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message",
+      "translation": "Wahrscheinliche Endlosschleife: Die DO WHILE-Bedingung ist immer wahr, und es wurde kein EXIT/RETURN-Pfad gefunden."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message",
+      "translation": "Dem DO WHILE-Block fehlt ENDDO."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.FieldNotFound",
+      "translation": "Das TOTAL-Feld wurde nicht gefunden: {fieldName}"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.OnFieldNotFound",
+      "translation": "Das TOTAL-ON-Feld wurde nicht gefunden"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.OnlyNumericFields",
+      "translation": "TOTAL unterstützt im ersten Durchlauf nur numerische FIELDS"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresLocalTableBackedCursor",
+      "translation": "TOTAL erfordert einen lokalen, tabellenbasierten Cursor"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresNumericField",
+      "translation": "TOTAL erfordert mindestens ein numerisches Feld zum Summieren"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresOnField",
+      "translation": "TOTAL erfordert ein ON-Feld"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresSelectedWorkArea",
+      "translation": "TOTAL erfordert einen ausgewählten Arbeitsbereich"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresToTarget",
+      "translation": "TOTAL erfordert ein TO-Ziel"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.TargetWorkAreaNotFound",
+      "translation": "Der TOTAL-Zielarbeitsbereich wurde nicht gefunden"
+    }
+  ]
+}
