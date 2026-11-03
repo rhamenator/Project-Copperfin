@@ -215,7 +215,7 @@ internal static partial class Program
         Expect(pseudoTitle.StartsWith("[!! ", StringComparison.Ordinal) &&
                pseudoTitle.EndsWith(" !!]", StringComparison.Ordinal),
             "qps-ploc should decorate catalog-backed text so hard-coded UI stands out");
-        Expect(pseudoTitle.Length > english.Text("Studio.OpenDialogTitle").Length + 7,
+        Expect(pseudoTitle.Contains("Çóóþþééŕƒííñ", StringComparison.Ordinal),
             "qps-ploc should stretch unbroken words beyond its surrounding markers");
 
         var formatted = pseudo.Format("Studio.OpenDocumentStatus", @"C:\demo\orders.scx", "Visual form", 3);

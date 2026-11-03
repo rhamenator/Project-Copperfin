@@ -284,7 +284,9 @@ void test_placeholders_pseudo_locale_and_unicode() {
             "[!! already pseudo-localized !!]",
         "#4378: pseudo-localization should not wrap an already decorated catalog value twice");
     const auto stretched = copperfin::localization::pseudo_localize("A longword {name}");
-    expect(stretched.find("\xC3\x85\xC3\x85") != std::string::npos &&
+    const auto first_doubled_o = stretched.find("\xC3\xB8\xC3\xB8");
+    expect(first_doubled_o != std::string::npos &&
+            stretched.find("\xC3\xB8\xC3\xB8", first_doubled_o + 4U) != std::string::npos &&
             stretched.find("{name}") != std::string::npos,
         "#2348: pseudo-localization should stretch unbroken words without changing placeholders");
 
