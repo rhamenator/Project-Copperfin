@@ -3,9 +3,9 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 
 namespace Copperfin.VisualStudio;
@@ -2702,25 +2702,17 @@ internal sealed class CopperfinLocalization
     {
         Locale = NormalizeLocale(requestedLocale);
         fallbackChain = LocaleFallbackChain(Locale);
-        var root = catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
-        externalCatalogs = new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
-        if (!string.Equals(Locale, PseudoLocale, StringComparison.Ordinal))
-        {
-            foreach (var fallbackLocale in fallbackChain)
-            {
-                var catalog = CopperfinExternalLocaleCatalog.Load(fallbackLocale, root);
-                if (catalog is not null)
-                {
-                    externalCatalogs.Add(fallbackLocale, catalog);
-                }
-            }
-        }
+        catalogRoot = catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
+        externalCatalogs = new ConcurrentDictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
     }
 
     public string Locale { get; }
 
     private readonly IReadOnlyList<string> fallbackChain;
-    private readonly Dictionary<string, IReadOnlyDictionary<string, string>> externalCatalogs;
+    private readonly string? catalogRoot;
+    private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> externalCatalogs;
+    private static readonly IReadOnlyDictionary<string, string> EmptyExternalCatalog =
+        new Dictionary<string, string>(StringComparer.Ordinal);
 
     public static CopperfinLocalization FromEnvironment()
     {
@@ -2896,15 +2888,24 @@ internal sealed class CopperfinLocalization
         "MX", "NI", "PA", "PE", "PR", "PY", "SV", "UY", "VE", "419"
     };
 
-    private static bool IsAsciiLetters(string value) =>
-        value.All(ch => (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'));
+    private static bool IsAsciiLetters(string value) => IsAscii(value, allowLetters: true, allowDigits: false);
 
-    private static bool IsAsciiDigits(string value) =>
-        value.All(ch => ch >= '0' && ch <= '9');
+    private static bool IsAsciiDigits(string value) => IsAscii(value, allowLetters: false, allowDigits: true);
 
-    private static bool IsAsciiAlphaNumeric(string value) =>
-        value.All(ch => (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9'));
+    private static bool IsAsciiAlphaNumeric(string value) => IsAscii(value, allowLetters: true, allowDigits: true);
+
+    private static bool IsAscii(string value, bool allowLetters, bool allowDigits)
+    {
+        foreach (var ch in value)
+        {
+            if (!((allowLetters && ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) ||
+                  (allowDigits && ch >= '0' && ch <= '9')))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public string Text(string key)
     {
@@ -2916,10 +2917,14 @@ internal sealed class CopperfinLocalization
 
         foreach (var locale in fallbackChain)
         {
-            if (externalCatalogs.TryGetValue(locale, out var externalCatalog) &&
-                externalCatalog.TryGetValue(key, out var externalLocalized))
+            if (!string.Equals(Locale, PseudoLocale, StringComparison.Ordinal))
             {
-                return externalLocalized;
+                var externalCatalog = externalCatalogs.GetOrAdd(locale,
+                    candidate => CopperfinExternalLocaleCatalog.Load(candidate, catalogRoot) ?? EmptyExternalCatalog);
+                if (externalCatalog.TryGetValue(key, out var externalLocalized))
+                {
+                    return externalLocalized;
+                }
             }
             if (Catalogs.TryGetValue(locale, out var catalog) && catalog.TryGetValue(key, out var localized))
             {
