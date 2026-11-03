@@ -10,12 +10,12 @@
     "defaultContentPath": "cldr-json/cldr-core/defaultContent.json",
     "defaultContentSha256": "4e832b82e71024d89b326f8a901460e5a86242061b129470a73289b41301128e"
   },
-  "classification": "Explicit script subtag or Babel 2.17 likelySubtags; conservative script/language filter. Manual entries need direct Unicode review. RTL, logographic, and vertical-layout entries are deferred to separate UI work.",
+  "classification": "Explicit script subtag or Babel 2.17 likelySubtags, with Sunuwar (Sunu) confirmed as left-to-right alphabet/abugida by Unicode 16.0 chapter 13. RTL, logographic, and vertical-layout entries are deferred to separate UI work.",
   "counts": {
-    "target": 823,
+    "target": 825,
     "deferred-rtl": 82,
     "deferred-logographic": 21,
-    "manual-classification": 2
+    "manual-classification": 0
   },
   "entries": [
     {
@@ -4026,12 +4026,12 @@
     {
       "locale": "suz-Sunu",
       "script": "Sunu",
-      "scope": "manual-classification"
+      "scope": "target"
     },
     {
       "locale": "suz-Sunu-NP",
       "script": "Sunu",
-      "scope": "manual-classification"
+      "scope": "target"
     },
     {
       "locale": "sv",
@@ -4658,5 +4658,6 @@
       "script": "Latn",
       "scope": "target"
     }
-  ]
+  ],
+  "classificationReference": "https://unicode.org/versions/Unicode16.0.0/core-spec/chapter-13/"
 }

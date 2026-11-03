@@ -10,8 +10,10 @@ European targets are `de-DE`, `fr-FR`, `it-IT`, `es-ES`, and `pt-PT`.
 and [`defaultContent.json`](https://github.com/unicode-org/cldr-json/blob/7d2b9cb11cec08f4d333ad73209deb3df0711c3b/cldr-json/cldr-core/defaultContent.json).
 The latter is essential: it includes default regional tags such as `de-DE`,
 `fr-FR`, `it-IT`, and `es-ES`, which the available-locales file omits.
-The pinned union contains 928 tags: 823 candidate targets, 82 RTL deferred,
-21 logographic deferred, and 2 needing direct script classification. This is
+The pinned union contains 928 tags: 825 candidate targets, 82 RTL deferred,
+and 21 logographic deferred. [Unicode's Sunuwar chapter](https://unicode.org/versions/Unicode16.0.0/core-spec/chapter-13/)
+confirms the two `suz-Sunu` tags use a left-to-right alphabet or abugida, so
+they are included in the candidate count. This is
 a planning manifest, not the packaged locale inventory or a readiness claim.
 
 The script classification is a first filter based on explicit script subtags
