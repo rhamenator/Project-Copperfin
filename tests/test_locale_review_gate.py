@@ -61,10 +61,14 @@ def main() -> None:
         write_json(root / "docs/localization-reviews/fixture.json", evidence)
         passed = run(root, "--release")
         assert passed.returncode == 0, passed.stdout + passed.stderr
-        write_json(root / "resources/locales/de/strings.json",
-                   {**translated, "Syntax": "Nutze <Verzeichnis> und --output mit COPPERFIN_LOCALE"})
-        syntax_drift = run(root, "--release")
-        assert syntax_drift.returncode != 0 and "protected syntax drift" in syntax_drift.stdout
+        for invalid_syntax in (
+                "Nutze <Verzeichnis> und --output mit COPPERFIN_LOCALE",
+                "Nutze <directory> und --ausgabe mit COPPERFIN_LOCALE",
+                "Nutze <directory> und --output mit COPPERFIN_SPRACHE"):
+            write_json(root / "resources/locales/de/strings.json",
+                       {**translated, "Syntax": invalid_syntax})
+            syntax_drift = run(root, "--release")
+            assert syntax_drift.returncode != 0 and "protected syntax drift" in syntax_drift.stdout
         write_json(root / "resources/locales/de/strings.json", translated)
         rewritten = run(root, "--write")
         assert rewritten.returncode == 0, rewritten.stdout + rewritten.stderr
