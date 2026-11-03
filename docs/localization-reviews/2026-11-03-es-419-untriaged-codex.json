@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "sessions": [
+    "codex:/root/review_en_gb_revisions/es-419-untriaged-16-2026-11-03",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "14 formerly source-identical es-419 entries translated by one Codex instance and independently accepted by another; two proposals remain unresolved.",
+  "residualUncertainty": "Text-only AI review; rendered UI and regional cultural review remain open.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Project.ActiveProject",
+      "sourceSha256": "0edbd5e431a7945befd89826aaf50362135b4a1e3c76e0d353dd5219976a1562",
+      "translationSha256": "f52f7cbf556c09fe60de6be7bf8e6517e92ea88b2757925952c8e15583347a21",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Project.ClassSymbolDerivingFrom",
+      "sourceSha256": "d157b363746486dc5f3d27fa8f4a8115c2ea772668ae1a51d43dfd5f4f0fcbff",
+      "translationSha256": "8bcf5b4ff50b21aada43e87c9b09f45ba5b9d6614f5a9940bc19c7c3be591298",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Project.ClassSymbolInActiveProject",
+      "sourceSha256": "8abbd928fa72d2d40a3d42ad3a97fe55c9eed4c9a2816346b92fb202e8a23a3b",
+      "translationSha256": "0e4a83f9827beb575800ff48be257075d01a955425f50382317d77d7420dbb36",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Project.PreprocessorSymbolInActiveProject",
+      "sourceSha256": "28b6ef23feb375b15427198c13be6834be16eaeeae183934c12cd8cb5aef57b5",
+      "translationSha256": "3efb2bacec695b7ee667cbfadb04eb3e41a02d6faa4762de9af6b655d116ef58",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Project.ProcedureFunctionProgramSymbol",
+      "sourceSha256": "19ebd3c39e71883ea21bb9ef901583ef91128522b65dd92f4736971947eb344a",
+      "translationSha256": "ce4bd67cfa88c26d36cb40237bd5df41ac16b02f406a38873228faf1581349ab",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Project.ProcedureFunctionSymbol",
+      "sourceSha256": "36d6a4a60d9b03cb5589c0a63cea9bb4646f4ddbccde55e6d98f11f7b0122117",
+      "translationSha256": "fda5f8dea9322ec1296788f666d7b2fd85f8d3d7f68ee6d5051cab714c7d81f0",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Signature.GetObject.Documentation",
+      "sourceSha256": "0f49390c08340dd3db642285294a5783a63bf289a9e6c248132097df33c367b5",
+      "translationSha256": "4c60d392b9fa675f942865dec7a5660caeff06a132bc3ed1fc729a0411b0352c",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Signature.SqlConnect.Documentation",
+      "sourceSha256": "929cd65eaf02db0037044bce2afcd4698ef7011970133bd8d7dba98eceb06014",
+      "translationSha256": "033a933bf4fe26399b90f96adbd738063ae74343d83ad9e1456b2d8755cee6f2",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Signature.SqlDisconnect.Documentation",
+      "sourceSha256": "626000fa8e73b45e007181cc64cb85b9c628ffbf2f5ac2b302a31ba7c5c37e4e",
+      "translationSha256": "9e89be4193a519f0bf1913d2947661a0797d4cc5c71a41b25f2ef4cc0750abbd",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Signature.SqlExec.Documentation",
+      "sourceSha256": "e17003b13958da20b3b3cc1e4a386ca43f523896f047c37b6ef9ac082888de27",
+      "translationSha256": "12320f0acea72ae858b2bbbd01c493990f9f9a5740e915c9872a8bf09aba84da",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Signature.SqlStringConnect.Documentation",
+      "sourceSha256": "e06630f03cba50aba4f2b18c732fc35597b2c3618e50b22f84717758fa863511",
+      "translationSha256": "82a9ec183dcb0e8785ad9274cb8e79c54976c57e3be26a65f5cfaad667dabae3",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Category.Interop",
+      "sourceSha256": "77bb728f0ccce20313373a0104c80718ebf564de45485a4d6649d0eb5c1b2af7",
+      "translationSha256": "695e56746725b27fe1c0c0ced203667042e157e6ba6c952ecd10c2a0b73896aa",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "sourceSha256": "b66fed63ca35a4c464467c946b19922154ca76747ae4e3cf24b0a06dacc686d8",
+      "translationSha256": "a0c6d4c295528154ef2e789d56f8ec5a33c6c1d12416d575d0afb324f26b9c80",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "sourceSha256": "8dbe7a160983b88d75fb5007ef674a7524d6112cba73f17d7810fcc66454d717",
+      "translationSha256": "6066b9d69040f05bacdf7635b0f602bbc699262f1c7e4510ad12050d89c5d553",
+      "verdict": "accept",
+      "reason": "Natural Latin American Spanish; technical identifiers and placeholders are preserved."
+    }
+  ]
+}
