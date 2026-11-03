@@ -18,7 +18,9 @@ def main() -> int:
         root = Path(temporary)
         locales = root / "resources" / "locales"
         locales.mkdir(parents=True)
-        for locale in ("en-US", "es-419", "pt-BR", "qps-ploc"):
+        inventory = (repository / "resources" / "locales" / "inventory.txt").read_text(encoding="utf-8")
+        declared = {line.split()[0] for line in inventory.splitlines()[1:]}
+        for locale in declared:
             shutil.copytree(repository / "resources" / "locales" / locale, locales / locale)
         managed_source = root / "vsix" / "Copperfin.VisualStudio"
         managed_source.mkdir(parents=True)
@@ -26,12 +28,19 @@ def main() -> int:
             repository / "vsix" / "Copperfin.VisualStudio" / "CopperfinLocalization.cs",
             managed_source / "CopperfinLocalization.cs",
         )
-        inventory = (repository / "resources" / "locales" / "inventory.txt").read_text(encoding="utf-8")
+        synthetic_index = 1
+        while f"zz-{synthetic_index:03d}" in declared:
+            synthetic_index += 1
+        synthetic = f"zz-{synthetic_index:03d}"
+        expanded_inventory = inventory.replace(
+            "qps-ploc pseudo\n", f"{synthetic} unreviewed\nqps-ploc pseudo\n")
+        if expanded_inventory == inventory:
+            raise AssertionError("Inventory has no qps-ploc insertion point")
         (locales / "inventory.txt").write_text(
-            inventory.replace("qps-ploc pseudo\n", "fr-FR unreviewed\nqps-ploc pseudo\n"), encoding="utf-8"
+            expanded_inventory, encoding="utf-8"
         )
-        shutil.copytree(locales / "en-US", locales / "fr-FR")
-        path = locales / "fr-FR" / "strings.json"
+        shutil.copytree(locales / "en-US", locales / synthetic)
+        path = locales / synthetic / "strings.json"
         complete = json.loads(path.read_text(encoding="utf-8"))
 
         def check(expected_success: bool, label: str, expected_error: str = "") -> None:
@@ -70,8 +79,7 @@ def main() -> int:
         path.write_text(json.dumps(complete, ensure_ascii=False), encoding="utf-8")
         (locales / "inventory.txt").write_text(inventory, encoding="utf-8")
         check(False, "undeclared fifth-locale directory", "Locale directories do not match")
-        (locales / "inventory.txt").write_text(
-            inventory.replace("qps-ploc pseudo\n", "fr-FR unreviewed\nqps-ploc pseudo\n"), encoding="utf-8")
+        (locales / "inventory.txt").write_text(expanded_inventory, encoding="utf-8")
         (locales / "stray.txt").write_text("unexpected", encoding="utf-8")
         check(False, "undeclared locale-root file", "Locale root files do not match inventory contract")
     print("Synthetic fifth-locale generator checks passed.")

@@ -61,7 +61,9 @@ foreach(line IN LISTS inventory_lines)
         message(FATAL_ERROR "Installed locale catalog is missing or not a regular file: ${catalog_path}")
     endif()
     file(GLOB locale_children RELATIVE "${locale_install_root}/${locale}"
-        "${locale_install_root}/${locale}/*")
+        "${locale_install_root}/${locale}/*"
+        "${locale_install_root}/${locale}/.*")
+    list(REMOVE_ITEM locale_children "." "..")
     foreach(child IN LISTS locale_children)
         if(NOT child STREQUAL "strings.json")
             message(FATAL_ERROR "Undeclared installed locale content: ${locale}/${child}")
@@ -85,7 +87,9 @@ if(NOT source_count EQUAL 1 OR NOT pseudo_count EQUAL 1)
     message(FATAL_ERROR "Locale inventory requires one en-US source and one qps-ploc pseudo catalog")
 endif()
 
-file(GLOB installed_children RELATIVE "${locale_install_root}" "${locale_install_root}/*")
+file(GLOB installed_children RELATIVE "${locale_install_root}"
+    "${locale_install_root}/*" "${locale_install_root}/.*")
+list(REMOVE_ITEM installed_children "." "..")
 foreach(child IN LISTS installed_children)
     if(child STREQUAL "inventory.txt")
         continue()
