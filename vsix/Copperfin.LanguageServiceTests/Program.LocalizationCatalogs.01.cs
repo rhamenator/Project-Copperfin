@@ -130,6 +130,10 @@ internal static partial class Program
                 "#7071: compiled Spanish fallback should win over a later installed English catalog");
             Expect(CopperfinLocalization.LocaleFallbackChain("es-Latn-MX").SequenceEqual(
                        new[] { "es-Latn-MX", "es-Latn", "es-419", "es", "en-US", "en" }) &&
+                   CopperfinLocalization.CatalogEntries("es-MX")["Studio.ExitMenu"] == "&Salir" &&
+                   CopperfinLocalization.CatalogEntries("pt")["Studio.ExitMenu"] == "&Sair" &&
+                   CopperfinLocalization.CatalogKeys("es-MX").Count ==
+                       CopperfinLocalization.CatalogEntries("es-419").Count &&
                    CopperfinLocalization.LocaleFallbackChain("es-Latn-ES").SequenceEqual(
                        new[] { "es-Latn-ES", "es-Latn", "es", "en-US", "en" }) &&
                    CopperfinLocalization.LocaleFallbackChain("es-Latn-419").SequenceEqual(
@@ -139,6 +143,7 @@ internal static partial class Program
                    CopperfinLocalization.LocaleFallbackChain("es-JP").SequenceEqual(
                        new[] { "es-JP", "es-419", "es", "en-US", "en" }) &&
                    CopperfinLocalization.NormalizeLocale(null) == CopperfinLocalization.DefaultLocale &&
+                   CopperfinLocalization.NormalizeLocale("qps-ploc-XX") == CopperfinLocalization.PseudoLocale &&
                    CopperfinLocalization.NormalizeLocale("zh-cmn-hANS-cn") == "zh-cmn-Hans-CN" &&
                    CopperfinLocalization.NormalizeLocale("fr/../es-419") == "en-US",
                 "#7071: fallback is bounded and malformed filesystem-like tags cannot become catalog paths");

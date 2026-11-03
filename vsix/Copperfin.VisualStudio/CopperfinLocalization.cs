@@ -2748,26 +2748,21 @@ internal sealed class CopperfinLocalization
         var locale = NormalizeLocale(requestedLocale);
         if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
         {
-            locale = DefaultLocale;
+            return Catalogs[DefaultLocale];
         }
-
-        return Catalogs.TryGetValue(locale, out var catalog)
-            ? catalog
-            : Catalogs[DefaultLocale];
+        foreach (var candidate in LocaleFallbackChain(locale))
+        {
+            if (Catalogs.TryGetValue(candidate, out var catalog))
+            {
+                return catalog;
+            }
+        }
+        return Catalogs[DefaultLocale];
     }
 
     public static IReadOnlyCollection<string> CatalogKeys(string? requestedLocale = null)
     {
-        var locale = NormalizeLocale(requestedLocale);
-        if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
-        {
-            return new List<string>(Catalogs[DefaultLocale].Keys);
-        }
-
-        var catalog = Catalogs.TryGetValue(locale, out var localizedCatalog)
-            ? localizedCatalog
-            : Catalogs[DefaultLocale];
-        return new List<string>(catalog.Keys);
+        return new List<string>(CatalogEntries(requestedLocale).Keys);
     }
 
     public static string NormalizeLocale(string? requestedLocale)
@@ -2832,7 +2827,8 @@ internal sealed class CopperfinLocalization
             parts[index] = part;
         }
         var result = string.Join("-", parts);
-        return string.Equals(result, PseudoLocale, StringComparison.OrdinalIgnoreCase)
+        return (string.Equals(result, PseudoLocale, StringComparison.OrdinalIgnoreCase) ||
+                result.StartsWith(PseudoLocale + "-", StringComparison.OrdinalIgnoreCase))
             ? PseudoLocale : result;
     }
 
