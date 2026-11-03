@@ -21,35 +21,41 @@ foreach(locale IN ITEMS en-US es-419 pt-BR fr-FR qps-ploc)
     file(COPY_FILE "${source_locales}/${locale}/strings.json" "${installed_locales}/${locale}/strings.json")
 endforeach()
 
-function(check_install should_pass case_name)
+function(check_install should_pass case_name expected_error)
     execute_process(
         COMMAND "${CMAKE_COMMAND}"
             "-DINSTALL_ROOT=${installed_root}"
             "-DSOURCE_DIR=${source_root}"
             -P "${CMAKE_CURRENT_LIST_DIR}/run_locale_catalog_install_contract_check.cmake"
         RESULT_VARIABLE result
-        OUTPUT_QUIET ERROR_QUIET
+        OUTPUT_VARIABLE output ERROR_VARIABLE error
     )
     if(should_pass AND NOT result EQUAL 0)
         message(FATAL_ERROR "Valid locale install fixture failed: ${case_name}")
     elseif(NOT should_pass AND result EQUAL 0)
         message(FATAL_ERROR "Invalid locale install fixture passed: ${case_name}")
+    elseif(NOT should_pass)
+        string(FIND "${output}${error}" "${expected_error}" error_index)
+        if(error_index EQUAL -1)
+            message(FATAL_ERROR "${case_name} failed for the wrong reason: ${output}${error}")
+        endif()
     endif()
 endfunction()
 
-check_install(TRUE "valid fifth locale")
+check_install(TRUE "valid fifth locale" "")
 file(REMOVE "${installed_locales}/fr-FR/strings.json")
-check_install(FALSE "missing fifth locale")
+check_install(FALSE "missing fifth locale" "is missing or not a regular file")
 file(WRITE "${installed_locales}/fr-FR/strings.json" "")
-check_install(FALSE "empty fifth locale")
+check_install(FALSE "empty fifth locale" "is empty")
 file(COPY_FILE "${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-FR/strings.json")
 file(WRITE "${installed_locales}/fr-FR/strings.json" "{\"test\":\"changed\"}\n")
-check_install(FALSE "changed fifth locale")
+check_install(FALSE "changed fifth locale" "differs from source")
 file(COPY_FILE "${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-FR/strings.json")
 file(MAKE_DIRECTORY "${installed_locales}/undeclared")
-check_install(FALSE "undeclared locale directory")
+check_install(FALSE "undeclared locale directory" "Undeclared or malformed installed locale")
 file(REMOVE_RECURSE "${installed_locales}/undeclared")
 file(APPEND "${installed_locales}/inventory.txt" "../../escape unreviewed\n")
-check_install(FALSE "malformed inventory")
+file(APPEND "${source_locales}/inventory.txt" "../../escape unreviewed\n")
+check_install(FALSE "malformed inventory" "Malformed locale inventory entry")
 file(REMOVE_RECURSE "${TEST_ROOT}")
 message(STATUS "Locale catalog install contract test passed")

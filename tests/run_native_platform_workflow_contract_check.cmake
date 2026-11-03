@@ -494,6 +494,10 @@ require_text(".github/workflows/build-installers.yml"
     "-DINSTALL_ROOT=build/standalone-studio-install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake"
     "Windows installer locale install contract invocation")
 require_text_count(".github/workflows/build-installers.yml"
+    "-DINSTALL_ROOT=build/install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake"
+    2
+    "macOS and Linux locale install contract invocations")
+require_text_count(".github/workflows/build-installers.yml"
     "tests/run_package_version_contract_check.cmake"
     3
     "package version contract checks")
