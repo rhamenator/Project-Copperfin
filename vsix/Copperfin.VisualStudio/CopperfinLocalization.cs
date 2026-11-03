@@ -1846,7 +1846,7 @@ internal sealed class CopperfinLocalization
                 ["Studio.WorkspaceAgent.Capability.ElevatePrivileges"] = "Elevar privilégios",
                 ["Studio.WorkspaceAgent.Warning"] = "Aviso obrigatório do modo irrestrito",
                 ["Security.WorkspaceAgent.Warning.Unrestricted.Title"] = "Habilitar acesso local irrestrito para o agente?",
-                ["Security.WorkspaceAgent.Warning.Unrestricted.Body"] = "Um agente irrestrito pode ler, modificar ou excluir qualquer arquivo que voce possa acessar; executar processos locais; usar a rede; e expor segredos disponiveis para sua conta. O login no provedor nao concede esse acesso. O Copperfin nao elevara privilegios para administrador ou root.",
+                ["Security.WorkspaceAgent.Warning.Unrestricted.Body"] = "Um agente irrestrito pode ler, modificar ou excluir qualquer arquivo que você possa acessar; executar processos locais; usar a rede; e expor segredos disponíveis para sua conta. O login do provedor não concede esse acesso. O Copperfin não elevará privilégios para administrador ou root.",
                 ["Security.WorkspaceAgent.Warning.Unrestricted.Acknowledgement"] = "Entendo os riscos e quero habilitar o acesso irrestrito.",
                 ["Studio.WorkspaceAgent.Close"] = "Fechar",
                 ["Studio.EmptyDocumentStatus"] = "Abra um ou mais ativos VFP para inspecionar e editar no Copperfin Studio.",
