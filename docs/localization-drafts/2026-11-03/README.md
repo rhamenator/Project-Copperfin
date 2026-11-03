@@ -8,7 +8,7 @@ value may enter a release ledger.
 
 | Locale | First-pass strings | Independently accepted | Needs revision |
 | --- | ---: | ---: | ---: |
-| `de-DE` | 760 of 3,146 | 728 | 32 |
+| `de-DE` | 920 of 3,146 | 883 | 37 |
 | `fr-FR` | 680 of 3,146 | 615 | 65 |
 | `it-IT` | 480 of 3,146 | 437 | 43 |
 | `es-ES` | 320 of 3,146 | 311 | 9 |
@@ -18,6 +18,8 @@ value may enter a release ledger.
 Sonnet; later batches and the Italian start were authored by separate Codex
 instances while Claude was rate limited. Different Codex instances reviewed the
 German, French, Italian, Spain Spanish, and Portugal Portuguese drafts.
-Placeholder and protected syntax checks run on the
-drafts; complete catalog coverage, regional language review, installed package
-checks, and rendered UI tests remain open.
+Run `python3 scripts/check_locale_drafts.py` to check source order, placeholders,
+exact review hashes, and protected syntax for accepted entries. Revised entries
+may retain reported syntax defects until corrected and reviewed again. Complete
+catalog coverage, regional language review, installed package checks, and
+rendered UI tests remain open.
