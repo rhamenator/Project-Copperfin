@@ -486,6 +486,9 @@ require_text_count(".github/workflows/build-installers.yml"
     "tests/run_locale_catalog_install_contract_check.cmake"
     3
     "locale catalog install contract checks")
+require_text("scripts/test-windows-installer-lifecycle.ps1"
+    "-DSOURCE_DIR=$(Join-Path $PSScriptRoot '..')"
+    "Windows installer lifecycle locale inventory source")
 require_text_count(".github/workflows/build-installers.yml"
     "cmake --install build --prefix build/install"
     2
