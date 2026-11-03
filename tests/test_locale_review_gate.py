@@ -34,8 +34,10 @@ def main() -> None:
         (root / "resources/locales").mkdir(parents=True)
         (root / "resources/locales/inventory.txt").write_text(
             "version 1\nen-US source\nde unreviewed\nqps-ploc pseudo\n", encoding="utf-8")
-        source = {"Greeting": "Hello", "Token": "VFP"}
-        translated = {"Greeting": "Hallo", "Token": "VFP"}
+        source = {"Greeting": "Hello", "Token": "VFP",
+                  "Syntax": "Use <directory> and --output with COPPERFIN_LOCALE"}
+        translated = {"Greeting": "Hallo", "Token": "VFP",
+                      "Syntax": "Nutze <directory> und --output mit COPPERFIN_LOCALE"}
         write_json(root / "resources/locales/en-US/strings.json", source)
         write_json(root / "resources/locales/de/strings.json", translated)
         write_json(root / "docs/localization-invariant-exceptions.json", {"version": 1, "entries": []})
@@ -46,7 +48,7 @@ def main() -> None:
         ledger["entries"]["Token"]["translationStatus"] = "intentional-source-text"
         evidence = {"date": "2026-11-03", "reviewerType": "independent AI",
                     "model": "test-reviewer", "sessions": ["test-session"],
-                    "scope": "Two synthetic review-gate strings", "entries": []}
+                    "scope": "Three synthetic review-gate strings", "entries": []}
         for key in source:
             record = ledger["entries"][key]
             record["reviewStatus"] = "ai-reviewed"
@@ -59,11 +61,16 @@ def main() -> None:
         write_json(root / "docs/localization-reviews/fixture.json", evidence)
         passed = run(root, "--release")
         assert passed.returncode == 0, passed.stdout + passed.stderr
+        write_json(root / "resources/locales/de/strings.json",
+                   {**translated, "Syntax": "Nutze <Verzeichnis> und --output mit COPPERFIN_LOCALE"})
+        syntax_drift = run(root, "--release")
+        assert syntax_drift.returncode != 0 and "protected syntax drift" in syntax_drift.stdout
+        write_json(root / "resources/locales/de/strings.json", translated)
         rewritten = run(root, "--write")
         assert rewritten.returncode == 0, rewritten.stdout + rewritten.stderr
         assert json.loads(ledger_path.read_text(encoding="utf-8"))["entries"]["Token"][
             "translationStatus"] == "intentional-source-text"
-        write_json(root / "resources/locales/de/strings.json", {"Greeting": "Guten Tag", "Token": "VFP"})
+        write_json(root / "resources/locales/de/strings.json", {**translated, "Greeting": "Guten Tag"})
         stale = run(root, "--release")
         assert stale.returncode != 0 and "changed since status" in stale.stdout
         write_json(root / "resources/locales/de/strings.json", translated)

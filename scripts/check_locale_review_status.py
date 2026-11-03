@@ -2,13 +2,20 @@
 """Track source, translation and independent-review state for v1 locale entries."""
 
 import argparse
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parent.parent
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
+PROTECTED_SYNTAX = re.compile(r"<[A-Za-z][A-Za-z0-9_-]*>|(?<!\w)--[A-Za-z][A-Za-z0-9-]*|\bCOPPERFIN_[A-Z0-9_]+\b")
+
+
+def protected_syntax(value: str) -> Counter[str]:
+    return Counter(PROTECTED_SYNTAX.findall(value))
 
 
 def reviewed_locales() -> dict[str, tuple[str, str | None]]:
@@ -113,6 +120,9 @@ def main() -> int:
     evidence_cache = {}
     for locale, (role, parent) in reviewed_locales().items():
         translated = load_catalog(locale)
+        for key in translated.keys() & source.keys():
+            if protected_syntax(translated[key]) != protected_syntax(source[key]):
+                failures.append(f"{locale}/{key}: protected syntax drift")
         if (role == "overlay" and not translated.keys() <= source.keys()) or (
                 role != "overlay" and translated.keys() != source.keys()):
             raise ValueError(f"Catalog key mismatch: {locale}")
