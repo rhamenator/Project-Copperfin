@@ -49,8 +49,8 @@ individual Copperfin sentences or regional cultural suitability.
 
 The corrected examples have local managed IntelliSense completion and Quick
 Info tests. Claude Sonnet 5.5 independently reviewed all eight corrected
-entries in two read-only passes; the second accepted two revisions to the
-CreateObject phrasing. Exact source/translation hashes, session provenance,
+entries in three read-only passes; the third accepted clearer
+CreateObject wording after review feedback. Exact source/translation hashes, session provenance,
 decisions and residual uncertainty are retained in
 `docs/localization-reviews/2026-11-03-intellisense-claude.json`. No native
 speaker or qualified human has reviewed either complete

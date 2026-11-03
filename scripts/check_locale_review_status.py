@@ -22,7 +22,7 @@ def load_catalog(locale: str) -> dict[str, str]:
 
 
 def exceptions() -> dict[str, str]:
-    data = json.loads((ROOT / "docs" / "localization-invariant-exceptions.json").read_text())
+    data = json.loads((ROOT / "docs" / "localization-invariant-exceptions.json").read_text(encoding="utf-8"))
     if data.get("version") != 1:
         raise ValueError("Unsupported invariant exception version")
     result = {}

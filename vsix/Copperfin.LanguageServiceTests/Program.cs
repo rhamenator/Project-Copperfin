@@ -55,7 +55,7 @@ internal static partial class Program
         TestReportSectionsPreserveNullableOrdinalMetadata();
         TestHostSnapshotPreservesUnplacedReportLayoutObjects();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
-        TestUntranslatedIntelliSenseExamplesUseSelectedLocale();
+        TestLocalizedIntelliSenseExamplesUseSelectedLocale();
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
         TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset();
         TestLocalizationCatalogFormatsWithInvariantCulture();
@@ -303,7 +303,7 @@ internal static partial class Program
         }
     }
 
-    private static void TestUntranslatedIntelliSenseExamplesUseSelectedLocale()
+    private static void TestLocalizedIntelliSenseExamplesUseSelectedLocale()
     {
         var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
         try

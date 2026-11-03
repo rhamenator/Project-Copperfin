@@ -2511,7 +2511,7 @@
   "LanguageService.IntelliSense.Keyword.For": "Keyword: starts a numeric loop.",
   "LanguageService.IntelliSense.Keyword.EndFor": "Keyword: ends a numeric loop.",
   "LanguageService.IntelliSense.Keyword.OnError": "Command: installs an error handler.",
-  "LanguageService.IntelliSense.Keyword.CreateObject": "Función que activa un objeto de automatización COM o Copperfin.",
+  "LanguageService.IntelliSense.Keyword.CreateObject": "Función que crea un objeto de automatización COM o Copperfin.",
   "LanguageService.IntelliSense.Keyword.GetObject": "Function-style bind to an existing COM or moniker-based automation object.",
   "LanguageService.IntelliSense.Keyword.SqlConnect": "Function: opens a SQL pass-through connection.",
   "LanguageService.IntelliSense.Keyword.SqlStringConnect": "Function: opens SQL pass-through with a raw connection string.",
