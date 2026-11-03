@@ -416,6 +416,7 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
     add_test(
         NAME test_post_v1_locale_registry
         COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}
+            -B
             ${CMAKE_CURRENT_SOURCE_DIR}/test_post_v1_locale_registry.py
     )
 endif()
