@@ -30,7 +30,8 @@ def reviewed_locales() -> dict[str, tuple[str, str | None]]:
                 (role == "source" and locale != "en-US") or
                 (role == "pseudo" and locale != "qps-ploc") or
                 (parent is not None and (parent not in locales or
-                 roles[parent] == "overlay" or not locale.startswith(parent + "-")))):
+                 roles[parent] == "overlay" or not locale.startswith(parent + "-") or
+                 len(parent.rsplit("-", 1)[-1]) == 1))):
             raise ValueError(f"Invalid locale inventory entry: {line}")
         declared.add(locale)
         roles[locale] = role

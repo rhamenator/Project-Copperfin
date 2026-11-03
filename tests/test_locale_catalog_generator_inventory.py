@@ -84,6 +84,11 @@ def main() -> int:
             f"{synthetic}-AT unreviewed\n{overlay_locale} overlay {synthetic}-AT\n")
         (locales / "inventory.txt").write_text(sibling_inventory, encoding="utf-8")
         check(False, "sibling regional parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        singleton_inventory = overlay_inventory.replace(
+            f"{overlay_locale} overlay {synthetic}\n",
+            f"{synthetic}-u unreviewed\n{synthetic}-u-co overlay {synthetic}-u\n")
+        (locales / "inventory.txt").write_text(singleton_inventory, encoding="utf-8")
+        check(False, "skipped extension parent", "Overlay parent must be a previously declared runtime fallback ancestor")
         chained_inventory = overlay_inventory.replace(
             "qps-ploc pseudo\n", f"{overlay_locale}-AT overlay {overlay_locale}\nqps-ploc pseudo\n")
         (locales / "inventory.txt").write_text(chained_inventory, encoding="utf-8")

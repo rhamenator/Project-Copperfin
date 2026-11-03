@@ -399,7 +399,9 @@ void test_product_locale_catalogs_have_key_parity() {
             (role != "overlay" || (!parent.empty() && parent != locale &&
                 parent != "en-US" && parent != "qps-ploc" &&
                 declared_locales.contains(parent) && !overlay_locales.contains(parent) &&
-                locale.starts_with(parent + "-"))) &&
+                locale.starts_with(parent + "-") &&
+                (parent.rfind('-') == std::string::npos ||
+                    parent.size() - parent.rfind('-') != 2U))) &&
             locale == copperfin::localization::normalize_locale(locale) &&
             locale.find("/") == std::string::npos &&
             locale.find("\\") == std::string::npos &&

@@ -61,10 +61,18 @@ string(REPLACE "de-DE overlay de" "de-DE overlay fr-FR" wrong_parent_inventory "
 file(WRITE "${source_locales}/inventory.txt" "${wrong_parent_inventory}")
 file(WRITE "${installed_locales}/inventory.txt" "${wrong_parent_inventory}")
 check_install(FALSE "cross-language overlay parent" "Overlay parent must be a full runtime fallback ancestor")
+string(REPLACE "de-DE overlay de" "de-u unreviewed\nde-u-co overlay de-u" singleton_inventory "${overlay_inventory}")
+file(MAKE_DIRECTORY "${source_locales}/de-u" "${installed_locales}/de-u")
+file(WRITE "${source_locales}/de-u/strings.json" "{\"test\":\"Hallo\"}\n")
+file(COPY_FILE "${source_locales}/de-u/strings.json" "${installed_locales}/de-u/strings.json")
+file(WRITE "${source_locales}/inventory.txt" "${singleton_inventory}")
+file(WRITE "${installed_locales}/inventory.txt" "${singleton_inventory}")
+check_install(FALSE "skipped extension parent" "Overlay parent must be a full runtime fallback ancestor")
 file(WRITE "${source_locales}/inventory.txt" "${inventory}")
 file(WRITE "${installed_locales}/inventory.txt" "${inventory}")
 file(REMOVE_RECURSE "${source_locales}/de" "${source_locales}/de-DE"
-    "${installed_locales}/de" "${installed_locales}/de-DE")
+    "${source_locales}/de-u" "${installed_locales}/de" "${installed_locales}/de-DE"
+    "${installed_locales}/de-u")
 execute_process(
     COMMAND "${CMAKE_COMMAND}" "-DINSTALL_ROOT=${installed_root}"
         -P "${CMAKE_CURRENT_LIST_DIR}/run_locale_catalog_install_contract_check.cmake"
