@@ -179,12 +179,10 @@ preservation capture using fractional excluded columns is byte-identical
 between the retained pre-wire baseline and the review-fix candidate under both
 GNU and Clang at SHA-256
 `43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`;
-all four framing audits pass and stderr is empty. This preliminary dirty-tree
-capture is retained at
-`build/listitem-column-native/preservation-v2-precommit-20261103/`; an
-exact-head repeat remains required. Fresh frozen-v5 broader qualification,
-hosted checks and clean exact-head authorized review also remain required
-before merge.
+all four framing audits pass and stderr is empty. The exact-head repeat at
+`736357435c33f1577425fb3637ecea1fb667c0f2` is retained at
+`build/listitem-column-native/preservation-v2/` with zero-status compile,
+execution, audit and comparison receipts.
 
 The first frozen-v5 GNU broader run passed 130/131 tests. Its sole failure,
 `test_prg_engine_runtime_surface_functions`, exposed that the newly transported
@@ -193,6 +191,17 @@ consume ordinary two-column `List(row, column)` reads and return column one.
 The repair makes that hook explicitly one-selector-only, matching the already
 guarded ListItem hook. The failed v5 receipt remains retained; a successor
 manifest is required before either broader compiler lane is repeated.
+
+Frozen-v6 qualification retains the one-selector guard and passes all 131
+selected tests under GNU in 785.22 seconds and Clang sanitizers in 5051.29
+seconds, with zero failures, skips or disabled tests. Product and remote heads
+are both `736357435c33f1577425fb3637ecea1fb667c0f2`; the immutable 620-input
+manifest reverified after both lanes. Retained log/JUnit SHA-256 pairs are GNU
+`92a1444a4a41a6736fe1b5e4c08c5264fa6e1cc5e1e87a68adae8499df73c179` /
+`778e2cf4ddd7f4765c19ef608752244a794dc43c150c90e877269e80ee219cc1`
+and Clang `6579d54f135544456c8157ca823a45bd31cb47f943f667894e5226247830748c` /
+`de12f935906e92346aa849104f028e7e8b1291b4127a3c557544d06e7be49526`.
+Hosted completion and a clean authorized exact-head review remain mandatory.
 
 ## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
 

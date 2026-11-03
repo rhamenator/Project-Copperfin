@@ -4,43 +4,32 @@
 
 This section supersedes the stale retained-division "Active slice" below. Work
 in `/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin` on
-branch `fix/listitem-column-read-5611`; PR #7238 is open. Pushed head
-`5bf6884c0f4dbcfdb73a7e0c822103140f16a365` has green hosted checks but does
-not have a clean exact-head authorized review. Claude was requested first and
-did not respond; old-head Codex and Copilot review findings are actionable.
+branch `fix/listitem-column-read-5611`; PR #7238 is open. Signed+DCO product
+head `736357435c33f1577425fb3637ecea1fb667c0f2` is pushed. It resolves all
+old-head automated findings: property-first side-effect-free reads retain both
+typed selectors; admission is limited to an ordinary existing Numeric ID on a
+coherent unbound RowSourceType-zero control; fractional conversion uses a
+separate exact-binary quantizer without changing ROUND; the helper test fails
+on assertions; and preservation requires the invoke phase. The existing
+one-selector `List` hook is explicitly protected from two-selector reads.
 
-The uncommitted bounded repair keeps two-selector ListItem reads on the
-property-first, side-effect-free native-property path and transports both raw
-typed selectors. Checked conversion is admitted only for a finite integral
-ordinary Numeric ID in `1..32767` that exists on a coherent unbound
-RowSourceType-zero control; every excluded selector/configuration falls back
-to the legacy property route. Fractional supplied-column quantization now uses
-the exact binary value in a separate consumer helper without changing shared
-ROUND. The direct helper test exits nonzero on accumulated assertions, and the
-preservation audit now requires the invoke phase.
-
-Fresh focused GNU and Clang lanes each pass the helper plus all four public
-class/mode/session shards. Frozen preservation v2 preliminary GNU and Clang
-baseline/fixed captures are all byte-identical at SHA-256
-`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`,
-with passing audits and empty stderr; ignored evidence is at
-`build/listitem-column-native/preservation-v2-precommit-20261103/`. NEXT:
-freeze broader v5, create a signed+DCO checkpoint, rerun preservation v2 at
-that exact head, execute the fresh broader gate as host capacity permits,
-update durable receipts, push, and request Claude review on the new exact
-head. Do not resolve review conversations until the pushed fix is verified.
-
-Nov3 04:24UTC: signed+DCO head `7f9a11c953a2721ac5f47a73272386cd8c5d9ee9`
-is pushed. Exact-head preservation v2 passes all GNU/Clang baseline/fixed
-lanes byte-identically with the SHA above and zero-status audits/comparisons.
-The first frozen-v5 GNU broader lane passed 130/131 in 793.56s; only
-`test_prg_engine_runtime_surface_functions` failed because the transported
-second raw selector let the pre-existing one-selector `List` hook consume
-two-column List reads. The Clang follow-on was stopped before tests when I/O
-pressure spiked. The bounded uncommitted fix requires `raw_secondary_selector
-== nullptr` for that List hook. NEXT run the single failed test, freeze a v6
-successor manifest/runner while retaining v5 receipts, sign+DCO/push, rerun
-exact-head preservation, then run broader v6.
+Focused GNU and Clang each pass the helper, four public class/mode/session
+shards and the runtime-surface regression. Exact-head preservation v2 passes
+all GNU/Clang baseline/fixed lanes byte-identically at SHA-256
+`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`
+with zero-status audits/comparisons. Frozen-v6 broader qualification passes
+131/131 for GNU in 785.22s and Clang sanitizers in 5051.29s; log/JUnit hashes
+are GNU `92a1444a4a41a6736fe1b5e4c08c5264fa6e1cc5e1e87a68adae8499df73c179` /
+`778e2cf4ddd7f4765c19ef608752244a794dc43c150c90e877269e80ee219cc1`
+and Clang `6579d54f135544456c8157ca823a45bd31cb47f943f667894e5226247830748c` /
+`de12f935906e92346aa849104f028e7e8b1291b4127a3c557544d06e7be49526`.
+Ignored receipts are under `build/listitem-column-native/preservation-v2/` and
+`build/listitem-column-native/broader-v6/`; failed v5 evidence remains
+retained. Hosted checks on the pushed product head are green or in progress.
+NEXT commit/push this documentation-only checkpoint, request Claude review on
+the new exact head, require an actual clean authorized review and all hosted
+checks green, then resolve fully addressed conversations and merge. No review
+conversation is yet resolved.
 
 ## Active Numeric compatibility workstream — 2026-10-29
 
