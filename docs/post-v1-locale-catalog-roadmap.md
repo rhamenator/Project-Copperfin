@@ -2,7 +2,7 @@
 
 This is a versioned **candidate inventory**, not an install manifest or language
 selector. Its machine-readable source is
-[`post-v1-registry.json`](../resources/locales/post-v1-registry.json). On the
+[`post-v1-locale-registry.json`](contracts/post-v1-locale-registry.json). On the
 `c650c965b` baseline, Copperfin has four catalog directories: source `en-US`,
 unqualified `es-419` and `pt-BR`, and test-only `qps-ploc`. The separate v1
 localization work owns the addition and completion of `en-GB` and corrections

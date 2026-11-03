@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY = ROOT / "resources" / "locales" / "post-v1-registry.json"
+REGISTRY = ROOT / "docs" / "contracts" / "post-v1-locale-registry.json"
 TAG = re.compile(r"^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$")
 REQUIRED = {
     "en-US", "es-419", "pt-BR", "qps-ploc", "en-GB", "en-CA", "en-AU", "en-IN",
