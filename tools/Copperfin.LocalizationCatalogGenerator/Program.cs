@@ -12,8 +12,22 @@ if (args.Length != 1 && args.Length != 2)
 var repositoryRoot = Path.GetFullPath(args[0]);
 var checkOnly = args.Length == 2 && string.Equals(args[1], "--check", StringComparison.Ordinal);
 var localeRoot = Path.Combine(repositoryRoot, "resources", "locales");
-var inventoryLines = File.ReadAllLines(Path.Combine(localeRoot, "inventory.txt"));
-if (inventoryLines.Length < 3 || inventoryLines[0] != "version 1")
+var strictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+string ReadStrictUtf8(string path)
+{
+    var bytes = File.ReadAllBytes(path);
+    var offset = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
+    return strictUtf8.GetString(bytes, offset, bytes.Length - offset);
+}
+var inventoryLines = new List<string>();
+using (var inventoryReader = new StringReader(ReadStrictUtf8(Path.Combine(localeRoot, "inventory.txt"))))
+{
+    while (inventoryReader.ReadLine() is { } line)
+    {
+        inventoryLines.Add(line);
+    }
+}
+if (inventoryLines.Count < 3 || inventoryLines[0] != "version 1")
 {
     throw new InvalidDataException("Locale inventory requires version 1 and declared catalogs.");
 }
@@ -50,9 +64,14 @@ if (!catalogDirectories.SetEquals(locales.Keys))
 {
     throw new InvalidDataException("Locale directories do not match the declared inventory.");
 }
-var strictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+var localeRootFiles = Directory.EnumerateFiles(localeRoot)
+    .Select(Path.GetFileName).ToHashSet(StringComparer.Ordinal);
+if (!localeRootFiles.SetEquals(new[] { "inventory.txt" }))
+{
+    throw new InvalidDataException("Locale root files do not match inventory contract.");
+}
 var sourceEntries = JsonSerializer.Deserialize<Dictionary<string, string>>(
-    File.ReadAllText(Path.Combine(localeRoot, "en-US", "strings.json"), strictUtf8))
+    ReadStrictUtf8(Path.Combine(localeRoot, "en-US", "strings.json")))
     ?? throw new InvalidDataException("Source catalog is missing or malformed.");
 var placeholderPattern = new Regex("\\{(?<name>[^{}]+)\\}");
 string[] Placeholders(string value) => placeholderPattern.Matches(value)
@@ -101,7 +120,7 @@ foreach (var locale in locales)
 {
     var isPseudoLocale = string.Equals(locale.Key, "qps-ploc", StringComparison.Ordinal);
     var catalogPath = Path.Combine(repositoryRoot, "resources", "locales", locale.Key, "strings.json");
-    var catalogText = File.ReadAllText(catalogPath, strictUtf8);
+    var catalogText = ReadStrictUtf8(catalogPath);
     var existingValues = new Dictionary<string, string>(StringComparer.Ordinal);
     var seenKeys = new HashSet<string>(StringComparer.Ordinal);
     using (var document = JsonDocument.Parse(catalogText))

@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
+cmake_minimum_required(VERSION 3.21)
+
 if(NOT DEFINED TEST_ROOT OR "${TEST_ROOT}" STREQUAL "")
     message(FATAL_ERROR "TEST_ROOT is required")
 endif()
@@ -43,6 +45,20 @@ function(check_install should_pass case_name expected_error)
 endfunction()
 
 check_install(TRUE "valid fifth locale" "")
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" "-DINSTALL_ROOT=${installed_root}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/run_locale_catalog_install_contract_check.cmake"
+    RESULT_VARIABLE missing_source_result ERROR_VARIABLE missing_source_error
+)
+if(missing_source_result EQUAL 0 OR NOT missing_source_error MATCHES "SOURCE_DIR is required")
+    message(FATAL_ERROR "Omitted SOURCE_DIR did not fail closed")
+endif()
+file(REMOVE "${source_locales}/fr-FR/strings.json")
+check_install(FALSE "missing declared source catalog" "Declared source catalog is missing")
+file(WRITE "${source_locales}/fr-FR/strings.json" "{\"test\":\"fr-FR\"}\n")
+file(APPEND "${installed_locales}/inventory.txt" "# drift\n")
+check_install(FALSE "changed installed inventory" "Installed locale inventory differs from source")
+file(WRITE "${installed_locales}/inventory.txt" "${inventory}")
 file(REMOVE "${installed_locales}/fr-FR/strings.json")
 check_install(FALSE "missing fifth locale" "is missing or not a regular file")
 file(WRITE "${installed_locales}/fr-FR/strings.json" "")
@@ -54,6 +70,9 @@ file(COPY_FILE "${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-F
 file(MAKE_DIRECTORY "${installed_locales}/undeclared")
 check_install(FALSE "undeclared locale directory" "Undeclared or malformed installed locale")
 file(REMOVE_RECURSE "${installed_locales}/undeclared")
+file(WRITE "${installed_locales}/fr-FR/notes.txt" "stray\n")
+check_install(FALSE "stray per-locale file" "Undeclared installed locale content")
+file(REMOVE "${installed_locales}/fr-FR/notes.txt")
 file(APPEND "${installed_locales}/inventory.txt" "../../escape unreviewed\n")
 file(APPEND "${source_locales}/inventory.txt" "../../escape unreviewed\n")
 check_install(FALSE "malformed inventory" "Malformed locale inventory entry")
