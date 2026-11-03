@@ -1,0 +1,1751 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "gpt-6.1-sol",
+  "mode": "Read-only independent batch review; Claude Code CLI tools disabled or separate Codex agent as named by model",
+  "sessions": [
+    "13b6ca5f-bf88-4291-97f6-0867d7e70f29",
+    "a21d5486-bf72-4047-bf41-7b782af4e184",
+    "24aaa5e1-d054-4c0c-8a55-ccede7e4b8fb",
+    "ffbe4efb-61a4-4c44-9c1e-3ad96c6401c7",
+    "a6ac00dd-ecf1-4d87-98da-f853170759fb",
+    "86d6ed0d-bc4a-43d4-9047-9c1075632ac0",
+    "27e6116b-d959-409a-96b0-5f691d029fb7",
+    "585ed4c2-0669-4c1c-a578-02680f13b8ef",
+    "d762258b-5be2-4285-a256-a420626fc5ab",
+    "0134021b-3404-48cf-9ec1-ae3e1ccc865d"
+  ],
+  "scope": "First-pass review of exact es-419 catalog strings. Only accept verdicts appear here; revise verdicts remain unreviewed.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed",
+      "sourceSha256": "3147dd7259f18e21d7eb638d4b6ef48de6a0817d86bb114bc63038fdb0490f5e",
+      "translationSha256": "d9807af7f1476dd9e29e4901ffcd09c2fdccfca3692e7ad31651be079e125441",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportUnsafeTableName",
+      "sourceSha256": "7211ffab2328478236771566a5ea80972438a7016d8ad842c29c05b54e98af72",
+      "translationSha256": "ad2652b4eebb4a480b51d5577c1b393ddbc91c1871fbff3cf85e8b242872cca4",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcPathMissing",
+      "sourceSha256": "1cc343bbcd13c0c3896b21d22a6875ac89312ccc774b78dbc25e0b0d767eac10",
+      "translationSha256": "c96f3aad6fffbd8737465d27d1bc08dbc5b3b77cd7a98bc624ed26527c2917d3",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcPropertyTypeUnsupported",
+      "sourceSha256": "9fc798393df8f52997fb8f24f44e914086db0d891434fc7ae8b8d8164635f7f1",
+      "translationSha256": "ee89fb4af823b530aef4c302890ee074e60cd887846385bed781b1a588ae687c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcReadFailed",
+      "sourceSha256": "aba4f4bef418e13265576505debc71124be83e8cd972cfb2ae875aa5e7ff7f75",
+      "translationSha256": "b97bd0a5cebeb21a32016178ca73a2b0b6d1cda5999b0d12bf8b8238a34e7d8f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.PathMissing",
+      "sourceSha256": "70a3961bc47925f7163865859ca63d3f9ee3553f75b4b17f13799475b241574b",
+      "translationSha256": "7a06d69f5f8b2ba0989dc3f4b05e02a2b2bacc23dc26534cc0a69e09105fa467",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing",
+      "sourceSha256": "6dbf427e7db29fb31da9e88e88db060ddace890d2120699558fdb7da9fe02b22",
+      "translationSha256": "786effd5acde7394fadb555bb3b58b7af3dc1ffacc4aa7e80187c17783e24754",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorNoRoom",
+      "sourceSha256": "59ad9341e85e00d20036ac41b874aee80faad3cb848e17fe55f94506bcef1336",
+      "translationSha256": "249e6c40559caec0d9b513ae8577e82a935fe32d42299e3beb57e37cbb54cbeb",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldCountZero",
+      "sourceSha256": "f3d2d4d91d4e8b38feb65ef511cc58c0f1e73f61b752b2c1ba0a68872f038d0b",
+      "translationSha256": "846ccad99ed709c4970f0ac128d343e811d9994441c69c1bbddc10401ed81cfd",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldLayoutOverlap",
+      "sourceSha256": "a27e6e53a4aa3660bd83d5653dd5294cf471b428113dadb3d31567156c6c6f9a",
+      "translationSha256": "fd8468d1e7175af395aeb6596e4f76d253f0965f772cafe461fa130e1ac4eadf",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldNameBlank",
+      "sourceSha256": "254ebb81765bed5dfff70760281cf8761e42cca760478f588bcfefc7fbedc19b",
+      "translationSha256": "b0dae1691e932340c80cb105d516e76f1bf62088518dafa62ce90c016c4b8ef4",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldNameDuplicate",
+      "sourceSha256": "be7e28525809036101e9a662769ae31bee913ddd68a548a5a31728d876f38cb1",
+      "translationSha256": "a0b70699a3f68a6de5c8613c4fb4ef18c389824ab74303b296e4f5b20580a155",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+      "sourceSha256": "a69ea5cb5e94bf6f11a70306a7f564ba0da56296b212bc758608be8e1ffd3471",
+      "translationSha256": "67e1115311f2817f93c807203437b908f8d63785ce1e492626dcfa95f0a36a3e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxHeader.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "b5708525c0926f63ee056379eb8a5d7b3f996cc522b6eb8a7565a9e29e65772a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.OpenFileFailed",
+      "sourceSha256": "06eb6ea8ce283e8448cdcd570a20d8cbcbb5fde9c52de2eaae9d1f87c44ce942",
+      "translationSha256": "86456c896be88117ed1268c02d257cdc247e6e1b31344e7cbc5b77f40792d80b",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Error.InvalidValues",
+      "sourceSha256": "5f746c8431eea2124015b3a021e0d01653a34b47a5e01d51ac3db11724705acc",
+      "translationSha256": "a4d86fa2504d22d5f517457fca942dc22d58619c4ae2b2c5bd692c3bee6e3dd4",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "b5708525c0926f63ee056379eb8a5d7b3f996cc522b6eb8a7565a9e29e65772a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Error.ReadHeaderFailed",
+      "sourceSha256": "8f674bc3e6ee00f7588de1a0bec8df2e7de523bdebd936767336e3ff864875fe",
+      "translationSha256": "aaefc1987ddcdae85c4ce67570a8354ec28085194821455fd408f7f4eccabf25",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseIiiCompatible",
+      "sourceSha256": "6d55ee5ab85bd9a820b140842038f047bfb7c172f580772e6f20fd0c09154c06",
+      "translationSha256": "dc5f15627fcf55b3fca18ca0148ae85fe4670a4c358f3c697a0e09b384807036",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseIiiMemo",
+      "sourceSha256": "91ea262622545669c954e81fb34c14838203fbb26321a298482d29e86821a18c",
+      "translationSha256": "c5de9024335dcb5c2c380daaeeba25f0e5550760bd0af8c889a18002fdb28427",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseIvMemo",
+      "sourceSha256": "14d49e04a1692b25ff9c772c5fc53f1edd599f410316c2dfea85bcf20d329b39",
+      "translationSha256": "bd6548e663aa64db59c2c7c45bba951d3b479f1fd5180bd405074e59cb3071ea",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseIvMemoSql",
+      "sourceSha256": "2a2c6f708257b9f7e70e99733417f53b17bc35e140cd12a7f76f10235c9a46af",
+      "translationSha256": "fef34d0494d91cb08f5cef425519f8d72646d6d4a8803cd50612b7105330f949",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseIvSqlTable",
+      "sourceSha256": "32ff67b72758550096ce4a9e89ee9622fbb7c0f0a4032af5eb037fec2e796bc4",
+      "translationSha256": "625e15017a234111ab874777549dad53d0b35a449eada5c00bcd6490565ad996",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseIvSystemFile",
+      "sourceSha256": "db2b9c8ffe9cc935f1b10504b973c4f16b22e970a0a69433e61eccb6f3399164",
+      "translationSha256": "df1938fcb8b204edc48397f72295ea4be80ba69c75c81e263629e6981f6648fd",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7",
+      "sourceSha256": "2c8b4edc6cf0d05aaa428a5cc252f9b2c9eab804b5682280a859bd1cc1ca428b",
+      "translationSha256": "0b32e4bf61bba5c08d817fa78117b3f1bd3bd652c038ae09af9c5ef73fe34037",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7Memo",
+      "sourceSha256": "96a35cdd42dcfdac80c819865faf1ea954ba70486b965d74048270f7a8ee620e",
+      "translationSha256": "cfc2d9824d80952857d212dcb8ae2563dcaf4d10f300d9edddc3d26bcbae69c0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7MemoSql",
+      "sourceSha256": "06c99e3ff332798e3bd54b7be1a6df144d903153940d0df090bf8511f8ad3d69",
+      "translationSha256": "1d59be24203065e4b09d405ac9b4ab43804a575f9731c1e885b113c9a9eab6d0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7SqlTable",
+      "sourceSha256": "a93576a1c38e422840ed18cca7afc6cc85726ffdfbd5bea2ed642b4c8a535b0a",
+      "translationSha256": "073bdd307d49dbe94c5cfe95a1fc952c3ae8484b34223dcb44d2a1142285875d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.FoxProMemo",
+      "sourceSha256": "a9cd10a4b67050207ca90df9c7b5344e4cc8388245c2e68aa0a4c6534fc115ca",
+      "translationSha256": "e969f29be41088047b12638e97c84701ff15606dfec894deaaa8c4c8f432b00f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.Unknown",
+      "sourceSha256": "b764cdc0eab7137467211272fa539f1260d1bf2e71bcf6ff3bdc960f5c16aa14",
+      "translationSha256": "2669e033a1213e64066c7dae4bf54c2ad82db2bf4cea7a05f5883edb32a6d409",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Version.VisualFoxProAutoincrement",
+      "sourceSha256": "049dd47983775ec988a109f2f7c99adc59f3e2780847f79d4b8d8b83f525fc2f",
+      "translationSha256": "08062fbb42907acdd364fa7fdcdb2441e435d7d63c39fb61aff9ee34f2d3bc12",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.CharacterValueTooLarge",
+      "sourceSha256": "4fe52fee4ec4746478e7a2c63c5e51c58c64c4f6af5be9f5c511688fd96ad2cd",
+      "translationSha256": "071ddfb127549213cf323a622a1bd09451fe965e3a6559fc25eaa212f4b71e3e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.CreateDestinationExists",
+      "sourceSha256": "8323cea88dba32e0e4199ab48fcba49347ec2738087abdc5390d3f4610e0bff8",
+      "translationSha256": "e3e8e7c714b40aebf12c5ef56ba67ec48f36b5c1b75873b641f3b12fcbc45a1e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.CreateFieldRequired",
+      "sourceSha256": "5b94a1105079c3bdb7838b3bf1c7bc199501bb47a1298aec52b939a64eb39bb5",
+      "translationSha256": "44e161a1611c6f7a6d30feb13f604a8cb903e5091d57e19cbdaccc2fc17b205c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.CurrencyValueInvalid",
+      "sourceSha256": "4c507d2ecc2190afbf51c48e052a84724c364470f1dfebc7b6f63adc4e145236",
+      "translationSha256": "087a300d6b8eaf344849e15156e20ec6cd3c3be840f3ae5331231ef318587bbe",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.DateFieldWidthInvalid",
+      "sourceSha256": "4c622b9d7163362bb6638cb53b1d08281cea02d3701f5ac4726d1c4c4f1149ca",
+      "translationSha256": "5a1e3be2c670834ca9d171078ba627e0d54209a3f21dcd60afb7147d0402be91",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.DateTimeValueInvalid",
+      "sourceSha256": "cb5c4281cb71893686bce0b0dadb4ba3b510f1a1960aecc873341df4fa6f45fe",
+      "translationSha256": "9de5bcc809adcaef7fe5b979b95fc085fa0d48577c33191c05d73769751391e3",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.DoubleFieldWidthInvalid",
+      "sourceSha256": "5809aa500f4f050eca74ec270033b497b658a0a0584cb6943bcc66366a43fd4c",
+      "translationSha256": "6ada0ba3514ea2dcc617fc253fb203f6e2823e6aa6304364e3730b304c344f8c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.EightByteFieldWidthInvalid",
+      "sourceSha256": "4d711f6aeb75693137c7086b89f777b5478f25ed45b7f0683446de2b8e311efd",
+      "translationSha256": "3d3943039e06c44e97dc6b49826052f6f27ec901b582bca37d0ea1e3ac460bc2",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.FieldLengthRequired",
+      "sourceSha256": "927602036cae8556f2352c8a1372bb03e6a5906c7a2eecaa51adb6f32ba3493d",
+      "translationSha256": "7704e19f90c629ebb9c80975b988adcad5281c9fd2ce7864efd88e875ffb6d87",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.FreeTableFieldNameTooLong",
+      "sourceSha256": "f4e721e2ae51ab6a238bff000b77aca1dab700c6ab0e0693927889e554df6a82",
+      "translationSha256": "d8dd6359c91f4b32b64a62fd65879787da2b97757a8ef262b6d7f4b78591cda0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.IntegerFieldWidthInvalid",
+      "sourceSha256": "6d7e275657abbd5bdb89cdee4ddeed855bc3bc39543a84b87490905b1126d5ca",
+      "translationSha256": "52d66c4e70e9cfff842f26ce71df46e14d8cc044917f0aebc592ef179858645e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.IntegerValueInvalid",
+      "sourceSha256": "09e2a768ad3fa400ff32dcba4541c5617f3a26b1cf5ba42f6ee465a586d351b4",
+      "translationSha256": "11f55b595476497178cb7d06aa5257a26473114706c201b9e69b38e9cbda8b74",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.IntegerValueTooLarge",
+      "sourceSha256": "dbf760a29a26037a732312e6e25f57f33b289d0023cb3224aff3c770becd7673",
+      "translationSha256": "3cdc4ec43f675d746cac7f6b5a7f766740dc83692afe54fd30f72f245d730cac",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.LogicalValueInvalid",
+      "sourceSha256": "33f82970b5875b4d76cba10ee19aecdd9d1724cdec41125c70f9a4892f29810b",
+      "translationSha256": "994f68c595f003f9f0ecee4369fadd2c1d8bba2c0e4a8a1e257ba1831af08993",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.MemoFieldWidthTooSmall",
+      "sourceSha256": "fe2c4910c19c115cc1c8a37052a4dae4c7883d340abcd7668bfc0d0ffbc39ad5",
+      "translationSha256": "d6f65e1baf8b0c3f68d848e1184ec0c086d44862c6b62ac4ffffb63e74e9e471",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.MemoSidecarPathMissing",
+      "sourceSha256": "ea65105d881780da96d5a831f1caeb1176afad1e909a35686b78748d0899c890",
+      "translationSha256": "5e6fa05b11716370a5577db5ca3960f6ae0f44b7c138b428e211401c030d70b7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.OpaqueValueInvalid",
+      "sourceSha256": "9da42b70c391d70658afe0be99741a355af543b49d7eef8ae869c1ded6bf75a7",
+      "translationSha256": "8caf036aff0841222f7447fb2aadd139941213c8ac3f5ab7930346a697ed92b2",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.OpenTableFailed",
+      "sourceSha256": "40abf179c19404a0d7834570ce2a336d8fb1ce7a5844db2ea140af7e0e9d0b46",
+      "translationSha256": "2a86d8ec34636a2bdee10a551dcbf15943452d2b550be042df0514fb1c2f187a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RecordFieldCountMismatch",
+      "sourceSha256": "dbc9c31f076d09574c9b68ff4ae5069a61d45c8d3d35e265bc57d0e1ee8a6674",
+      "translationSha256": "8e97d33d50286248377da5b2959a30844b40fff445203a9d67be6d0b90b91b48",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TargetFieldExists",
+      "sourceSha256": "1cb9bd45f0f73a5719cd3269f5533ce440a40f60931171ac8e32c02831d91fa1",
+      "translationSha256": "031487e8fa2bc993ec91d185e650e0cbad8840b08407eff47932734afddeb10c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TooManyFieldsForHeader",
+      "sourceSha256": "6558e2079e1d201082c5619eb7ad5e54699b72b28812c28adeb63fe01081d945",
+      "translationSha256": "67a1d634d234699f9790e894095dc1e525bcab196b88f0ff161ab26de69f486f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.VqFieldWidthTooSmall",
+      "sourceSha256": "5873ddf3468bfd217f8d7a18b236c198576c385d807a5c3b9ac0779921e16e96",
+      "translationSha256": "432da97884962766ec3abe900aadbf88e3b44b8f0cabbacaee4a3e31383ea42f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.VqValueTooLarge",
+      "sourceSha256": "df681edff8299db0e7146795da03d9138a2b57867041b6a17bde49c693cfd0cd",
+      "translationSha256": "c10fab74228f6c0538358676517516b412e61e02234322ea84e30f4eef54ee35",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.WriteMemoSidecarFailed",
+      "sourceSha256": "b34d22d9e39327fc0c744102679aa24c5a0945de9fa1824275933c01c5e4c5b1",
+      "translationSha256": "e46494d0ce5ad79a71efe9eea010d4e18786d2b2c834065b58b1326686d71f9e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.WriteTableFailed",
+      "sourceSha256": "dfebf0891266447cd84d46a137a12a6360ce98947c994ad7ba7ca8fa679bb4d4",
+      "translationSha256": "7b22dc1ff328040b30f14448b7223df144530e1917d9b8dc8aa950d4af473b33",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.ClipperNtxInvalidValues",
+      "sourceSha256": "d471969b0b13fae96bbed07506da792a811a9dc10bec039b16af3b14baceb038",
+      "translationSha256": "16a4a3fa2eab2038d535c85cf1253341a17e886f103b2af00ad3d28e0e9e245d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.DbaseMdxInvalidValues",
+      "sourceSha256": "9b85021623a1e6935cd9b82ee825264c0d7c21dbebcb1f0e5274adafe18e3c66",
+      "translationSha256": "d7e15e05c7f92daac27bac6ac5f5c7017d66d2babf1ca2f9149582be765cc211",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing",
+      "sourceSha256": "0beba3921fd3d7d89125bbdcea6abe007d7d20bf8f433af3bec598fd2ea67a46",
+      "translationSha256": "00cdc90366e4a65847ee295d185967e23225635c5001161b0ed52b8ec7585533",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.DbaseNdxInvalidValues",
+      "sourceSha256": "f6d2ae9f42bb6a45fcae3a72691bcde4e7d1d74a2c4a67eb23b24af6b24fd77b",
+      "translationSha256": "33edc484cd4633e0094f164d484bc2c288bf9dad20402e19cb41049658d2c074",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "b5708525c0926f63ee056379eb8a5d7b3f996cc522b6eb8a7565a9e29e65772a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues",
+      "sourceSha256": "9b0cdbb8d68cb9ec3059f5b6052240a537763fc15771aacf3165e992e3cf5adb",
+      "translationSha256": "8831599d6b65767fb2313f8a3adc248d52b9d66e0cf9bf27f79d94aeb3422808",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.Sidecar.Error.AmbiguousPath",
+      "sourceSha256": "49c84926675c5e12188b77a22870cf3a0342be543775011904330d22369ca138",
+      "translationSha256": "bb3fb7d95bd4d5e100d3356e497ca3a521c5db409c90c569ef4e09c1279db962",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.GridHeightPositiveRequired",
+      "sourceSha256": "1afb896c70c528970d5651a1310bc4979da717c3317101868f7c621003253f70",
+      "translationSha256": "7e84d7bbc85b5e34afb884ecae353c5b16e2fa7447e40809bc54d4d98cf7ec83",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.GridWidthPositiveRequired",
+      "sourceSha256": "740aaecfc992d2484c833db0a09f23cdadb41336245535023f9389d8cb7e2fab",
+      "translationSha256": "4b122a2c4ba67f277556857e8cd3c97c5364912750889ed0e9fda505d5a74570",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.HorizontalNudgeDeltaRequired",
+      "sourceSha256": "f3626f9ed83845e4391fbd6513586429e048fc0051315210d3b55924bc269010",
+      "translationSha256": "0ebb704886cc182ada6a9c148e1610d7d8c01d8ae8df81d1234e514bb4ce31c8",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.VerticalNudgeDeltaRequired",
+      "sourceSha256": "6c6683ece3a9e046415680e2764181f16707e0543a6caec69a192a8194cba393",
+      "translationSha256": "9f2469d219c9f13ae9f62399f102e80265c9595f042b7d3dd83407531770076d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Identity.CopiedRowFieldRequired",
+      "sourceSha256": "b4f23a4c6b3a36502448cde4f167d5a259228235db3af4ddd2cf21cc9edafe6e",
+      "translationSha256": "89d738b8791180a3e98723a684332c96ef3499e68b5dd1d5948ec17c4f747dca",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Identity.FieldsRequired",
+      "sourceSha256": "3a7e42ee0cfbbe53c7941166889311062053386e8912991a06da757d00c799b6",
+      "translationSha256": "fb73222c6f022e43b06ca6c293d08d33d9519983ff6b5d3d07ba8f1fe62354fc",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Identity.ValueExists",
+      "sourceSha256": "e58c2837ed0288a4a3d5387fd83739ea21dbd86d211947b65c203a91e7ef9b6c",
+      "translationSha256": "0599fc528fd26840ee80cd1c82c4ac3b9feb43f86cbf8ad74b2cb90aba57d899",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.CreateBatchRequired",
+      "sourceSha256": "d5c2b72e0009142d1f229b7741e7438859b458fa28ffb919c416fc70644a0565",
+      "translationSha256": "13b6d17e03cd19a7ecc44db0c763dc5ef55c7967f206aec4861a0f3915812402",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.DeletedStateBatchRequired",
+      "sourceSha256": "a2b81ac5c8c86992120cb5b6f584d18c03e5cfad457b1099a2ddd85da833ca89",
+      "translationSha256": "43318d56f4250cd56e1a22820c7219a8df79e63c850212da652003bc540a0b8d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.DuplicateBatchRequired",
+      "sourceSha256": "3652154de6350929b524bff7f5a52e6053063cf5d3d6191692c30189fb4f631e",
+      "translationSha256": "edfbb0547ddb602985089c7d740c0f71769ab4a14b770b4d4648fe541f185a2f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.EditBatchRequired",
+      "sourceSha256": "87c8fbe619e55139dd56f61858d044affa2cf4d2caab3fc892bd542b058b2374",
+      "translationSha256": "9fbf3d283db516f862fc589adbc5f0ccb3b968fa6849db77d45019c21244c44c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.FieldValuesRequired",
+      "sourceSha256": "1afc792f3a200e44ffe3f48ca0e0a78695b24740a3370e35ba72bb847fea39b5",
+      "translationSha256": "7ad073e9937a24fd08612e2a8ba83a4b0d04d022c6f0b89ac176f982e908eed5",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.GridSnappingModeUnsupported",
+      "sourceSha256": "525f5af97d4bf28546eed2e6865f4d4fd955dd9bae8ba57cdc840feeaabff92b",
+      "translationSha256": "9bc67f7fd8aa64f4590e4b4a53f00583113d9adc6b60af3b737e141df93df50e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.GroupContainerFieldsRequired",
+      "sourceSha256": "6f77aefa63118aa6e441c0c8ba475b34a64d1afc2755ae5cc65296ea526557e0",
+      "translationSha256": "50799a958d4809346c55ce2382fe35a7cc3aba06c82ed2f19664190de21136ab",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.GroupContainerNameMissing",
+      "sourceSha256": "fa3a4d800619f10aae3f2b3cc6751337f85564af22ddba05ca1e8f0c072620d1",
+      "translationSha256": "a063c0c5a773114f8325236f680def42a95680cdff85de4d78854a4b130cc219",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.GroupSelectionRequired",
+      "sourceSha256": "dd78f6641ef202f99c49848810c1b82f13c7be31c3dc16486d4144e99e54632a",
+      "translationSha256": "0ce04ca7f00174ce99315fe0b71ddbd6a37cf2d1b44d25007319563a576a1c03",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.MemoFieldMissing",
+      "sourceSha256": "d35a5d517791fad2bd8337b78b83148ed82f5a05e4c3323b527d45d44710250d",
+      "translationSha256": "a48da51ae208ca7b9e854ad1aa08e590774721e52072437cb0f038ba7c359bcb",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.NameAmbiguous",
+      "sourceSha256": "afdf9d02f2f122d07629a6634a2895d69fce449203ea952df684e4ff6d139b15",
+      "translationSha256": "a1456a035b404a78203472ba5081b94ca64c38ec13ebe731569b85e5d7ed8ba0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.NudgeModeUnsupported",
+      "sourceSha256": "89ea795bed8d23fb15b0be662e7b9bd083148fe7101bade0c8fe51c16c10ef6d",
+      "translationSha256": "f82965d6589a6ca8e9db1312974a6206e4d365ad200920f2249619e9efebb98f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.NudgeSelectionRequired",
+      "sourceSha256": "32f3157573a8fb349c9f11a06de92408512b0c3e61381405e9afd2df194fa1ce",
+      "translationSha256": "431f428ae39c9d66eea9a8cdf9ae28a34c427e24dbb90f2e9c9fc2f10afe52b4",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ParentChainCycle",
+      "sourceSha256": "0798dcb5158a281793e7649def261e662e02fb4b9dadeab5cce5affabe3480b0",
+      "translationSha256": "f6cb23164488e51e7b9e885d1699d93d11ada64f66d766935aa6c7bc13ad0f95",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ParentNameAmbiguous",
+      "sourceSha256": "e17eb2a223aa7def8edb31b8020fc3a8984532ed20d3c6baf3caead1c86c39f3",
+      "translationSha256": "5502ac00997f21ab51516cb22de806419f7b26492e3e887218189d0a54508f50",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ParentNameMissing",
+      "sourceSha256": "b7c35241b0e662d4e0e30f8400e58ff280760fc092643ad3fb4c7a32b6c256d0",
+      "translationSha256": "67336520123cf21652b18b667ab477351217dced79510bd852459632ef8eb62a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ParentObjectChainCycle",
+      "sourceSha256": "279c963e317fb948e56090af9d5f3c579943409f8c4a11592ec382d7a8665883",
+      "translationSha256": "9c0e51fe8cee9b7bacc9010d5b97765960db9996d0aaaa93095e757156518a14",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.RenameBatchRequired",
+      "sourceSha256": "879d97689a652a414ac75e74f1b2ea9733fb62adcd4c92c454d442bc1dc6c20d",
+      "translationSha256": "1079cb84356f7fc93b36d1681a82b26c919c0367d8a60dfa321dec0f4d92fb6a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ReorderBatchRequired",
+      "sourceSha256": "4f96db45b8ee0cdfa49f72cd2fec8cb3007c5848acd23170d15f582eb179d43f",
+      "translationSha256": "7f003def48a4e8221c17c8829825d517828e4f523cca0f4caa5a1ec88e44dfac",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.SelectedContainerChildrenRequired",
+      "sourceSha256": "3762d18aa3f4f02fa6657df46f8d9db69383301a84ec2d52dfa0aef46a211437",
+      "translationSha256": "32345f243a2bf74e7e733b1edf5eef7c9f2a868b865e86a1516c488e117c4e18",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.SelectedContainerNameMissing",
+      "sourceSha256": "ce9ed6c3ea6f15fc40bcf71a9c68baadbb256ef695b622f90bca28354a18eb26",
+      "translationSha256": "c5bfc386431c1573fd407aa7bb15b7d4bc6e919f0206d0106b965dd4e2304c12",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.SelectedFieldMissing",
+      "sourceSha256": "0a129814102c8538255249267743123478ec66a057a6ad4e36314e39832a7f05",
+      "translationSha256": "b5a772eb57c4677766b9a55aafd3f3a5e8045b140cb0bd8e250d8bd6e7852a1d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.SelectedFieldOrPropertyMissing",
+      "sourceSha256": "29ef2082eef5fc3f5251fa065ad8d1b2914a64f559ce29091c6e19c60b62e397",
+      "translationSha256": "c26bb277b77f87fce069d7c3996e0b767b272dccadd3d993ff1126e99a878356",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.SelectedMemoFieldMissing",
+      "sourceSha256": "ae890fe60213018fe8f10789722f2eec0c1f82631fca0e5bc719ffe6890cc882",
+      "translationSha256": "03139c321647c0168d7c8706075dca921467c974f41030f3838111bcbb3ca2eb",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.SnapSelectionRequired",
+      "sourceSha256": "1112d9a1deff70f24225f69b2d3542135ecce06e9e053aaada83712b9a6bd79e",
+      "translationSha256": "31b2fbb7bf4c1eeb235f46744481d430d872de07c7882e754f1067c3a2adc05e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.Ambiguous",
+      "sourceSha256": "a179b872a167514f6c684ab16bcaa3f552f4233650bebdce0a73d1402ee00b1d",
+      "translationSha256": "23f115a28144fed864a59a191f20bd0aad2a71487fe2773777a34ed5ef43069c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.ChangeBatchRequired",
+      "sourceSha256": "9a2e98e48e053c3d2a86b966e6cd7c8e92d835f17486071af159d931add14b53",
+      "translationSha256": "b27213e7e82a872cd4f4aecba6af321f90ba10d6b26a2b2c1fd237a1e817257c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.ClearBatchRequired",
+      "sourceSha256": "f17a0c0321c8d6962bae6bf201b34ae4bb96ab73e8d6027ac313f4312c88f257",
+      "translationSha256": "3bc6221c828a7d67c1bb3e2d4021241ac1193eaf4c9dcab9929bc6bbfeedd2d7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.CopyBatchRequired",
+      "sourceSha256": "b67ea96839bffd4d5e696ecfd1623c8a7dd8bdd1fcc4f464c729744571279593",
+      "translationSha256": "542ac5cc33e2f7496fbe93fccdb6e23af7cded96f73780f25282cd1d87167ecf",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.DirectFieldRenameUnsupported",
+      "sourceSha256": "d3c9641562c4b988858f809de2c6ade86ec560f60ce4a573f3b732e18936003d",
+      "translationSha256": "20e5a605e1c719e1d083c5a175fb8a957e8017b55d16dc1fc87bc34f2d9ed3d2",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.DirectFieldReorderUnsupported",
+      "sourceSha256": "6bb618a5f9348d7c2720755d18f325c6e108c164dd10342cb4622dbc29f20cfa",
+      "translationSha256": "5c94fa3ba0313bb190418fa50a23117a90254624d9c194d81b2234993616f2cc",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.FontSizeFiniteNonNegativeRequired",
+      "sourceSha256": "79e23ccf2568e35a6ba19803b00eded0355cff3429cea2411c7e6c2b865b6106",
+      "translationSha256": "4751660264f96e9eb0f094651fd9d208bc81d816f67dd348f915adffb0d446f6",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.MoveBatchRequired",
+      "sourceSha256": "16e3b0ce41dd25224c7b218bc2fdfac4885188c72aab809dfb00423da5770661",
+      "translationSha256": "ccc8d9ede3b307e504c6f8e51ccf3ac3228f00180f9d3724f7b9c83b5d8d7ca7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.NonNegativeRequired",
+      "sourceSha256": "39aad15613c171ad1881b0d446e3e7e2de45433175f07327be411cdb9c53a9e9",
+      "translationSha256": "ef2fab214bcde274f1b15bd6f300afc8ab541a83209ef55826f26f887cf8bb0e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.NotRenameableMemo",
+      "sourceSha256": "6a3488dca01031dcfdd0f6678db9b4231df0e089189702356bc04da70e9d40a2",
+      "translationSha256": "a810642dc379d8e1a6aabdd5c7ff0020f4fd43ccad1857d934825bdcae23583d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.NotReorderableMemo",
+      "sourceSha256": "195abafb032e97d306b1d99e7fe88cc0ff0c098819e8d8fdf1b646c1c4bf48e2",
+      "translationSha256": "58a97b8ce8d5f7f397da4f7c23562cb175183cb01b89e4c701458926455151d8",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.NotWritableField",
+      "sourceSha256": "61b1965f7008854dd443acd99feed6a722e91f7f5f9f400dc5ef75edc746b46a",
+      "translationSha256": "4080bc3b38b2e1d1fe3a926fb48c8cbfec593d98fa97d8071a0f1955a74b584d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.ReadFailed",
+      "sourceSha256": "30e9c7e44aa07f565b56bea6cea687649051fb48b16715983f9c0196ef8101e9",
+      "translationSha256": "da02b29cadda2456e7d2ca8ed8136e93f6a76950b92d3302641c02295f65a507",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.RelativeAmbiguous",
+      "sourceSha256": "9e757df8e4f8819f1e24611a6f553bd0ff273777beee39dc5a66eb05b57e79cc",
+      "translationSha256": "84ad38509ca7194bd9756bd5441a26f2592965c374cfd6ecb455deb7b89b13f1",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.RenameBatchRequired",
+      "sourceSha256": "db546f7c4c32d82f20c808c0c8f1dd3a4767fd58d28ed74b3b58a93b985e910d",
+      "translationSha256": "361e044cc8e940e9eb7baad339bea4cf5136c49caa62aa71ae594554ad549b00",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.ReorderBatchRequired",
+      "sourceSha256": "48b94294209cb715c7e28e47e9bca96f9a7a7352ce16433f066985e3a775a215",
+      "translationSha256": "e28546ebf79fc178d3b49857ffb777bfa65a567a3593eecba46b26b8e07b9265",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.SourceAmbiguousInObject",
+      "sourceSha256": "2d743ebe9988757e39a64b92d50ef45a290c6570278433b3cebbfd5c6bd44b62",
+      "translationSha256": "fab8eac7b7d28f9783d9b6e9d7aaa244d911e03f9ea68b4b1da2ac18ccbe2460",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.TargetExistsInObject",
+      "sourceSha256": "f19c1bb8625fbb5481018611bbd652203fe2f569ded08766ca28c06d413c14d7",
+      "translationSha256": "dfb1b4f4050b7d64a7ec07e02571f93474db447c30888d3448cb7f59ea55b865",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.TargetObjectAlreadyHasProperty",
+      "sourceSha256": "58ba5578dbabc54b8149fc098cad00d025b89f5a521911f41ba6afaa31223461",
+      "translationSha256": "922f49f45799f6ea98bd97432e49ebd4cce97307df1706ddce16bf81416e0c9e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AllowOutput",
+      "sourceSha256": "c5a85da91776255cafd61fe57c199adf46e1251917b57fa1b1c5d8e95229c5fe",
+      "translationSha256": "ec247a2305f871dded016e122f22ec5e8b2681da8d39462131bf39195141ae8a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AlwaysOnBottom",
+      "sourceSha256": "142e75c1b0b8ff8a1a7122f9377ee09a0844b7a07646fbd1a89da37ee5b7ea07",
+      "translationSha256": "f663c72314360dfbdab83556b6664be1241af93c262f131a69f94440f1ecf1e1",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AlwaysOnTop",
+      "sourceSha256": "fc1fe7e1ee204465ff1aa8da2dddec2f32c47966cded86db8d924d0983a7075d",
+      "translationSha256": "627947e343fb00e985fc8f1fc44696c3203943acc241184b15cb6f483d0b1bfe",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BackColor",
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "3f012085d15b056ab6972fcfb3e856ce9d786e2da4f17b2721b0027d404df65f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BackStyle",
+      "sourceSha256": "8a7a132e8d5a70abeefd53ce3f9b03ac22b33cc5c52db4df1f86c7715c632988",
+      "translationSha256": "36b724e211577cd3dc1d4ec04b68dffa2ad0e93cd233160d8ab84977070528e7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BindControls",
+      "sourceSha256": "7f603664413d55c8bc9acf02d03a19ae2ec2738a82fb6944efc4bab48bea0a18",
+      "translationSha256": "4febeac890f7f18439fa6d551bd3f9f0592baece82a42a677d98e9139ebfe682",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BorderColor",
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "6a6fbb2d09cdeab914721f5925fe584d6db69227ee86bd112317e22a7340ffab",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BorderStyle",
+      "sourceSha256": "852d12ee4870f2267e514c49c11779f30d7e45b5fdfd1e0e886a62e5f4a9ce47",
+      "translationSha256": "16f87b43c524e3ba3ba26983e0a704038c5aade5c90ca902e3c07f75b6365c41",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BorderWidth",
+      "sourceSha256": "385a872760e7ab4fcc48da36a57630f0b22dc7de39c0bcc8ebcf3c4c6b9b68ac",
+      "translationSha256": "cc79b085977224b9f56c3a419ba8a38fced2f0e711d9b7b0173fc27dc2c3152f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BoundColumn",
+      "sourceSha256": "38917df282470a2e2f85b9d86a8cf4b381869264d1ac50130d713dfbb6e12067",
+      "translationSha256": "b8d99c5e4a21b996331fd5839a1a87ed035676d06acb5bc35ae226006924da39",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BufferMode",
+      "sourceSha256": "16793a65e0cfda0414031efc214e4dca811321f75354f4d54a00439a161be866",
+      "translationSha256": "398ff573010957cc026f9af0f358864653673ba4d963812b3cd6eed91a34c97a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.BufferModeOverride",
+      "sourceSha256": "1ac66255ec1e880ef991858ad3e977f57fdf25c15aee7836ccf081d35c2ded96",
+      "translationSha256": "be59e475686e60f8279ae3aa80ed161df904cf744ade6910b6bbe4e3610046cb",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ButtonCount",
+      "sourceSha256": "fcc8421ffbc9967aacdaccd8b7776ff659a8f58be25eadf62575edb50d677e00",
+      "translationSha256": "24f15b00bd3208e5bf4bdb9932afb01241e459617a7f52e98bfab994b9f03d6f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ChildOrder",
+      "sourceSha256": "f4e758aa396881d1861e4ce75adcff7a0fa9b14b1b2f19fb7b37e33cbcd1ab87",
+      "translationSha256": "dcf12ae040f3bd80c18a1c0ec75df550c10d65e2db048e415e340941bcca03dc",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ClipControls",
+      "sourceSha256": "8ccfed593ced1814375382054a8e629d01f494dd6147407b8b91027caa8342f6",
+      "translationSha256": "3072818f83a7ce9a1d020ffc8beb563d497a244be2bdb9fa1d26e9d9dfe3bf00",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnCount",
+      "sourceSha256": "f566c722fb27ed6934fdae56e8e5fe2263022518d9588a9285dded885a247fbe",
+      "translationSha256": "28ec4d3e94426f48bea1cf2d264e38f21473ddb5856e0c880a5b60ec4982ceb0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnOrder",
+      "sourceSha256": "9af5b34f260e3973c0b87c6e78aefbc83ffdaa4bb39561688b74baef6577c986",
+      "translationSha256": "1cb4d8af20f39b1a5f80d381f703d6d2b2adfa27d40faa218b1b77ba3f589b07",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnWidths",
+      "sourceSha256": "12af2b925d300a376adc9506f674814fa94d680a3da65d8635d550e6c9ffcac1",
+      "translationSha256": "297aef8b7fab3d62ff5b0599ef387164d72d8f4d89ae8901585ff5b737873fa2",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ContinuousScroll",
+      "sourceSha256": "74c9a9a56d6b9fabf1a77511d9599a3a95503b81d2ef98fdd9a4a77f5dcbb510",
+      "translationSha256": "f25a8fe0f98b0c49bd64315dea2e85c9eed8d450886ea69309df4cc67720fbab",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ControlBox",
+      "sourceSha256": "bf2501139f0afd8187156370051c0101764676fb351043307220f09de7e63d96",
+      "translationSha256": "9a76d97e09844f93651b222407b8e24724b281cc7c6fcec5101296698b8cef1f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ControlSource",
+      "sourceSha256": "7703ab882568c5f5a7a6f6e20d5126012d56df90f0c912dfff45de3caf3cb95e",
+      "translationSha256": "bdc6aececde15cd955f8100144148f38ab504acb25748a5b7e98e875a6000a23",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.CurrentControl",
+      "sourceSha256": "cf50274fee2abb8d013f07b2ff0d1d1d8f7333c705746e9addd56ed45a55f085",
+      "translationSha256": "80104c3e1d350164aeca67e327ef7496e735f87d6f025ceb57e7eba2d3ebe7d8",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Curvature",
+      "sourceSha256": "ce97e449f49f6dfbe3f9acdb172fac5489099bf62b908d501cb466f359d91508",
+      "translationSha256": "12b9dde2af70a08507a90a4f862442c3f76f0798c555470478f4b66f91cd392c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DefaultFilePath",
+      "sourceSha256": "d32bf6f762c73939521d33dd4d7cd43617d676d8567e14df86494c82f707b472",
+      "translationSha256": "927918b7c459baad7b8f6f262d9de70d26299d2ae0618269ff63e7e387ed310c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Desktop",
+      "sourceSha256": "68693d02ab4fbb2331b8cc39915322e48e61f06d4d1b31e7d19913202857bc8a",
+      "translationSha256": "a36b12f40ffe000637da38cbb70449e16897b341aaaffa25701ad706237e5a08",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledBackColor",
+      "sourceSha256": "5585423fec738873d51269c2b9be882f32040949e8c23fa6f7ec58486ccb0546",
+      "translationSha256": "cb7afa1cf284776282b7a180dda70210a2fe7385c8821121bc57143ddaaa676c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledForeColor",
+      "sourceSha256": "3c06ddb5398e7fa53a86ca56fb28f7e2523455a33c1907d0f9a3ba7f060b6e06",
+      "translationSha256": "e3ab101c90f182101a36a273cffa160cc0f81b38c929534beaf07e409701f565",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledItemBackColor",
+      "sourceSha256": "c63c14580b5f13b51b6cc582513072c06c10d92cd7f9c381c007ebb6e52f147c",
+      "translationSha256": "656add3419f103d3285d22e2e2fb89d0bd78b5cd909aafab8c57f99963180854",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledItemForeColor",
+      "sourceSha256": "6109f1de4317e17eae45d09c68630ab8e205e4d90a7b8abc2ab867ccb8b6b2ca",
+      "translationSha256": "11767480bd66dd84a4cabd67bd39909572fde50daf479856d28d550a96b77bb1",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisabledPicture",
+      "sourceSha256": "d0c6e4b30eb31a07e7ed1d52bacf99b8e245617f0612dc52bf8d27676c29019b",
+      "translationSha256": "6e5bd1d40f64d5a26866cb900926f57bf51550cbdea4a1cb89a02a7a612e8c19",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisplayValue",
+      "sourceSha256": "0baeaa6ef801384ff09dbad3b5fe96cab284b83c5d9285ae4c9944f4f1e7eede",
+      "translationSha256": "528fa9767bfc9059aba5dc6cbf365cad4e280fbac76430be488ce8d7961b00bf",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Dockable",
+      "sourceSha256": "3a3f7879d9988f7bae75c58c0f1884f8f09eb2e9c4618d4ec0dc9f79f11c96c1",
+      "translationSha256": "ef0720d7f20abbde5340d595d03d12e391f90c00c1ec1cc9061b944f125051ae",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DownPicture",
+      "sourceSha256": "01413d021e746c95e435f5ed20bd56ecfacd32f3834f7ccae7b2bf6c5acbd1b1",
+      "translationSha256": "5a849675405ea5a669db5be527b193734edb59478158bab0a7cb95eb8df3947c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DragMode",
+      "sourceSha256": "b7e5d0033079baa78b199b347b23ea9e80f6a7264659693fed26870d726c1259",
+      "translationSha256": "075a9493cdb89ab1aa5d446302c5bf3cfaf656840881df144ddfc5899c0ee9ed",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DrawMode",
+      "sourceSha256": "2b3668b473e5231961b0cf44549b27d0c5f9e2305cc9f209b96e1e55ae61337f",
+      "translationSha256": "70f041379fdaed9823a51c4e83a11eb2c6b1291b99aa419496351899ba995e87",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DrawStyle",
+      "sourceSha256": "3cd2b8b9dcc3bb69e413892aa74c0d121cb77bbb526985e5157375d4a232d51c",
+      "translationSha256": "2356c3b78ea5c00067bf07737cad0e10d1d5579f3f95e4c73c174fa19241e5d9",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DrawWidth",
+      "sourceSha256": "08fe70d46780dd5b07d65e003da881999dc4ead0fb2113a47110ca691b305b20",
+      "translationSha256": "18fe24bfc557a4192254e59273483d10ffc4ff6856f58d80bebf17a53051877f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FillColor",
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "8052ab727f505e5f86ed1f5660aa3da024efcfac4cd947af3b83494f9225eaed",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FillStyle",
+      "sourceSha256": "3e53aca5eac738d4893cd18cf4204872394356d3b7f20f064bcb41365095e035",
+      "translationSha256": "74b568e0d7fe361d2b039ad5e5136fb6a74f4afa6d4be634b7e0374901fbdfec",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontBold",
+      "sourceSha256": "1dd8892a47d05cc903811b9cb71712aec68e4679b46088024c4d71c84c724d40",
+      "translationSha256": "c6734c24f7b48af296673e8f3b7715878613c6467642f15bf2ff26ddb88c2fd8",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontItalic",
+      "sourceSha256": "b65a5cadecda1297410f5226cc0e22721c22f21b98676df77d30bd9ba175a773",
+      "translationSha256": "520cf152dfe08f2b5227babac30aba47fd1aedb3d046232161e4d3c70454714e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontName",
+      "sourceSha256": "a6ac2c76d05355f0c2cc0e6c0412fd46689ef0d9274bab205e08525353415fb9",
+      "translationSha256": "5775e1b0a73621786c0fe4b71c4262f7cde2e29b5295b739cd5a2067f388e3f0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontOutline",
+      "sourceSha256": "f89020fd4bafe74991e69a7d988da1ca89ee04cce251cc8c5c6674b204e7b8e1",
+      "translationSha256": "7e31c64586d7f9504c721e4d9e67f0cc743a9e1edc118ace6be6c6dab8bc236c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontShadow",
+      "sourceSha256": "bbe4fee1d692af7c63103300a02fff7e2d8d637e8d661bf6ecf6cb7513880901",
+      "translationSha256": "e27bee522e88c9f3b04034d9e1f45e3360c0906bdfd54f41ffe5e3f892e6dd51",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontStrikethru",
+      "sourceSha256": "0d62615a8c94c5075128acc6879d272e196da6470d2101ed73bef8e6ee3fa3a4",
+      "translationSha256": "789b7c8a1e5ed3abbed28970f77929cf75227dbdcc036b6efc97fe3ff33d37ce",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontUnderline",
+      "sourceSha256": "37687e24f60b3c0f16694236821eae8c52ed3941b7ff8aaf5fb3bb7fd452dfe3",
+      "translationSha256": "c0dba1743ed9a778394cbdd716c239eff68efee7a1072969ee934f7b590dffbe",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ForeColor",
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "52b5316a540b1afeb216ae038b2af10dbaaa65d56e8be3eb4e6f36499fab6d8a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FormSetClass",
+      "sourceSha256": "c21d78972d7048fb55b06710d886bf02eef148d376553be259b1a92f2061e9a4",
+      "translationSha256": "f542077f65ab2b1ba6549de1dc5c171a261bdcaa56b86005a5b04e9217253587",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Format",
+      "sourceSha256": "e904c9ccfa425ff0b055d2c533462314d35a529b055e8abe41d49bb46d827427",
+      "translationSha256": "aa32c15eaf920e0f14b773b26807f28e56c4c35af53f036fd56b3f767e9134b1",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HeaderHeight",
+      "sourceSha256": "6d712f77078adffd528fa500c8681402f2aee7b88e21b108c38cbbe569f9f4d4",
+      "translationSha256": "c2ef9b5d96e0325b68e821ec1f5dc6da0d7769734aa7c2c8bc47aa78b088f7d7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HelpContextID",
+      "sourceSha256": "318d8f7fe67849f5b7c05965edecc078de605704da4f79351c079064a84e112e",
+      "translationSha256": "89e0e0ae2ee6863fffd97861e4b0a239b4c32aa7c9ab431402f05b0f50704cb7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightBackColor",
+      "sourceSha256": "12eb7fd3777afa400043072854be687c072a7f8a009c0dfac88d2197d552345a",
+      "translationSha256": "a38ab0c39283ae8effc5de9630a344c13dbf2d41d1776ecbdf8bf46a3ee427f4",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightForeColor",
+      "sourceSha256": "d1908f533c1b4a6151a15685f099873de593ed03853633c18933d93243387180",
+      "translationSha256": "2b2c49dfd0ba02e8e9412912b4dab274f941339dde5450e85a10820f95e239ac",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightRow",
+      "sourceSha256": "4edcbe69b9ce90e94d76e064664771c6c453fcbff29abfbb08e41b941246cbb8",
+      "translationSha256": "f6aa7b40aed70a0c559257069fb7125b1ee64d7b483b41dbc54db1553bf5f846",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightStyle",
+      "sourceSha256": "c954ca80c7f519b8cba113c09c3183a0c983501dcaad63f78dab077c9d0f67ea",
+      "translationSha256": "6db0de30900af6b39fbbc78e6896e034238dbf737a920fd3687514293d263ffa",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.InitialSelectedAlias",
+      "sourceSha256": "cc711e94d73da4c4ded3d19e4b77ddacd297ebb98c016c65d249a6d7d0122f90",
+      "translationSha256": "daeb492149485f1c2c62d30554691a063723ab093ab486cb9867f2179f762958",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.IntegralHeight",
+      "sourceSha256": "9c9c9cdce2d966da53e262befbc5c2e60177d4b1efe0510438c898e688616bfa",
+      "translationSha256": "7fbd8603868290ffb4290edba28c180772c10d117c1b13a18ea2fb812ca62d63",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ItemBackColor",
+      "sourceSha256": "11e4f54e96af2267372b1d2b8fc2e42bb8e9abe29b39a738afd5901f4dfd4b83",
+      "translationSha256": "13cd68affcaec0ff174c46710977be8732c3845823160ef8556990ad29c79e1b",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ItemForeColor",
+      "sourceSha256": "5e07d5387437c2bb843195638b1b4170ffe6f04fcd6a7985178964e80c126add",
+      "translationSha256": "e32a657662dc234f020fb8ebe539ce8446d347ff353e89bb05c89b0ec733ae4d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.LeftColumn",
+      "sourceSha256": "454454bdd567bf09ac659a2c1e6dd3b12db1f1418d5d54317cbe517b5eece322",
+      "translationSha256": "59b2ee25e75661eef1b293f79d8b6855a128382f06af3e0acddb855d350ff9f7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ListItemID",
+      "sourceSha256": "3bd60fdee6372994eb9c94b49ff23fd47a490b632b04cb05ef85c15ecd6df7d6",
+      "translationSha256": "8c2a1348fc04e253c6d8fe82612053f9df77cfed30fedde78987d391030a782a",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.LockColumns",
+      "sourceSha256": "bb074b6be1df481bd77d0415c542310d7c6f0cbf51b492b251b7fad552b2640f",
+      "translationSha256": "cb127e54d69643adcd6d8504eba9d780bf44be8ea047508bf158d8bc099620da",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.LockColumnsLeft",
+      "sourceSha256": "68ee7e89c7510010b29932074fc280ca6fa422cc78025ee04bd9ad8edb19dae9",
+      "translationSha256": "4b254e3356fa21289e896c2aecdebb2967c239cf52823fd4217728250614f1dc",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.LockScreen",
+      "sourceSha256": "988353ed6ef25580e1d10ba2a78f70d6f7dfe0f9a07d6953a41f536043b62b09",
+      "translationSha256": "709609399eb03148750d8b6239da5da3a6f5cfe5aed71d625e8bf3f65dbf16c6",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MDIForm",
+      "sourceSha256": "1a9b6bb677b40cd8fd9bde7824f5244a8dfff8ae95333026fd1082c7335f9aef",
+      "translationSha256": "e6fa3767c2a8d585dd2eb49a7b5a79c271147be857ca65a6e4af6ddb1c0fbf15",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MacDesktop",
+      "sourceSha256": "12767001984a977c007ff515b9d572bb1ba639e87c91b7fafae8772a44e74e58",
+      "translationSha256": "23a7165aafa533807296f8982e6e580ce0a8be34396cc5f83526b0247932768c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MousePointer",
+      "sourceSha256": "a40f00aab9bbce3309b3c77f451820b735029d9777073546a50d5dbedf876595",
+      "translationSha256": "c43e95ff2b244557eb0b799f81f4847c79e446a9044805be073fcccde1517bfd",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Movable",
+      "sourceSha256": "2b8589fcfcd770884a9bf6cee2495e3a3f6a93c6f366a703454ac750cb0cc79c",
+      "translationSha256": "7198c3b86762deea3963a1c7ec5ad367876118ce6d29d8aa1608c1dbb602e56d",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.OLEDragMode",
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "b41a1a61baef6fd9494d6e4ef4c30a00456a0c8ab1bacb326ca300a3a133edde",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.OLEDragPicture",
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "0ed7b6bd46a7bbeed33a6677251cc0735767b1ad920dba1431d6f2b8ed52d60e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Picture",
+      "sourceSha256": "2cea274d0bedc39ec4ab6ba9e59ec889e3ed6fb56a1cf088a64d9b383378dc97",
+      "translationSha256": "3559fb35e3328cffef7f38fb08562f74bee14e53c17302479714634ecac7f129",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.PictureMargin",
+      "sourceSha256": "7192e6e5c5ee8df4698d1c7d321c9c4bee99ddb089607cd312a16068b7210b68",
+      "translationSha256": "352c7e62575c15bf73095d0c37cda5ca840cb33a07ef9303cf23c20c9a36a786",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.PictureSpacing",
+      "sourceSha256": "11420290f455f7ca6da281293529a2c0b7a286491104d0ad3295e79d39b90846",
+      "translationSha256": "ce2af811937428acda2d10eefbc197279e32a3547f5577f820ff60fbe16fa1c7",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.RecordMark",
+      "sourceSha256": "ec0176654248a2274e24dbad48a425f7b4940ec4c169a90e9ca4ca0222dc6f45",
+      "translationSha256": "270c0889ee4acf59009c5c93676fa67389240de7885d50e1a758d5e20a3ce7f5",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.RecordSource",
+      "sourceSha256": "10d4feea9a08a54e7211bd87230ba138bf4b6813841d67cb4ccec04c73a63692",
+      "translationSha256": "33db6b8faf5fa23af893e5058fc3ca19d1c1fdd2111876106c8c04d5d9749574",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.RecordSourceType",
+      "sourceSha256": "bc41763b9c1ab33018029e38603b6712ac13eb956e76645f327116d4ba1bedcc",
+      "translationSha256": "f59af5c8e56ac09ffb2e4cb96298de4a6a4951d9da7c63a46664cfacb8e1cdeb",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Resizable",
+      "sourceSha256": "8bdcbfc1e826765a976efa3975864ad2b955a703129bf2fc66ca6c7f7a764ba0",
+      "translationSha256": "1da9b523a387a0a883386c06a129d5dd8c3a1a655e83f38d6b619af2c94ffa0b",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.RowHeight",
+      "sourceSha256": "81b4d0362eb3361c7c236ee0430a7012786aee4cf95e3c3f5b95aa5f5ac89a4a",
+      "translationSha256": "32f3037345fefdf57b843e2023727467ac680acb45995c068f10a525706e90ad",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.RowSource",
+      "sourceSha256": "50f01f1d98210e72ad86c6f10314248c5d084a9b0ec3568455f45ee14be412ec",
+      "translationSha256": "18d061ada6dc64fd519c7e8030a66df0cd57ce0e8fa16d9744eca2b65e82e2fe",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.RowSourceType",
+      "sourceSha256": "7dad7cb40c65e8b9ad33338cd1eff054b7fd15ff4493d6729d14daac033478aa",
+      "translationSha256": "da003964b8bf5f012c2edc169e5416b39d2c720f0462cf01817de5a5daa28274",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ScaleMode",
+      "sourceSha256": "f28b02dff319e414653a7aaa087935fc88301f970eba2d19a7ed992bc1224b21",
+      "translationSha256": "015519e84c5a98e3cbbfd152f79655506ccdbad90ba08f7708676b83fdfe52ec",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ScrollBars",
+      "sourceSha256": "9dda07aa660121e91f394cf85a1f6018a8de3868bc7ac9e3b6c57eae4f4602cd",
+      "translationSha256": "ce2c1242c7a56c361b851a1530f300b038477d04e9659c7b452541b50041d437",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedItemBackColor",
+      "sourceSha256": "baf75d75b6731d54dc23f285cf3afb114f873b517202df0927138b41f3cef9cf",
+      "translationSha256": "058376d724e4d9912c384932feb4242b8412da3c8963515b9f67ad6b76d3c7ec",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedItemForeColor",
+      "sourceSha256": "c7bc8cc8060736496a3423aaa2045921b09b9309887747936d53e118af886ee4",
+      "translationSha256": "a447dd8ccadb9ca2f1fc12f6fd8f66c1f7416509d9a83d4fb3308ab86b06179f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ShowWindow",
+      "sourceSha256": "4ee0c5cae7662b168ec5859a29dc9e431960690640f9417fa760c224321e0848",
+      "translationSha256": "005e6d551312ae406f709e209c9c0a429e4c0aac00228b257f9b4d0cbf18e4e0",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Sparse",
+      "sourceSha256": "d7af78c1f4c4a2defc54302095df328cc37c57ae94b7b45fb62a1a437eb3dcc3",
+      "translationSha256": "3dacd6a12f2924c35e141fefe9eeee63378e4926a51090e799d7370832662549",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.SpecialEffect",
+      "sourceSha256": "5b159fe91e0009d47abf46665ef7829bc6f74a51335d815b1981829cd4f78b14",
+      "translationSha256": "93ff772f39c2fc4457eaf61b53faeb5c2b0f2d590175c454d8b32e477bbf8d84",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.SplitBar",
+      "sourceSha256": "d534ee021bdb2cdf82f36219d655defab1a345c19b4a4690834cb9741669451d",
+      "translationSha256": "58bfeffec87e838ec0554d2fb7aab0950171892d4bd704be5798f87e8582254e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.StatusBarText",
+      "sourceSha256": "2dc92965d3666b2beca094824e96e8049e642a05ef9161d8bc9905ed9628e074",
+      "translationSha256": "4be4459bb0eb1dfb2a2bec3ba10f7025980c355a2b9a8eea64401f831fb0fd57",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Style",
+      "sourceSha256": "cb86eb2d914d37df6857c3cfe4827b5f770b01a86578120618b0b21572160be8",
+      "translationSha256": "06521aac8158a3c23b6409d198b052dc2fe5ec7939a123869235731c3384867c",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.WindowState",
+      "sourceSha256": "a8ee23732a04abaa28ed119773cb8e624010d3fe33f2de02e45e090f5235a517",
+      "translationSha256": "9d21e20052ae2e18aaddda9c39c9166444746c69c36163407ecc382ba7bd5be3",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.CharacterValueTooLarge",
+      "sourceSha256": "d70fdffb2a174c62bf40718c8eb673f27843883771702b891eb0725e7d4c0f8a",
+      "translationSha256": "0199265dede20473f1a2793c186b0d734b162a035cb7ded5734391893106dafa",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.TableOpenFailed",
+      "sourceSha256": "4aeffae7b9a9d8b5b3f4278578b351575801b7dbea19a3f078aa73ef30c11c9a",
+      "translationSha256": "1d6cfe1f607d64475e505e9ad9f1a7e8cb539ed56752e70da81d871c48b4a36e",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.TableWriteFailed",
+      "sourceSha256": "220d1768a1930631dfa2541289fba95125d002e3dfd2f2d61746b59fc33ec861",
+      "translationSha256": "6cdacb8d9e2f64a09fa66e967babe08fc3d477cb276c75589e00ae883451b1ac",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.TargetFieldMemoRequired",
+      "sourceSha256": "f9acb42936ac938fac5d94ea4da4101feb60de552da58ed73c643226f4c81c73",
+      "translationSha256": "cd23f8f6924cbc912789cab184439f800ed48b661bef67f10d62044f33e1fd1f",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.CreateJournalFailed",
+      "sourceSha256": "5136411b4026dd4086aaf958c3274de388baa9efe2bbbd5052955310186f401a",
+      "translationSha256": "387c39b9dbe6b7d3b992a18908cda61cbd3d3c6805d2e7ab43ee75e04ece5e70",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.CurrentPropertyReadFailed",
+      "sourceSha256": "29c13d3622639213684f4e945d8c231102d8123d6cb57af040457b333faebb49",
+      "translationSha256": "1768c53b3a3c473f2287d361f1fb034e07685108a95165b90b1cb5cc35857d95",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.DeletedStateLabel",
+      "sourceSha256": "3333862d4ec7bd86c13a9c236a79c24c17c494aa6a1ec6d3b6016f3324af3a88",
+      "translationSha256": "b81132044384937c5c9949bc8808db646bfac7bbcffe3a85de05ecc1adf87ec3",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.HistoryUnavailable",
+      "sourceSha256": "d1edd4c3e49946ffa1eb83a2629ede634c6c16304924caf8e142513e85c72c94",
+      "translationSha256": "d1f2d8539398b85435032cf686921a8e4688751da7b874a665bba711f6ea49a5",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.JournalReadFailed",
+      "sourceSha256": "1b8cdc45a908ef207afbf3829a2662838faa038262a7aaa28709c3e5a71312b8",
+      "translationSha256": "2b3499d623d648cd2f610a9b8871c5bc1103e8551f704c8e61b6932d140e0912",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.PropertyLabel",
+      "sourceSha256": "d0655d644d05e70a3a9a1b961d5c8a048f45d899824fb606cd82ee37147fca0a",
+      "translationSha256": "e0f38fd38e3de3b408ee1a39b611c9143e76178713ef58dbb1072e526b6e41ba",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Undo.RenamePropertyLabel",
+      "sourceSha256": "7dd3c1ee03756c58d58bff9af3867604d7afed73e4030f99032de1eaa64d71c9",
+      "translationSha256": "bb60c84f870fccbb98ba79f4847c6619da6a91963423066a55050834089f2eb6",
+      "verdict": "accept",
+      "reason": "La traducción conserva el sentido y los tokens técnicos."
+    }
+  ],
+  "residualUncertainty": "AI text review cannot certify native-speaker cultural suitability, machine contract safety, or rendered UI behavior.",
+  "limits": "All rejected or uncertain proposals remain blocked pending correction and fresh review."
+}
