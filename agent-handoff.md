@@ -31,6 +31,18 @@ the new exact head, require an actual clean authorized review and all hosted
 checks green, then resolve fully addressed conversations and merge. No review
 conversation is yet resolved.
 
+Nov06 local Claude `/code-review` of exact head
+`cfd5fbbd8103376a2ba0ac09ac95223d9fa46163` found one actionable medium
+regression: the new raw-selector transport let two-selector `ItemData`,
+`IndexToItemID`, and `ItemIDToIndex` calls enter one-selector property-read
+routing. Fail-first public coverage reproduced the route loss. The bounded
+repair requires both the typed hooks and fallback property resolvers to see no
+secondary selector, preserving the legacy method route. The expanded 104-case
+public shard passes all four mode/session combinations under GNU and all four
+under Clang. NEXT: signed+DCO commit/push, fresh hosted checks and a clean
+Claude exact-head review; then re-audit conversations and merge only if every
+gate is clean.
+
 ## Active Numeric compatibility workstream — 2026-10-29
 
 Owner resumed #5611/#6776/#7189; all remain OPEN and owner-authored. `main` is

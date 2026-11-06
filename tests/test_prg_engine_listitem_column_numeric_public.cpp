@@ -100,6 +100,30 @@ void invoke(const fs::path& path,const std::string& mode,int selected,const std:
  expect(seen,"ListItem COLUMN captured control "+tag);
  for(const auto& event:state.events)expect(event.category!="prg.object.selected"&&event.category!="ole.invoke","ListItem COLUMN no external event "+tag);
 }
+void invoke_preserved_secondary_selector_route(const fs::path& path,const std::string& mode,int selected,
+ const std::string& cls,const std::string& member,const std::string& first,const std::string& expected,bool bracket){
+ ++public_count;const std::string other=mode=="VFP9"?"COPPERFIN":"VFP9";
+ const std::string expression="o."+member+(bracket?"[":"(")+first+",2"+(bracket?"]":")");
+ const std::string tag=mode+" session"+std::to_string(selected)+" "+cls+" "+expression;
+ write_text(path,(selected==2?"SET NUMERICBEHAVIOR TO "+other+"\nSET DATASESSION TO 2\n":"")+
+  "SET NUMERICBEHAVIOR TO "+mode+"\nPUBLIC o,cResult,nCode,lAfter,nGuard\n"
+  "cResult='sentinel'\nnCode=0\nlAfter=.F.\n"
+  "o=CREATEOBJECT('"+cls+"')\no.AddListItem('first',11)\no.AddListItem('second',22)\n"
+  "o.ItemData(1)=101\no.ItemData(2)=202\n"
+  "TRY\ncResult="+expression+"\nCATCH TO problem\nnCode=problem.ErrorNo\nENDTRY\n"
+  "lAfter=.T.\nnGuard=CAST(1.9 AS INTEGER)\nSET DATASESSION TO 1\nSET NUMERICBEHAVIOR TO COPPERFIN\nRETURN\n");
+ auto session=PrgRuntimeSession::create(make_runtime_session_options(path,path.parent_path(),false));
+ const auto state=session.run(DebugResumeAction::continue_run);
+ expect(state.completed,"secondary-selector legacy completion "+tag+": "+state.message);
+ expect(get(state,"ncode")=="0","secondary-selector legacy error "+tag+" got "+get(state,"ncode"));
+ expect(get(state,"cresult")==expected,"secondary-selector legacy result "+tag+" got "+get(state,"cresult"));
+ expect(get(state,"lafter")=="true"&&get(state,"nguard")=="1","secondary-selector legacy continuation "+tag);
+ bool seen=false;for(const auto& object:state.ole_objects)if(copperfin::runtime::lowercase_copy(object.base_class_name)==
+  copperfin::runtime::lowercase_copy(cls)){
+  seen=true;expect(copperfin::runtime::lowercase_copy(object.last_action)==copperfin::runtime::lowercase_copy(member+"()"),
+   "secondary-selector must retain legacy method route "+tag+" got "+object.last_action);}
+ expect(seen,"secondary-selector captured control "+tag);
+}
 void public_cases(const std::string& mode,int selected,bool hostile){
  expect(numbers.size()==11&&exacts.size()==4&&hostileNumbers.size()==6&&hostileExacts.size()==7,
   "ListItem COLUMN frozen tables");
@@ -126,6 +150,11 @@ void public_cases(const std::string& mode,int selected,bool hostile){
   {"en-US","Subscript is outside defined range."},{"es-419","El subíndice está fuera del intervalo definido."},
   {"pt-BR","O subscrito está fora do intervalo definido."},{"qps-ploc","[!! Šµþšçŕïþţ ïš øµţšïðë ðëƒïñëð ŕåñğë. !!]"}}){
   set_env_value("COPPERFIN_LOCALE",locale.first,true);invoke(path,mode,selected,cls,22,"0.9",{}, {},locale.second);}
+ for(const std::string cls:{"ListBox","ComboBox"})for(const bool bracket:{false,true}){
+  invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemData","1","101",bracket);
+  invoke_preserved_secondary_selector_route(path,mode,selected,cls,"IndexToItemID","1","11",bracket);
+  invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemIDToIndex","11","1",bracket);
+ }
  set_env_value("COPPERFIN_LOCALE","en-US",true);std::error_code ignored;fs::remove_all(dir,ignored);
 }
 }
@@ -135,6 +164,6 @@ int main(int argc,char** argv){ScopedEnvironmentValue locale("COPPERFIN_LOCALE")
  else if((argc==3||argc==4)&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
   (std::string(argv[2])=="1"||std::string(argv[2])=="2")&&(argc==3||std::string(argv[3])=="--fixed-only-hostile")){
   public_cases(argv[1],std::string(argv[2])=="1"?1:2,argc==4);
-  expect(public_count==(argc==4?56:92),"ListItem COLUMN complete public count");}
+  expect(public_count==(argc==4?56:104),"ListItem COLUMN complete public count");}
  else{std::cerr<<"Expected COPPERFIN|VFP9 1|2 [--fixed-only-hostile]\n";return 2;}
  std::cout<<"ListItem supplied-column frozen public cases="<<public_count<<'\n';return test_failures()==0?0:1;}

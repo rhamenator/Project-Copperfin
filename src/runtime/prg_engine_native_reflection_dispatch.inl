@@ -411,7 +411,8 @@
             }
             // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: preserve property-first
             // routing, but do not recover Numeric indices from formatted text.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 is_native_itemdata_member_name(runtime_object,
                     normalized_property_name.substr(0U, selector_open)))
             {
@@ -429,13 +430,14 @@
             }
             if (const auto item_data_slot =
                     parse_native_list_control_itemdata_member_slot(runtime_object, property_name);
-                item_data_slot.has_value())
+                raw_secondary_selector == nullptr && item_data_slot.has_value())
             {
                 return read_native_list_control_item_data(runtime_object, *item_data_slot);
             }
             // RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001: keep property-first routing
             // and exact raw Numeric identity; textual GETPEM keeps its old path.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "indextoitemid")
             {
                 const auto& set_state = current_set_state();
@@ -451,7 +453,7 @@
                 }
             }
             if (const auto item_id_slot = resolve_indextoitemid_member_slot();
-                item_id_slot.has_value())
+                raw_secondary_selector == nullptr && item_id_slot.has_value())
             {
                 return read_native_list_control_item_id_for_slot(
                     runtime_object,
@@ -459,7 +461,8 @@
             }
             // RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001: preserve raw typed item ID
             // before textual GETPEM/legacy selector coercion can round it.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "itemidtoindex")
             {
                 const auto& set_state = current_set_state();
@@ -475,7 +478,7 @@
                 }
             }
             if (const auto item_index_id = resolve_itemidtoindex_member_item_id();
-                item_index_id.has_value())
+                raw_secondary_selector == nullptr && item_index_id.has_value())
             {
                 return read_native_list_control_index_for_item_id(
                     runtime_object,
