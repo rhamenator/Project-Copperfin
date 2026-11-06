@@ -1,0 +1,1 @@
+- 2026-11-03: Add complete en-GB catalog and managed locale selection, with British spelling, invariant syntax checks, and per-entry review status under the v1 localization workstream (#2348).

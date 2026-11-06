@@ -1,0 +1,549 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions",
+    "independent Codex subagent /root/review_es_revisions (GPT-6.1 Sol)"
+  ],
+  "scope": "67 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Dialog.StudioHostMissing",
+      "sourceSha256": "858e0b5800d8707c6f880d5fce7d29b9b1d2437033763d9d579f14891bd2055c",
+      "translationSha256": "e84d726c8c313ca7b7245e7a0a2e434f7cded375460eeece83b4d2b715fef79b",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance",
+      "sourceSha256": "d127fc01e5f59208a2fce07c255535a8878354043c4364b90b1c83bca005cc7f",
+      "translationSha256": "fc0127d451e283eec6768fadf615b00c48bc76b9b3d9d8893e7dac8c15dffb5d",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.Generic",
+      "sourceSha256": "506435ff87a9ef91bc21ffef4c2e2e71c4630e1e95212bc12459c2e929d74554",
+      "translationSha256": "555b3f995296497b967cd578829d58844aca07ab46855acc9fc96625516426f6",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Placeholder.CodeReferences",
+      "sourceSha256": "1b9570ae8331bfdbcae5b71e6df6ab52ec34e1d73089bccc8a826570af6d2d81",
+      "translationSha256": "4349482e48152972c41690b70626f14ce4280441ce79353e80587f65eb853912",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Placeholder.Toolbox",
+      "sourceSha256": "38755b5b5e0f9c3359435fdfc7358a88c748a82f6dda512da86ed57f916785fd",
+      "translationSha256": "466d83546ca37b940b35816a1fca9f3381fb320485ee805acdab8f6da68040fb",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ReportSection.UnplacedObjects",
+      "sourceSha256": "57d6de2036463e586d10ec9d8f5570f1dedd3ed6b625750418ab7ff8d0c4123a",
+      "translationSha256": "10e1c0b0e88f55d0ab75a92abcd9a9582b8463be85b1c201339f11f800f6f23b",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.StandaloneSubtitle",
+      "sourceSha256": "c29a367323680038024d531988c47f728dec4553819f8f4c77517b07363ca4e1",
+      "translationSha256": "e5b5378b297c2cad89b72b94e0c228e8c6538e75074bfbbad8511d3aa3e0dfec",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.NoDatabaseSelection",
+      "sourceSha256": "cd6c672b1738784d7c22adb766318c20e7ac30c52c34875ebb77c80a4bf6d8e1",
+      "translationSha256": "b20dbcc27c3893055b426e4eb49bc001029a50cb95075abfe1d3777f5b3427ff",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbasePolyglot.SourceShape",
+      "sourceSha256": "2c81e560d41ceb67ebc8b7cb4b9368d7485e1579164317a9f502af18883c71ce",
+      "translationSha256": "e1cbc9e2cda9b3b9492738b048cc24fa44fec01bd107d75f8d2f71d50b8b8595",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.R.Title",
+      "sourceSha256": "202aaca5e25de1f3e4cb4b805b35a2fd344793ddd19aeb6ad277e2e1c5c3e36b",
+      "translationSha256": "1d2da3473dd85afe461c5724007242cf15632bac569843987045568e66cb995c",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.Rust.OutputStory",
+      "sourceSha256": "85c8e4088c51ebf921e82bd5dbfbc3c1c8cd85a2ec0b82003d6acf9c5eb6f16f",
+      "translationSha256": "dd78e29bdac4c246e2c57af95693c13a2f6941f1ca23336a8b6df16bfed337ae",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.Xbase.OutputStory",
+      "sourceSha256": "c9a7ea3e5feda1f53e7bd3e3a61044254b9a0282398318f34e9464d4060a07ef",
+      "translationSha256": "e0105bcc7a5282a4e362a7f5f40c52049e931157b0790a33953777a3288ac4d0",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+      "sourceSha256": "1c250ab7269e501cae212d1386320398df4d44a5c2627c69bcfafcdc8fa626c5",
+      "translationSha256": "66b958608f5a6460b8bb1355ccaf2e8501fe2b444de1ac33fefa7cc60cb71161",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.QueryTranslator.Error.SelectFromOnly",
+      "sourceSha256": "b06a992cbe1379a02ba8b13bdce9c6191eccdf649f517a9fc9fc689de6dca58b",
+      "translationSha256": "0dc52c79a2151b6475ffa98d55e8288bceb580aad2ad2117e701ff9f5fd8f40a",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
+      "sourceSha256": "32ac907508f228def4151c2b528aa5cf64d60d72af0a4d9e6e39812b66632c7d",
+      "translationSha256": "5c11110dbb8e3cecda98b9cae6029d1687a55617d1bc715f8ef619d92db1b969",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+      "sourceSha256": "e8280bad48ef6f5a2301b03e32b2ac95d70ff216cd45de0ebdf7ba6afd749f40",
+      "translationSha256": "c92df45bd1ac12fa9c5a89c987b0f4297d15e751c6a1b6a588c796a2dc53dc63",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan",
+      "sourceSha256": "568b1d4fd99ce3638550ed36cdb349e4d09bc9a3052e7f47ec25b1da2989f180",
+      "translationSha256": "a6545dbd8e0028a3607f6f0f1aa7cce6f0269452c4e3352459e3f2289e8c70e0",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+      "sourceSha256": "5a93ab3ebd1c482673180281af0865cfd97e57a51ea2aeff7c950fb28a7db0ee",
+      "translationSha256": "03b30fd33a4f4dbec650373c4b0a4eb74999c9a73cf2c0602ee6e8fe536a1279",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+      "sourceSha256": "d782f3220ab46cc09c2eb908f7599a192f1ceee2dc35056bddd66cf5172e63aa",
+      "translationSha256": "bcfe84bb793fa0f5a4eda2407a6d6a325f5ab02c8182733117e2285b9d51241b",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+      "sourceSha256": "4ad3cc20d38b5d205e992fc36549c6452c99b801f2d5b001f1381a319480c051",
+      "translationSha256": "fec065008aaa93c2bce7a8e7aa5ea6fa4ed58d70326e94efdc56977e71a2efed",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+      "sourceSha256": "db5cdb7135ce5acde24ccfc5785a4fd6bb5a63bc77503cfc9566e2916c8120ec",
+      "translationSha256": "478a0e2db4acff9bf958b975268025f15affd617a3ecbc8999a23bf96e560967",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName",
+      "sourceSha256": "5edb1fc37978ade273a49e847f542c8de097c6824e36fb391e79edf78957cf76",
+      "translationSha256": "a715c16cfed5bc1ac3aefe2ed5f5cc67491581b64a7c59b8dda8f3327fe30d3e",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly",
+      "sourceSha256": "3b04c011b7968d25b62d15e5883d2c018edebda7a5b322ddccf572a934537b71",
+      "translationSha256": "e512fc0ac10a5a30d829d5739b70bc654f5f407a0d39fc9208cb178b7c5a0b51",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions",
+      "sourceSha256": "c2b0d17e6cc702f51f936f25b60d7b3dc461591e8c7fd21e9c0d7b36b5297fd5",
+      "translationSha256": "7c4d2fc26d27af921d4728504225f544cce1520a3287dd361584972bebd8aeea",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ReturnToCrossesExpressionInvocationBoundary",
+      "sourceSha256": "8e2215805f75bcbd8f5d160ec4dc746b132997f27af2bc1a1f66d3e70388af92",
+      "translationSha256": "a662a7cf5ee0722d0c604062f143a90b645c21523beec5169437cd5a87381367",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.ReportAsset.Error.ResolveFailed",
+      "sourceSha256": "284be5e8ecde6b0de192139354129e10f01a01a14dfe6c2c1f466a03aa32276c",
+      "translationSha256": "2219cce3c430aad76e046cf65a54dca250f2b4c1c0da9427e4083f613a77aad4",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset",
+      "sourceSha256": "5789e7fc2f0b861fe7acf39c65f04dafb018ecd2f6b6e196eebe988ba4e57eed",
+      "translationSha256": "71b12f8336b76205073b3ac4f8590e7bfbbf3787afb30425a46573fa40d34285",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpoint",
+      "sourceSha256": "97ffe7ee4bf7ef06e7fc644d836fbed51423ab9313e1581c4af4a9f44b9c9061",
+      "translationSha256": "31ebb2673242ed31ea0760c72239bae63db4dbc1e7f9b3d9130113200822d62a",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+      "sourceSha256": "99a6eb06b3cfb52ba2c0096aeb49046b2469ef5adcff65d423e8b94b95402d5e",
+      "translationSha256": "1223c1e552d92bc306a37db3ab97ce58d8525dba8b2ec379d71eff088b36607e",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+      "sourceSha256": "519816696ccdeb697034c41326b583286bb0d16d1da46f51fe5d72559dba5486",
+      "translationSha256": "27f912d7357de4e0e2a21cddb5e941dd657f0acfc5ffe434c4144c108cb737d4",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode",
+      "sourceSha256": "59cda05aa63a7b42782dc049181f9a4317f2b0b7d6d3afc453cc25c58856be68",
+      "translationSha256": "bc26d9d2cc514e144ebee077cf06e5dfc072a01cf72cea4c77595dac1f410969",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Profile.Role.BuildEngineer.Description",
+      "sourceSha256": "aadd0b26e37aff66ae7b84543eb0cad6dbd217087c293261c8dfe51f2d16b8da",
+      "translationSha256": "19be9251866dde07c42bac8143fcbd0311b37e3470dabdec48e6552f379bfe48",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Profile.Role.Developer.Description",
+      "sourceSha256": "6f1ecd6e52375ef5fcb22169c0c3423fee9f6eaf2a55390b28a8b34b9d57546a",
+      "translationSha256": "d1a16dcc71457af16b475a2bf52026a8677c977f82ab9b070003e919a0810f34",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.WorkspaceAgent.Decision.AdvisoryAllowed",
+      "sourceSha256": "7ee1a85d5be0bcab4b7015cf674378a5bf3a1de90f1e4084930c3919e98dbf6b",
+      "translationSha256": "202aaa6ca7a0b47fe9132f7b9a63045f0f8f11b40d131053a2046cef6aae63bb",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.OpenBuilder.Description",
+      "sourceSha256": "c255846cb4694f6743a44ad1c045a0a57148cfa14f937d3e641fd303612982c7",
+      "translationSha256": "487db44632d693ce426ff980adee51bff2860295b7706e010f488a5cc4a2c7fa",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.ShowPropertyGrid.Description",
+      "sourceSha256": "8d61c1291adeb65ec6939a2899be577e59cd8c74fb59eb84278d18945377cba9",
+      "translationSha256": "19e9342ec29d1a1caf458002274142acebe073f5adf401e1d8cf3bf6356eae97",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.LabelDesigner.Title",
+      "sourceSha256": "7ebf31e996ddf189fddf1af2f5c022519ceb7c9e1b5a50ce168ac10e13149b4c",
+      "translationSha256": "9a7ba3b7c2315f5e138f57b7b52f40753aac9e0c1f8ea7110c2829a226bb24cd",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Error.AssetPathRequired",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "e66d6a75b3ad0567f083c85c072a3a364a234eb044f11b9627de4f923cb5ffc7",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.WorkspaceAgent.ActivationUnavailable",
+      "sourceSha256": "0624473be05bc72c553d693948f60427182558b870119dc1b1cd80b86ded15ce",
+      "translationSha256": "de4a5f6977c18f781157492f4fed50f7eaac6fe7171b01a078441e6bc7d4354b",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.ContextConflict",
+      "sourceSha256": "4115eb25ae74d112501e0096033fd8f18d57f1fd25dfef6e48cbe55f310352c0",
+      "translationSha256": "32a3365cb92c737b4782df291d7ebb8b71d45cce9c45b19442c8aca57dae4718",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "sourceSha256": "dc95fafe996fcb864232ede1cbf243cd3d220185d06c10040dad52f9d7ce3035",
+      "translationSha256": "d7cc8dd04cbd6faae57ce558b6724478b58155821ec3bd5f3e9153af4aeca893",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "sourceSha256": "9e7c3f2caa927522d09aeae0d7017f373644f2ab37dae502195dc113e357dfd2",
+      "translationSha256": "bb7aef4028b7b0c499d3c13edbc38cf49845f6f4fa55e45358f1465c9fa14e52",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "sourceSha256": "811ebf65b1097f596a7cfa4d19957c083a95affe046d0c5c61dd6b9284a81f4c",
+      "translationSha256": "f984f44199c6b2eefb1eff104fa4192d5ec621be946c2d86bc283d9858642516",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "sourceSha256": "f0d44b836f4e181c34060746aa432d25f3c79687c66a391db8fe52744afd2c45",
+      "translationSha256": "485f744f81f55c0129a12f51111139582ed50435e4d869d167c17bd17790c0cc",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "sourceSha256": "b1bd07d1db8cb0a0c7cf72d4a8f56fa805b3c7249128b27359f8d35ddab2573b",
+      "translationSha256": "a0f0b0a9f1d1b68d0bf56cc70599f2d0829fc78ea8f80e0ca8a954e08ab5a629",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "sourceSha256": "10a75a9207b35688660dd7b86adce5dd77b025792d36e3cc916815013b501b1f",
+      "translationSha256": "c477bcdc87ea6024cfe379bb634cf2279dd09660f3968d1e44b35f88337816b4",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.NoAssetPathProvided",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "e66d6a75b3ad0567f083c85c072a3a364a234eb044f11b9627de4f923cb5ffc7",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportStagingFailed",
+      "sourceSha256": "859d192224a1cb39a14726c1a6ec027de10691caefda8dff548e9aa7ab265656",
+      "translationSha256": "ad5838baa8d819f2a3cb17d4b61b6eaae6f2ec945c668ca3b0a5900f3af8009c",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbcCatalogEmpty",
+      "sourceSha256": "0ab9f05aad68fc5998febc7b24eae55382d5b695bab364daf6ecf8ca045c5bad",
+      "translationSha256": "15138ae819881ceae93b6b121a041693e448d15efaf4d8c06f0ac2d0e14c25f2",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbcCatalogParseFailed",
+      "sourceSha256": "96c36ef238285c25a3030b4d1709d53878f1bc1d983cb3580a4fd2549ee7eca0",
+      "translationSha256": "36674b1c55128d86bb9e2089666344c1ca3e70defa265bc0641368877c3d1d8b",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfHeaderLengthDescriptorMismatch",
+      "sourceSha256": "32c3e96cffd7f01da34f63ae74560d29f2d2210b744bffd356d85b34dfb2c80b",
+      "translationSha256": "0704043520cbd9d157d7bd6ffb76af6bd8c7ad936ec6995245fc5098cabde787",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.IndexCompanionParseFailed",
+      "sourceSha256": "1530eaf4bec925673c1254dab7c2cfb6aba64852d0ac101f0b6ca53119e9c636",
+      "translationSha256": "a1df2a6c9db6b26a9bb0a53983e1af26719e4af551156e93e1d075e2cd43fbef",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.InvalidTagName",
+      "sourceSha256": "67fe2bfab3590ac6b0051ea7dad01d39433c0613d4427e799c1b61b5bec2d784",
+      "translationSha256": "2614dd53c3b7910e4712e9e152246bd669aa96b3541034baef56a87a4119fdb2",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.LegacyDbaseReadOnly",
+      "sourceSha256": "9e1b17573dd63d7360c9a51454631e1609833d5a91c5cb23db6a49d0e64538cd",
+      "translationSha256": "43248581aaf6ab10b9ecbed400b179735ec2a2e3adbf72327d3445b9adbd6dc3",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.LegacyFoxproReadOnly",
+      "sourceSha256": "8023d81a3a5f67d97aad73e669cc1c65987f1192057ea2577818a733c0c185e9",
+      "translationSha256": "c2de52818b0e30e97e6e18997546a7e813301219b4e4a90c31a8b383c42773d0",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Identity.FieldMissing",
+      "sourceSha256": "8bb879e51fe6b1d66f7700939789a8f5ca2fb529fad2ac659967be3032060b7d",
+      "translationSha256": "1a5626b01655c119c462e97d3f4c0d0087fe25ff188d1fd1cce4152d66211a75",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Identity.ReplacementExists",
+      "sourceSha256": "185e259e07830faac15e154f038c84e18a77581cd40324267a745ad702c2e854",
+      "translationSha256": "baf3604c41d3c95fad9f35eacc31dc9153735c3e7a1d6918ce79152af31a23ca",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Identity.ReplacementFieldMissing",
+      "sourceSha256": "7199293391e2f2e8a710633c35fc9542bd00b5f6985b43b01efc2946abc84114",
+      "translationSha256": "047674bd2ed2d90942f528e1efa55a70b7a322ee5d0c329ed47be6776c4cb7c5",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.OLEDropEffects",
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "50dff058da05e0e0192b88365588ae3a1c7498af495787aae69b8fcf3be3f673",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.OLEDropTextInsertion",
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "e25a552247b086bade9cf2d119004a2d7780550a7e82f44d624fb37b86d23d54",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.PanelLink",
+      "sourceSha256": "39d5342be493c1be7bc6eeca67ea61c36aa3fba1a69185cd978f00cbe3dd3821",
+      "translationSha256": "4ef92e99145efb8a9f93eccbb4e4b11cc7f7489377810436e258421f63ad42f0",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.PicturePosition",
+      "sourceSha256": "98609cf77dff2225941c4954469259983eea2791e6b90dcef7e51c81bd64a90f",
+      "translationSha256": "af7ed69843bb4bb4a82db2887613bba610bd38a5aeab88200555ba2224d1268f",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.PictureSpacing",
+      "sourceSha256": "11420290f455f7ca6da281293529a2c0b7a286491104d0ad3295e79d39b90846",
+      "translationSha256": "4d9a7c79e92fea0ab71f00bfcb1fa08de77e8809003aceee1f75a5fb38b7b929",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.TabOrientation",
+      "sourceSha256": "fce4f93885b311937548da6b4780f6494b6cef61cb19ec2cd8233d60d0e10501",
+      "translationSha256": "acf533c3a18584b6ec5f2f49f215b47d8d25a1ff2320ba1c16dfa99ad941a384",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.PropertyLabel.WhatsThisButton",
+      "sourceSha256": "2c23b386fd05447b943472e59f70280e29bf6da3c0a997f80e3dbedce6c7b7d4",
+      "translationSha256": "4362beaf16d8f70154fb3b725e817b0ca899097cab17dae05b847e6e79922469",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.DirectFieldUpdateUnsupported",
+      "sourceSha256": "cc18c84f3ec03150b33ce6680d1ff34965425c4eed8775fc0dc753487b291e92",
+      "translationSha256": "b5a02a23ee346d702aa3f2e3a4ba1558e434867f173e368fd09363b002593d68",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.RecordIndexOutOfRange",
+      "sourceSha256": "0885f7004c16b1481c49d6ffcea156e88cd088869e58a415c4ced0cc1cc891b8",
+      "translationSha256": "5ed7fc63685ef36a945fb3fe14c7999f51080ab11cdbb273e3b5590e4efed6b8",
+      "verdict": "accept",
+      "reason": "Meaning and natural pt-BR wording are acceptable in context; protected syntax is preserved."
+    }
+  ]
+}

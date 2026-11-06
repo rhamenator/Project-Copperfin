@@ -420,6 +420,12 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
             "${CMAKE_SOURCE_DIR}/scripts/check_locale_review_status.py"
     )
     set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;review-status")
+    add_test(
+        NAME test_locale_review_gate_fixture
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/test_locale_review_gate.py"
+    )
+    set_tests_properties(test_locale_review_gate_fixture PROPERTIES LABELS "localization;review-status")
 endif()
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)

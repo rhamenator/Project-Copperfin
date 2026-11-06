@@ -1,0 +1,973 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions/pt-untriaged-122",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "120 formerly source-identical pt-BR entries translated by one Codex instance and independently accepted by another; two proposals remain unresolved.",
+  "residualUncertainty": "Text-only AI review; rendered UI and regional cultural review remain open.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.Guardrails",
+      "sourceSha256": "0c9b35a43ac6826c773bd7685036225124c6ac54bdaa45e3decde26f953d849e",
+      "translationSha256": "3fed5847599023b265fbbb86ed4904fe7da564ae150f3b07427c1ccf1f5f395c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.LabelHardening",
+      "sourceSha256": "22550a8efe03fb6c0694f0ebe6d2dabb7e5c7e950ace4036a9ce2f9756791465",
+      "translationSha256": "52c887aa44f413debd4b5786a3d1fd7c3c05d85484f34a75fd0b7ebe1acc50f6",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Alias",
+      "sourceSha256": "70b5b7f83d26380c5fd40fb7ac1f7088b5687266c4d0bcaa1f572e8b0eb8eeb6",
+      "translationSha256": "0a3ddfd9368ae0ea04664c96f5ccf2ba89eb66c060ba733cddf6322635b87dcc",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.ClearEvents",
+      "sourceSha256": "06c2a3fd557d773d83ca35fcf73c5d1c91e13564a8e584fa2199788f361a4e87",
+      "translationSha256": "409ddd6a3cc45af226c62700854e6e4aafbe8d3e5caacf05683f4f64943339f8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.DefineClass",
+      "sourceSha256": "11b4fd71f082b1abb80b6079990d5397a68bf632acde9ea41d66a2e3f9d81722",
+      "translationSha256": "d58f175f574f5d4a8c94a91349395fb042b2a5fcfcc046bb522bc02ef4567401",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Do",
+      "sourceSha256": "af59133e8cb3845778cc77b66e2dd754a7229efd9a55d1b0b0a98bd34c4e5cad",
+      "translationSha256": "0dbcb58c96fa85c315f44f324b41a6c1c02240c0f5bfa241675ae6800baecf42",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.DoForm",
+      "sourceSha256": "31bd984a1fcb522904a58869434da92191e837930420ce50c2e549cb4d73a049",
+      "translationSha256": "e6a16628a68822bb98d854c36e80d343a5498a625e7ab354976c59c37a5e4c12",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Else",
+      "sourceSha256": "c6ca03db7ebd7a825fbb618b66b190de89305251f59ff0781e08e07b27109fb5",
+      "translationSha256": "a12c2ef9966aab39aadacc04428a64ef1a921fd0e3cfdb36a7662dd9be9d1177",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.EndDefine",
+      "sourceSha256": "f5b60a7e7a0606e3b7062f5d8bea615d1c05e49fe05dbbf44a17fd2a58b65e08",
+      "translationSha256": "e7a46994f22aa9ed651f491e9aa1505a565f953626a150b15925876638af832a",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.EndFor",
+      "sourceSha256": "d20888ea1dbc8c2d6350a0748c95713032cd27867d840958ca3edfe3a487e9fb",
+      "translationSha256": "3b77a9d412aea64995b9a9d6d7a86e68b1aaac24bc2f9d4370f414a663a5dde8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.EndIf",
+      "sourceSha256": "72bcda1aa08a71bae1a7997f0462dab2f6d597ed18d874d59f373f36f13f0882",
+      "translationSha256": "b394fe0eb5b2937bf5f24b405df92dbc0b97fbd0f77145e7be56e2621704bbbe",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.For",
+      "sourceSha256": "ab3ee4c4d27aba8b0b47da45f730051e645591dd3f61aa9a61afe201a4ac8dcb",
+      "translationSha256": "b5714f70ba7e00512045c3d514809884847c673c6a9b827434e23b9a73689374",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.If",
+      "sourceSha256": "8597d0e33805ffc5b05c94e3fd3596f9105db9eb48fb538a338b17b4ea50ac1d",
+      "translationSha256": "45419546b7266d498419345d2fc9d442e4a4569e6f7f55346bf09cf70d761038",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.LabelForm",
+      "sourceSha256": "1d9039fa3917f11c7233d45aa3040776656ac3bff70780eb7761384771c0325d",
+      "translationSha256": "79953d6806df9a179aa63c85b00bdb71c0a99c744778c16704c037bec7da54cd",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Local",
+      "sourceSha256": "f805568fdaf9d51b0dccef396393ad8daeb555bf4afbc60be1ff7b55d3bcea80",
+      "translationSha256": "5a1d1a43ac819066765f94481e3cbf4caaa59690700ca92f1e8fcf43976792f9",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.OnError",
+      "sourceSha256": "945b730de80f61d4c9fcada889bd654af1f58ee4b8a75bf50e58f611ecb80962",
+      "translationSha256": "a30f9f990e0556801056f0f5fd31bb0e3797be149b2ab68eaa0921e7b13ac3c4",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Public",
+      "sourceSha256": "35c42a2bab644c4484baedeee21d006578b35868b68ddd12f2d35753a018ad56",
+      "translationSha256": "917584ac6d727175252147d506689c8f0ab52379c0f2ca9ab9f43e9fbbbee40c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.ReadEvents",
+      "sourceSha256": "728f89563071cffc86a62076d560201e2c9d1c1f858730a4e356a63cf2969c4f",
+      "translationSha256": "0f906b96af5f509dea6a9a0d8baeea8350a63671ef5e1661471b04fcf5df9d36",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.ReportForm",
+      "sourceSha256": "6ea256705e1d99efb969839d8fef90aea744875c6a1bc6ca1f0f8164202147bd",
+      "translationSha256": "307f94b5f1c3ccdd06993fba718784e5b340e1dfdaa3107d4733a7363894b820",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Return",
+      "sourceSha256": "5b1a17c16e20b316c41e4d1a67b2829450b9c3fe0ba7fbc9ffeb3f735bafe1bb",
+      "translationSha256": "42f094cc8ad6e6acbd9f282c17fbde1e7e1f087d9940c7fde193db65eb65f2df",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.SetDataSessionTo",
+      "sourceSha256": "3b6fe899b16cd03eef0312266c2f6a2e282af4286f232cfd1ac54d4aa15729b1",
+      "translationSha256": "e085b37ed7c648bb7b73e344d14a45fdceecb2db1e4d69f5a8cad0d45c4a534c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.SqlConnect",
+      "sourceSha256": "c8f9e7ab27f8ab7f6fe6ecd66b0c7963a11786416b6c1a56c13b67748766da4e",
+      "translationSha256": "07dc162e3902de58406f1f511d64fbc9c1aecff0a04e587bae31a1d6b67bf71d",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.SqlDisconnect",
+      "sourceSha256": "07633e05942c9c7e5be77d7069130200301369d04837302f2ce5a9c84842f7a2",
+      "translationSha256": "9808dced062556d2ecd94c23e3bc6195a72d13d28391b8ec11093833552dfd8b",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.SqlExec",
+      "sourceSha256": "9a57b0edb87b85d53729070a300cb182270e2537cb3c96fbf263fbea3a612b81",
+      "translationSha256": "5f7a856039ed330caf6af8bd31b5f5bd807589666b0d8d50fcb580db47f1bcef",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.SqlStringConnect",
+      "sourceSha256": "765b3faf33f8a7f4f2fad7f8fef94de61ede2731e0eb9c0a2dedb54f07ee17e1",
+      "translationSha256": "a0d1cb14e26037f3aa856236698159065b49eb53568b7d916fb09f9fb72f9d1f",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.ActiveWorkbook",
+      "sourceSha256": "8c60d57dc673a34485bfffa98bffc8974462cd21a9d6dc4dcf7df2e29c747a4a",
+      "translationSha256": "f741c91551b8fa19a87280800d0633b56074772a60d07e686f0a2cf36f59d471",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Add",
+      "sourceSha256": "959659601aa72f60dc15baa27f91dfcc8656bf56c6065942c7144a68028c22aa",
+      "translationSha256": "e978a06a69ee82733c0d25f9ba90b2141b082a14c31b63f8ca72abb6d28aa13a",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Caption",
+      "sourceSha256": "12b0fa19b405705e9723551dd514541e293661c1d1c7e2ca58f05fa4e58f5246",
+      "translationSha256": "e870291c134b9b9b5cd6907013684237f49e8bb86f686252532d6122f7152a0f",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Close",
+      "sourceSha256": "5f7ed10c16dbbf2a3d8ea52935b2671f9b51c73123e71c6800260cfd01b2eb96",
+      "translationSha256": "faaa6facad6b34ab92601834b1d80b25b7ee4f14205c33d1ab6576ed6ccd54a6",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Count",
+      "sourceSha256": "4d607523cd006e10e13a71d630d09dfd15263a6e24091509c80c094da8480658",
+      "translationSha256": "8569056770e03705bdc7d649e82d432ec2fa74cf7fe68ea015833b36124d4466",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Documents",
+      "sourceSha256": "6f04d6baf9384f0d69651636b650b5a55a9bb2b5b0b2cffd732699b20e64b730",
+      "translationSha256": "a8a9d2e538a89b8e351cfcbee3102bf88c3fd55a1eebe240ffe8ecad3bb9a172",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Execute",
+      "sourceSha256": "27f8f1cee4b7fb6fe36b4124979052c8f3d7f23ffe49213829dbae8f896eed1b",
+      "translationSha256": "d2f44b1debe9cec25f670d9f962012ddfa2bd4cc166d22dd4492045ddb5cfcfb",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Item",
+      "sourceSha256": "409c3ba41ad6ff1a5ba488b07bd71d5d2470733d0ffe6765ee3317f9649fb2b8",
+      "translationSha256": "8505e5dcdf791272b8907f7ab95595d462a235c4e99216ca8668db9a134bb1af",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Open",
+      "sourceSha256": "af19d75df02c73caa2f3f3e37a4e71120f30b5d423e6f123fd300e998d010827",
+      "translationSha256": "b9817dbf3ae01a73e72ec0f4b1681db318e9b11ca3bae18f97bb785f09e4215a",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Quit",
+      "sourceSha256": "99bd6f38f318ab79734c502e72462680f324b8ecae2b21eaac1af278a01cfbd3",
+      "translationSha256": "3594190ff7f23adca1ba7710edefdd4e4d4bb0fdcb5f713b878268c48cfba7d3",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Refresh",
+      "sourceSha256": "63133c0580497039874e4cc9dc14de74c429738c57f3b28230ebab55e54e13c7",
+      "translationSha256": "62597168caf1ba044995e5ae1fc7dc80b4f920fa62a2b36aacc2b998d6172b38",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Value",
+      "sourceSha256": "ec1fdece3d9108393d58585344114668bdd6dfde5dac7f614a202974029290bb",
+      "translationSha256": "7024b8f5254ff2447db78e3004595ea39752792de1876afa194f922440617178",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Visible",
+      "sourceSha256": "96b163337b549c702e72cf7ed1182f5314df68057632ba7bcacd0c22c55bc977",
+      "translationSha256": "7b35effcc86fc9494439b820c9448cb11cbd36821a5d3d3c9709563fd2aff8a6",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Member.Workbooks",
+      "sourceSha256": "b47ad60f7e6df69b9aeecece129e438ce6ae8073984dc3d87370a78cd9f4fc84",
+      "translationSha256": "d7a67b996e93cb38d7f8bc21b5bdf0dd3ee09a8b9bc23fbe45d17d1b79eb8f24",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ActiveProject",
+      "sourceSha256": "0edbd5e431a7945befd89826aaf50362135b4a1e3c76e0d353dd5219976a1562",
+      "translationSha256": "90fbf500b57731a1f6eb9e5a4c12c3f85d5037f046844ea6f4717c99f08d89ce",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.AliasFromProjectSource",
+      "sourceSha256": "13ce3275d083a08649650a991bd072478c554f1165d7de05c92bf0e21acabc48",
+      "translationSha256": "967b2b3c8b1b9a2aaec5da944dba0df28fc85f5cac70298788d56667ff308c31",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.AliasFromUseAlias",
+      "sourceSha256": "7ab765cf84cc66b64d70d29ef0d38edc764c622fa43ca150e313832b0343b306",
+      "translationSha256": "1dadc0ec598d74ac6f9ad5438dfc34914ef12b77ac000df849924d38742811ef",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ClassSymbol",
+      "sourceSha256": "1f636b27045298f387db219435155b8d18a00caadbb723b30f1db660cb398441",
+      "translationSha256": "33695706c108c96fca0a0403f84e323f0a766ca6ba60e4ffb0968555963dd4b4",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ClassSymbolDerivingFrom",
+      "sourceSha256": "d157b363746486dc5f3d27fa8f4a8115c2ea772668ae1a51d43dfd5f4f0fcbff",
+      "translationSha256": "4981021e3d36e6401c156d52fc842d0a74ad1a83e918f6df8543894c99869888",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ClassSymbolInActiveProject",
+      "sourceSha256": "8abbd928fa72d2d40a3d42ad3a97fe55c9eed4c9a2816346b92fb202e8a23a3b",
+      "translationSha256": "0562ac105947c713484e266738f225baa43028c3a01e4fa7301fe481bdbcba86",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.FormAsset",
+      "sourceSha256": "c0a9f1d007404fe1abdd3e91d141cd7e8e31c47ff0cf2e9eec632efd08f31265",
+      "translationSha256": "c0adcaa056f7e472ec1628a65d803d2bb66a98398fefe26b1bdb1db4b5dcac43",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.FunctionSignatureDiscovered",
+      "sourceSha256": "2a3d88342516ab8002fcd477124764a3e6d294b49944ed8e53ae1072bf767477",
+      "translationSha256": "04d808826767480ef750526d0617d28502d7127289fa0e2cedd1477837c55f1e",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.FunctionSymbol",
+      "sourceSha256": "e07f970758a3f74776a3843b57b1a61eca5732e73ccd4b93cb197a3b946650ff",
+      "translationSha256": "198f53dfea096818b1b573eb97d6c04766d2f9268ad2e44738bba47f93fe3a2e",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.LabelAsset",
+      "sourceSha256": "833e173ef5f7c4f21a14ff8d71f23a82183dc1882e5a5076db518560ff9e4dcf",
+      "translationSha256": "7adefdffb795545a048a6e1c32bfdd10764fb275f08fd97081fe51062f4f6b00",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.MenuAsset",
+      "sourceSha256": "c57c149ed24b2f2cc04e03f4e6154936bb10dcd763dc93d986f34a4236d2006f",
+      "translationSha256": "c3b40996c5abd16930eaab66289ca612be80ac991d92b6360d36dc08f6b57a53",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.MethodMemberFromType",
+      "sourceSha256": "a38050d290fd4cd1d2b4524382127fc3a4a8e2f4aacc41057a7a57850a8cafba",
+      "translationSha256": "cff2e6597f7f41fcd1aba24c69efb753d8dcf8ce704dce0d3bafbd7a58ea377f",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.MethodSignatureDiscovered",
+      "sourceSha256": "5364de9734a231ad572822c61028b99d9cc352d5cbbc83845499afeeae0d1ba5",
+      "translationSha256": "94b437a45b85d6e0afa841872db5286b3eabe45bbc14c52cf0d6e6c290d3e77c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.MethodSymbolOnClass",
+      "sourceSha256": "68492722c0b4f1e717c872614867790c12b468920225fd07ec89dc46a521e26f",
+      "translationSha256": "5635dacfbf6bcffa2723f42c10c145e33d8c5fc40e7a09be7594d4aabcbe82b3",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.PreprocessorSymbol",
+      "sourceSha256": "dc1efa2aa3db3689cc82dcf052977915b9ca3c96cf6c51b5aeffcf3c1454bb9a",
+      "translationSha256": "1fbd11806ff9fc8be30370cf0c214792b3f030b8e18d4ad94dd64a1f6d14be06",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.PreprocessorSymbolInActiveProject",
+      "sourceSha256": "28b6ef23feb375b15427198c13be6834be16eaeeae183934c12cd8cb5aef57b5",
+      "translationSha256": "982e9bc0264216258f4a98bac1fd81e9e6c5547137ef99b3cc767641d799c6b8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ProcedureFunctionProgramSymbol",
+      "sourceSha256": "19ebd3c39e71883ea21bb9ef901583ef91128522b65dd92f4736971947eb344a",
+      "translationSha256": "e0a0894cfa2c8cac26b9b70497a4cdf38750e38a626c42b55366930e9b7b794a",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ProcedureFunctionSymbol",
+      "sourceSha256": "36d6a4a60d9b03cb5589c0a63cea9bb4646f4ddbccde55e6d98f11f7b0122117",
+      "translationSha256": "a7816e2d880049bfc1aecac7dae3aac0656fdd41ae1caac58271f5eb8db63f39",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ProcedureOrFunctionSymbol",
+      "sourceSha256": "ae08aff9effb41a45207b6f7b2e6e0499f3278b5b4f0315f3f9e5cf2fdc85c38",
+      "translationSha256": "5baab613bade765ceebd9ade1c34879f65c1bd5acf627fc4a9c0387d518a507a",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ProcedureSignatureDiscovered",
+      "sourceSha256": "19320f07d1e0093cd9a98a54d902887d718d5ce24599b279901a7b26a964eed1",
+      "translationSha256": "c41b79c3ff005ef17b1a032573cb03f4291f538b57f3afb466d1ec14a3dbb0f8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ProcedureSymbol",
+      "sourceSha256": "45bf16f01f943f06c19af2341a1fdbaeb27a49116ac10df086d1ab334839d330",
+      "translationSha256": "2bd9481101f2e8d85c2d8ec10c285454dbae481e236282d7b583bc4840f63592",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.ReportAsset",
+      "sourceSha256": "a4a58b59197b416423fe194b62de2a36c713eef32b2e35bf92749722388fcf39",
+      "translationSha256": "9e77e137d48221456656e7163185e1c6ccb65e49232c770c1d54001921213585",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Project.TableAsset",
+      "sourceSha256": "807bbdf19eb2e6bceefe8d85d919c9b2fece62e7f43d5a5dccd1300103a98504",
+      "translationSha256": "e11f82fa6002c2f2d6c1d0a01535fa13c4080bdb696b40e3114f7e5fb5eadaa7",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.DataSessionTo",
+      "sourceSha256": "ce2540586b29516b61df59bb043018724f564c46513c7a4f60281a33ef3810d8",
+      "translationSha256": "f6cb836849a0318cd58c11b83fc31e3c22c0f9da641526de99b8c1bd79b3bd93",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.DefaultTo",
+      "sourceSha256": "b8ba23688d2d7ad5761bb0e1a11583ec169f9e98f1d14e59eea859e19b0eb667",
+      "translationSha256": "39f6065fe9051ded827b66f7d28321970cc92826b05f262cddc2d577bed1dd74",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.Deleted",
+      "sourceSha256": "558c37cace2818aae9f448eac11c4d927762e682ee3739d6e1a9311d00b75461",
+      "translationSha256": "b91862d885d4c8e93d4bb3b0494b64e251b5812201fb8d997c4e43362091d5ba",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.Exact",
+      "sourceSha256": "2574377244774cd492d7de1c1b01258160fe2e2a1b0d0391cc0fc14e2bbfbbd7",
+      "translationSha256": "cde0871dcf6ee531220bba2157121bab55f1fea5503cf9ab17f91351a1d94450",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.Exclusive",
+      "sourceSha256": "e77e4cc1fb24d96cb732d5766523a24fb6b50bea9f8616e6606afa7db45aaecb",
+      "translationSha256": "8d4f6f5c86fae227ad1a287d5f3c3046b55628c08d847443c3030086957e100b",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.MultiLocks",
+      "sourceSha256": "34d02d0bc0245d7e1b22bd61fed390c57748831baca5d94e6b6f6ec986ca3954",
+      "translationSha256": "ba31939f666da82c6348b58c84a3c1b378b4004f544d2e88a1ef053040251037",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.Path",
+      "sourceSha256": "09e8761395fb7280a3b4992e54e4f9fa09b0e32049005f43f0e40efd13341447",
+      "translationSha256": "e0d1ebb3ed274c01df9ac4829d27ea428698acd1e5f9b802d910a962462b5866",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.Safety",
+      "sourceSha256": "2fc17967124117dbe9c4a3b88d377b0541115a5f733a8cbfa78b14a6ad72fab0",
+      "translationSha256": "d404f10d3d5adaad02d9799475757ad4c26c4c36a142772995b7973e0728c9b1",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Set.Talk",
+      "sourceSha256": "5b4b84cc38814054558cb934577904931a8e00c8661a324bcae3aa0b0328886a",
+      "translationSha256": "53972d1a66081bcacdd8bb1421754ae98e6bd1eb8795aacf675c6993143c1e26",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Alias.Documentation",
+      "sourceSha256": "05c19c74c0227280d3e20787f076e7604326b80c558d4bc2eedf18328cf626a7",
+      "translationSha256": "89f4cc1e12b73aa63c1b79b5123a763d5a7a0b54dc66fa983ccf7d152f5b847c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Alias.Parameter.WorkAreaOrAlias",
+      "sourceSha256": "aa3e7776f212770afbb264f6b9d664c95ad96f94759d0398cadfa18a48c18ef0",
+      "translationSha256": "edcf8d277906b24c8b1dec6afd4c1cb4bb41b3e1655c622265d9994b4ecf223f",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Bof.Documentation",
+      "sourceSha256": "76bc69d22e432872813d99b02db516cf9b118d92e2bdf826a9cf21e03f5304ab",
+      "translationSha256": "fe5dfe68f9254aad9dcb4f72bb304e82ba11bcb341f3d11ba8ee3338437a331f",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Bof.Parameter.Alias",
+      "sourceSha256": "80ed86e0adae4bb6e933e4d6b5b48fc52099b685b1b80fad6e35401f240a77b5",
+      "translationSha256": "52fc2ecd3e32f5fded7878f98da3a07d9e5f628c8b4b98686d635e08e382dca8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CreateObject.Documentation",
+      "sourceSha256": "7b114bf4e530266d15c826c1bea21977c8f028c74225f22650c87a682e982981",
+      "translationSha256": "6d08194b7136980395e6f0bedaaa1675c2c4e90bd7661426c1ee18c18a9c9d91",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CreateObject.Parameter.Class",
+      "sourceSha256": "11e52d0cd630693b5f3a3a77c2b4ccd18979269d1ad8a630742d5a0b6440addb",
+      "translationSha256": "dfae42e9d481b2405664c2272aeba23fcbec25104e4e89f9036fcd58514ec53d",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CreateObject.Parameter.Init1",
+      "sourceSha256": "77ae62d6a2d3f73c8908aac56ae0c8fcfc37c9dba84065e4c3d0e6b42ae3326d",
+      "translationSha256": "472d49f6f5fd926023719283f1064b410844a26f8cec42678573271348ae5f5c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CreateObject.Parameter.InitN",
+      "sourceSha256": "64b4dcbff5f3229606fb18117793fa55684dec50b087eabbe157cf72da5b8077",
+      "translationSha256": "c9baf984b9f7693b596ab809e6bda8a8e7c205c7534e7f34ba99070f896e0f2f",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CursorGetProp.Documentation",
+      "sourceSha256": "77091343ad0ce2a13d97b11b30978f382d75e7fcd759cbf58f9f118c2ce17ccc",
+      "translationSha256": "b9a04252b5a58ee60097bd3aad23119cd241c21d4844a41cc6df9aa950608457",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CursorGetProp.Parameter.CursorName",
+      "sourceSha256": "f6e3c6671067f9e07b6397e975f798c4039bf400836cdff0ddaae8b3f9a76108",
+      "translationSha256": "25652d99af05dacae6d646de475346117999e1bb19841aad6a49aae4065d15e5",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.CursorGetProp.Parameter.Property",
+      "sourceSha256": "5f53e9af301805ac76897156bdbf74f19765ba120db8d42d7fede0b2076e4e82",
+      "translationSha256": "22abc385cf2e1edc8ee294423e99a4901df7d8560524d3b0dfc50028d70eb766",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Eof.Documentation",
+      "sourceSha256": "c1fb164d1359ee0cafc6029c147ed13f36078da1af884b9597e695f11267ede6",
+      "translationSha256": "08a92a022ed67af917cf613feade914d0b944a38d9219284877c58f8c4db7f00",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Eof.Parameter.Alias",
+      "sourceSha256": "80ed86e0adae4bb6e933e4d6b5b48fc52099b685b1b80fad6e35401f240a77b5",
+      "translationSha256": "52fc2ecd3e32f5fded7878f98da3a07d9e5f628c8b4b98686d635e08e382dca8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.GetObject.Documentation",
+      "sourceSha256": "0f49390c08340dd3db642285294a5783a63bf289a9e6c248132097df33c367b5",
+      "translationSha256": "af0469e04fb8b4300429326d5fb9db2e1ed5cc9e2294321ea9530d7ae7c8069c",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.GetObject.Parameter.Class",
+      "sourceSha256": "cf2e6b6969eb8cec300cb228261303ede65ce3f2903fc56b6e012f60492cc262",
+      "translationSha256": "7c01df9d0c677815012081410c050b856f4566d53de54cc3f72e3b24f6408c36",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.GetObject.Parameter.FileName",
+      "sourceSha256": "939c18dce44c984b286202b221cc5115003da26b32b68102e4fce012e165db4c",
+      "translationSha256": "508c9c2f06520b03298c07b911062636ebc9906199a68b8900d9fd8d296539b3",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Iif.Documentation",
+      "sourceSha256": "e4b94f0b47820f7974fb7e02f01eab71f852dfc3a55a476de0b8b369077529b9",
+      "translationSha256": "c4fccda08ec7ccc7e0d227be266cce97d28a32a2ddd243c2fcd65e8c92383b12",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Iif.Parameter.Expression",
+      "sourceSha256": "19d169f8442e740680f86b5a6a451ed018bcde3bb00d702b18a2bce27d29cb14",
+      "translationSha256": "7fd99b87dad7027512632a063fda9473f0b5f11611a8e484a9bd52d144a025ac",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Iif.Parameter.FalseValue",
+      "sourceSha256": "9b3f94e2241e9a17b0e7b78a31ddd99b242d16d1b0f4f6aa93924f7ffe477b46",
+      "translationSha256": "75731b8f995145ae5e8f0c6c91bf749611960bee9db151e5d7746e2e04bce8f7",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Iif.Parameter.TrueValue",
+      "sourceSha256": "c01ebca008bff7cd69881db1ee2cf5e373e7132aeaf84ac141671759e92ec2b5",
+      "translationSha256": "12c908cf5897880d6ab9766dd37e8e64b48a9511687e0f32b84a61432478e258",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.MessageBox.Parameter.DialogBoxType",
+      "sourceSha256": "31cd41ac94e92d30975dde3bfa3b525877a382be6a5f352e8185aca56a534d40",
+      "translationSha256": "d35b9461861415393755a1645bdca0a71dfe87e8a1040a9d428be491005eb559",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.MessageBox.Parameter.TitleBarText",
+      "sourceSha256": "76ed8bb5416c2ec502cd42b02e7c4acf1f501512b0ef28e7a8422da1e4208512",
+      "translationSha256": "5dd054d3f68319ef3752547dbdfa7640f563c367dedbefdb2abb8505196343a1",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.RecCount.Documentation",
+      "sourceSha256": "cd3b244b0bbf1ecee36b52ab1b3bceb1f0b223b557b74fa0c701fa607f62328c",
+      "translationSha256": "10917cfed66a196cb18770f11058b181f95f95bf7995ef322ec42668256b7df2",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.RecCount.Parameter.Alias",
+      "sourceSha256": "80ed86e0adae4bb6e933e4d6b5b48fc52099b685b1b80fad6e35401f240a77b5",
+      "translationSha256": "52fc2ecd3e32f5fded7878f98da3a07d9e5f628c8b4b98686d635e08e382dca8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.RecNo.Documentation",
+      "sourceSha256": "31c56753fcdffb50ea76add9af7c96f04e21d25ae741eacafc1a70cf812a1cf9",
+      "translationSha256": "4aa522b6f024e2a646fb7c4a5eb45e463ec2f0c6c20e2b4f4066ca056745fe14",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.RecNo.Parameter.Alias",
+      "sourceSha256": "80ed86e0adae4bb6e933e4d6b5b48fc52099b685b1b80fad6e35401f240a77b5",
+      "translationSha256": "52fc2ecd3e32f5fded7878f98da3a07d9e5f628c8b4b98686d635e08e382dca8",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Select.Documentation",
+      "sourceSha256": "b11ec158dcc03fbf6a37ca82f77544c05541c09e3aabdb0bd7e38d61045a5ad0",
+      "translationSha256": "6d21bfdb106a4f6e305704300bf70e197b21fb9fd81d3d77bbc28c644d402d53",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Select.Parameter.WorkAreaOrAlias",
+      "sourceSha256": "7ff47681c02d032ae119484d019800bd9d6def97db098f7e05e4f96e960f4a33",
+      "translationSha256": "2f226f4bd348ded7a095c4044e625788cff78531981295c88c6797f1f6a5e1e3",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlConnect.Documentation",
+      "sourceSha256": "929cd65eaf02db0037044bce2afcd4698ef7011970133bd8d7dba98eceb06014",
+      "translationSha256": "69b2ad9a9272353a1ff00b99560af4e01fd7e510dc88a65f73d52e16da4a3b27",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.DataSourceName",
+      "sourceSha256": "32733b6b9b1aea13f2d10aa487a51741bb08d74f623a09cc2e00ae1625c1bcf9",
+      "translationSha256": "6bafaa934b33c427416246ebb7c506473218c1bdb48502a080b2a4a3a54de403",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.Password",
+      "sourceSha256": "a746ddde2835979b7d79da7fdea9293019a79f2bb3f5152cce69eaa71d225bec",
+      "translationSha256": "85a4d14333a5d42aefe6c59d3d76d0262cbc177d76497bb576c6c5c776e79929",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.Shared",
+      "sourceSha256": "aa91fdd4ebbdc347e4e407f7798ead4a856414aaa6f3f2aa6b5ab498e9116ae1",
+      "translationSha256": "7c3a17b35e0e96fb481b24cecc874509d18ab6c792ebda916988008bea32c9c6",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.UserId",
+      "sourceSha256": "01e6c5613c23806420b971c5f9f61142bcf431939fef7b3a44c901265baa7594",
+      "translationSha256": "8fb8edac8736adacf5c50cab11f0dd93ef47c4c512caeeffa785f691ba68159d",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlDisconnect.Documentation",
+      "sourceSha256": "626000fa8e73b45e007181cc64cb85b9c628ffbf2f5ac2b302a31ba7c5c37e4e",
+      "translationSha256": "5296267f341e1f1099cdea9a95c7145f5bb871b8b7ca403e5593dd6495c77cac",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlDisconnect.Parameter.ConnectionHandle",
+      "sourceSha256": "c53ab63b9b15b3db6ac4a5a2a4e8d0b9bc83524d78327943810d82050bfa0060",
+      "translationSha256": "0070ee78dd42d9b4a18ffec8f9a0b26df8e8021a22736a6ec9164aaf401e5e01",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlExec.Documentation",
+      "sourceSha256": "e17003b13958da20b3b3cc1e4a386ca43f523896f047c37b6ef9ac082888de27",
+      "translationSha256": "123bcfa52d75b5ffec59188df802e32d64a330f44ef65aaf0981882d73b855bb",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlExec.Parameter.Command",
+      "sourceSha256": "7f8b5b939cbee1df346b552f5b993ca92b3ca8f7f3fb4c868446c6697881c4a0",
+      "translationSha256": "4fc0d9878aea909c56f0d50ea42cf7c75bc4334da89b11402ae66e904a666487",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlExec.Parameter.ConnectionHandle",
+      "sourceSha256": "47e88e21607f6a8621a85811472b6861c4bf8851a5e1384436ad94adb3feb85a",
+      "translationSha256": "fdba72eb23e0db2a39493cd1a380cbc22b18f02b4c1b8dae5d9a4ec2a3794f89",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlExec.Parameter.CursorName",
+      "sourceSha256": "398d0cc18d78a571908b43f877248add1e78cdcb6431ab62fa3e32a61e114833",
+      "translationSha256": "fcb95c4c8d9ac7e3ebfb40d768be83ec6ed84bfb510422c76f28d2a9767c0e46",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlStringConnect.Documentation",
+      "sourceSha256": "e06630f03cba50aba4f2b18c732fc35597b2c3618e50b22f84717758fa863511",
+      "translationSha256": "21236308d4d3640db96187ccfa3e2b16e9907c4c064873ae0440c4fc13ed9b57",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlStringConnect.Parameter.ConnectString",
+      "sourceSha256": "18691ca9424149b4b96e9e3f2e47367dbaeb0e0535d2d9caf4dd13658bdc0669",
+      "translationSha256": "66ef2e73cb68ec4c87e86dc7e6c4a2bd82b0ee5d84420c22fdd82153d062f179",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.SqlStringConnect.Parameter.Shared",
+      "sourceSha256": "aa91fdd4ebbdc347e4e407f7798ead4a856414aaa6f3f2aa6b5ab498e9116ae1",
+      "translationSha256": "7c3a17b35e0e96fb481b24cecc874509d18ab6c792ebda916988008bea32c9c6",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Sys.Documentation",
+      "sourceSha256": "2a5d97f3802123dcb6c16f0207c5cc228791e80845e50f51ccfe9744c6e8c9ed",
+      "translationSha256": "5779bb6624d1e02f638830920941fcd0113b9eaf93a16c7dab15318eb0680440",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Sys.Parameter.Expression1",
+      "sourceSha256": "a24f5eae75d50ea8c1d4890ec2a2304dbd52122e7dfff338628fa598b85acecc",
+      "translationSha256": "b4b90de80869cfbb4af6177fc36ba795ffd0967cd2464eda5c4d1ab88e5d44a1",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Sys.Parameter.ExpressionN",
+      "sourceSha256": "22323638c073919859d79b07070d4a097a49ee0cac102fa83d598c985cdb4d2b",
+      "translationSha256": "862cf5db1cf0af173d38e968a2cab15b712a83b9780d64c4972614cceb9546cc",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Signature.Sys.Parameter.Function",
+      "sourceSha256": "1ddc54d13461ce3fdc07b4a6270901f223424ee3732b9786335ff6b4030aa77b",
+      "translationSha256": "17cff10fa6a29a9446029576faf42a587837de3a18815c608215d270e945f13e",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Category.Interop",
+      "sourceSha256": "77bb728f0ccce20313373a0104c80718ebf564de45485a4d6649d0eb5c1b2af7",
+      "translationSha256": "e6f351f9b15150368fd13387244455a99e4fffd990f19a2d6c9f2ab9bea424e4",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "sourceSha256": "b66fed63ca35a4c464467c946b19922154ca76747ae4e3cf24b0a06dacc686d8",
+      "translationSha256": "02de8424c280ba4d868175a4ceaf53a771fc3f9a6bc9592278e07d032361a9ec",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "sourceSha256": "8dbe7a160983b88d75fb5007ef674a7524d6112cba73f17d7810fcc66454d717",
+      "translationSha256": "b48d376cf443b763bf7c65d7a4ccf2d9651069a920124a643d6d63ece05d8f13",
+      "verdict": "accept",
+      "reason": "Natural Brazilian Portuguese; protected VFP/SQL/COM tokens and placeholders are preserved."
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "GPT-6.1 Sol",
+  "sessions": [
+    "Codex /root/review_es_revisions",
+    "Codex /root/review_pt_revisions"
+  ],
+  "scope": "14 exact-value es-419 corrections and one independently accepted intentional source-text Builder tab title.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Builders.Status.ExecutionReady",
+      "sourceSha256": "01c2e36476cb3656b314f67ca4cfdeba09c72381b61c4abca7250e13e16e0e23",
+      "translationSha256": "c6eb03a48b7b75a022003ac6edffca30f65815606da33d8532692796decb5236",
+      "verdict": "accept",
+      "reason": "Builder is the VFP workflow term; execution result and both positional placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Placeholder.Builders",
+      "sourceSha256": "c89ed881f9bdd6e891b49cfe667e5e7e331dd62a2b67585aaec922c8517fe0f0",
+      "translationSha256": "7172f195e1aeb0d05ee20f0c299c13ca77cb8c2118ebe208d207fc82cd23ae3e",
+      "verdict": "accept",
+      "reason": "Restores “insights” as information rather than saying Builder objects appear; coherent UI prose."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.BuilderContextSecurity",
+      "sourceSha256": "0f0358f3bac11fc58c5bbf297f4ce49c3b428639eb6197f86373e4f40c3bb165",
+      "translationSha256": "da2182dcced979b491f04afb2b7334571d041e0901b1431174d701252a78def1",
+      "verdict": "accept",
+      "reason": "Distinguishes policy-governed setup Builders from wizards and preserves IA/MCP acronyms."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.Builders",
+      "sourceSha256": "38d1f5db1e215474d553b7161e7b6706d2008e9370f82c80be20f41ca01b81b7",
+      "translationSha256": "f4cd6668618219deb79e837a2eda24ec5f3b3345b1b8126b52a43dfffcee236a",
+      "verdict": "accept",
+      "reason": "Matches established Builder UI label and retains the product name."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.CurrentBuilderTargets",
+      "sourceSha256": "630ae1b3081e53e87a026fe876efd337b2509a00d7cd0aeccc411aac0fdcaede",
+      "translationSha256": "2388b87b6c693e6ef950d37d3769e2df4e1ffd2155e7de619f45f136c466c5c6",
+      "verdict": "accept",
+      "reason": "The UI lists project object nodes under this heading; “Destinos” denotes those current targets without changing the display structure."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.RecommendedBuilderContexts",
+      "sourceSha256": "07c4cca92fc41fc315d5d7884ff4d18a23aa5fb8acdb2412e89136555c4bc316",
+      "translationSha256": "9de8acde129b0f55bd0620d3f5999f8ba8235bbdd20ba76ed2ec914f12cac7b2",
+      "verdict": "accept",
+      "reason": "Natural heading that retains recommended contexts and Builder role."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Builder.GridBuilder.Title",
+      "sourceSha256": "263f8fe332e6cebe275053ff96f220d79a68c1e30a03a1488336df1476e05b8f",
+      "translationSha256": "f95bc6b50c20d4432d1bd913bbdcf754fa97992b8c0cc09abb7d609104d44a17",
+      "verdict": "accept",
+      "reason": "“Cuadrículas” is a natural grid-control UI noun; Builder remains the VFP product role."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Builder.GridBuilder.Vfp9Equivalent",
+      "sourceSha256": "7c507a4d8bd8b115c2e6c4237d1fd3f56de1a33ddaabd8de12775a8ce7d33a53",
+      "translationSha256": "8486482877fa01092121895b8566a39dd0d66a1afc2f9adf2feaad2264677f54",
+      "verdict": "accept",
+      "reason": "Keeps `builder.app` exact and localizes only the separate display phrase in the registry."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.EditorAction.OpenBuilder.Description",
+      "sourceSha256": "c255846cb4694f6743a44ad1c045a0a57148cfa14f937d3e641fd303612982c7",
+      "translationSha256": "c791394b25590e56ba8734355c6f3317aee4d3bcab48d5209ad028792875a5a0",
+      "verdict": "accept",
+      "reason": "Preserves context filtering and VFP compatibility while aligning Builder/wizard terminology."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.SelectionBuilderLaunch.Error.BuilderIdRequired",
+      "sourceSha256": "cc190f2f8ee07f370475ebf7f2b59c326b3091f2f0a881a6d34ea7ebfc029769",
+      "translationSha256": "cad71f4ddbc94d7e6ee8093c63a049ab7b1eafd674f761adb03f24d0481ef0b6",
+      "verdict": "accept",
+      "reason": "Preserves the required Builder ID for a selection-context launch request; no identifier value changed."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext",
+      "sourceSha256": "78ef84bb753f9c1d1d05d0bad4848279c1e3d2cb9d39ba42818df452a77f72bf",
+      "translationSha256": "3f088427e3ce3960072a2418d1d30d5c24eee9cb5c6ace2be775aacba377fac7",
+      "verdict": "accept",
+      "reason": "Preserves unavailability in selected Studio context, fixes accents, and aligns Builder terminology."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder",
+      "sourceSha256": "bc24f91a01e90044bf57bd249def9434e8bd965689ab36bc9a92ad2872631a8e",
+      "translationSha256": "613b7417a08de823c63ef267a04b93f5dfe19d74a0a4b2be35007c3f3fb59e18",
+      "verdict": "accept",
+      "reason": "The source branch checks an empty builder list; proposal preserves at least one Builder for the selected-context launch catalog."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "sourceSha256": "b35d39bc7d28d92e471842ca8102fee0f7163618921d948cce1cf9aeac33f672",
+      "translationSha256": "b1131c79bf4a32418fa911cb86e5a6e48b9303981bc951887085579126de0007",
+      "verdict": "accept",
+      "reason": "Preserves exact `{token}` placeholder and diagnostic meaning."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "sourceSha256": "9e7c3f2caa927522d09aeae0d7017f373644f2ab37dae502195dc113e357dfd2",
+      "translationSha256": "6c330244d180c9b1d046bf8e22be538761244d56f307481e28c9b3f1dd4af9cb",
+      "verdict": "accept",
+      "reason": "Natural “plan de inicio” while retaining the Builder role; this is a human request-name fragment."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Tab.Builders",
+      "sourceSha256": "bb4e1793df031132dbcf96e28f8eb647efe4342427856b04ebd5303119b05d80",
+      "translationSha256": "bb4e1793df031132dbcf96e28f8eb647efe4342427856b04ebd5303119b05d80",
+      "verdict": "accept",
+      "reason": "Exact source term is an established VFP UI noun and is already used by neighboring es-419 labels."
+    }
+  ]
+}

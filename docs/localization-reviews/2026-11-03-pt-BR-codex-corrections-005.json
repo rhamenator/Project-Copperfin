@@ -1,0 +1,725 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "89 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathEmpty",
+      "sourceSha256": "16984f62b933434f7104b924aa9193e148e4f1d07adfa866cde062f857c26c9d",
+      "translationSha256": "01222d20186edff888d132358a735c6d655dd08b494e3ce07db4b40cef954fc4",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathResolveFailed",
+      "sourceSha256": "8f88ee2d9b0c92adab29973ee71d73bdd41859ff4d05d857204066972bee06d2",
+      "translationSha256": "641ad439c1ad2aed60cea04deffae8da342c02c737c6078ca989cf3e9cf8b934",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+      "sourceSha256": "1c5a006f5e2d43094d93dc8bb909c2bb491ca5b856f2081e5a0a63c816bdd9b8",
+      "translationSha256": "8ff94696425a6bb36bbb099f0d407e3433ec2850da1b1f0bf3cc3dc4a1edbb05",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
+      "sourceSha256": "9179461f5608ea70fe432d5453f050f568b33e345e1780a369364d054a6451b3",
+      "translationSha256": "8bc2d2e1740281aaccbd628c5fcb388d8900986b5380182b674dd1c429318a92",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.ResourceOutOfMemory",
+      "sourceSha256": "807356d4db0958215020ae8ab590c4e89cb5e6933966fdb6a9dce181681bdef5",
+      "translationSha256": "50d073c8df7a762cde713ab04b0b71c147d9bfe440e3065a2fc1a48c5c49f913",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.UnknownRuntimeFault",
+      "sourceSha256": "b96c4c692e35880c91fea65eebc21780cd66aa507bc9d3a61a1d4aafc5aee362",
+      "translationSha256": "ddfe31c1dd35af27d45b4b29610ae5568d8b6d8ef94e1aeb56d38d3fb985d45b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.ValidateUnsupported",
+      "sourceSha256": "219eaa457a3c39caa788ebce49691e6ce1212f7f2326c3bbb19b6c4ae2f9a594",
+      "translationSha256": "35651cf9faf7468705731f758e775a71f67e33e8a4a5541f567d62c345e8f3c7",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.AssemblyNotDispatch",
+      "sourceSha256": "21606a1240fbbd089a426d5ea2c9d4490bba62f8423181308f9700ad2cef8747",
+      "translationSha256": "c99b885bbc6256a5489260a14bc0b315aa74a2686cd840beb54912620b7282c8",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+      "sourceSha256": "5093e48c5dbed56fc5791205128d671fac45f896cf13b5d8f2a0c07f2ca95a4f",
+      "translationSha256": "009fa5f73f49543dece1a4a5ddd2dd8049d79d6318969142f15bb5febc203caf",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "sourceSha256": "59457083cef5d3449d8c010dfbc82c5684fce2e6e943f03051d7caa9eae9f9eb",
+      "translationSha256": "4b830a559d2d82f5677daa28270f58edd0686a193caa7e6af02ee0170326c179",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.AclassFallback",
+      "sourceSha256": "72746fa364da420fcd60b9b2544ff355d1fd686c9ca4087777ba560173c3b1bc",
+      "translationSha256": "1df7abac8a2e0225b78cec5fc8a879723b0eadf771a941c794e284c4383912ab",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback",
+      "sourceSha256": "fdab9cb93c4329a81d618cb000491cce34c9794e1e630aaaa7281620a6887529",
+      "translationSha256": "1835a9a99909ab6b445a8e2b739fcac5455b6ba3589ff08109a3aed1eeee82dd",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Session.Message.StepOutCompleted",
+      "sourceSha256": "2dda1a58e6e9dc3b042ec7cb48aa80675617c3cb628dd514f471829a4f1f880d",
+      "translationSha256": "68b32c9d390f0784425d3faadab529256300899a0d11ebaa3201b696b4d337ea",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Session.Message.WaitingInReadEvents",
+      "sourceSha256": "7deda661f9697423a216f0eba3fbc765a64d94be73b4374773c241b9c1dcd1fa",
+      "translationSha256": "d63edb07d9db3f73803b007a0dceef8a051009050a9d9b75056aaf69c1064351",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.BackupCreateFailed",
+      "sourceSha256": "957103ba166d7198cc6d5918dbbeca5eb10076672d38047ce84965f9c7099bfa",
+      "translationSha256": "f0dc31ce872ef5e70384562bb42315dbb4c36d318bdb74fe72019e30275c8653",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+      "sourceSha256": "f97549ecfc89f30fd399eb7e2ec748a4247ffce5039636c95bd59bae3bebbcd5",
+      "translationSha256": "5bb42985147fefbb40aefa81499390c38d2a046933bf8682c569c2a83970be2b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.FederationExecutionRequiresSqlite",
+      "sourceSha256": "239ae0c494887ac3ba04d5c6d5d8eb5689727526e8a368a487f33d0667f3d35c",
+      "translationSha256": "7a28f7063b23afc98609471919a16852e7bac55c563403ec744c9e821f0afbf5",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.StartupAssetDigestMissing",
+      "sourceSha256": "dba29a3f86590aa80aa34e5f6e095d90436eb7cef90891c95bb99b6a07438cc3",
+      "translationSha256": "c5ba254efc974afa7e272cc3391aa702479384fbbd47737c715293228034ced0",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.UnknownFederationBackend",
+      "sourceSha256": "8b9c041b5a03d25a55de13818760ae0a6da02cf324df14f8b784943db392a6e6",
+      "translationSha256": "9983bf67457aa9c7ba220434c4369404c685e70b63deb65f1e2aee337a9ed2ed",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Audit.Error.CreateLogDirectoryFailed",
+      "sourceSha256": "c826dface76bb6209a7e6de914c32a58846c276cbb0994c1a673cff6d4062adf",
+      "translationSha256": "023c9882fdef2ffd747a278313b36b989ca0d1190ea1fc35b08033800526f0d8",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Audit.Error.ReadExistingLogFailed",
+      "sourceSha256": "3a4fa6a66f25e68e4315ee6829db226a4f28d1acad5cdcc723fe16b3713a2158",
+      "translationSha256": "4fb135a0eec32ef3f070b960090a0ffd8b9c7d9cf732829e8ffeafabc4c40578",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Profile.Feature.Audit.Description",
+      "sourceSha256": "5b6524cacc3fad16c0beb1f7091692766d7df7cd30191ca46c5875f91740aee5",
+      "translationSha256": "552a8792240c6bd8211ed91a42487394404cb92cc7edabc5632274f17c015a38",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Profile.Feature.Audit.Title",
+      "sourceSha256": "c9294d63066e9bb13cd203c88735f4979186b397ccf327b5334b14e7c1e0a603",
+      "translationSha256": "0d464d0e1099eba235790b79f17ddbe4a7554548ce944afa9a29cf26dc0bac2e",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Security.Profile.IdentityProvider.EntraOidc.Description",
+      "sourceSha256": "c620f9fd47b7f7c2b0350456d608c3cd9ef374aa822581a1312d8cc5d42718f1",
+      "translationSha256": "076b062c8dfc89794442a6441cf98e366eb91b5bce0d32340e3fecca26829678",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.FormBuilder.Title",
+      "sourceSha256": "c3ca9dfa10e6b12516d71b1861e2b77e8681bdedcc14c6ced26e56395e844744",
+      "translationSha256": "f70dd3deb13ac9ea177b43f4c4b613ce979e2ad82234f99a68b64f8b798b8f9e",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.FormBuilder.Vfp9Equivalent",
+      "sourceSha256": "5a7ed966af4618d2349bd1b1a35bc950956ad56e7398f56cf00584dd04d47e07",
+      "translationSha256": "82f5043329d4f3701a783924e2f233443f819e37e6b77a9f9e9f382afb99a1ce",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.GridBuilder.Description",
+      "sourceSha256": "9d91b2797926e4d91aada3e7f1f2bdfc5629d9d97a53c1e9c8eeb79e85931345",
+      "translationSha256": "dad2bf87c7b93419668440d2bbbd3e00bdc28f9fecc38d5290014c6b5bc36506",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.MenuDesigner.Description",
+      "sourceSha256": "84697a18d1f62a3cca525d793d7308ad32508b2d1c3c88ba2b885459b89f63bf",
+      "translationSha256": "19a19285862dc100110d424d4bb568b24cd7e2a6da1b4407d7b5a53a6ea3da69",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.ReportBuilder.Title",
+      "sourceSha256": "bc7dc8987654bdd71053dc6b775288e586c0920716ecb0773063ddac9a091770",
+      "translationSha256": "6b523378d3e8e8ab61f08129be2b145131892ef6c62ab8e078b3ebd31005f9b1",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder",
+      "sourceSha256": "0f5c906614ef78c6030fecd231fe7290a8a1345645e788b2978be489ed747de6",
+      "translationSha256": "1b61d0b16879086f9d9a545249b65faa3aeb5576917ce43261e597d77d4dad1b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.BuilderInvocationAdmission.Error.EntryPointRequired",
+      "sourceSha256": "1aa8dfa34b6882205c95f9f160d713b1bd16a31c2dbe95007e1c9a0e27b020c9",
+      "translationSha256": "6cb1ced6be1fbced48c305a0fa95fdf4a4d8ba21de047a2f4208eb14a8564e84",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.BuildDeploy.ParityScope",
+      "sourceSha256": "ac4290efeb4b7683b373addca517cd839e7264b13cab2bb75be89c6bb5167247",
+      "translationSha256": "ef07120602b3bfa37097ec3630e368084a0c70c52e8cfde37c5f9597587fefcf",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.MenuDesigner.ParityScope",
+      "sourceSha256": "ca8a6e89e39707ebf8fae7e52cc4ef1a306e022be2d676c98e8b28a45d17e46c",
+      "translationSha256": "b8564ed6e0751313788e8dc9afb04a0c64e18983cbcd21f28518ed1c732ccdd1",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext",
+      "sourceSha256": "78ef84bb753f9c1d1d05d0bad4848279c1e3d2cb9d39ba42818df452a77f72bf",
+      "translationSha256": "c0254865f498302122a6745876e6b05fea66f87b70afcd525f66c2d83f57e79f",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Grid.Description",
+      "sourceSha256": "36adaa744c126ec616b07c48c5c1b7958ff6ef6cbc9404ec56d731bfc424b4c5",
+      "translationSha256": "b9927a2031bce53f335e12b812a324bc6ba6bd1f66e72d574914c0210f12f88a",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "cf6d7691e46827977a9c4cb6021d489402ce2fca21e73731b0b7af0fec7553a6",
+      "translationSha256": "d2237b53d63997fbb43b1435684615a9c9042568528d1273f83ccbe83de93229",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "sourceSha256": "7fc053db44bc509d4177281b0b63a3f2cc565331df82c87d6700fa3ccf6dc7b8",
+      "translationSha256": "fdc4166af2cf9f4663fd1a6524ce753dc459663bb550d79057a4546a1161911b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "sourceSha256": "e30fc60ace85df044b30e643285e271ee1c6dba0ff34b4f14db440f22b49b558",
+      "translationSha256": "06c65c3dfc83dd40d3e6a3a28cdc8d7b8f298adb8ac207e9fb677cbb60521eba",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "sourceSha256": "3fb5bae2ea65a5b33c6aad4cbf375400519cfd2051709c7279abd077ef96e033",
+      "translationSha256": "76e91585697fccc7e90d0385b794b14698548ddc28672c3d93d2422d0be7a760",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "sourceSha256": "101311655bfb8ee6fc3d28e0ad12345c67a804374dd49abcc35aa3b9c1fc3c6d",
+      "translationSha256": "af032d887598f1660b027ebf5f866c9aab551e56839759f11c9f9ff642fdb705",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.NoReparentOperations",
+      "sourceSha256": "e1aaeb076e5b0f3296b53d5c070ad36fff3130bcf6765707022c71dfcf885185",
+      "translationSha256": "c5d3cfd4f440bca2f3866833a4303f304a3d0048bf97ccc6e768a0639eab9cde",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject",
+      "sourceSha256": "77817e6827c1467aeaf0335ba20f9f093c5e307bb5bc4ba86dfd5a2bd74a6fa6",
+      "translationSha256": "42c901a655d6fe31ae34c24b96249a5043b4805bb51ad169d298062eb2dcbe83",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.CommandWindow.Unsupported",
+      "sourceSha256": "404fc37220f000238c196f804a6e77d72626b03b0500658c617675c71a7d3b07",
+      "translationSha256": "d62f1e7f4d422249a34785a6ee54773331e56b2210f5be815d5159d777223205",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.ReadFailed",
+      "sourceSha256": "1beb71a5973dea694e7b0b71c10b5527036f4b83b5fb723e2ee49f798530e698",
+      "translationSha256": "71342a0607f754c3053c715107da461c18b89eebcf760a46ada713a155b6122b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Field.NotFound",
+      "sourceSha256": "689cbaf999ab10d2edb1d739d80202901621e6acbd961561088241b000036760",
+      "translationSha256": "99bbb79d50f59678c02e8c06a09bdb973ac4b8fc427f620cd3cd94a5060ed494",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Field.TargetNotFound",
+      "sourceSha256": "6c3ea4cf534f42ddf6e82871c3b06ba5d53933039ec417a871646130cdf37032",
+      "translationSha256": "b93e9c264b7af9e2a8dc2557f7c4614a998f2cf7ed046c5e55eedb5c3ec1c5b9",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Identity.ValueExists",
+      "sourceSha256": "e58c2837ed0288a4a3d5387fd83739ea21dbd86d211947b65c203a91e7ef9b6c",
+      "translationSha256": "fbd1e9ab7d2cb9f20033aa2bbeb4e0dd21b2c3ca7a76f08d5f26a1362d23ea66",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.NotRenameableMemo",
+      "sourceSha256": "6a3488dca01031dcfdd0f6678db9b4231df0e089189702356bc04da70e9d40a2",
+      "translationSha256": "2916effcf76639c727f9c5259c5d311313a1061e11d82e7658b3927e716cae8d",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.NotReorderableMemo",
+      "sourceSha256": "195abafb032e97d306b1d99e7fe88cc0ff0c098819e8d8fdf1b646c1c4bf48e2",
+      "translationSha256": "ce90f92d439acaa4930dd256ea06a0a5c450aa770017dd144ca1d8961c0e541f",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Property.NotWritableField",
+      "sourceSha256": "61b1965f7008854dd443acd99feed6a722e91f7f5f9f400dc5ef75edc746b46a",
+      "translationSha256": "a2aebc589555ef412ad3688a7c7d3f7ba55bc3e903f342e012139dc54ad509b4",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.CharacterValueTooLarge",
+      "sourceSha256": "d70fdffb2a174c62bf40718c8eb673f27843883771702b891eb0725e7d4c0f8a",
+      "translationSha256": "cdd2f62f7e48119c3b0efb71cb6203c25a13aeb740db869a99d8961c9672ef2d",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.LogicalValueRequired",
+      "sourceSha256": "33f82970b5875b4d76cba10ee19aecdd9d1724cdec41125c70f9a4892f29810b",
+      "translationSha256": "1d23307cf9dba6c621fa278965af3a8be0dba2fa84f00cbd6ad35a847bcc241b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.NumericValueTooLarge",
+      "sourceSha256": "510df4af5f141d5a8cb9bd0243e821383cce564346eb93f9f2eed571af25dc9b",
+      "translationSha256": "f118b4495363eea83b9fa8f6cccdbee6eddfaaa59b3f62e45f60835f01509633",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.RecordDataTruncated",
+      "sourceSha256": "fb465ad2d406dd619f19bbfc55061c94677d9c63ae7834313fb38abf517501fd",
+      "translationSha256": "fd774f1834fc47767ccf021879699ee65b271fe903230013abe75c28f6c79e6c",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.TableOpenFailed",
+      "sourceSha256": "4aeffae7b9a9d8b5b3f4278578b351575801b7dbea19a3f078aa73ef30c11c9a",
+      "translationSha256": "b4f9437f5ea949dc83c33340346cf07c763ff2daabe733184b8bf4ea46549186",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.TableWriteFailed",
+      "sourceSha256": "220d1768a1930631dfa2541289fba95125d002e3dfd2f2d61746b59fc33ec861",
+      "translationSha256": "f619273d35c03acab6728941313a6abe88ae33bf8e7fca2c41b2fed49bf17a79",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Storage.TargetFieldMemoRequired",
+      "sourceSha256": "f9acb42936ac938fac5d94ea4da4101feb60de552da58ed73c643226f4c81c73",
+      "translationSha256": "d0fdc33a57ced98605b640f4f7bbc4eff3ce8c420f8e7c08172c6dcd9e19b95b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.CreateJournalFailed",
+      "sourceSha256": "5136411b4026dd4086aaf958c3274de388baa9efe2bbbd5052955310186f401a",
+      "translationSha256": "cebe42a62fd101bf3f55cfb9269d427c0253fb0a3c94be0f66cdc638c52cd893",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.CurrentPropertyReadFailed",
+      "sourceSha256": "29c13d3622639213684f4e945d8c231102d8123d6cb57af040457b333faebb49",
+      "translationSha256": "97394a46a1be05aabddfd6b57b2dc23e12688c882a4ee3093ff4f3529ee5a57d",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.DeletedStateLabel",
+      "sourceSha256": "3333862d4ec7bd86c13a9c236a79c24c17c494aa6a1ec6d3b6016f3324af3a88",
+      "translationSha256": "1b197281e735737441d5229e416618bb6b8b5bd9eca9b6ce308fb0722c83c204",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.HistoryUnavailable",
+      "sourceSha256": "d1edd4c3e49946ffa1eb83a2629ede634c6c16304924caf8e142513e85c72c94",
+      "translationSha256": "25ff9cb2465ce6c4ca4baffd8c2088ab66e9bed04f8dec0f84643ddc0ed1ea40",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.JournalReadFailed",
+      "sourceSha256": "1b8cdc45a908ef207afbf3829a2662838faa038262a7aaa28709c3e5a71312b8",
+      "translationSha256": "596d99933e504163e64f1b8251a638acfacd1ecdbb9dade39226f272a20d0e07",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VisualAssetEditor.Undo.PersistJournalFailed",
+      "sourceSha256": "46ce2d84decbb541892dc7a22b6d16fcfc2bfae9c5286d64a0766c7516113109",
+      "translationSha256": "ebf9ebc585687caa0899bf192cdb492b3b08d40893be44518c85f5cf2e63a619",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Column.Frame",
+      "sourceSha256": "d0b50e064a4f8d9438c977e05a087f07815802c0055005c7f913181729464607",
+      "translationSha256": "66643f859c2e25e09c30d04b2abcc0b153474c3e89960a23444d672b554d6451",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.InitialSummary",
+      "sourceSha256": "4599a4f9cad30c901f4ab47b4e5eaa688dc7c3c40f968767cc56076c287dd907",
+      "translationSha256": "d6cfedbeaf9ab718016badf4fee663c2f04cfa4660f09d91af5468aac9aa6b56",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.OutButton",
+      "sourceSha256": "9a3c5460432ba66a10b0e6bcd1f2338cec818ad3b8b3f96b079a14a5f1ca0d55",
+      "translationSha256": "65c3ad9e856de822a07c55986867fd236d8d277352ed6ed12eb89d56c44949be",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Tab.Globals",
+      "sourceSha256": "f47ddae7d767135a2da794d0e578ccfa790cfd50c34f30436f829d4082cab1c2",
+      "translationSha256": "fb66e2eb69fb6ae273701be68869de99ec0ce984d7ba535bbe4a61086dbae67e",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Tab.Locals",
+      "sourceSha256": "a8184dba5c5c2669040acba12adfba04112a7b14c0fbcdf31446e347e36b4498",
+      "translationSha256": "554888ffbe6f281eedfca64a7242998e2445d931fb20c93e04abf1b9cf3a6594",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Tab.RuntimeEvents",
+      "sourceSha256": "2726492201593e1523728f88fcdef12d1cbad14d50b28f3753caeebd3af090a7",
+      "translationSha256": "3eb582f318f043b4b7745508e9264e68df458abdc48c58759ca4d49513b1661a",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Transport.ProcessClosedOutput",
+      "sourceSha256": "91746f8fb8578862e8629bcd94823a8511443753d80b84b64b97890267969e95",
+      "translationSha256": "37f578bd5b8502ec16e8051527892a9898d3a4c2b9decfaf9589f98b7d377bd1",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Transport.ProcessDidNotStart",
+      "sourceSha256": "0ffd09cbd86f616c5801a8fcfc4004ddc2a2a7efe85dcaf697e0fabf7ed314ad",
+      "translationSha256": "c44c895fa4744b1bd628a015a18971aca32f1bb865d484c4a09df78e3366eb25",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Transport.ProcessExited",
+      "sourceSha256": "7e7a876c4686aebc1869340b38aa1013c5c6d2b04dd6479d504a4e4585d941d9",
+      "translationSha256": "3c9e1348f702d7628b20e1941e1b6782305e961c7e3f1755fea0f1e07b8e676b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Transport.ProcessTimedOut",
+      "sourceSha256": "470e048622fcd2eca7a9a852528ce295913b07c67ec3845c75f590d51aa164ed",
+      "translationSha256": "7c3d83b4710e96da422711662a37e460aeb6a984ed3027df579583beac63cea4",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectAlignment.Top.Completed",
+      "sourceSha256": "d905c85a52214b331e7e71e571e7570b2b79f7a43b5c8175ec8407e253207176",
+      "translationSha256": "2aab8c4568160b3d047d8cbeb09b29f91e2350f0e07fa5b01ea0ca2f86abb01f",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectAlignment.Top.Executing",
+      "sourceSha256": "bce83ffd9e4ce1ec55853bfccac3ac72481b569e1b792687eecba18b61f7710c",
+      "translationSha256": "165fc49ce238530115b0e1feb22623bb81d73ba19ef1a52e740fdf6d17a9de9d",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectAlignment.Top.Failed",
+      "sourceSha256": "0d4c5e28bd00ecb477d56cc3e5de416b34bc400d5858efe3d48175cbc5fcb05a",
+      "translationSha256": "0d850255c587c06910b4da0a5c16c5e16d7e239f01a00d1f981c149694e5ddf5",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectAlignment.TopButton",
+      "sourceSha256": "e40c2d61c82e3af2b5b73c3607c66b02db0a6345e978339acd2caabb9d20c38a",
+      "translationSha256": "a49eed351eaf9c005d406e677e05524722b309dc074f2e7419f3792ae030acdd",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectResize.HeightButton",
+      "sourceSha256": "e6c3665ed90f94669651c024b5ff00ca72ff23e54bdaf3ec62b3160cab1623b5",
+      "translationSha256": "c64e38927ad3164075f9814a12dfc39779aed8689562436488ec095dbfc03396",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectResize.SizeButton",
+      "sourceSha256": "728b76730fbbb23cc5195d4e2531f53ba1378aa5cec412faad7ac6410a919253",
+      "translationSha256": "c9ad70ae35bc409fad8de7ac990f0b79d16f1cc4f7246030aa55d7603c5e8dbf",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.ObjectResize.WidthButton",
+      "sourceSha256": "04675d46ae94f73481fe0bf84b4545f77064243672fa4768dfade143c13e557d",
+      "translationSha256": "52222a76e110d2c3763acc3251882ff76005c0f0a4ad831dd04fbb68ea9779d7",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.PreviewBounds",
+      "sourceSha256": "b953527ca0b2f90d43d223a9737e24fd3e1ca968dabd88e5a2ccacddc81634ca",
+      "translationSha256": "f5b533fcd62327e932a089f75cef33585b99aab530a9c2fcbc11d0c5c284405e",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.PrinterDriver",
+      "sourceSha256": "2282fb0f4cc6762e08629ce784e12b17e1c2a67ddb96c93bb666ca23baa6aa5d",
+      "translationSha256": "e1761b6ee58d00c6d6f39b8569882a87dda4817eea7e813d754e59cff89e0c2a",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.NoFrames",
+      "sourceSha256": "787950e8905a088d3b49b2f6d67b8513e1248ab56058fc6a67c0ec42ff3f0b32",
+      "translationSha256": "e6b6b4a5d33289585fc46a44273e67f3da2feaa600f6b7f0f324e771a0199f6b",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Tab.Toolbox",
+      "sourceSha256": "95ddf8e9a1b838e10aedf778673fb562a2a76bc738a604add5200fcac649e832",
+      "translationSha256": "7f44d38603b03ea1014f1c45b573a642c0cfcf003cf67ffff2455c58bbb64414",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Toolbox.Available",
+      "sourceSha256": "19512a9bef44cb8ed214e3a239ffd69e38897ff88e64377417f98d058e3fadb5",
+      "translationSha256": "305b6923b308af478efc60d29e2ffe11127930651acdcc51933216b67617581f",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Toolbox.Creating",
+      "sourceSha256": "2905869fe02e31c1a5f95b4d2e7dd3ee01e713d978538053e764c7c8ccd62ff7",
+      "translationSha256": "42d9ac323ee0e8447668f370d8d53d5f8f3386d128345fc9ad4100eef4a78555",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Toolbox.Empty",
+      "sourceSha256": "f6aa33f48e9d685073f870937af7851f7a19212b2a60f01b641f501056151bf0",
+      "translationSha256": "4d5d49ba7a34f8e32898dd2bb80db1c17921ef2fe1c869ef92834e96fe377fe0",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Toolbox.Loading",
+      "sourceSha256": "bfa6dc904b1a3a70d888381c7b93fa7f2d372b8df680c5e2a8dc95a63dcdf4d1",
+      "translationSha256": "f9e61f573603baa4b138dc8e7ce436fd5dbe22dcab536b4bc1a656401fa1d805",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Toolbox.Unavailable",
+      "sourceSha256": "72d5b7d9ec84e9576bacbe80d78b794f0d1de0b17444069a317e02e2785eb424",
+      "translationSha256": "a6bfbb4aa360ac13258684d57124289b839ea31f6b592f1a7f0f1e7920e431b0",
+      "verdict": "accept",
+      "reason": "Meaning, Brazilian Portuguese wording, placeholders, and protected technical tokens are sound in context."
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "mode": "Independent separate Codex agent review of exact proposed British English wording",
+  "sessions": [
+    "separate Codex instance /root/review_en_gb_revisions/2026-11-03-second-pass"
+  ],
+  "scope": "10 first-pass claude-origin en-GB revisions independently accepted with exact hashes.",
+  "entries": [
+    {
+      "locale": "en-GB",
+      "key": "AssetEditor.Guidance.ClassLibrary",
+      "sourceSha256": "9cfb060487bb2b9b46b02501c90149449b3269df41a8f17ed66c103868eaaae0",
+      "translationSha256": "5763ab6e5709f77f50961dcb11dcbf0b19c314d7434a24c994ca31fe18fe3ed9",
+      "verdict": "accept",
+      "reason": "Adverbial “in place” is idiomatic; VCX/VCT and the meaning remain unchanged."
+    },
+    {
+      "locale": "en-GB",
+      "key": "LanguageService.IntelliSense.Keyword.SqlExec",
+      "sourceSha256": "9a57b0edb87b85d53729070a300cb182270e2537cb3c96fbf263fbea3a612b81",
+      "translationSha256": "ee0f3e06c6627ed2a00091f41cb768e14adbc26e46055cce182c8ed8b5668a42",
+      "verdict": "accept",
+      "reason": "British “materialises” is natural here; SQL pass-through and cursor alias remain intact."
+    },
+    {
+      "locale": "en-GB",
+      "key": "LanguageService.IntelliSense.Signature.SqlExec.Documentation",
+      "sourceSha256": "e17003b13958da20b3b3cc1e4a386ca43f523896f047c37b6ef9ac082888de27",
+      "translationSha256": "e300fa0abeba7c59a3d7c14a151b0fde05bdbff48cb00ef6230b02ecfad616cd",
+      "verdict": "accept",
+      "reason": "British “materialises” preserves SQL pass-through and result-cursor meaning."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+      "sourceSha256": "994f62d938abb72fc3e729293a666b816ad89a1769ac8feb1dd37f085484cc08",
+      "translationSha256": "65179fa9087d9e50f7aef44469cd0e377e9655b0fc85a54f5e0e21ebeddd7a4a",
+      "verdict": "accept",
+      "reason": "British “recognised” is suitable; machine token AND remains exact."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "sourceSha256": "45a350b8b8d6ce38a78f7cf4141e7fcab230621622214fe28810e37192ae5004",
+      "translationSha256": "abda296c46f22292081267b170e9f06ced83c098e9b8a5144e63280729a81d45",
+      "verdict": "accept",
+      "reason": "“Recognised optimisation” is natural British spelling with unchanged meaning."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "sourceSha256": "3ad5c53ef61b0449babb078fb99da39aa6911fb5f67e77a544262d3bae702ad8",
+      "translationSha256": "16a2f8629ffb506aab5aba9f3f1ddb73b32b3487a5d98e761f0b737faea52f65",
+      "verdict": "accept",
+      "reason": "British spellings preserve the planning decision meaning."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing",
+      "sourceSha256": "4545f6e4adf883e82b0542534383b77f70fb6d260bbd73d283db3a4ce217c1c4",
+      "translationSha256": "07841619eb98c31c631c1eab7f8e072da0b38b94195762871d89e1b07092f16b",
+      "verdict": "accept",
+      "reason": "British “materialise” changes spelling only; the output-path error remains clear."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Package.Error.PackageRollbackFailed",
+      "sourceSha256": "4d536cce98bedefda520e30d5c53973456b26fb58164dfe92efbb5c86ea5b335",
+      "translationSha256": "b21e8c9d453a6cff2f916c55c2f334f4166ece3baa2a363e007e97749ac35427",
+      "verdict": "accept",
+      "reason": "British “materialisation” preserves the rollback failure meaning and {path}."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Package.Error.PrimaryOutputMissing",
+      "sourceSha256": "85857eae662cd8159d72123f2af533e532d0ad5b4dc7a7866a234107ac706b35",
+      "translationSha256": "ae797a89607f6cda7b83ca2a995b4f44ff42aaeecf8f4d61375db0c3483f83a3",
+      "verdict": "accept",
+      "reason": "British “finalisation” and “materialised” preserve the existence requirement."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "sourceSha256": "fa93818644dffd2ce0621487cecf087974c3e301d202188e934d1449d8e248e2",
+      "translationSha256": "99c9631d528194181ac33f50fd23953de06274d5cb30f486a19a8844ac247620",
+      "verdict": "accept",
+      "reason": "British “materialised” preserves the warning and {path}."
+    }
+  ],
+  "residualUncertainty": "Text-only AI review; rendered UI, package and human cultural assessment remain open.",
+  "limits": "No human linguistic certification."
+}

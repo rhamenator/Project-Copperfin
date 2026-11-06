@@ -1,0 +1,166 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "mode": "Independent separate Codex agent review of exact proposed British English wording",
+  "sessions": [
+    "/root/review_pt_revisions/2026-11-03-second-pass"
+  ],
+  "scope": "19 first-pass codex-origin en-GB revisions independently accepted with exact hashes.",
+  "entries": [
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed",
+      "sourceSha256": "cad259588ef21940960e92da396bf3791636f2364f4c4da1434cc511e70e9715",
+      "translationSha256": "6a9b00f7c39e9bb2e482181b5895b308241316fb8d3d4a46ebd2b819c0e8a82a",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.CriticalSection.Error.EnterAscendingOrder",
+      "sourceSha256": "4a33ffb8c78f8320935c98324748515f7698a5d40cac81b9a5f1fe4163cccc4a",
+      "translationSha256": "e349a4065279921a3267d6bc6d6171f701a0563ced97dad9987bf9b0ae682290",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed",
+      "sourceSha256": "411cd812d809eccaa7a9d41848b896e9a346dc64851424b6c7efa7ce3d7ce476",
+      "translationSha256": "9b2cb8feb47e2ea6c0f3dd73389963d4e587184253bf0217a84e009b864b61fc",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed",
+      "sourceSha256": "f3b24796e90f96b3fb87ed8a7fb71f9c8a552a7fe3a75b8623eec077e0b7b737",
+      "translationSha256": "e1c502e4f176f6bbe9a48663cdb9e1de50d09c007d377ce0245d5a6451e07a4e",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
+      "sourceSha256": "a949f8cfffc4c1e47f9256959d94942d1fded04b05ef03d040375d9c38b91361",
+      "translationSha256": "1df0adda42f5535f0026bd061eb3377c099baeb64ceab0e795596dc134496f08",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "RuntimeHost.Launch.Note.CompatibilityLauncher",
+      "sourceSha256": "f9ce805ff53ac0cca72b0d0d925fba2ff01d6f36fbc7df91f40b1462ba497337",
+      "translationSha256": "647e60abbcb5e87a9f66f166350ab75b5ae11cae0914988e1ca1c5fc5a9b9fbb",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
+      "sourceSha256": "a2804a5f64150197b974af1367cd2aa7709fbd90993852f66c32bbdb2e0631b8",
+      "translationSha256": "8db8f5b1336c5f3200ff1a4ac200b46f7349cf11a8cb79d87d0f0646c560aa88",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram",
+      "sourceSha256": "ab32a4d3f2161829a66cda62021e7f6cbcadb225d6e619399f7b44095d6aa0b8",
+      "translationSha256": "7b6c9d90f0f578ca9f06f6d07723bdcb788422ada7576a61c720ada5015310d7",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Studio.Startup.UnknownArgument",
+      "sourceSha256": "653b8054b0331fad312cb2f61ff4e0f2c9f67e543c060f370393e064186cc699",
+      "translationSha256": "508bc3880f864c52f9c5a0b543e7bd68637cfc655dabe7248a347e1fa7fe1559",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessDesign.Error.MalformedPropertyLine",
+      "sourceSha256": "69dee81ea55d600532ad6152280b4a0c94cadd50dce4a7e24d56f097bb8aea99",
+      "translationSha256": "8e6a29af56ab121c7c74475f9d840287b8d0f7da4ddd66b633a51f655e58e780",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessLongValue.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "6f30d1fc66bea973f8c85d06dc1164eb831e2474df99af91d78001c403870096",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessMSysObjects.Error.NotAnAccessContainer",
+      "sourceSha256": "32e2b823cf9b904b7f0c21c7b094965023e7717c16bef2643a41446d038bf87e",
+      "translationSha256": "1ef2edb446c5ee6d8e72bdbf9596702204eaf98c8c245dd5f0baa4afde5f7d83",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessMSysObjects.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "6f30d1fc66bea973f8c85d06dc1164eb831e2474df99af91d78001c403870096",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessSavedQueries.Error.NotAnAccessContainer",
+      "sourceSha256": "32e2b823cf9b904b7f0c21c7b094965023e7717c16bef2643a41446d038bf87e",
+      "translationSha256": "1ef2edb446c5ee6d8e72bdbf9596702204eaf98c8c245dd5f0baa4afde5f7d83",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessSavedQueries.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "6f30d1fc66bea973f8c85d06dc1164eb831e2474df99af91d78001c403870096",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessTableDefinition.Error.NotAnAccessContainer",
+      "sourceSha256": "32e2b823cf9b904b7f0c21c7b094965023e7717c16bef2643a41446d038bf87e",
+      "translationSha256": "1ef2edb446c5ee6d8e72bdbf9596702204eaf98c8c245dd5f0baa4afde5f7d83",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessTableDefinition.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "6f30d1fc66bea973f8c85d06dc1164eb831e2474df99af91d78001c403870096",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AccessTableDefinition.Error.UnrecognizedTableType",
+      "sourceSha256": "68ca27d47536a9c80e700a06225a1124761f70ad748b5985dd621058c91bddb0",
+      "translationSha256": "71465cdc8ae3497ff68392b8fe2661830723656ca8f8380b30d81988f670a535",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    },
+    {
+      "locale": "en-GB",
+      "key": "Vfp.AssetInspector.Error.DbcPropertyTypeUnsupported",
+      "sourceSha256": "9fc798393df8f52997fb8f24f44e914086db0d891434fc7ae8b8d8164635f7f1",
+      "translationSha256": "42f66ccebdd077b4e11fca908f06f3e05cba4e69565cb104c8a2bf5b574ab846",
+      "verdict": "accept",
+      "reason": "The proposal applies standard British spelling to ordinary prose while preserving the technical meaning, placeholders and identifiers."
+    }
+  ],
+  "residualUncertainty": "Text-only AI review; rendered UI, package and human cultural assessment remain open.",
+  "limits": "No human linguistic certification."
+}

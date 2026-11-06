@@ -1,0 +1,1557 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "Codex /root/review_es_revisions",
+    "/root/review_pt_revisions"
+  ],
+  "scope": "193 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.RequiredFieldsMissing",
+      "sourceSha256": "2a56ea25c20c609cbcf45bab17b05b1d15599cdc426d5ad5b646af2c6a8a484c",
+      "translationSha256": "3ae64785063c4c9fe61e1285e72d870ff6a15a183041059a4ed0ec0a089bcb2f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Identity.ReplacementDuplicatedInSubtree",
+      "sourceSha256": "3cd243a4bb8250f2f3f3a7b5d7e3c692f159564ee1435dfd76cbaf93ba4e6f83",
+      "translationSha256": "01b773c4d9d76b8d28d737539f54b82bc25690adeb1b40fc0f80eb6105cfce51",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.CopyBatchRequired",
+      "sourceSha256": "1b0070da06f1e6aacd9a82a9210a26f47ea7104fd3d6f0a5f19abb032ebee28f",
+      "translationSha256": "9ccc6d2e984230c66982bd14e083ed0a7b18ebd909909e6f0e86a354c94c0e1f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.DeclarationParseFailed",
+      "sourceSha256": "ddbbf3573758abad8ab80426ccd96fce08ffa547317ab3b97ec02fa46e0121f7",
+      "translationSha256": "ca5f01c67e8fd3c8d8faa233b1b08c531911ef1063bac663932b4d0e99de905f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.DeleteBatchRequired",
+      "sourceSha256": "64409d073087fa895ed812329ca8054c641a5785b80d9ae24d68c6f9b3e26b3f",
+      "translationSha256": "f4a44281a6fb1da62c6669449c8ec56414a983338d3fe23e8a1c9520c35ccd6e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.MoveBatchRequired",
+      "sourceSha256": "fce240b7737b5791985b45c724bdaa46435202da0760f74e58b972df5705087f",
+      "translationSha256": "f159c679d82864a10c1537eec8c82ccd2bd4e17ee88b3d5e9bbfc942fbd20947",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.NameRequired",
+      "sourceSha256": "1bffbaf37651e9a9ef0ab5746118b7d5947009f747153ef6d960eb3959b9495c",
+      "translationSha256": "1a3649f0ccec107ec5363df4beb7e1394c635e568bd657f98af7f5dcd8b647f5",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.NamesCannotBeEmpty",
+      "sourceSha256": "e078b62e20f5ed4ec215ce19f508d40b40a49a51ec3ac7d9e98e869316a1d9fe",
+      "translationSha256": "b7376bb1228c4f7e824a5acd785a26e0026d8b637d9454df5e5f30b927ed6ded",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.NotFound",
+      "sourceSha256": "e64ea9de357bc6cc0d34b043c3cb7f3c83a98e0d546b88b67b9d59440a7226c6",
+      "translationSha256": "d8b787f789b9e6ebf91282583eab78ab116dbcbb358351dc1a9d95eb76824a8d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.PlacementUnsupported",
+      "sourceSha256": "3d42a1a2c4a6d12db095210991b9b56bd1b1ebe36c95129214fd68fd76401873",
+      "translationSha256": "8561f5c14c3165393151d9a6fdd321ff023ff47c2c2357447de3c5c6062821dc",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.RelativeAmbiguous",
+      "sourceSha256": "2b0ce27639dd137e65eb22298c49c8342b099bbb5a694f8aad72174b4eeeea37",
+      "translationSha256": "6d47d50ff3e35d94a2fa2c2163bb87f620bc313e5b76418d2e4301603d9fea1a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.RelativeNameRequired",
+      "sourceSha256": "e450d353b2263f5c8b837e6126e9fc10b819ba883803d373091de008024ff665",
+      "translationSha256": "338037b6fe4c8e27cd9480b1695bea57d05b072e2fe1f1133f1c577cc80ee0a7",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.RelativeNotFound",
+      "sourceSha256": "1a365cf3af9e25299e2b87c00b6cb3cefb487bbd29793d1ecc17cba6f1c4492c",
+      "translationSha256": "608661e0896fc8ac4dec81bcf649f6cffaa11f6863ecb0b29706f0270b8616c1",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.RenameBatchRequired",
+      "sourceSha256": "74aaf42770a6a7e76d0f4fe5628c7d1efc8e0bc6ddf4e2b29c4070a3317280db",
+      "translationSha256": "658daa844c30e907bb3a5532293c9bbdd2b44e30ff1855e362af0b875038960c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.ReorderBatchRequired",
+      "sourceSha256": "0d9cf24ceb278180a4adc1bf393a52d998fdef543e3ba1bc99d8fd663fa4e6cc",
+      "translationSha256": "d3a4e55af3f8ae9e87d6797053295376d4d0195a2f4f7881d824efe963f9f420",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.SourceMoveToSelf",
+      "sourceSha256": "5f80c617c56a48abc8926c56032858b80d6a4769fb49172cd513b5adb903abdd",
+      "translationSha256": "de0996fa8022d3638f5d9e0a2b58852837dd5386d86d0f3bd1965149fb822534",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.SourceNotFound",
+      "sourceSha256": "a20695e2387d7b4ca319ebcd734489cc85841dc5620102f22c0471e3495fafe8",
+      "translationSha256": "aea47e02d653455bee3842ae68823c492daddd3249fa15ca5902d75bdde13e54",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.SourceRelativeToSelf",
+      "sourceSha256": "b24849acf1b5756631ea7361537922b5b22a4d367bbf08d003f811563642ed92",
+      "translationSha256": "af21996d46f65220e6a4f3d8627852d913de3f02b9f1065c04074105ef2d1bc6",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.TargetExists",
+      "sourceSha256": "32560245b3c04d3d208f00775b901c0c2247c65241cabd7135655e8b834994bc",
+      "translationSha256": "3b679b4f612caef617df923db5a31384a56bc610318fba440472ffe7c1907a07",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.TargetNameRequired",
+      "sourceSha256": "ae0882d7d1b904a5b3787887307ca1812fbaf3a80a8817a17ffcf40a6b677ae0",
+      "translationSha256": "4c5a5cfe633c28e4f8492fee9d5d842e07ae5821f45177b5d1b0129b9359fe8e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Method.TargetObjectAlreadyHasMethod",
+      "sourceSha256": "47753c38a126dfb4ecc969a312bd047cbefe7f0b11a42cff8495e4a6e34730e4",
+      "translationSha256": "45213580e6b8fb2c9f0822088b3a9f587da7b2a93502e75b90e7e2364265acb5",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.AlignmentModeUnsupported",
+      "sourceSha256": "818bee4adbec28f11a6370a5b338f7b88131c37887d38f3fb4d8727f296ea293",
+      "translationSha256": "f342da37ad73edc953967ae540f1a94166f805bc3579d602fdb3a06680955176",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.AlignmentTargetsRequired",
+      "sourceSha256": "f11b69951f5b9807122d6936ebb95128ebbabc2b853fc34f7670f6e52a53365f",
+      "translationSha256": "38eb5ac7e7ce003a46ddbdb16003a2ab17a4eb5387f6ff9d2971c526e1e2d7a9",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ContainerRecordUnavailable",
+      "sourceSha256": "aa78fad4f11b06827b6c15024fb394b884167d38362d8ff27529c2bcdfd54b34",
+      "translationSha256": "9161a56e940d24f5586702f914bc597ea7c59275daf440cc36138de4004ae6c0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.CopiedRootRecordUnavailable",
+      "sourceSha256": "cf826d3acfeee7c9924511dd0de65bbf618c781bd1dc729ec43758b6dd09c8ea",
+      "translationSha256": "f9ce62aec22ab35394835c27a9079dba3ad7c3064e33808c9fed0c1a049c3cdc",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.CreatedBatchRecordUnavailable",
+      "sourceSha256": "80f3579e83b78523e3571ba36bd6d9e16e9007b7dcf17631f76519fd67117137",
+      "translationSha256": "73dc9200a99f6b389c19cebc5d2c5087a86a0d320157aa8b4b7cec75eb13c0c9",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.CreatedRecordUnavailable",
+      "sourceSha256": "fd6a79d82a5d23b32acddebf402098ac8777360aa6e4f6dd4f515e3acf6d6ba4",
+      "translationSha256": "d669534a535036dafe3145a09db7b87b5eb2f486372d73529b32b509e63c29c6",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.DistributionModeUnsupported",
+      "sourceSha256": "fa6be7f2b1350694fde5800ff17fb2557212bcadaba601029505eab2aa4319ad",
+      "translationSha256": "7967d6ab7f645e647854ace16d6f7eefeccb50b73dc47dbb659f69113f2623c2",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.DuplicatedRecordUnavailable",
+      "sourceSha256": "6453624a06d866c01e66d2a9bc86458a15e2a29d58e5f785b89146a95fb7429b",
+      "translationSha256": "6b1780a6666cf3db50b732617722e2e85626b30cff27a1acf44fc270a8e90069",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.EnabledSelectionDuplicate",
+      "sourceSha256": "e7baf56da5dceb0a96a1d53d1fb6a5cd2d4b3d45bbe1bef44a63121f5b7d7596",
+      "translationSha256": "0327cd0598ec74181745e16a741c9d40523f0d95599a6a9e5c44d26ba701f178",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.EnabledSelectionRequired",
+      "sourceSha256": "e54d0e77773dc9e1c6a56f9ceceac41d73b24f5da07d8c94b82aa44676be3d4c",
+      "translationSha256": "39ed4d629c09145d4265543052551c03eb3415411b580fe8f4d2172655dc6b97",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.GroupContainerUnavailable",
+      "sourceSha256": "904485474b828453712fa24d3a871ccdfaa5e83801fedd7cf05d9921aa900255",
+      "translationSha256": "293f2c156540892d3b1436ed4d74c8590cdf11f1a059a216b97cfc91a4e4d738",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.LockedSelectionDuplicate",
+      "sourceSha256": "fc2558728cbb59c3d9ed4cc1e16ee1a024b629f77b52144f6b4421fc5aa57d56",
+      "translationSha256": "2587aed5dbe39149b1ce2ee3b1caae006408ca083e21e377e20d17c2a2368e92",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.LockedSelectionRequired",
+      "sourceSha256": "ae8346ec79b86834342f370f6550f203413cb00453af090064bb8fa757f936bf",
+      "translationSha256": "908dddc1abffd01f61c01990cb6ceac58b6f3de046ca2edc932b95caec1beb22",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.NameNotFound",
+      "sourceSha256": "a99041fc37ea97dbeab38047d366de605801beb06a25f7ebf8b01cae0e11bca7",
+      "translationSha256": "685668e587adfb4c1895bc148b3186795e06818566390f8d61bf3db4d6b692cd",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.NameRequired",
+      "sourceSha256": "6467636d4733e8d7a884ceeecd1e255c0468e98869f0607e6525cf5be117a039",
+      "translationSha256": "9a51ca6357087345ceb1c25ffe909763e42bfc4258bd6034414576ad69f8cae4",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ParentRecordUnavailable",
+      "sourceSha256": "98c45d6aaa7634f68ad75e3a1522db1e5584292f8f516796acc54f904f3e15e8",
+      "translationSha256": "c23c3d3cc2a5f8ade50c95ef9c559c75683347d10b03ff70fe741f7cf47245e0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ParentSelectorRequired",
+      "sourceSha256": "f085bd7d457d052d37c1b2f47550880c512f3789112ef3002d3745491949f56a",
+      "translationSha256": "e6d6f49549dc2923c9d24d602e203f963c1c9299a7a2d7116278e3ed3d19259b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.PlacementUnsupported",
+      "sourceSha256": "808c63661484e18d85f277775e2c4e7f8e83d1cbfb3460510bc0e233828d6576",
+      "translationSha256": "62b49f066479340142c7df4a6a0c9bf91375e9a6196992fab587b5ad03f51078",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.PropertyAssignmentDuplicate",
+      "sourceSha256": "c708d0995b0e35ffa570905329e850bfc9d8bdc9a728e22c5ee62e320fc82606",
+      "translationSha256": "46272675b6edee3160972c085cb00c5601347be6429944ef235e0de0a252cd9c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.PropertyAssignmentSelectionRequired",
+      "sourceSha256": "3c559c959ca70614f3a97a39868bc6505071e2ab023afbbdde2771c353d947d0",
+      "translationSha256": "82dd5e3c4dcd206ed6a2c449aed3dff0186bd5356ad992648268e6c1e36acac3",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ReadOnlySelectionDuplicate",
+      "sourceSha256": "94b325f1c0de08a7132d30215a823f2bf486b46b527ca941de5f29861450ccda",
+      "translationSha256": "2efa3c7ab1b36fa3652790058220d3658a6e85359b8f730bc67181373bca213b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ReadOnlySelectionRequired",
+      "sourceSha256": "097e907368d4113d5e5bb755c577d1838f4bfbe70805782f53e786585633dec4",
+      "translationSha256": "317fbab3287753aaac51465f5dde7f05c457df3f2ccce9d6a21f59b0c5421277",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.RecordUnavailable",
+      "sourceSha256": "0d018a31122c9730868a32231d1c718ddafc4398aa2aa435cbb076806463e896",
+      "translationSha256": "72974bd45aff12423c62b3fd3b8e9c1a3848f42ec1197ccb87976d7038da42c7",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ReorderRelativeToSelf",
+      "sourceSha256": "b90512ed94ff4c0b777026b7a925a66eb5cb9f8089339f0694fb080bba18ffa1",
+      "translationSha256": "8b24b6e327c7da66caab1731b7970fdb0b6fc608524be69662bb7d196fcc6e60",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ResizeModeUnsupported",
+      "sourceSha256": "64a0811afe61287340a8ad373e0f068eda55feec4011230a7b7176e52d64baa8",
+      "translationSha256": "ec1bcb92307af00226c9eea344cc157cb05a1480b114cbd27478d37b7382d37d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.ResizeTargetsRequired",
+      "sourceSha256": "4fda6527ea579a7358c89d603776e4a2cbaab0f4080396e068ad308ccee97358",
+      "translationSha256": "ec68c8544f6a18b6fc69a2f429da59b7da267121b0936c58b6fa2ab365683a94",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.TabOrderSelectionDuplicate",
+      "sourceSha256": "7ca4c06785791723fc8cd8e3116934686005997b229305185d99c7976f8b2fb4",
+      "translationSha256": "b2b7fbda46c467f151983e5521fa2eeed2ddfa46cd099d343cefe3e40295bb96",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.TabOrderSelectionRequired",
+      "sourceSha256": "ca4b6e29d9c075c64212bdeeabf5ed2d2c5ae71d0b2abf2aeed4475de6293d68",
+      "translationSha256": "6c4eb1db78d73574ac5383ae7b8fb82c2a6148fefb11542c91f162c8d0511b99",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.TargetRecordUnavailable",
+      "sourceSha256": "0df7e389db05036abe76db4c1a520dd009094c5519025d1e03676b885c9962ff",
+      "translationSha256": "ff5b0f1fbc0141967cb7383f701e728d9f99acd774ab3de9a1851120007eebf7",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.TargetSelectorRequired",
+      "sourceSha256": "33c8cd100f44a4465260c9910a5792bdb375091f54f21ef6cffc8469a76892f8",
+      "translationSha256": "f7a1ec443f6b413bfeda6b8b14bc23b826b0c673b4ee2a32c00e4baa79beb0ee",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.UniqueIdAmbiguous",
+      "sourceSha256": "0455013d24235695add80de38ec2e45389c3df80538ef194cda07ec66002efb4",
+      "translationSha256": "35f743394ec2044788bf2e862adb190f02346aa2223a2e58045314a189110bb1",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.UniqueIdNotFound",
+      "sourceSha256": "dab9aadb7d64e40a2c93053983b26d23f73c4a3ff625b267cbede21250a3e583",
+      "translationSha256": "da95f3274fee353967bd19d29875741a66af399a9b3e57977fc5e29c084ce651",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.VisibilitySelectionDuplicate",
+      "sourceSha256": "1ce7b34ec12066911dceb558bef57042ec3c5573c93d316b551c4ea54683c9e9",
+      "translationSha256": "4b90605ea64f29d6a1c0b32c78047522618e62a960fa12b76a5f13230c710676",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Object.VisibilitySelectionRequired",
+      "sourceSha256": "50899d898dc2fa6c49d1da9eced317b335d3e09f7039c1b781c9655263e7eac3",
+      "translationSha256": "c3b084c578cb8ff1497fbb8afc8114fa728df90539d67855e7ef0b28df2f3a47",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Operation.AssetPathRequired",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "2517e8fdd35b3f944c658b01e2ba8cff048fd03b02c9bf754c72aa241ae9725e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Operation.RollbackFailed",
+      "sourceSha256": "1ea39a2aec4cf0841b726a49c46e6c181657859981d3a3c3cfcc2f2d09f8f2be",
+      "translationSha256": "6923ad472814df326802d8932cf7ae1d9f4908221e9495e99ccb6f2935030b7f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Operation.TargetRollbackFailed",
+      "sourceSha256": "88a023be75dc05ff31c66be421a2b811f4e3cc65e5fd929d9cd175ad68e4a3a4",
+      "translationSha256": "3fdbcb70d880a970b1e4249cbcf89366d0aaae9b5638cb5f331d86f96fb87e33",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.NameRequired",
+      "sourceSha256": "4f5b0a7174fb1e86bb8895dfc65363c68440b38cc764bdaa6e4b232c89aa3664",
+      "translationSha256": "abcb003306d68605d419e83fa0d36c9d9070e2cc8c7dd4ddc56d1b8dfcb80533",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.NotFound",
+      "sourceSha256": "e17a0de2d261a64c2788270500f596300555d5bcd0475ea2c96f6784b1056e14",
+      "translationSha256": "82993a5c15f23ab78018addcb4b07adbd6442ac5f88888836cc9bbbaebf19981",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.PlacementUnsupported",
+      "sourceSha256": "80d82da00894ab5883366b9d318e824800b86336bb713e8a2f0db67c5a303a8d",
+      "translationSha256": "6914ab2188ce21111c41f60aa6e7db6ea821a2b063b65978637d71f36f9a9354",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.RelativeNameRequired",
+      "sourceSha256": "61807ccc822ac18daed16ff40084a827f1ec3a5c600718800ddea84faceedbd7",
+      "translationSha256": "cbbc4a3bb05d4bb0ef6162ab8dc2071cfa732a4f2ae2ac484f45aea78796adb7",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.RelativeNotFound",
+      "sourceSha256": "17e14bb9f62511737b5bf8add2a25bf543dfeb83822af02f4da1871d132c94b2",
+      "translationSha256": "ed8ed15f77f021e022edbf8ea77260550fc0f22aa1403b08e20636e342084296",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.SourceMoveToSelf",
+      "sourceSha256": "0c7ee15d5cff630216164770584aa6e16fc65b799564cbdfddf0aa3a12b684b7",
+      "translationSha256": "9d0bae40708bdffd0798756cb3ffbe358a599c1a810ba79e79fbb72e0dd84b52",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.SourceNotFound",
+      "sourceSha256": "1c91cf9bd1e1819baa2d71e2b6ac6c498a912694d5a7b2f25e7209e82246ecf2",
+      "translationSha256": "beea1606a6e4ffe6d32a6b0bcc54d65589ae95fcffca4fad1fdbc88d6c73523f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.SourceRelativeToSelf",
+      "sourceSha256": "fe2c5a95226edb9f89e6a1fdfb2f5339847264b70b307ce9627d93f34668296d",
+      "translationSha256": "5c4a4e94f60b3a83d71d7e909976e8fc9ec6989e24802f47372d1792acb5916b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.SourceRenameToSelf",
+      "sourceSha256": "263f58e365745a410b1a6082e6fe8d9f3bcb793d8c0503a696a18527a9ba5fac",
+      "translationSha256": "ff89f4460b1ede7bc9baf7c65de1fc564352f35f2a3041a8f9793455bc7d7ffe",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.StartingTabIndexNonNegativeRequired",
+      "sourceSha256": "b48addf0e1508909a5ef0a432568b3d5bfcbfe68f4a135173b4944ce3ea02c1f",
+      "translationSha256": "e68eaa7e1f5af5f3b40f35f22a17d8dd1952662492b54daabe830403679d137b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Property.TargetNameRequired",
+      "sourceSha256": "50cdbbebad0d8904dd71213cff5fd08b5493b6856ea7fcfb9357366b2cf8a5be",
+      "translationSha256": "b6783570b75b16f77a4dbd6a02cae7c3188b193d04a2840cbed31b8e57763a14",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AddLineFeeds",
+      "sourceSha256": "89420b625adfdc7fed157514fdcb24b85324c2132809e63b5b4deda79db1f11b",
+      "translationSha256": "a79df51a4a7f2a9ad9ce638dd8ab1e234480a6a3b91354e3387ed199000881e0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AllowCellSelection",
+      "sourceSha256": "f16b6d2eb20b084240e0b38c9ea7e8bf64b3117666d059ae7b41230eec3eb982",
+      "translationSha256": "d22d5cefdd3c889f33778c7f70fd30b59babae96074e57f91bf6a2e2450c8f0a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AllowHeaderSizing",
+      "sourceSha256": "464d4041c702b0212603370a34ca0683ca6c5e6969da494dc3b752cf9056536c",
+      "translationSha256": "c362de12fb1bb2aa5b62607c0e9d417d7eb443119dd8d98556ffa4fcc030b9ea",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AllowRowSizing",
+      "sourceSha256": "e097a6012d420e74e093b0a530d36a528a70dc940abea45ed79dc1b5022e5b28",
+      "translationSha256": "5349772ac701fa71a187c0df9d9968aa903c5b545299824f739c0cbe1ddd2322",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AutoCenter",
+      "sourceSha256": "57afb0caad2390523d75eed7d10ae1df825a2c341a54e1740975ca809c7c7898",
+      "translationSha256": "b0eecdd085eddf4fba34afc26a8360500b830a6c49a3a74f46918fe0a9ac8bd8",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AutoRelease",
+      "sourceSha256": "eefcb30caaab6ffd4bdbe63b38e16f81ad6e1e498256791556da39b9d0ef5218",
+      "translationSha256": "ced4cdbb0c560d6b96bc48a1b7a354fccd81019c27675f9554ec09dfa09fe28b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.AutoSize",
+      "sourceSha256": "b1a79dd81ccfa017f91fb7fc998d6acd70928c9d827acb513ee816d8b54f0e9a",
+      "translationSha256": "015ee48c2eac0b68af541b3177b61b327fcd981fededa79fb1dd16c671923037",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Caption",
+      "sourceSha256": "176ca52906b001daa816562988464d2af4e18590a85bc7090e28ad3faccb7f8c",
+      "translationSha256": "8878a3037498bece22077c13684bdf8bb3a972b6a3c13c989bfdfd12049b6650",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ColumnLines",
+      "sourceSha256": "85154c5a81f5cba33c2bc958805fe3d83e7ea923e4de5ec0720d889fab31e6c1",
+      "translationSha256": "73811a24e9c5bf9cf2e2b5c7a7df5f15a8b465d4bfc0a9d65f8fa513014c19c6",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DataSession",
+      "sourceSha256": "ebf9c4d8baa6158bd4d501fcd47e0e76e6d00d4d6e6cf1405bf1debbfe53593d",
+      "translationSha256": "0820bc584f99837c88e1599d057230f8012973ced80cc1cb10dfa0d66923ed8c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DeleteMark",
+      "sourceSha256": "209fbffbd798be6866a8e7d53b80fe2823661a0e1709a975b275731f7b9c62b6",
+      "translationSha256": "4530648737ab4570332edcd65bda1236da019e26c2387c2379a0bb542bfe1af6",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DisplayOrientation",
+      "sourceSha256": "0e25b0d2b1fa3111050bb796698ae509620302b287299ec60a883a3f91b05633",
+      "translationSha256": "edbedd3d0b480d53eb2785aa478cdec6f030e9f324b8756c4834be5d5b0cf2e4",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DragIcon",
+      "sourceSha256": "463f3645e5c70ba65244e120dca974bf2d62db84a57e3d74b5c4b6a5810ae314",
+      "translationSha256": "5a8154ac5e70ba9f2eda253a2fb99f8259c4caa5c0ba7ac88a0ec70bde49da70",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicAlignment",
+      "sourceSha256": "d09de994dee4e67c57f25c866edd3352205e6ad0b0e20af240dd0151bcf95ff1",
+      "translationSha256": "0da01514d2077e6d48efff0729fd89d665945b1fcb4469b8c1f85ef72e7d9e47",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicBackColor",
+      "sourceSha256": "d63bb5ff4398dd5b5c3700eebbef13d1bf381337cd0e4380a8160ae49db730e7",
+      "translationSha256": "15d65379b8493df3ead9429e3eb94491cb5e8ae52732b4f95055048db7c9c560",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicCurrentControl",
+      "sourceSha256": "63befe61fc10fa3469982683fa0e26e9f4601c2cf04a170c19d87e286abf2959",
+      "translationSha256": "306d179718a2ce441eb9bd8f172719a338c9731133f48ee9da8b171f00a3406f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontBold",
+      "sourceSha256": "11635f87190d6a33f9ef02ca9a1bb48bee36dd329e1783510707c96f326d56d3",
+      "translationSha256": "954372a06efa435a8ca3c0d1f965890a48cb4b52671525d229577b892521a366",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontItalic",
+      "sourceSha256": "bea866b92a0d3d8c02bfacfa012bb80302acbba1c8382d15eeacb5edc29d1419",
+      "translationSha256": "d563d610e79ad380bc70d13e6331fcca4b60bbc24d4a0ae8e4a5215aed814940",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontName",
+      "sourceSha256": "a0e6822671f7678611d0277184378d7bf62a331759a8d6191063047526cbbcb4",
+      "translationSha256": "5ff0f5eba5d11264415275a8dd2ada896d3c261c05d2e833a9bcacfd8a284201",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontOutline",
+      "sourceSha256": "8b1def55d92e9296db9b9a512dc4ebd9e88fdf09ec94d111573db0ad46f60ce5",
+      "translationSha256": "5ba8aad48157e4da2820be092cac75de91851bb97145e51ab886c288f4fac18b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontShadow",
+      "sourceSha256": "9852a11d7564a64c27f8c34dd76fe638063b4e20c5e9d1fee77b04e81a6b98af",
+      "translationSha256": "a9a9311fccb3dcc14fe4804ff379c06e1273198bf5c930da25db83428d9e5220",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontSize",
+      "sourceSha256": "70481810bc8b3f66df8ec6d5806786274b17987694e39ab027dc61578d76b9bb",
+      "translationSha256": "46cd083e20a84c0a9bc71cd195e8f8dd8d40b7f53ed51e42bf28a911ed212939",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontStrikethru",
+      "sourceSha256": "4e3eb25953804d5c36e59ebcfae8a99df7ece7a813da19dc76b97f16758ae0b4",
+      "translationSha256": "5ef0c0301f71f432e2e215da8bc1ec766da419be915c80ef3835ce7a735cbddc",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicFontUnderline",
+      "sourceSha256": "57d302c6b8279b4012df26a49ce6efcc2ae4dfd405ce463ceccedd10ed8e6ddb",
+      "translationSha256": "fa1ad7a32ae8305d366b9e5131e3b50a12acb95d466c86d6729c48457b959370",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicForeColor",
+      "sourceSha256": "d908cc3b7650d2854b750b1bea30f06a81d7e2e909d1083a1f557e5a61ccfa46",
+      "translationSha256": "5ad526758776dfc2c99b54cd8f7b98aa59b4db0ab0aff7e76dc8cd9c108b9ff0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicInputMask",
+      "sourceSha256": "f8fa4b17ab9bf2c91cd7d7ce8cf6f204dc87ee7a0d4a8a1e18d902cd3a81a1fb",
+      "translationSha256": "13a372a7eb8346540f6e542a9b7cf3bfffd1c9dbb8983253b99d5e04c14aebb9",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.DynamicLineHeight",
+      "sourceSha256": "7e4f416284c2c2d3128edfb1715b2bcec89cd090f0224f780eeda8aa84a20a56",
+      "translationSha256": "81a053219c81116f68ae5b15b4fa32d3939f0614ff8851ac399c8e02c55dcc74",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.FontSize",
+      "sourceSha256": "f320119eda6dec0aaefe4b3ee3c42cda1da760dd4405c50bf3ce758e1408e2ed",
+      "translationSha256": "0b8dc31fac862f66241ed5a91485030eaa1b3cbf179261b6c7d2be44c1806608",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.GridLineColor",
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "b508953cd137b7e2265fba36052bf7b1401e3d6b2a0e33a05ac075ead1a1f3cd",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.GridLineWidth",
+      "sourceSha256": "303a9a98a85189558fd6b44d9cc969a98701f5f19457732f82c34957a9e9fef3",
+      "translationSha256": "f4c247d3ee1033886c6cd2e773ff809934563acf4515f994f3743eae5f56381d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.GridLines",
+      "sourceSha256": "d0983396b0ae41f455674fb7cd47eab3d3c8f8edeb94e8c7cef823c1040a4cd8",
+      "translationSha256": "b4624f8a5ef89f9fb195efc7fee9886ed44b61d71aa1bbfede06ecd91d256391",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HalfHeightCaption",
+      "sourceSha256": "7567116a53c573f8f89c25bfc4f95d43510d40915d30e275acdc1b5c1d96b9ed",
+      "translationSha256": "781387daf150d00bcf1ddb3ded01fe6bc889e265d89dece8e29a121373294d9e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HideSelection",
+      "sourceSha256": "4a694d15889a6648ce621773c22aef33528937f77fec4aaaa8c8a7f6b4a9b38b",
+      "translationSha256": "0e41971477baa0a34a53ac97954d291b0e12504d44623e29409449c0a3a6eac5",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.HighlightRowLineWidth",
+      "sourceSha256": "76982be7250a5f93f4200ba3eeae6da2b6c3b2944547ca8c6512727f104cdf8c",
+      "translationSha256": "a8ec0d30c796b683e5a0b9cb459a9b34f11460c7c0652b6220764a81d90cd094",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.IncrementalSearch",
+      "sourceSha256": "6a32dd9987b799c3ec6e42e842254388a8bced7ee33107eae029fe891b62a671",
+      "translationSha256": "7104a74d8fc1b41a0df9a4bf7c39ed8a318420c3c105377983d0e05585def56b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.InputMask",
+      "sourceSha256": "a722d56c62dc4ceae6f59a36a3620805736765c3e995bb5d6a4a53d2fddf9f98",
+      "translationSha256": "670b2b651560d32ca2e815a9217b17b78f60b216422f4deabb0a219fa23029b0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.LinkMaster",
+      "sourceSha256": "760724f89727cbc2ed58c3f2ab7a7fb6f4e88e45332e653b00fd80af053f1241",
+      "translationSha256": "10530e6c711189d47b53cfe38b06a68f5c10d1e90c6142913e945ac3a2ddb46e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ListIndex",
+      "sourceSha256": "ce27de2de9dd0d5faa12b0ae163a40c9a411e5e0f4b7d0b23c2949f038f51100",
+      "translationSha256": "3d6c2c8624973f7dfc2b18947e13d3937c9a9bfae0ad79ea79684131e645d6e9",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MaxButton",
+      "sourceSha256": "e232d03abcf3be121743dfdcaee54adc482895179c0fdcbde42f177e97f7192d",
+      "translationSha256": "b4d32d57fcc61af964f6a40a610e07ff535d1821b75bdcff4ddf71e3968006aa",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MaxHeight",
+      "sourceSha256": "51f60edc63ca67071914d447b5d8d444b770a00a732cb6c4494daee0af6c713a",
+      "translationSha256": "ad6df632f433b478ccd277fd2e3d4733dc3439daac84259258d4113f8d467bee",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MaxWidth",
+      "sourceSha256": "6fbb3710b489a450e4553eb83a73e3b0296c1f9242b1216d918054d13e8173ba",
+      "translationSha256": "afd19bafccf4c3054296cc3984083ba2bf0184e6ac7358bdd435f8e9fb6f923c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MinButton",
+      "sourceSha256": "331a4a6f28b83963f2342e3a736a0c8125ba087ced05e64e000e26f393a6697f",
+      "translationSha256": "be2f3849e7f06c9e936674fbfdd6e68653b6e7c490f375e42a52af36184133b1",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MinHeight",
+      "sourceSha256": "2079f071f86b8cafe7e0566e8c2d42cd893720ee4fb8a555d20a2b5c735de42a",
+      "translationSha256": "0761e1b228e1edd84e62db5a80c41021a957c1fedc3dbe2641d2a51b1afb5a08",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MinWidth",
+      "sourceSha256": "baacc163cc2ac975a775aab6dc9a659fdac28672a966c23912903c383d18eba1",
+      "translationSha256": "aa6a8b09ac2242068c3d8d8b764be7d22892cb69764ace66b8367b85c0871a2d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MouseIcon",
+      "sourceSha256": "a199ab162e587e6965652c321a1d508697f5f456a39a7983d929125e6cbbffbe",
+      "translationSha256": "33541ec54ae8b38838fcd9e3f941bee7b92b3fc44c5c51cb3e2b399def711035",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MultiSelect",
+      "sourceSha256": "294dcc0f3497360b42ee6e7d412b83da180688bf70d3a64bd42da56e14b82a80",
+      "translationSha256": "730e7cf43a47733b3493211764071ee1ebaae031d9dcb811cdfb04b00016c5d3",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.PanelLink",
+      "sourceSha256": "39d5342be493c1be7bc6eeca67ea61c36aa3fba1a69185cd978f00cbe3dd3821",
+      "translationSha256": "753e648beee4fa8c55095a726a1268b80448e806da34e3091ac9fe4cb31f7376",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.Partition",
+      "sourceSha256": "2df962d37ee229c547fb4ebef038a1eaecd0cd6f1c109746f4a9c1fa80329254",
+      "translationSha256": "744c35fe69a80cef6676251da5602452ab19074c202478300c3a4a090dfefdab",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.PicturePosition",
+      "sourceSha256": "98609cf77dff2225941c4954469259983eea2791e6b90dcef7e51c81bd64a90f",
+      "translationSha256": "06a5e7ab77a0c7b0064524302828be4d9e9b9784c15f601e39813e7308b8bb9f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.PictureSelectionDisplay",
+      "sourceSha256": "115ea893c579f7278791868c151b0cc31addc30bb1f59c5e6249a33873253b88",
+      "translationSha256": "cf63e6baaaaa1317c5c36f64e3e40c54722cd7677b5bb99d741064b141c3441a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.TabOrientation",
+      "sourceSha256": "fce4f93885b311937548da6b4780f6494b6cef61cb19ec2cd8233d60d0e10501",
+      "translationSha256": "185e77f26b4432ed5ecdb11a064e52314845037d385e1cb9bba6be6d8f6655f4",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.TitleBar",
+      "sourceSha256": "29a74ca8939d32319ac698a4c1ca814e0e12985f13319bcfe69ed1effb0d2195",
+      "translationSha256": "cc692d6ae13b37ef38e337253e7d2407909031815f229d689a8fdd260a5f4694",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.ToolTipText",
+      "sourceSha256": "6ad8aa19ab96e33e79ed5223bf59a666e39ee0b5eba3dc3a8569a875da17b8bf",
+      "translationSha256": "a3b5145794027552164ecf105c85bc520f3ac6fabf41f0fd661f3bed6daa9c13",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.DirectFieldUpdateUnsupported",
+      "sourceSha256": "cc18c84f3ec03150b33ce6680d1ff34965425c4eed8775fc0dc753487b291e92",
+      "translationSha256": "0160e5a4bf8dcfaa1bc41d9ecc1ea065ea473ffbb096bb1493923a56ea2587a1",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.LogicalValueRequired",
+      "sourceSha256": "33f82970b5875b4d76cba10ee19aecdd9d1724cdec41125c70f9a4892f29810b",
+      "translationSha256": "1445d333e6b728842029bca12640d22604be6b800d1cc72448e5a8b64c1a6859",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.NumericValueTooLarge",
+      "sourceSha256": "510df4af5f141d5a8cb9bd0243e821383cce564346eb93f9f2eed571af25dc9b",
+      "translationSha256": "deab4b35e1a1eeb27b5b4f95318de4b0f8b79f5259c7e0068cacf91237ca0962",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.RecordDataTruncated",
+      "sourceSha256": "fb465ad2d406dd619f19bbfc55061c94677d9c63ae7834313fb38abf517501fd",
+      "translationSha256": "ed42ae81e4f511327ee4ad7e760ced54305c71a71e995a430f530f46b7c20502",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.RecordIndexOutOfRange",
+      "sourceSha256": "0885f7004c16b1481c49d6ffcea156e88cd088869e58a415c4ced0cc1cc891b8",
+      "translationSha256": "8f90a0a895b07451e24c04b0aac88f32a6c3624080b2455370629c0d00e6648a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Storage.TextEncodingConversionFailed",
+      "sourceSha256": "e37741bfeb2006db90adf27acde6f478fe401674339a28d7aadf8761accb6d13",
+      "translationSha256": "601c66f2202505dcb2941c18c54b9da5cc80aebfe135a39d388dc6ccd19e272a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Database.Column.Shape",
+      "sourceSha256": "e0e492707f85ff1f9c23155494a54382b52bf34888091adc7a6bb338ef78f88d",
+      "translationSha256": "77350c0d891d9560f14f604c1be1423aafb00982aa8761744dbbafb74d0ae04c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.BreakpointSpecificationRequired",
+      "sourceSha256": "5d9f100fb32942a9dfccbc37041a12c54da21a36ff231524f25a8e46f057e106",
+      "translationSha256": "5a4f12f081e282d6cf6fb125961ed345556582d066df63c4b16d2692d7512b2f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.Column.Frame",
+      "sourceSha256": "d0b50e064a4f8d9438c977e05a087f07815802c0055005c7f913181729464607",
+      "translationSha256": "669017e1461557903e78eff1b6264313025627cf9fd2aa02236ddd221701523d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.CommandFailed",
+      "sourceSha256": "283ba894bac4af700f7a2d1cfdff520db0c00c38845e14c49c21d5fa4a675972",
+      "translationSha256": "b1d0d5c0503f3ce3f1b8294580d4cce83e07e6e456fdcbd72efa5d316c2a9cd8",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.Transport.ProcessExited",
+      "sourceSha256": "7e7a876c4686aebc1869340b38aa1013c5c6d2b04dd6479d504a4e4585d941d9",
+      "translationSha256": "a6260b36a442ae46e06e723fabefb29adb7bd17217987d8da06a1c60abafc92d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Details.FileMetadata",
+      "sourceSha256": "55993fe963a3cfb5cf903a63e266e8618753b24220a0321e02b011c643fa8224",
+      "translationSha256": "c01d2ff6d67460a89873e0f2c34cf5d9ba67a3fb9693100bacb0a5e7e3e9faa2",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Details.ReportPreviewBoundsSummary",
+      "sourceSha256": "97d042ad9e6d1e4b5c422989ba23c3d9463c88ca923df90258c29c7aea237a82",
+      "translationSha256": "79b34e1c2f5f84ca2f148afc70799ddb3dd7e7ac3a39312715f802e0cb26de7f",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Dialog.DebugManifestMissing",
+      "sourceSha256": "82233686d05a77e61ed04a027177fe5d6dc0ec5160c8d172960b9117edd02907",
+      "translationSha256": "cb816d4734be17a88553cb45eacfb65f7c725f026b258ac8a5b7cbfa7faab514",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Dialog.StudioHostTimedOut",
+      "sourceSha256": "d249a8a242110728063c2becf40f5d8ecf556be23294f6647ea8b665a7ba27dc",
+      "translationSha256": "c56f19e79c0bd0ccc0d804bd2c9e25c26538d4421057c252787c9eb29aab491c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ObjectSnap.Horizontal.Executing",
+      "sourceSha256": "49efbf3b313620c8555d3f456cc83bfabef11659f2bc9b068e800295a38cfeb3",
+      "translationSha256": "96767ed90569c9691675d93a321e331c0ffafef8e89bf6490985d8db8a33f644",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ObjectSnap.Vertical.Executing",
+      "sourceSha256": "4600ee708eb67e0aa55db1ec52c1073d2cc54f0f39fdfd037bd984e3c9d4f8af",
+      "translationSha256": "9e9caa3063feb00e6f58c8cf7cffa83bce36f33c1fb2be53dde2cd479ce081b3",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Placeholder.TaskList",
+      "sourceSha256": "be860aa1efc524e791dc30cc36beabb13434b4a2d1d85090ada7727d9ec4c4d9",
+      "translationSha256": "5a87429ca43d305016bc83b94b1cf7f1c69d02be522f069cf66e62eef7b1ed4b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Project.Workflow.LauncherCouldNotStart",
+      "sourceSha256": "f9ad10a8c33386a2b2615e3c7311f9d1e16cf998a63a8725f0a209983616ca83",
+      "translationSha256": "d06f4be458dbfd2707d49439a5a8a3eb1dec6d12d925a740740b09635f90ac28",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Project.Workflow.LauncherCouldNotStartWithMessage",
+      "sourceSha256": "ab88a292c999d6d971949468e6f86f61fba93a9ab0304109800c86aed4342808",
+      "translationSha256": "986b03d0ceef83423809464f6739d0a2c361895a1911465c1d4093d5c7f64d19",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Project.Workflow.LauncherMissing",
+      "sourceSha256": "a41156a0e4d3de64466ab356b144968326ccab4e1e7956c3a886791c39aa8c14",
+      "translationSha256": "18a444c14b25bece408ea9021778cf099b8441ce4d09d29220e7f83409a57dad",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Project.Workflow.LauncherStarted",
+      "sourceSha256": "314953559567244351c2687e77da44832a4fb95b7c48eae1f93afaf44011994f",
+      "translationSha256": "642ddf6cff876689aa6f7dc76d612583a0f1b22900ac4c7e1f91254310b6f7f6",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.ActiveSortExpression",
+      "sourceSha256": "f2b8f3ba09ab91366ed4da960f8a51ab50cce51a7af0aef2348b116cc3040384",
+      "translationSha256": "f4c8036b8417a776f4950571c6e6e02602564548feace5db71e7ce241f1765bd",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.ApplyingChange",
+      "sourceSha256": "da46cea565d60779099ff9e7cac8171e120397dc7a06d9e137200dbe244aa7d2",
+      "translationSha256": "be763f3a1549ca9b1655fc7b72b7326fe5cec2bbd3112f6150a778d6f1d5d29e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.EjectAfter",
+      "sourceSha256": "3477d139a694611a3b62f3f746be2abe4d3df8678521e9ff83919747f182c417",
+      "translationSha256": "56ed58fe94b7a174dff081556bd43cef0d73e2d5658e3406ad7eee9e1dd20871",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.EjectBefore",
+      "sourceSha256": "4fbdde03e7a37ed06d7e51e31ebead38daa7f565e011bb64ce087bd952acedd2",
+      "translationSha256": "e200db0bc63581680b2e80dc67334e3ad8ffd9ffeecf7ddd19139205be49cb1b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.Parent",
+      "sourceSha256": "5f7953f7c9b6ba16602898e540795140db39847cf03fd10d32ef636cded0360e",
+      "translationSha256": "e0a00d69395b2f724591a250cfa334690b385d9ec28af90166527a3e952aa226",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.PreviewBounds",
+      "sourceSha256": "b953527ca0b2f90d43d223a9737e24fd3e1ca968dabd88e5a2ccacddc81634ca",
+      "translationSha256": "6795664839a26c2404791553a75f90df050db243d18b4e65f0c115be42f072c3",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.SectionTitle",
+      "sourceSha256": "cde8d07e9b3b08c4823acd478741446d8b62495273584f0d4516431f2e29e825",
+      "translationSha256": "21d82bd43a1ccece666f605de75cfc5711ada2b939db3f4e2059f86193d031e5",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.StringTrimming",
+      "sourceSha256": "7b1ec6b422f02c40c774522ecbc29b65488086a916361a713381f43b8d049a39",
+      "translationSha256": "3a796e524865ebd3c10fd966f33c977f419d22e675a62dc5a19cc3404f587ad0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.ToolTipText",
+      "sourceSha256": "6c6161874977598df55cb5dbbd742551d6b72b322f3ebdfe290e8723fc753b45",
+      "translationSha256": "10edf1b12f00a669c688873ee5c15b1e5b3f0dbda52e21b0d212febbc2d2b0c1",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.UpdateFailed",
+      "sourceSha256": "20c4180726403b4234ec7f58d6ab39131ba8299478c0979f31474563d3371cac",
+      "translationSha256": "b599d282399f98d8b96d9ad98eb200217ebb78912916734738e93eff4e6f06f8",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ReportSection.Settings",
+      "sourceSha256": "74a883a037bc227f91891ab654a753d3a99f31ab06ae5b5d2b6e594a692b41f8",
+      "translationSha256": "bb507137e363137915421975ee9fcf5264a60200e5417072bc5e1b9a38e61ba7",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ReportSection.UnplacedObjects",
+      "sourceSha256": "57d6de2036463e586d10ec9d8f5570f1dedd3ed6b625750418ab7ff8d0c4123a",
+      "translationSha256": "d3491e8a1c776083b19f3241f1fa640576fca84246f7a56f73021ad26abd889e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.BuildWorkflowHeading",
+      "sourceSha256": "147920089c82a9d5c1e20481d38493b424bd0d61901145f2920275212d1955e0",
+      "translationSha256": "a8deecc53716c6dff95de629410dc479dc37b42784bc3d863be85c720c4b4f4a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.ConnectorTargets",
+      "sourceSha256": "e6d0c2f72685423d0abee5b89ccb64a3573764d1009d0bbedaf29c5ad8f88da6",
+      "translationSha256": "d5b4e9b782675e3f7f68d71f27b7985ee6327c7fd972bf1b1bb7caa3309bb886",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.DataExplorerActivation",
+      "sourceSha256": "e3715391be6b10290e08d94e963fd9e6c4a3d3e790f1d8abd26c60e5322d1b69",
+      "translationSha256": "7db1323fa5254ddbf0cc5498b291e1a9a0557a98f885f27cce1184278c96461d",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.DatabaseFederation",
+      "sourceSha256": "0a10ec8a47b8f3f843429154f1951f2965fcf4d41640e119ea88e5bce6000258",
+      "translationSha256": "b71d97a1cea35e7d04adb2f775b6e8d49e2d6aeed7aa6e57b3360a0717ea006b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.DatabaseFederationUnavailable",
+      "sourceSha256": "575887f8b2cbbd76370f65d08e9b500fa0ad42c8ffbe33d9cf154d3d5d873253",
+      "translationSha256": "74fc9064dec9b8298e241692564bf797291dd6a9cc73c1d543af6b7653b3f4fc",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.FrameLocalsNone",
+      "sourceSha256": "21f2ed6189a8b5bdf3b959c364cc3e156d4f080972f9636a7edf529d09ad994a",
+      "translationSha256": "be70ec6ac9ec47ed1b1b1e675fc6fbfb9b53a5aa5d624df92c9d52761d97f603",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.Globals",
+      "sourceSha256": "a3f445743f203fb1c2c9930f57f3cab3e67f1a640ad32b8a857c57be6af8add8",
+      "translationSha256": "848243389041edc39187c4c0dbc12ab54df251b67114e2000ce32e4b304d1c2e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.GroupTitle.OtherAssets",
+      "sourceSha256": "28694465d033a962a8ae7efec1299bc522ddde0a0e60884bc7ab88507adf20e3",
+      "translationSha256": "61dcf11e483bfee4375151ea73cdd0f0e637fd895dbe5536170a9fcebd33df66",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.Guardrails",
+      "sourceSha256": "0c9b35a43ac6826c773bd7685036225124c6ac54bdaa45e3decde26f953d849e",
+      "translationSha256": "3fed5847599023b265fbbb86ed4904fe7da564ae150f3b07427c1ccf1f5f395c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.HighValueShortcuts",
+      "sourceSha256": "f94a9e3f89ff9baf4bf449558fc01cd97972d690e8c6a510191991d100053651",
+      "translationSha256": "bf85ccf38ee6a9240d16b939adcfd500e3470220a953beb5cb599ae10d51e1a1",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelAiModelSelection",
+      "sourceSha256": "a19f661618233cb82588af3d6f156e1b00e307ae8faefda39dce353476d899f7",
+      "translationSha256": "933ef36dcf38923788092ef7d7681877aa85afd1ed1870be5133fb0fd337a3e2",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelDataAssets",
+      "sourceSha256": "77ba8f2f93e3468e014b6c5bfcd334cb928f3baa77e9eddfadc67216b85a8eb4",
+      "translationSha256": "3ecb8e2378e16dc775ffbe7a682f7c792aa1032bbbedb08f0ac1dc6c80b893c0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelDiscoveredDataAssets",
+      "sourceSha256": "69e7adb33bd7a105c34334be133891e28d672e1d29c1de63c7add9dce6ac34f9",
+      "translationSha256": "a8e422289a7528db81e7fd15713539e2d4b019464975ca28f18860f37a48edca",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelLanguageIntegrations",
+      "sourceSha256": "5c889c177a47eb486dc389f58a667c5b7adb0cef3c5e397f54fc55984de59d4f",
+      "translationSha256": "b67b8ea0223f5d2abd4697e447005b9befdae3feaa296a0f134617cb13160466",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelLanguages",
+      "sourceSha256": "318655cea4bd2096fbfad433d7c019bac40750d1a456fc34d366df41fcc77197",
+      "translationSha256": "925fce281235dee3a2a013beb914698eccfcb6eaeb86a6049dee3c3e9ddb54e0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelLocals",
+      "sourceSha256": "e9e8d4b193cfa45adf2725ec439027bfe4fe40e008978ea499817bbb547cd6e7",
+      "translationSha256": "d18c99024cbb28abf705e1cbaf1abbf7119eae8923c674921deafab9ec299bcd",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelOptionalAiPlanning",
+      "sourceSha256": "8014dac9908a7f492c3b13f5c85a6219d6dff5ab3e936edc53322e22e93ce141",
+      "translationSha256": "d7712bca9ae53b8029cd6355c7bb92f58bf45c03316e0d542227f265782b193e",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelOptionalAiPlanningPaths",
+      "sourceSha256": "a64b468e6b280a7880d636897bffee272074af5d282b76e5bc7ededc9724b53b",
+      "translationSha256": "ee0feac858ad54ba7a29b67593029076b2ce57a98a9b2ea4f53069b370c9e0bd",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelStatement",
+      "sourceSha256": "6171b2a461207d19928471284b296dd163f75b99d814fb458b7ed7f2b1c9c8eb",
+      "translationSha256": "07dbe28f35c9ec8526f7cfb39bd0966bb0d492bab33a982dd4105c4449c32ff9",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.NoFrames",
+      "sourceSha256": "787950e8905a088d3b49b2f6d67b8513e1248ab56058fc6a67c0ec42ff3f0b32",
+      "translationSha256": "b1844ddde02f5067d13db66d3955d733fd13c3bc4dec9839b117d1114e0c260c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.ProjectInsightsUnavailable",
+      "sourceSha256": "41daafafe34d95bf53409e11ae4c6194c1a4cdd60deeafc9dbde738feb0d3efa",
+      "translationSha256": "cae6d68d22c3afd6f1d6f067efef7fc17464667ea81fb73419589cfcff9dd6d5",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Undo.Failed",
+      "sourceSha256": "7a7be70257500009ca5959cd68a32cf5673e6e5f56c6b6146f53e9a722592f96",
+      "translationSha256": "9fb76eb8cabc4e3c8e320a8bcca7290436385ca567894cd62bf2ec5f76788231",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "sourceSha256": "ae2adef0015e6509d0a2ee8269f04560b58786c25505236797964736a4b0aed1",
+      "translationSha256": "f317727cd9d228fb721e992e07c57e6909784ea8869325a5ed706736f7cbd2c3",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "sourceSha256": "9bb6c6ec8edab1b7ae8451e7e899ee6deae5cc8c6a7057e1b182d7c041311e47",
+      "translationSha256": "c6661002a6d97e95ff5e446c8d0b04208c1c34c3df6e1fecc3e6ad03e2170731",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.DotnetPublishFailed",
+      "sourceSha256": "a02dd70dd7e1fd29ea6aafb4b57ff3438507822b4427a98423a809132b525071",
+      "translationSha256": "0dcad80e286feaa60bf80543dfe31369a080a8988594212ad1e2c5666385f251",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "sourceSha256": "ad8e7cd43832135a54fb9bbe7fabab95f466f64423b33d5e0b8c8a597243b155",
+      "translationSha256": "e2ff44fa18e8474f0522a2269d5240a831d7f28c5fb15050433b78df44868627",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "aed847047dcbd7c86ef1e20ddcace48065b7576ebdb6287856d6b91a94a6a9a7",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "sourceSha256": "fb1c277d77b7923edb1b8378be8572b152bdfa7d189fd9a84129d123fb521c73",
+      "translationSha256": "31d8870cd7283288ad8196f7c3b2093c5ffc257f02e36ca65fd8ffe8dd0ce7a8",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Error.CatalogMissing",
+      "sourceSha256": "c8c15400c0e2b81baf61506e7fe0120cb13e6fbe50795130dfb8f3dc918f4f67",
+      "translationSha256": "2ff1bb52726553936cfa62e0a1756616e83b118596ad3ec2d7f98941f944ffc0",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Error.UnknownLocale",
+      "sourceSha256": "2d03b917a03667ced597af4b44bc6fbe833c9190a7864471dda2bce391062f68",
+      "translationSha256": "a0fd0be3ffb68f62979f9b2a95527c67193aec7842577db05337f82891d3a9ae",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Licensing.Error.InvalidSignatureEncoding",
+      "sourceSha256": "c1bfba92f5d063d1abfe269eb42724e2a0a5705b0a8224eb91db1ae64507b85a",
+      "translationSha256": "45dc403f7096e92e8a65bc41c597b9ac72d58e1b79b90899ddd8722f595e712a",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Licensing.Error.MalformedSignatureAlgorithmField",
+      "sourceSha256": "e8f00cd530b6206ae8aa0b848ca4263b7b3d7925e87f00f04697ac6db338a8d5",
+      "translationSha256": "d81d8d47072af98a0ae9873ac8909666b3a125c73e835ffb125869207d25f98c",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Licensing.Error.MalformedSignatureField",
+      "sourceSha256": "5819903702358c7ba15fb3513f3d99a9b80e7ace55734db8288dcb0c86da1384",
+      "translationSha256": "8fff9c9ee507310e443ffdac6bc9b8627c11168c63147204f53f9854a65ad561",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.Vector.AccessMode",
+      "sourceSha256": "1c477c171df5d88e83d139ec179708500de5710b2a3be2c8e7fd7a7bac7d3155",
+      "translationSha256": "08da0bfe934a7ac8ec6a61fee056e6f8034128f5dd9c6d93472bcd914700e468",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.TargetShape",
+      "sourceSha256": "b2f936ca651af86da00600063b0946b8b7e40ba41abafab9094c880c53a50d38",
+      "translationSha256": "cea96792f3034863bea0ab54ddcf6a359c4a29f6110f03c21917157b426de214",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.SourceShape",
+      "sourceSha256": "17d06a6b23c8a7d7b0e99b7956825ada74936ee7e7c6e9494ff1ce5ea586e082",
+      "translationSha256": "5c350ea2dd7a71c34e12267cf6c8e0c6d76b16a5a4aa5985babed2fe8c254c02",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.TargetShape",
+      "sourceSha256": "d94d91dcc2efc7f187da19256a6addfe531a0c33b2f4f27e056dda9154c5f394",
+      "translationSha256": "7ed3429d00c6c58dbcf8e1e87930db019c45c0247a823f455f275728d0358e8b",
+      "verdict": "accept",
+      "reason": "Spanish spelling and meaning are acceptable in context; protected tokens remain exact."
+    }
+  ]
+}
