@@ -3225,10 +3225,32 @@ namespace copperfin::runtime
 
                 RuntimeOleObjectState *target_object = *object;
                 std::vector<std::string> segments;
+                const std::size_t selector_open = member_name.find_first_of("([");
+                std::size_t protected_selector_open = std::string::npos;
+                if (raw_selector != nullptr && raw_secondary_selector != nullptr &&
+                    selector_open != std::string::npos && !member_name.empty())
+                {
+                    const char selector_close = member_name[selector_open] == '(' ? ')' : ']';
+                    const std::size_t leaf_separator = member_name.rfind('.', selector_open);
+                    const std::size_t leaf_start =
+                        leaf_separator == std::string::npos ? 0U : leaf_separator + 1U;
+                    const std::string leaf_name = normalize_identifier(trim_copy(
+                        member_name.substr(leaf_start, selector_open - leaf_start)));
+                    if (leaf_name == "listitem" && member_name.back() == selector_close)
+                    {
+                        protected_selector_open = selector_open;
+                    }
+                }
                 std::size_t start = 0U;
                 while (start <= member_name.size())
                 {
-                    const std::size_t separator = member_name.find('.', start);
+                    std::size_t separator = member_name.find('.', start);
+                    if (protected_selector_open != std::string::npos &&
+                        separator != std::string::npos &&
+                        separator > protected_selector_open)
+                    {
+                        separator = std::string::npos;
+                    }
                     std::string segment = separator == std::string::npos
                                               ? member_name.substr(start)
                                               : member_name.substr(start, separator - start);

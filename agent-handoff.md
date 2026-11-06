@@ -1,5 +1,26 @@
 # Agent Handoff
 
+## Active slice — ListItem decimal selector member path (2026-11-06)
+
+PR #7238 merged as `23250292cccc06a1d5043fbf9735452725b53fdb`
+after exact-head local Claude review, all hosted checks and seven resolved
+conversations. Continue in dedicated worktree
+`/home/rich/.codex/worktrees/listitem-selector-member-path-7189/Project-Copperfin`
+on `fix/listitem-selector-member-path-7189`, based on that merge. The admitted
+#7189 follow-up protects the selector suffix only for valid two-selector
+`ListItem` parenthesis/bracket reads when splitting native member paths,
+preventing decimal columns from leaving the property-first route without
+changing other members or malformed paths. Fail-first ListBox/ComboBox coverage
+showed fractional reads incurred one extra action versus integral controls; the
+bounded repair makes their route counts equal in both delimiter forms. GNU and
+Clang pass all four COPPERFIN/VFP9 data-session shards at 116 cases each,
+including decimal-selector preservation for unrelated legacy methods.
+Changelog assembly and diff checks pass. NEXT: push this signed+DCO commit, open
+the PR, request Claude-first exact-head review, reach hosted green, resolve all
+conversations and merge.
+Preserve legacy two-selector method fallthrough and do not broaden into
+unrelated parser paths.
+
 ## Active slice — PR #7238 ListItem supplied-column review repair (2026-11-03)
 
 This section supersedes the stale retained-division "Active slice" below. Work
