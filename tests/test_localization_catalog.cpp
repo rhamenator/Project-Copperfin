@@ -138,6 +138,23 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
             std::vector<std::string>({"es-Latn-MX", "es-Latn", "es-419", "es", "en-US"}),
         "#3894: script-qualified Spanish should preserve the Latin American fallback contract");
     const std::vector<std::string> pseudo_chain = locale_fallback_chain("qPs-pLoC");
+    const auto mexico_chain = locale_fallback_chain("es-MX");
+    const auto script_mexico_chain = locale_fallback_chain("es-Latn-MX");
+    const auto neutral_portuguese_chain = locale_fallback_chain("pt");
+    expect(
+        std::find(mexico_chain.begin(), mexico_chain.end(), "es-419") != mexico_chain.end() &&
+            std::find(script_mexico_chain.begin(), script_mexico_chain.end(), "es-419") !=
+                script_mexico_chain.end() &&
+            std::find(neutral_portuguese_chain.begin(), neutral_portuguese_chain.end(), "pt-BR") ==
+                neutral_portuguese_chain.end(),
+        "#2348/#7074: regional overlay parents must agree with native fallback");
+    expect(
+        locale_fallback_chain("es-ES") == std::vector<std::string>({"es-ES", "es", "en-US"}) &&
+            locale_fallback_chain("es-Latn-ES") ==
+                std::vector<std::string>({"es-Latn-ES", "es-Latn", "es", "en-US"}) &&
+            locale_fallback_chain("es-MX") ==
+                std::vector<std::string>({"es-MX", "es-419", "es", "en-US"}),
+        "#7074: Spain Spanish must not inherit Latin American prose while Mexico does");
     expect(
         pseudo_chain == std::vector<std::string>({"qps-ploc", "qps", "en-US"}),
         "#3894: pseudo-locale fallback should preserve its established normalized identity");
@@ -173,6 +190,14 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
         temp_root,
         "sr-Latn",
         "{\"Script.Message\":\"Serbian Latin exact locale\"}\n");
+    write_catalog(
+        temp_root,
+        "de",
+        "{\"Base.Message\":\"Deutsche Basismeldung\",\"Regional.Message\":\"Deutsche Standardmeldung\"}\n");
+    write_catalog(
+        temp_root,
+        "de-DE",
+        "{\"Regional.Message\":\"Deutsche regionale Meldung\"}\n");
 
     const auto traditional_taiwan =
         copperfin::localization::load_catalogs(temp_root, "ZH_hANT_tw");
@@ -191,6 +216,13 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
             serbian_latin.translate("Script.Message") == "Serbian Latin exact locale" &&
             serbian_latin.translate("Fallback.Message") == "English fallback",
         "#3894: canonical script-only directories should load on case-sensitive filesystems");
+    const auto german_germany = copperfin::localization::load_catalogs(temp_root, "de-DE");
+    expect(
+        german_germany.fallback_chain == std::vector<std::string>({"de-DE", "de", "en-US"}) &&
+            german_germany.translate("Regional.Message") == "Deutsche regionale Meldung" &&
+            german_germany.translate("Base.Message") == "Deutsche Basismeldung" &&
+            german_germany.translate("Fallback.Message") == "English fallback",
+        "#2348: sparse German regional overlay should inherit base and source entries");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -251,6 +283,12 @@ void test_placeholders_pseudo_locale_and_unicode() {
         copperfin::localization::pseudo_localize("[!! already pseudo-localized !!]") ==
             "[!! already pseudo-localized !!]",
         "#4378: pseudo-localization should not wrap an already decorated catalog value twice");
+    const auto stretched = copperfin::localization::pseudo_localize("A longword {name}");
+    const auto first_doubled_o = stretched.find("\xC3\xB8\xC3\xB8");
+    expect(first_doubled_o != std::string::npos &&
+            stretched.find("\xC3\xB8\xC3\xB8", first_doubled_o + 4U) != std::string::npos &&
+            stretched.find("{name}") != std::string::npos,
+        "#2348: pseudo-localization should stretch unbroken words without changing placeholders");
 
     expect(
         english.translate("Test.Unicode", {{"name", "Zo\xC3\xAB"}}) ==
@@ -359,16 +397,29 @@ void test_product_locale_catalogs_have_key_parity() {
         return;
     }
     std::set<std::string> declared_locales;
+    std::set<std::string> overlay_locales;
     std::size_t source_count = 0U;
     std::size_t pseudo_count = 0U;
     while (std::getline(inventory, inventory_line)) {
         std::istringstream fields(inventory_line);
         std::string locale;
         std::string role;
+        std::string parent;
         std::string extra;
         fields >> locale >> role;
+        if (role == "overlay") {
+            fields >> parent;
+        }
+        const auto fallback_chain = copperfin::localization::locale_fallback_chain(locale);
+        const bool parent_is_runtime_ancestor =
+            (locale.starts_with(parent + "-") || parent == "es-419") &&
+            std::find(fallback_chain.begin(), fallback_chain.end(), parent) != fallback_chain.end();
         const bool valid = !(fields >> extra) &&
-            (role == "source" || role == "unreviewed" || role == "pseudo") &&
+            (role == "source" || role == "unreviewed" || role == "overlay" || role == "pseudo") &&
+            (role != "overlay" || (!parent.empty() && parent != locale &&
+                parent != "en-US" && parent != "qps-ploc" &&
+                declared_locales.contains(parent) && !overlay_locales.contains(parent) &&
+                parent_is_runtime_ancestor)) &&
             locale == copperfin::localization::normalize_locale(locale) &&
             locale.find("/") == std::string::npos &&
             locale.find("\\") == std::string::npos &&
@@ -381,6 +432,9 @@ void test_product_locale_catalogs_have_key_parity() {
         if (role == "source") {
             ++source_count;
             expect(locale == "en-US", "#7072: en-US must be the only source locale");
+        }
+        if (role == "overlay") {
+            overlay_locales.insert(locale);
         }
         if (role == "pseudo") {
             ++pseudo_count;
@@ -414,14 +468,18 @@ void test_product_locale_catalogs_have_key_parity() {
         if (!localized.ok) {
             continue;
         }
-        expect(
-            localized.entries.size() == english.entries.size(),
-            "product " + locale + " catalog should contain the same number of keys as en-US");
+        if (!overlay_locales.contains(locale)) {
+            expect(
+                localized.entries.size() == english.entries.size(),
+                "product " + locale + " catalog should contain the same number of keys as en-US");
+        }
         for (const auto& entry : english.entries) {
             const std::string& key = entry.first;
-            expect(
-                localized.entries.contains(key),
-                "product " + locale + " catalog should contain en-US key " + key);
+            if (!overlay_locales.contains(locale)) {
+                expect(
+                    localized.entries.contains(key),
+                    "product " + locale + " catalog should contain en-US key " + key);
+            }
             const auto localized_entry = localized.entries.find(key);
             if (localized_entry != localized.entries.end()) {
                 expect(

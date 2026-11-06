@@ -1,0 +1,330 @@
+{
+  "session": "/root/review_pt_revisions; Codex separate author instance",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewStatus": "unreviewed; independent review pending",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+      "source": "Visual object update batch property values require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}"
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MissingValue",
+      "source": "Missing value for {option}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.BooleanValue",
+      "source": "The {option} value must be {trueToken} or {falseToken}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+      "source": "Visual method copy batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+      "source": "Visual method delete batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoAssetPath",
+      "source": "No asset path was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+      "source": "No method copies were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+      "source": "No method deletes were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodKind",
+      "source": "No method kind was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodName",
+      "source": "No method name was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+      "source": "No method moves were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+      "source": "No method placement was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+      "source": "No method renames were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+      "source": "No method reorders were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodSource",
+      "source": "No method source was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+      "source": "No target method name was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+      "source": "Visual method move batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+      "source": "Visual method rename batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+      "source": "Visual method reorder batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ModernEditorDirection",
+      "source": "use familiar Visual Studio build output, publish, and configuration surfaces while keeping VFP-compatible build concepts"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ParityScope",
+      "source": "build/run/debug commands, executable packaging, runtime bundling, deployment output"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Title",
+      "source": "Build And Deployment"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
+      "source": "Project build, executable generation, redistributable runtime packaging"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "source": "use task-based tool windows and property-driven panels similar to modern Visual Studio item/template experiences"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ParityScope",
+      "source": "guided configuration, app scaffolding, control/report builders, template-driven generation"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Title",
+      "source": "Builders And Wizards"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
+      "source": "builder.app, wizard.app, Wizards folder"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
+      "source": "blend Visual Studio designer idioms with a class hierarchy explorer and source/designer split views"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ParityScope",
+      "source": "visual class editing, inheritance navigation, method/property browsing, builder actions"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Title",
+      "source": "Class Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
+      "source": "VCX/VCT designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection",
+      "source": "feel like Server Explorer or SQL tooling in Visual Studio while preserving VFP data-session semantics"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ParityScope",
+      "source": "connection browsing, table/query exploration, data session binding, connector-aware inspection"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Title",
+      "source": "Data Explorer And Environment Tools"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
+      "source": "DataExplorer.app, data environment tooling"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "source": "lean into modern Visual Studio debugging panes and diagnostic lists rather than reproducing older floating tool windows"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ParityScope",
+      "source": "breakpoints, stepping, watch windows, call stack, coverage, task and error surfaces"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+      "translation": "Werte zum stapelweisen Aktualisieren visueller Objekteigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UnknownOption",
+      "translation": "Unbekannte Option für {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MissingValue",
+      "translation": "Wert für {option} fehlt."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.BooleanValue",
+      "translation": "Der Wert für {option} muss {trueToken} oder {falseToken} sein."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+      "translation": "Optionen für das stapelweise Kopieren visueller Methoden erfordern zuvor {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+      "translation": "Optionen für das stapelweise Löschen visueller Methoden erfordern zuvor {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoAssetPath",
+      "translation": "Es wurde kein Asset-Pfad angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+      "translation": "Es wurden keine Methoden zum Kopieren angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+      "translation": "Es wurden keine Methoden zum Löschen angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodKind",
+      "translation": "Es wurde kein Methodentyp angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodName",
+      "translation": "Es wurde kein Methodenname angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+      "translation": "Es wurden keine Methoden zum Verschieben angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+      "translation": "Es wurde keine Position für die Methode angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+      "translation": "Es wurden keine Methoden zum Umbenennen angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+      "translation": "Es wurden keine Methoden zum Umordnen angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodSource",
+      "translation": "Es wurde kein Methodenquelltext angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+      "translation": "Es wurde kein Name der Zielmethode angegeben."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+      "translation": "Der Wert für {option} muss eine nicht negative ganze Zahl sein."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+      "translation": "Optionen für das stapelweise Verschieben visueller Methoden erfordern zuvor {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+      "translation": "Optionen für das stapelweise Umbenennen visueller Methoden erfordern zuvor {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+      "translation": "Optionen für das stapelweise Umordnen visueller Methoden erfordern zuvor {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.UnknownOption",
+      "translation": "Unbekannte Option für {commandName}: {argument}"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ModernEditorDirection",
+      "translation": "vertraute Oberflächen von Visual Studio für Buildausgabe, Veröffentlichung und Konfiguration nutzen und dabei VFP-kompatible Buildkonzepte beibehalten"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ParityScope",
+      "translation": "Befehle für Build, Ausführung und Debugging; Paketierung ausführbarer Dateien; Bündelung der Laufzeit; Bereitstellungsausgabe"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Title",
+      "translation": "Build und Bereitstellung"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
+      "translation": "Projektbuild, Erzeugung ausführbarer Dateien, Paketierung der weiterverteilbaren Laufzeit"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "translation": "aufgabenorientierte Werkzeugfenster und eigenschaftsgesteuerte Bereiche wie bei modernen Elementen von Visual Studio und -Vorlagen verwenden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ParityScope",
+      "translation": "geführte Konfiguration, Anwendungsgerüste, Steuerelement- und Berichtsgeneratoren, vorlagenbasierte Erzeugung"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Title",
+      "translation": "Generatoren und Assistenten"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
+      "translation": "builder.app, wizard.app, Ordner Wizards"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
+      "translation": "Designkonzepte von Visual Studio mit einem Klassenhierarchie-Explorer und geteilten Quellcode- und Designeransichten verbinden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ParityScope",
+      "translation": "Bearbeitung visueller Klassen, Navigation durch Vererbung, Durchsuchen von Methoden und Eigenschaften, Generatoraktionen"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Title",
+      "translation": "Klassen-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
+      "translation": "VCX/VCT-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection",
+      "translation": "an Server-Explorer und SQL-Werkzeuge in Visual Studio angelehnt sein und zugleich die VFP-Datensitzungssemantik bewahren"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ParityScope",
+      "translation": "Durchsuchen von Verbindungen, Tabellen und Abfragen; Datensitzungsbindung; konnektorspezifische Prüfung"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Title",
+      "translation": "Daten-Explorer und Umgebungswerkzeuge"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
+      "translation": "DataExplorer.app, Datenumgebungswerkzeuge"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "translation": "moderne Debuggerbereichen von Visual Studio und Diagnoselisten nutzen, statt ältere schwebende Werkzeugfenster nachzubilden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ParityScope",
+      "translation": "Haltepunkte, schrittweise Ausführung, Überwachungsfenster, Aufrufliste, Abdeckung, Aufgaben- und Fehleransichten"
+    }
+  ]
+}

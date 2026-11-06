@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_en_gb_revisions/fr-FR-first-pass-006-2026-11-03",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+      "source": "An object {commandName} requires {options}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+      "source": "An object group requires at least one {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector",
+      "source": "An object group requires at least one grouped child selector."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Rename",
+      "source": "rename"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "source": "{newObjectNameOption}, {newNameOption}, or {newUniqueIdOption}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reorder",
+      "source": "reorder"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reparent",
+      "source": "reparent"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "source": "{parentNameOption}, {parentUniqueIdOption}, or {clearParentOption}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Format",
+      "source": "format"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormatTitle",
+      "source": "Format"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferMode",
+      "source": "buffer-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+      "source": "buffer-mode-override"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle",
+      "source": "Buffer-mode-override"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeTitle",
+      "source": "Buffer-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCount",
+      "source": "button-count"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle",
+      "source": "Button-count"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath",
+      "source": "default file path"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle",
+      "source": "Default-file-path"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientation",
+      "source": "display orientation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle",
+      "source": "Display-orientation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Caption",
+      "source": "caption"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CaptionTitle",
+      "source": "Caption"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrder",
+      "source": "child-order"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle",
+      "source": "Child-order"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrder",
+      "source": "column-order"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle",
+      "source": "Column-order"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSource",
+      "source": "control-source"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle",
+      "source": "Control-source"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControl",
+      "source": "current-control"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle",
+      "source": "Current-control"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPicture",
+      "source": "disabled-picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle",
+      "source": "Disabled-picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPicture",
+      "source": "down-picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPictureTitle",
+      "source": "Down-picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIcon",
+      "source": "drag-icon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIconTitle",
+      "source": "Drag-icon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragMode",
+      "source": "drag-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragModeTitle",
+      "source": "Drag-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Curvature",
+      "source": "curvature"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle",
+      "source": "Curvature"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+      "translation": "La commande d'objet {commandName} nécessite {options}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+      "translation": "Un groupe d'objets nécessite au moins une option {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector",
+      "translation": "Un groupe d'objets nécessite au moins un sélecteur d'enfant groupé."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Rename",
+      "translation": "renommer"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "translation": "{newObjectNameOption}, {newNameOption} ou {newUniqueIdOption}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reorder",
+      "translation": "réorganiser"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reparent",
+      "translation": "changer de parent"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "translation": "{parentNameOption}, {parentUniqueIdOption} ou {clearParentOption}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Format",
+      "translation": "format"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormatTitle",
+      "translation": "Format"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferMode",
+      "translation": "mode de mise en mémoire tampon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+      "translation": "remplacement du mode de mise en mémoire tampon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle",
+      "translation": "Remplacement du mode de mise en mémoire tampon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeTitle",
+      "translation": "Mode de mise en mémoire tampon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCount",
+      "translation": "nombre de boutons"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle",
+      "translation": "Nombre de boutons"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath",
+      "translation": "chemin de fichier par défaut"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle",
+      "translation": "Chemin de fichier par défaut"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientation",
+      "translation": "orientation de l'affichage"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle",
+      "translation": "Orientation de l'affichage"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Caption",
+      "translation": "légende"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CaptionTitle",
+      "translation": "Légende"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrder",
+      "translation": "ordre des enfants"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle",
+      "translation": "Ordre des enfants"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrder",
+      "translation": "ordre des colonnes"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle",
+      "translation": "Ordre des colonnes"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSource",
+      "translation": "source du contrôle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle",
+      "translation": "Source du contrôle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControl",
+      "translation": "contrôle actuel"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle",
+      "translation": "Contrôle actuel"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPicture",
+      "translation": "image à l'état désactivé"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle",
+      "translation": "Image à l'état désactivé"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPicture",
+      "translation": "image à l'état enfoncé"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPictureTitle",
+      "translation": "Image à l'état enfoncé"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIcon",
+      "translation": "icône de déplacement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIconTitle",
+      "translation": "Icône de déplacement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragMode",
+      "translation": "mode de déplacement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragModeTitle",
+      "translation": "Mode de déplacement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Curvature",
+      "translation": "courbure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle",
+      "translation": "Courbure"
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -2702,14 +2703,23 @@ internal sealed class CopperfinLocalization
     public CopperfinLocalization(string? requestedLocale = null, string? catalogDirectory = null)
     {
         Locale = NormalizeLocale(requestedLocale);
-        externalCatalog = CopperfinExternalLocaleCatalog.Load(
-            Locale,
-            catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR"));
+        fallbackChain = LocaleFallbackChain(Locale);
+        catalogRoot = catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
+        externalCatalogs = new ConcurrentDictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
     }
 
     public string Locale { get; }
 
-    private readonly IReadOnlyDictionary<string, string>? externalCatalog;
+    // Native hosts do not have a neutral pt catalog; retain the requested UI identity
+    // while forwarding the same pt-BR catalog that the managed neutral-pt chain uses.
+    public string NativeHostLocale => string.Equals(Locale, "pt", StringComparison.Ordinal)
+        ? PortugueseBrazilLocale : Locale;
+
+    private readonly IReadOnlyList<string> fallbackChain;
+    private readonly string? catalogRoot;
+    private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> externalCatalogs;
+    private static readonly IReadOnlyDictionary<string, string> EmptyExternalCatalog =
+        new Dictionary<string, string>(StringComparer.Ordinal);
 
     public static CopperfinLocalization FromEnvironment()
     {
@@ -2745,26 +2755,21 @@ internal sealed class CopperfinLocalization
         var locale = NormalizeLocale(requestedLocale);
         if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
         {
-            locale = DefaultLocale;
+            return Catalogs[DefaultLocale];
         }
-
-        return Catalogs.TryGetValue(locale, out var catalog)
-            ? catalog
-            : Catalogs[DefaultLocale];
+        foreach (var candidate in LocaleFallbackChain(locale))
+        {
+            if (Catalogs.TryGetValue(candidate, out var catalog))
+            {
+                return catalog;
+            }
+        }
+        return Catalogs[DefaultLocale];
     }
 
     public static IReadOnlyCollection<string> CatalogKeys(string? requestedLocale = null)
     {
-        var locale = NormalizeLocale(requestedLocale);
-        if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
-        {
-            return new List<string>(Catalogs[DefaultLocale].Keys);
-        }
-
-        var catalog = Catalogs.TryGetValue(locale, out var localizedCatalog)
-            ? localizedCatalog
-            : Catalogs[DefaultLocale];
-        return new List<string>(catalog.Keys);
+        return new List<string>(CatalogEntries(requestedLocale).Keys);
     }
 
     public static string NormalizeLocale(string? requestedLocale)
@@ -2774,36 +2779,135 @@ internal sealed class CopperfinLocalization
             return DefaultLocale;
         }
 
-        var normalized = (requestedLocale ?? string.Empty).Trim().Replace('_', '-');
-        if (normalized.Equals(BritishEnglishLocale, StringComparison.OrdinalIgnoreCase))
+        var normalized = requestedLocale.Trim();
+        var posixSuffix = normalized.IndexOfAny(new[] { '.', '@' });
+        if (posixSuffix >= 0)
         {
-            return BritishEnglishLocale;
+            normalized = normalized.Substring(0, posixSuffix);
         }
-        if (normalized.Equals(DefaultLocale, StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith(DefaultLocale + "-", StringComparison.OrdinalIgnoreCase))
+        normalized = normalized.Replace('_', '-');
+        var parts = normalized.Split('-');
+        if (parts.Length == 0 || parts.Length > 16 || parts[0].Length < 2 ||
+            parts[0].Length > 8 || !IsAsciiLetters(parts[0]))
         {
-            return DefaultLocale;
+            return "en-US";
         }
+        for (var index = 1; index < parts.Length; index++)
+        {
+            if (parts[index].Length < 1 || parts[index].Length > 8 || !IsAsciiAlphaNumeric(parts[index]))
+            {
+                return "en-US";
+            }
+        }
+        var scriptSeen = false;
+        var regionSeen = false;
+        var suffixStarted = false;
+        var extlangCount = 0;
+        for (var index = 0; index < parts.Length; index++)
+        {
+            var part = parts[index].ToLowerInvariant();
+            if (index > 0 && !suffixStarted && !scriptSeen && !regionSeen &&
+                part.Length == 4 && IsAsciiLetters(part))
+            {
+                part = char.ToUpperInvariant(part[0]) + part.Substring(1);
+                scriptSeen = true;
+            }
+            else if (index > 0 && !suffixStarted && !regionSeen &&
+                     ((part.Length == 2 && IsAsciiLetters(part)) ||
+                      (part.Length == 3 && IsAsciiDigits(part))))
+            {
+                part = part.ToUpperInvariant();
+                regionSeen = true;
+            }
+            else if (index > 0)
+            {
+                if (!suffixStarted && !scriptSeen && !regionSeen &&
+                    extlangCount < 3 && part.Length == 3 && IsAsciiLetters(part))
+                {
+                    extlangCount++;
+                }
+                else
+                {
+                    suffixStarted = true;
+                }
+            }
+            parts[index] = part;
+        }
+        var result = string.Join("-", parts);
+        return (string.Equals(result, PseudoLocale, StringComparison.OrdinalIgnoreCase) ||
+                result.StartsWith(PseudoLocale + "-", StringComparison.OrdinalIgnoreCase))
+            ? PseudoLocale : result;
+    }
 
-        if (normalized.Equals("es", StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith("es-", StringComparison.OrdinalIgnoreCase))
+    internal static IReadOnlyList<string> LocaleFallbackChain(string? requestedLocale)
+    {
+        var locale = NormalizeLocale(requestedLocale);
+        var chain = new List<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        void Add(string candidate)
         {
-            return SpanishLatinAmericaLocale;
+            if (seen.Add(candidate))
+            {
+                chain.Add(candidate);
+            }
         }
-
-        if (normalized.Equals("pt", StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith("pt-", StringComparison.OrdinalIgnoreCase))
+        Add(locale);
+        var parts = locale.Split('-');
+        var regionIndex = parts.Length > 1 && parts[1].Length == 4 && IsAsciiLetters(parts[1])
+            ? 2 : 1;
+        var latinAmericanSpanish = parts[0] == "es" && parts.Length > regionIndex &&
+            LatinAmericanSpanishRegions.Contains(parts[regionIndex]);
+        var parent = locale;
+        while (parent.LastIndexOf('-') is var separator && separator >= 0)
         {
-            return PortugueseBrazilLocale;
+            parent = parent.Substring(0, separator);
+            var lastSeparator = parent.LastIndexOf('-');
+            if (parent.Length - lastSeparator - 1 == 1)
+            {
+                parent = lastSeparator < 0 ? string.Empty : parent.Substring(0, lastSeparator);
+            }
+            if (parent.Length == 0)
+            {
+                break;
+            }
+            if (latinAmericanSpanish && parent == "es")
+            {
+                Add(SpanishLatinAmericaLocale);
+            }
+            Add(parent);
         }
-
-        if (normalized.Equals(PseudoLocale, StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith(PseudoLocale + "-", StringComparison.OrdinalIgnoreCase))
+        Add("en-US");
+        if (locale == "pt")
         {
-            return PseudoLocale;
+            chain.Insert(chain.Count - 1, PortugueseBrazilLocale);
         }
+        Add(DefaultLocale);
+        return chain;
+    }
 
-        return DefaultLocale;
+    private static readonly HashSet<string> LatinAmericanSpanishRegions = new(StringComparer.Ordinal)
+    {
+        "AR", "BO", "BR", "BZ", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
+        "JP", "MX", "NI", "PA", "PE", "PR", "PY", "SV", "US", "UY", "VE", "419"
+    };
+
+    private static bool IsAsciiLetters(string value) => IsAscii(value, allowLetters: true, allowDigits: false);
+
+    private static bool IsAsciiDigits(string value) => IsAscii(value, allowLetters: false, allowDigits: true);
+
+    private static bool IsAsciiAlphaNumeric(string value) => IsAscii(value, allowLetters: true, allowDigits: true);
+
+    private static bool IsAscii(string value, bool allowLetters, bool allowDigits)
+    {
+        foreach (var ch in value)
+        {
+            if (!((allowLetters && ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) ||
+                  (allowDigits && ch >= '0' && ch <= '9')))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public string Text(string key)
@@ -2814,14 +2918,21 @@ internal sealed class CopperfinLocalization
             return PseudoLocalize(pseudoSource);
         }
 
-        if (externalCatalog is not null && externalCatalog.TryGetValue(key, out var externalLocalized))
+        foreach (var locale in fallbackChain)
         {
-            return externalLocalized;
-        }
-
-        if (Catalogs.TryGetValue(Locale, out var catalog) && catalog.TryGetValue(key, out var localized))
-        {
-            return localized;
+            if (!string.Equals(Locale, PseudoLocale, StringComparison.Ordinal))
+            {
+                var externalCatalog = externalCatalogs.GetOrAdd(locale,
+                    candidate => CopperfinExternalLocaleCatalog.Load(candidate, catalogRoot) ?? EmptyExternalCatalog);
+                if (externalCatalog.TryGetValue(key, out var externalLocalized))
+                {
+                    return externalLocalized;
+                }
+            }
+            if (Catalogs.TryGetValue(locale, out var catalog) && catalog.TryGetValue(key, out var localized))
+            {
+                return localized;
+            }
         }
 
         return Catalogs[DefaultLocale].TryGetValue(key, out var fallback) ? fallback : key;
@@ -2856,7 +2967,12 @@ internal sealed class CopperfinLocalization
                 }
             }
 
-            builder.Append(PseudoCharacter(current));
+            var decorated = PseudoCharacter(current);
+            builder.Append(decorated);
+            if ("AEIOUaeiou".IndexOf(current) >= 0)
+            {
+                builder.Append(decorated);
+            }
         }
 
         builder.Append(" !!]");

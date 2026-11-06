@@ -1,0 +1,4663 @@
+{
+  "version": 1,
+  "date": "2026-11-03",
+  "purpose": "Planning scope only; entries are not packaged or release-approved catalogs.",
+  "source": {
+    "project": "Unicode CLDR JSON",
+    "commit": "7d2b9cb11cec08f4d333ad73209deb3df0711c3b",
+    "availableLocalesPath": "cldr-json/cldr-core/availableLocales.json",
+    "availableLocalesSha256": "f96e42e059182a3ae1329f7e5d380442e84753c2a2c12119cc1c5c468ff6f620",
+    "defaultContentPath": "cldr-json/cldr-core/defaultContent.json",
+    "defaultContentSha256": "4e832b82e71024d89b326f8a901460e5a86242061b129470a73289b41301128e"
+  },
+  "classification": "Explicit script subtag or Babel 2.17 likelySubtags, with Sunuwar (Sunu) confirmed as left-to-right alphabet/abugida by Unicode 16.0 chapter 13. RTL, logographic, and vertical-layout entries are deferred to separate UI work.",
+  "counts": {
+    "target": 825,
+    "deferred-rtl": 82,
+    "deferred-logographic": 21,
+    "manual-classification": 0
+  },
+  "entries": [
+    {
+      "locale": "ady",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ady-JO",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ady-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ady-TR",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "af",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "af-NA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "af-ZA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "agq",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "agq-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ak",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ak-GH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "am",
+      "script": "Ethi",
+      "scope": "target"
+    },
+    {
+      "locale": "am-ET",
+      "script": "Ethi",
+      "scope": "target"
+    },
+    {
+      "locale": "ar",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-001",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-AE",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-BH",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-DJ",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-DZ",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-EG",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-EH",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-ER",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-IL",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-IQ",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-JO",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-KM",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-KW",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-LB",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-LY",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-MA",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-MR",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-OM",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-PS",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-QA",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-SA",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-SD",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-SO",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-SS",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-SY",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-TD",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-TN",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ar-YE",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "as",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "as-IN",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "asa",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "asa-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ast",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ast-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "az",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "az-Cyrl",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "az-Cyrl-AZ",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "az-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "az-Latn-AZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ba",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ba-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bal-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bal-Latn-PK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bas",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bas-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "be",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "be-BY",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "be-tarask",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bem",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bem-ZM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bez",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bez-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bg",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bg-BG",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bgc",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "bgc-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "bho",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "bho-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "blo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "blo-BJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bm",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bm-ML",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bn",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "bn-BD",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "bn-IN",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "bo",
+      "script": "Tibt",
+      "scope": "target"
+    },
+    {
+      "locale": "bo-CN",
+      "script": "Tibt",
+      "scope": "target"
+    },
+    {
+      "locale": "bo-IN",
+      "script": "Tibt",
+      "scope": "target"
+    },
+    {
+      "locale": "br",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "br-FR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "brx",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "brx-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "bs",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bs-Cyrl",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bs-Cyrl-BA",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bs-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bs-Latn-BA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "bua",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "bua-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ca",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ca-AD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ca-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ca-ES-valencia",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ca-FR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ca-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ccp",
+      "script": "Cakm",
+      "scope": "target"
+    },
+    {
+      "locale": "ccp-BD",
+      "script": "Cakm",
+      "scope": "target"
+    },
+    {
+      "locale": "ccp-IN",
+      "script": "Cakm",
+      "scope": "target"
+    },
+    {
+      "locale": "ce",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ce-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ceb",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ceb-PH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "cgg",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "cgg-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "chr",
+      "script": "Cher",
+      "scope": "target"
+    },
+    {
+      "locale": "chr-US",
+      "script": "Cher",
+      "scope": "target"
+    },
+    {
+      "locale": "ckb",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ckb-IQ",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ckb-IR",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "cop",
+      "script": "Copt",
+      "scope": "target"
+    },
+    {
+      "locale": "cop-EG",
+      "script": "Copt",
+      "scope": "target"
+    },
+    {
+      "locale": "cs",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "cs-CZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "csw",
+      "script": "Cans",
+      "scope": "target"
+    },
+    {
+      "locale": "csw-CA",
+      "script": "Cans",
+      "scope": "target"
+    },
+    {
+      "locale": "cv",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "cv-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "cy",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "cy-GB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "da",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "da-DK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "da-GL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dav",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dav-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-AT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-BE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-DE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-LI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "de-LU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dje",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dje-NE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "doi",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "doi-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "dsb",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dsb-DE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dua",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dua-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dyo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dyo-SN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "dz",
+      "script": "Tibt",
+      "scope": "target"
+    },
+    {
+      "locale": "dz-BT",
+      "script": "Tibt",
+      "scope": "target"
+    },
+    {
+      "locale": "ebu",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ebu-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ee",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ee-GH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ee-TG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "el",
+      "script": "Grek",
+      "scope": "target"
+    },
+    {
+      "locale": "el-CY",
+      "script": "Grek",
+      "scope": "target"
+    },
+    {
+      "locale": "el-GR",
+      "script": "Grek",
+      "scope": "target"
+    },
+    {
+      "locale": "el-polyton",
+      "script": "Grek",
+      "scope": "target"
+    },
+    {
+      "locale": "en",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-001",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-150",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-AE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-AG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-AI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-AS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-AT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-AU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-BZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CX",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-CZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-DE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-DG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-DK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-DM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-EE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-ER",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-FI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-FJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-FK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-FM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-FR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-GY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-HK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-HU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-ID",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-IE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-IL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-IM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-IN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-IO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-JE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-JM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-JP",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-KI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-KN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-KY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-LC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-LR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-LS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-LT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-LV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MP",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-MY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-NZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-PW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-RO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-RW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SX",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-SZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-TC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-TK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-TO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-TT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-TV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-UA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-UM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-US",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-VC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-VG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-VI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-VU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-WS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-ZA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-ZM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "en-ZW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "eo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "eo-001",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-419",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-AR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-BO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-BR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-BZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-CL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-CO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-CR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-CU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-DO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-EA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-EC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-GQ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-GT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-HN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-IC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-MX",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-NI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-PA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-PE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-PH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-PR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-PY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-SV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-US",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-UY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "es-VE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "et",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "et-EE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "eu",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "eu-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ewo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ewo-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fa",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "fa-AF",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "fa-IR",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Adlm",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-BF",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-CM",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-GH",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-GM",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-GN",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-GW",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-LR",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-MR",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-NE",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-NG",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-SL",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Adlm-SN",
+      "script": "Adlm",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ff-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-BF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-GH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-GM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-GN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-GW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-LR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-MR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-NE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-NG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-SL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ff-Latn-SN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fi",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fi-FI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fil",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fil-PH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fo-DK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fo-FO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-BE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-BF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-BI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-BJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-BL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-DJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-DZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-FR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-GA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-GF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-GN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-GP",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-GQ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-HT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-KM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-LU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-ML",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MQ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-MU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-NC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-NE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-PF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-PM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-RE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-RW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-SC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-SN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-SY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-TD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-TG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-TN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-VU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-WF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fr-YT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fur",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fur-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fy",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "fy-NL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ga",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ga-GB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ga-IE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gaa",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gaa-GH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gd",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gd-GB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gl-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gsw",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gsw-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gsw-FR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gsw-LI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gu",
+      "script": "Gujr",
+      "scope": "target"
+    },
+    {
+      "locale": "gu-IN",
+      "script": "Gujr",
+      "scope": "target"
+    },
+    {
+      "locale": "guz",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "guz-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gv",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "gv-IM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ha",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ha-GH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ha-NE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ha-NG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "haw",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "haw-US",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "he",
+      "script": "Hebr",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "he-IL",
+      "script": "Hebr",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "hi",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "hi-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "hi-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hi-Latn-IN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hr",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hr-BA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hr-HR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hsb",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hsb-DE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hu",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hu-HU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "hy",
+      "script": "Armn",
+      "scope": "target"
+    },
+    {
+      "locale": "hy-AM",
+      "script": "Armn",
+      "scope": "target"
+    },
+    {
+      "locale": "ia",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ia-001",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "id",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "id-ID",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ie",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ie-EE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ig",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ig-NG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ii",
+      "script": "Yiii",
+      "scope": "target"
+    },
+    {
+      "locale": "ii-CN",
+      "script": "Yiii",
+      "scope": "target"
+    },
+    {
+      "locale": "is",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "is-IS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "it",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "it-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "it-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "it-SM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "it-VA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ja",
+      "script": "Jpan",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "ja-JP",
+      "script": "Jpan",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "jgo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "jgo-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "jmc",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "jmc-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "jv",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "jv-ID",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ka",
+      "script": "Geor",
+      "scope": "target"
+    },
+    {
+      "locale": "ka-GE",
+      "script": "Geor",
+      "scope": "target"
+    },
+    {
+      "locale": "kab",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kab-DZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kam",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kam-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kbd",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kbd-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kbd-TR",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kde",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kde-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kea",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kea-CV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kek",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kek-GT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kgp",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kgp-BR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "khq",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "khq-ML",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ki",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ki-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kk",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kk-Arab",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "kk-Arab-CN",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "kk-Cyrl",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kk-Cyrl-KZ",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kk-KZ",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "kkj",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kkj-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kl-GL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kln",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kln-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "km",
+      "script": "Khmr",
+      "scope": "target"
+    },
+    {
+      "locale": "km-KH",
+      "script": "Khmr",
+      "scope": "target"
+    },
+    {
+      "locale": "kn",
+      "script": "Knda",
+      "scope": "target"
+    },
+    {
+      "locale": "kn-IN",
+      "script": "Knda",
+      "scope": "target"
+    },
+    {
+      "locale": "ko",
+      "script": "Kore",
+      "scope": "target"
+    },
+    {
+      "locale": "ko-CN",
+      "script": "Kore",
+      "scope": "target"
+    },
+    {
+      "locale": "ko-KP",
+      "script": "Kore",
+      "scope": "target"
+    },
+    {
+      "locale": "ko-KR",
+      "script": "Kore",
+      "scope": "target"
+    },
+    {
+      "locale": "kok",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "kok-Deva",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "kok-Deva-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "kok-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kok-Latn-IN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ks",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ks-Arab",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ks-Arab-IN",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ks-Deva",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "ks-Deva-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "ksb",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ksb-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ksf",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ksf-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ksh",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ksh-DE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ku",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ku-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ku-Latn-IQ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ku-Latn-SY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ku-Latn-TR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ku-TR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kw",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kw-GB",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Deva",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Deva-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Latn-IN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Orya",
+      "script": "Orya",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Orya-IN",
+      "script": "Orya",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Telu",
+      "script": "Telu",
+      "scope": "target"
+    },
+    {
+      "locale": "kxv-Telu-IN",
+      "script": "Telu",
+      "scope": "target"
+    },
+    {
+      "locale": "ky",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ky-KG",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "lag",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lag-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lb",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lb-LU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lg",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lg-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lij",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lij-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lkt",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lkt-US",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lld",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lld-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lmo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lmo-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ln",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ln-AO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ln-CD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ln-CF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ln-CG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lo",
+      "script": "Laoo",
+      "scope": "target"
+    },
+    {
+      "locale": "lo-LA",
+      "script": "Laoo",
+      "scope": "target"
+    },
+    {
+      "locale": "lrc",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "lrc-IQ",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "lrc-IR",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "lt",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lt-LT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lu",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lu-CD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "luo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "luo-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "luy",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "luy-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lv",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "lv-LV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mai",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "mai-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "mas",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mas-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mas-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mer",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mer-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mfe",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mfe-MU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mg",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mg-MG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mgh",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mgh-MZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mgo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mgo-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mi",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mi-NZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mk",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "mk-MK",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ml",
+      "script": "Mlym",
+      "scope": "target"
+    },
+    {
+      "locale": "ml-IN",
+      "script": "Mlym",
+      "scope": "target"
+    },
+    {
+      "locale": "mn",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "mn-MN",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "mni",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "mni-Beng",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "mni-Beng-IN",
+      "script": "Beng",
+      "scope": "target"
+    },
+    {
+      "locale": "mr",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "mr-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "ms",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ms-BN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ms-ID",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ms-MY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ms-SG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mt",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mt-MT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mua",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "mua-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "my",
+      "script": "Mymr",
+      "scope": "target"
+    },
+    {
+      "locale": "my-MM",
+      "script": "Mymr",
+      "scope": "target"
+    },
+    {
+      "locale": "mzn",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "mzn-IR",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "naq",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "naq-NA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nb",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nb-NO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nb-SJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nd",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nd-ZW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nds",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nds-DE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nds-NL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ne",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "ne-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "ne-NP",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "nl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-AW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-BE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-BQ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-CW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-NL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-SR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nl-SX",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nmg",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nmg-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nn-NO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nnh",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nnh-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "no",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nqo",
+      "script": "Nkoo",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "nqo-GN",
+      "script": "Nkoo",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "nso",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nso-ZA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nus",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nus-SS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nyn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "nyn-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "oc",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "oc-ES",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "oc-FR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "om",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "om-ET",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "om-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "or",
+      "script": "Orya",
+      "scope": "target"
+    },
+    {
+      "locale": "or-IN",
+      "script": "Orya",
+      "scope": "target"
+    },
+    {
+      "locale": "os",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "os-GE",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "os-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "pa",
+      "script": "Guru",
+      "scope": "target"
+    },
+    {
+      "locale": "pa-Arab",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "pa-Arab-PK",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "pa-Guru",
+      "script": "Guru",
+      "scope": "target"
+    },
+    {
+      "locale": "pa-Guru-IN",
+      "script": "Guru",
+      "scope": "target"
+    },
+    {
+      "locale": "pcm",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pcm-NG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pl-PL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pms",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pms-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "prg",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "prg-PL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ps",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ps-AF",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ps-PK",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "pt",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-AO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-BR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-CV",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-GQ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-GW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-LU",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-MO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-MZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-PT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-ST",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "pt-TL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "qu",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "qu-BO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "qu-EC",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "qu-PE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "quc",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "quc-GT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "raj",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "raj-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "rm",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rm-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rn-BI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ro",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ro-MD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ro-RO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rof",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rof-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ru",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ru-BY",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ru-KG",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ru-KZ",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ru-MD",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ru-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "ru-UA",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "rw",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rw-RW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rwk",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "rwk-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sa",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "sa-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "sah",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sah-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "saq",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "saq-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sat",
+      "script": "Olck",
+      "scope": "target"
+    },
+    {
+      "locale": "sat-Olck",
+      "script": "Olck",
+      "scope": "target"
+    },
+    {
+      "locale": "sat-Olck-IN",
+      "script": "Olck",
+      "scope": "target"
+    },
+    {
+      "locale": "sbp",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sbp-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sc",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sc-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "scn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "scn-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sd",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "sd-Arab",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "sd-Arab-PK",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "sd-Deva",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "sd-Deva-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "se",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "se-FI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "se-NO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "se-SE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "seh",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "seh-MZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ses",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ses-ML",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sg",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sg-CF",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "shi",
+      "script": "Tfng",
+      "scope": "target"
+    },
+    {
+      "locale": "shi-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "shi-Latn-MA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "shi-Tfng",
+      "script": "Tfng",
+      "scope": "target"
+    },
+    {
+      "locale": "shi-Tfng-MA",
+      "script": "Tfng",
+      "scope": "target"
+    },
+    {
+      "locale": "shn",
+      "script": "Mymr",
+      "scope": "target"
+    },
+    {
+      "locale": "shn-MM",
+      "script": "Mymr",
+      "scope": "target"
+    },
+    {
+      "locale": "shn-TH",
+      "script": "Mymr",
+      "scope": "target"
+    },
+    {
+      "locale": "si",
+      "script": "Sinh",
+      "scope": "target"
+    },
+    {
+      "locale": "si-LK",
+      "script": "Sinh",
+      "scope": "target"
+    },
+    {
+      "locale": "sk",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sk-SK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sl-SI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "smn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "smn-FI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sn-ZW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "so",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "so-DJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "so-ET",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "so-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "so-SO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sq",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sq-AL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sq-MK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sq-XK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sr",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Cyrl",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Cyrl-BA",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Cyrl-ME",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Cyrl-RS",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Cyrl-XK",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Latn-BA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Latn-ME",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Latn-RS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sr-Latn-XK",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "st",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "st-LS",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "st-ZA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "su",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "su-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "su-Latn-ID",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "suz-Sunu",
+      "script": "Sunu",
+      "scope": "target"
+    },
+    {
+      "locale": "suz-Sunu-NP",
+      "script": "Sunu",
+      "scope": "target"
+    },
+    {
+      "locale": "sv",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sv-AX",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sv-FI",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sv-SE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sw",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sw-CD",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sw-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sw-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "sw-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "syr",
+      "script": "Syrc",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "syr-IQ",
+      "script": "Syrc",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "syr-SY",
+      "script": "Syrc",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "szl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "szl-PL",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ta",
+      "script": "Taml",
+      "scope": "target"
+    },
+    {
+      "locale": "ta-IN",
+      "script": "Taml",
+      "scope": "target"
+    },
+    {
+      "locale": "ta-LK",
+      "script": "Taml",
+      "scope": "target"
+    },
+    {
+      "locale": "ta-MY",
+      "script": "Taml",
+      "scope": "target"
+    },
+    {
+      "locale": "ta-SG",
+      "script": "Taml",
+      "scope": "target"
+    },
+    {
+      "locale": "te",
+      "script": "Telu",
+      "scope": "target"
+    },
+    {
+      "locale": "te-IN",
+      "script": "Telu",
+      "scope": "target"
+    },
+    {
+      "locale": "teo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "teo-KE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "teo-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tg",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "tg-TJ",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "th",
+      "script": "Thai",
+      "scope": "target"
+    },
+    {
+      "locale": "th-TH",
+      "script": "Thai",
+      "scope": "target"
+    },
+    {
+      "locale": "ti",
+      "script": "Ethi",
+      "scope": "target"
+    },
+    {
+      "locale": "ti-ER",
+      "script": "Ethi",
+      "scope": "target"
+    },
+    {
+      "locale": "ti-ET",
+      "script": "Ethi",
+      "scope": "target"
+    },
+    {
+      "locale": "tk",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tk-TM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tn-BW",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tn-ZA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "to",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "to-TO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tok",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tok-001",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tr",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tr-CY",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tr-TR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tt",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "tt-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "twq",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "twq-NE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tyv",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "tyv-RU",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "tzm",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "tzm-MA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ug",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ug-CN",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "uk",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "uk-UA",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "und",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "ur",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ur-IN",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "ur-PK",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "uz",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "uz-Arab",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "uz-Arab-AF",
+      "script": "Arab",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "uz-Cyrl",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "uz-Cyrl-UZ",
+      "script": "Cyrl",
+      "scope": "target"
+    },
+    {
+      "locale": "uz-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "uz-Latn-UZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vai",
+      "script": "Vaii",
+      "scope": "target"
+    },
+    {
+      "locale": "vai-Latn",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vai-Latn-LR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vai-Vaii",
+      "script": "Vaii",
+      "scope": "target"
+    },
+    {
+      "locale": "vai-Vaii-LR",
+      "script": "Vaii",
+      "scope": "target"
+    },
+    {
+      "locale": "vec",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vec-IT",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vi",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vi-VN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vmw",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vmw-MZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vun",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "vun-TZ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "wae",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "wae-CH",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "wo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "wo-SN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "xh",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "xh-ZA",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "xnr",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "xnr-IN",
+      "script": "Deva",
+      "scope": "target"
+    },
+    {
+      "locale": "xog",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "xog-UG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yav",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yav-CM",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yi",
+      "script": "Hebr",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "yi-UA",
+      "script": "Hebr",
+      "scope": "deferred-rtl"
+    },
+    {
+      "locale": "yo",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yo-BJ",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yo-NG",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yrl",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yrl-BR",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yrl-CO",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yrl-VE",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "yue",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "yue-Hans",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "yue-Hans-CN",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "yue-Hant",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "yue-Hant-CN",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "yue-Hant-HK",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "yue-Hant-MO",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "za",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "za-CN",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "zgh",
+      "script": "Tfng",
+      "scope": "target"
+    },
+    {
+      "locale": "zgh-MA",
+      "script": "Tfng",
+      "scope": "target"
+    },
+    {
+      "locale": "zh",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hans",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hans-CN",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hans-HK",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hans-MO",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hans-MY",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hans-SG",
+      "script": "Hans",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hant",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hant-HK",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hant-MO",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hant-MY",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zh-Hant-TW",
+      "script": "Hant",
+      "scope": "deferred-logographic"
+    },
+    {
+      "locale": "zu",
+      "script": "Latn",
+      "scope": "target"
+    },
+    {
+      "locale": "zu-ZA",
+      "script": "Latn",
+      "scope": "target"
+    }
+  ],
+  "classificationReference": "https://unicode.org/versions/Unicode16.0.0/core-spec/chapter-13/"
+}

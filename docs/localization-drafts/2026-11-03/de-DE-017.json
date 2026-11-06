@@ -1,0 +1,330 @@
+{
+  "session": "/root/review_pt_revisions; Codex separate author instance",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewStatus": "unreviewed; independent review pending",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Title",
+      "source": "Debugger And Diagnostics"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Vfp9Equivalent",
+      "source": "VFP debugger, coverage.app, tasklist.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ModernEditorDirection",
+      "source": "keep FoxPro form behavior but use modern Visual Studio-style selection adorners, property browsing, snapping, and document tabs"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ParityScope",
+      "source": "layout canvas, property grid, builders, container editing, event hookups, data environment integration"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Title",
+      "source": "Forms Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Vfp9Equivalent",
+      "source": "SCX/SCT designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ModernEditorDirection",
+      "source": "feel like a modern Visual Studio shell with dockable panes, searchable tool windows, and richer diagnostics rather than a clone of the VFP chrome"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ParityScope",
+      "source": "workspace shell, document hosting, tool window orchestration, command surfaces"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Title",
+      "source": "IDE Shell"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Vfp9Equivalent",
+      "source": "vfp9.exe shell, taskpane.app, Toolbox.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ModernEditorDirection",
+      "source": "share the report-designer visual language so label editing feels like a focused modern layout designer, not a legacy modal editor"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ParityScope",
+      "source": "label layout, expression editing, stock settings, print dimensions, preview workflows"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Title",
+      "source": "Label Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Vfp9Equivalent",
+      "source": "LBX/LBT designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ModernEditorDirection",
+      "source": "use a Visual Studio-style hierarchy/tree editor with command detail panes instead of reproducing the old menu dialogs verbatim"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ParityScope",
+      "source": "menu tree editing, prompt/command/setup/cleanup editing, generation, preview"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Title",
+      "source": "Menu Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Vfp9Equivalent",
+      "source": "MNX/MNT menu designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ModernEditorDirection",
+      "source": "feel like Object Browser, Go To, and Find All References inside Visual Studio rather than standalone legacy dialogs"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ParityScope",
+      "source": "symbol browsing, reference search, object inspection, navigation between designer artifacts and code"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Title",
+      "source": "Object And Reference Browsers"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "source": "objectbrowser.app, browser.app, Foxref.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ModernEditorDirection",
+      "source": "feel like Solution Explorer plus project properties, while still surfacing VFP-specific concepts such as generated assets and main-program semantics"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ParityScope",
+      "source": "asset inventory, build settings, dependency graph, main program selection, excluded item handling"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Title",
+      "source": "Project Manager"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Vfp9Equivalent",
+      "source": "PJX/PJT project manager"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ModernEditorDirection",
+      "source": "look closer to SSRS and current Visual Studio report tooling with stronger outlines, inspectors, live preview, and clearer band/property panes"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ParityScope",
+      "source": "band editing, expression authoring, grouping, preview, export, report listeners, builder workflows"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Title",
+      "source": "Report Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Vfp9Equivalent",
+      "source": "FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ModernEditorDirection",
+      "source": "invisible to end users except through faster, safer execution and clearer diagnostics"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ParityScope",
+      "source": "command execution, PRG runtime, event dispatch, forms/report/menu runtime behavior, deployment runtime"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Title",
+      "source": "Runtime And Execution Engine"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
+      "source": "vfp9r.dll, vfp9t.dll, executable runtime behavior"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
+      "source": "use searchable categorized toolboxes and contextual task panes instead of static legacy palettes"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
+      "source": "control palette, snippets, common actions, contextual productivity panels"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+      "source": "Toolbox And Task Pane"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "source": "Toolbox.app, taskpane.app, gallery.app"
+    },
+    {
+      "key": "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+      "source": "Planner is not yet implemented for {planMode} AI policy. Deterministic translation failed: {translationError}"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.AccessMode",
+      "source": "embedded file engine"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Title",
+      "translation": "Debugger und Diagnose"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Vfp9Equivalent",
+      "translation": "VFP-Debugger, coverage.app, tasklist.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ModernEditorDirection",
+      "translation": "FoxPro-Formularverhalten beibehalten, aber moderne Auswahlmarkierungen im Stil von Visual Studio, Eigenschaftsansichten, Rasterausrichtung und Dokumentregister verwenden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ParityScope",
+      "translation": "Layoutfläche, Eigenschaftsraster, Generatoren, Containerbearbeitung, Ereignisbindungen, Einbindung der Datenumgebung"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Title",
+      "translation": "Formular-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Vfp9Equivalent",
+      "translation": "SCX/SCT-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ModernEditorDirection",
+      "translation": "wie eine moderne Umgebung von Visual Studio mit andockbaren Bereichen, durchsuchbaren Werkzeugfenstern und umfassenderer Diagnose wirken, statt die alte VFP-Oberfläche nachzubilden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ParityScope",
+      "translation": "Arbeitsbereich, Dokumentverwaltung, Koordination von Werkzeugfenstern, Befehlsoberflächen"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Title",
+      "translation": "IDE-Oberfläche"
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Vfp9Equivalent",
+      "translation": "vfp9.exe-Oberfläche, taskpane.app, Toolbox.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ModernEditorDirection",
+      "translation": "für die Etikettenbearbeitung die visuelle Sprache des Berichts-Designers übernehmen, damit sie wie ein moderner Layout-Designer wirkt und nicht wie ein alter modaler Editor"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ParityScope",
+      "translation": "Etikettenlayout, Bearbeitung von Ausdrücken, Einstellungen für Etikettenmaterial, Druckmaße, Vorschauabläufe"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Title",
+      "translation": "Etiketten-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Vfp9Equivalent",
+      "translation": "LBX/LBT-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ModernEditorDirection",
+      "translation": "einen Hierarchie- und Baumeditor im Stil von Visual Studio mit Bereichen für Befehlsdetails verwenden, statt die alten Menüdialoge wortgetreu nachzubilden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ParityScope",
+      "translation": "Bearbeitung des Menübaums, von Beschriftung, Befehl, Einrichtung und Bereinigung; Erzeugung; Vorschau"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Title",
+      "translation": "Menü-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Vfp9Equivalent",
+      "translation": "MNX/MNT-Menü-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ModernEditorDirection",
+      "translation": "an Objektbrowser, Gehe zu und Alle Verweise suchen in Visual Studio angelehnt sein, statt eigenständige alte Dialoge zu verwenden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ParityScope",
+      "translation": "Durchsuchen von Symbolen, Suche nach Verweisen, Objektprüfung, Navigation zwischen Designerartefakten und Code"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Title",
+      "translation": "Objekt- und Verweisbrowser"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "translation": "objectbrowser.app, browser.app, Foxref.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ModernEditorDirection",
+      "translation": "an Projektmappen-Explorer und Projekteigenschaften angelehnt sein und dabei VFP-spezifische Konzepte wie erzeugte Assets und die Semantik des Hauptprogramms zeigen"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ParityScope",
+      "translation": "Assetübersicht, Buildeinstellungen, Abhängigkeitsgraph, Auswahl des Hauptprogramms, Behandlung ausgeschlossener Elemente"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Title",
+      "translation": "Projektmanager"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Vfp9Equivalent",
+      "translation": "PJX/PJT-Projektmanager"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ModernEditorDirection",
+      "translation": "sich an SSRS und aktuellen Berichtswerkzeugen von Visual Studio orientieren, mit klarerer Gliederung, Inspektoren, Livevorschau und übersichtlicheren Bereichen für Berichtsabschnitte und Eigenschaften"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ParityScope",
+      "translation": "Bearbeitung von Berichtsabschnitten, Erstellung von Ausdrücken, Gruppierung, Vorschau, Export, Report Listener, Abläufe mit Generatoren"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Title",
+      "translation": "Berichts-Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Vfp9Equivalent",
+      "translation": "FRX/FRT-Designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ModernEditorDirection",
+      "translation": "für Endnutzer nur durch schnellere und sicherere Ausführung sowie verständlichere Diagnosen sichtbar sein"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ParityScope",
+      "translation": "Befehlsausführung, PRG-Laufzeit, Ereignisverarbeitung, Laufzeitverhalten von Formularen, Berichten und Menüs, Bereitstellungslaufzeit"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Title",
+      "translation": "Laufzeit- und Ausführungs-Engine"
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
+      "translation": "vfp9r.dll, vfp9t.dll, Laufzeitverhalten ausführbarer Dateien"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
+      "translation": "durchsuchbare, kategorisierte Werkzeugkästen und kontextbezogene Aufgabenbereiche statt statischer alter Paletten verwenden"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
+      "translation": "Steuerelementpalette, Codeausschnitte, häufige Aktionen, kontextbezogene Produktivitätsbereiche"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+      "translation": "Werkzeugkasten und Aufgabenbereich"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "translation": "Toolbox.app, taskpane.app, gallery.app"
+    },
+    {
+      "key": "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+      "translation": "Der Planer für die KI-Richtlinie {planMode} ist noch nicht implementiert. Die deterministische Übersetzung ist fehlgeschlagen: {translationError}"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.AccessMode",
+      "translation": "eingebettete Datei-Engine"
+    }
+  ]
+}

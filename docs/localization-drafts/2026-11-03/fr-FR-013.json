@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-013-2026-11-03-ee6d54d7-7e6d-41eb-be25-4fbe4e93045c",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelection",
+      "source": "allow-cell-selection"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelectionTitle",
+      "source": "Allow-cell-selection"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HideSelection",
+      "source": "hide-selection"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HideSelectionTitle",
+      "source": "Hide-selection"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DeleteMark",
+      "source": "delete-mark"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DeleteMarkTitle",
+      "source": "Delete-mark"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordMark",
+      "source": "record-mark"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordMarkTitle",
+      "source": "Record-mark"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SplitBar",
+      "source": "split-bar"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SplitBarTitle",
+      "source": "Split-bar"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRow",
+      "source": "highlight-row"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowTitle",
+      "source": "Highlight-row"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLink",
+      "source": "panel-link"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLinkTitle",
+      "source": "Panel-link"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizing",
+      "source": "allow-header-sizing"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizingTitle",
+      "source": "Allow-header-sizing"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizing",
+      "source": "allow-row-sizing"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizingTitle",
+      "source": "Allow-row-sizing"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Resizable",
+      "source": "resizable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ResizableTitle",
+      "source": "Resizable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds",
+      "source": "add-line-feeds"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeedsTitle",
+      "source": "Add-line-feeds"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTop",
+      "source": "always-on-top"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTopTitle",
+      "source": "Always-on-top"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottom",
+      "source": "always-on-bottom"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottomTitle",
+      "source": "Always-on-bottom"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IntegralHeight",
+      "source": "integral-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IntegralHeightTitle",
+      "source": "Integral-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IncrementalSearch",
+      "source": "incremental-search"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IncrementalSearchTitle",
+      "source": "Incremental-search"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MultiSelect",
+      "source": "multi-select"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MultiSelectTitle",
+      "source": "Multi-select"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowHeight",
+      "source": "row-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowHeightTitle",
+      "source": "Row-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScaleMode",
+      "source": "scale-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScaleModeTitle",
+      "source": "Scale-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StartingTabIndex",
+      "source": "starting tab index"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrder",
+      "source": "tab-order"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrderTitle",
+      "source": "Tab-order"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrientation",
+      "source": "tab orientation"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelection",
+      "translation": "autoriser la sélection de cellules"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelectionTitle",
+      "translation": "Autoriser la sélection de cellules"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HideSelection",
+      "translation": "masquer la sélection"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HideSelectionTitle",
+      "translation": "Masquer la sélection"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DeleteMark",
+      "translation": "marque de suppression"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DeleteMarkTitle",
+      "translation": "Marque de suppression"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordMark",
+      "translation": "marque d’enregistrement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordMarkTitle",
+      "translation": "Marque d’enregistrement"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SplitBar",
+      "translation": "barre de séparation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SplitBarTitle",
+      "translation": "Barre de séparation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRow",
+      "translation": "mettre la ligne en surbrillance"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowTitle",
+      "translation": "Mettre la ligne en surbrillance"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLink",
+      "translation": "lien du panneau"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLinkTitle",
+      "translation": "Lien du panneau"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizing",
+      "translation": "autoriser le redimensionnement de l’en-tête"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizingTitle",
+      "translation": "Autoriser le redimensionnement de l’en-tête"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizing",
+      "translation": "autoriser le redimensionnement des lignes"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizingTitle",
+      "translation": "Autoriser le redimensionnement des lignes"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Resizable",
+      "translation": "redimensionnable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ResizableTitle",
+      "translation": "Redimensionnable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds",
+      "translation": "ajouter des sauts de ligne"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeedsTitle",
+      "translation": "Ajouter des sauts de ligne"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTop",
+      "translation": "toujours au premier plan"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTopTitle",
+      "translation": "Toujours au premier plan"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottom",
+      "translation": "toujours à l’arrière-plan"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottomTitle",
+      "translation": "Toujours à l’arrière-plan"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IntegralHeight",
+      "translation": "hauteur entière"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IntegralHeightTitle",
+      "translation": "Hauteur entière"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IncrementalSearch",
+      "translation": "recherche incrémentielle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IncrementalSearchTitle",
+      "translation": "Recherche incrémentielle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MultiSelect",
+      "translation": "sélection multiple"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MultiSelectTitle",
+      "translation": "Sélection multiple"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowHeight",
+      "translation": "hauteur de ligne"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowHeightTitle",
+      "translation": "Hauteur de ligne"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScaleMode",
+      "translation": "mode de mise à l’échelle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScaleModeTitle",
+      "translation": "Mode de mise à l’échelle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StartingTabIndex",
+      "translation": "indice de tabulation initial"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrder",
+      "translation": "ordre de tabulation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrderTitle",
+      "translation": "Ordre de tabulation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrientation",
+      "translation": "orientation des onglets"
+    }
+  ]
+}

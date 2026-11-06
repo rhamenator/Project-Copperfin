@@ -33,27 +33,27 @@ def main() -> None:
         (root / "scripts" / SCRIPT.name).write_bytes(SCRIPT.read_bytes())
         (root / "resources/locales").mkdir(parents=True)
         (root / "resources/locales/inventory.txt").write_text(
-            "version 1\nen-US source\nde-DE unreviewed\nqps-ploc pseudo\n", encoding="utf-8")
+            "version 1\nen-US source\nde unreviewed\nqps-ploc pseudo\n", encoding="utf-8")
         source = {"Greeting": "Hello", "Token": "VFP",
                   "Syntax": "Use <directory> and --output with COPPERFIN_LOCALE"}
         translated = {"Greeting": "Hallo", "Token": "VFP",
                       "Syntax": "Nutze <directory> und --output mit COPPERFIN_LOCALE"}
         write_json(root / "resources/locales/en-US/strings.json", source)
-        write_json(root / "resources/locales/de-DE/strings.json", translated)
+        write_json(root / "resources/locales/de/strings.json", translated)
         write_json(root / "docs/localization-invariant-exceptions.json", {"version": 1, "entries": []})
         created = run(root, "--write")
         assert created.returncode == 0, created.stdout + created.stderr
-        ledger_path = root / "docs/localization-reviews/de-DE.json"
+        ledger_path = root / "docs/localization-reviews/de.json"
         ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
         ledger["entries"]["Token"]["translationStatus"] = "intentional-source-text"
         evidence = {"date": "2026-11-03", "reviewerType": "independent AI",
                     "model": "test-reviewer", "sessions": ["test-session"],
-                    "scope": "Two synthetic review-gate strings", "entries": []}
+                    "scope": "Three synthetic review-gate strings", "entries": []}
         for key in source:
             record = ledger["entries"][key]
             record["reviewStatus"] = "ai-reviewed"
-            record["reviewProvenance"] = f"fixture.json#de-DE/{key}"
-            evidence["entries"].append({"locale": "de-DE", "key": key,
+            record["reviewProvenance"] = f"fixture.json#de/{key}"
+            evidence["entries"].append({"locale": "de", "key": key,
                                         "sourceSha256": digest(source[key]),
                                         "translationSha256": digest(translated[key]),
                                         "verdict": "accept", "reason": "Synthetic fixture"})
@@ -61,24 +61,68 @@ def main() -> None:
         write_json(root / "docs/localization-reviews/fixture.json", evidence)
         passed = run(root, "--release")
         assert passed.returncode == 0, passed.stdout + passed.stderr
-        write_json(root / "resources/locales/de-DE/strings.json",
-                   {**translated, "Syntax": "Nutze <Verzeichnis> und --output mit COPPERFIN_LOCALE"})
-        syntax_drift = run(root, "--release")
-        assert syntax_drift.returncode != 0 and "protected syntax drift" in syntax_drift.stdout
-        write_json(root / "resources/locales/de-DE/strings.json", translated)
+        for invalid_syntax in (
+                "Nutze <Verzeichnis> und --output mit COPPERFIN_LOCALE",
+                "Nutze <directory> und --ausgabe mit COPPERFIN_LOCALE",
+                "Nutze <directory> und --output mit COPPERFIN_SPRACHE"):
+            write_json(root / "resources/locales/de/strings.json",
+                       {**translated, "Syntax": invalid_syntax})
+            syntax_drift = run(root, "--release")
+            assert syntax_drift.returncode != 0 and "protected syntax drift" in syntax_drift.stdout
+        write_json(root / "resources/locales/de/strings.json", translated)
         rewritten = run(root, "--write")
         assert rewritten.returncode == 0, rewritten.stdout + rewritten.stderr
         assert json.loads(ledger_path.read_text(encoding="utf-8"))["entries"]["Token"][
             "translationStatus"] == "intentional-source-text"
-        write_json(root / "resources/locales/de-DE/strings.json", {**translated, "Greeting": "Guten Tag"})
+        write_json(root / "resources/locales/de/strings.json", {**translated, "Greeting": "Guten Tag"})
         stale = run(root, "--release")
         assert stale.returncode != 0 and "changed since status" in stale.stdout
-        write_json(root / "resources/locales/de-DE/strings.json", translated)
+        write_json(root / "resources/locales/de/strings.json", translated)
         (root / "resources/locales/inventory.txt").write_text(
-            "version 1\nen-US source\nde-DE unreviewed\nfr-FR unreviewed\nqps-ploc pseudo\n",
+            "version 1\nen-US source\nde unreviewed\nde-AT overlay de\nqps-ploc pseudo\n",
+            encoding="utf-8")
+        overlay_path = root / "resources/locales/de-AT/strings.json"
+        write_json(overlay_path, {})
+        overlay_ledger = run(root, "--write")
+        assert overlay_ledger.returncode == 0, overlay_ledger.stdout + overlay_ledger.stderr
+        pending = run(root, "--release")
+        assert pending.returncode != 0 and "regional review evidence is missing" in pending.stdout
+        regional = {"locale": "de-AT", "parent": "de",
+                    "parentCatalogSha256": hashlib.sha256(
+                        (root / "resources/locales/de/strings.json").read_bytes()).hexdigest(),
+                    "overlayCatalogSha256": hashlib.sha256(overlay_path.read_bytes()).hexdigest(),
+                    "reviewerType": "independent AI", "model": "test-reviewer",
+                    "sessions": ["test-regional-session"], "verdict": "accept",
+                    "residualUncertainty": "Synthetic fixture only"}
+        write_json(root / "docs/localization-reviews/de-AT-regional.json", regional)
+        inherited = run(root, "--release")
+        assert inherited.returncode == 0, inherited.stdout + inherited.stderr
+        (root / "resources/locales/de/strings.json").write_text(
+            json.dumps(translated, indent=2) + "\n", encoding="utf-8")
+        stale_parent = run(root, "--release")
+        assert stale_parent.returncode != 0 and "regional review evidence is stale" in stale_parent.stdout
+        (root / "resources/locales/inventory.txt").write_text(
+            "version 1\nen-US source\nde unreviewed\nfr-FR unreviewed\nqps-ploc pseudo\n",
             encoding="utf-8")
         missing = run(root, "--release")
         assert missing.returncode != 0
+        for inventory in (
+                "version 1\nen-US unreviewed\nde unreviewed\nqps-ploc pseudo\n",
+                "version 1\nen-US source\nde unreviewed\nqps-ploc unreviewed\n",
+                "version 1\nen-US source\nde unreviewed\nde-AT overlay de-DE\nqps-ploc pseudo\n",
+                "version 1\nen-US source\nde unreviewed\nde-u unreviewed\nde-u-co overlay de-u\nqps-ploc pseudo\n",
+                "version 1\nen-US source\nde unreviewed\npt-BR unreviewed\npt overlay pt-BR\nqps-ploc pseudo\n"):
+            (root / "resources/locales/inventory.txt").write_text(inventory, encoding="utf-8")
+            invalid = run(root, "--release")
+            assert invalid.returncode != 0, inventory
+        write_json(root / "resources/locales/es-419/strings.json", translated)
+        for regional in ("es-MX", "es-Latn-MX"):
+            write_json(root / f"resources/locales/{regional}/strings.json", {})
+            (root / "resources/locales/inventory.txt").write_text(
+                "version 1\nen-US source\nde unreviewed\nes-419 unreviewed\n"
+                f"{regional} overlay es-419\nqps-ploc pseudo\n", encoding="utf-8")
+            valid = run(root, "--write")
+            assert valid.returncode == 0, valid.stdout + valid.stderr
     print("Locale release review gate fixture passed")
 
 

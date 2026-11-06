@@ -18,18 +18,49 @@ def protected_syntax(value: str) -> Counter[str]:
     return Counter(PROTECTED_SYNTAX.findall(value))
 
 
-def reviewed_locales() -> tuple[str, ...]:
+def reviewed_locales() -> dict[str, tuple[str, str | None]]:
     lines = (ROOT / "resources" / "locales" / "inventory.txt").read_text(
         encoding="utf-8").splitlines()
     if not lines or lines[0] != "version 1":
         raise ValueError("Unsupported or missing locale inventory version")
-    entries = [line.split(" ") for line in lines[1:]]
-    if any(len(entry) != 2 for entry in entries):
-        raise ValueError("Malformed locale inventory")
-    locales = tuple(locale for locale, role in entries if role not in ("source", "pseudo"))
-    if len(locales) != len(set(locales)) or not locales:
-        raise ValueError("Locale inventory has duplicate or no reviewed locales")
+    locales = {}
+    declared = set()
+    roles = {}
+    for line in lines[1:]:
+        fields = line.split(" ")
+        if len(fields) not in (2, 3):
+            raise ValueError(f"Malformed locale inventory entry: {line}")
+        locale, role = fields[:2]
+        parent = fields[2] if len(fields) == 3 else None
+        if (locale in declared or role not in ("source", "unreviewed", "overlay", "pseudo") or
+                (role == "overlay") != (parent is not None) or
+                (role == "source" and locale != "en-US") or
+                (role == "pseudo" and locale != "qps-ploc") or
+                (parent is not None and (parent not in locales or
+                 roles[parent] == "overlay" or not (
+                     (locale.startswith(parent + "-") and
+                      len(parent.rsplit("-", 1)[-1]) != 1) or
+                     (parent == "es-419" and is_latin_american_spanish(locale)))))):
+            raise ValueError(f"Invalid locale inventory entry: {line}")
+        declared.add(locale)
+        roles[locale] = role
+        if role not in ("source", "pseudo"):
+            locales[locale] = (role, parent)
+    if not locales or sum(role == "source" for role in roles.values()) != 1 or \
+            sum(role == "pseudo" for role in roles.values()) != 1:
+        raise ValueError("Locale inventory requires reviewed locales, en-US source, and qps-ploc pseudo")
     return locales
+
+
+def is_latin_american_spanish(locale: str) -> bool:
+    parts = locale.split("-")
+    if parts[0] != "es" or len(parts) < 2:
+        return False
+    region_index = 2 if len(parts[1]) == 4 and parts[1].isascii() and parts[1].isalpha() else 1
+    return len(parts) > region_index and parts[region_index] in {
+        "AR", "BO", "BR", "BZ", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
+        "JP", "MX", "NI", "PA", "PE", "PR", "PY", "SV", "US", "UY", "VE", "419",
+    }
 
 
 def digest(value: str) -> str:
@@ -87,12 +118,13 @@ def main() -> int:
             raise ValueError(f"Invariant exception source changed: {key}")
     failures = []
     evidence_cache = {}
-    for locale in reviewed_locales():
+    for locale, (role, parent) in reviewed_locales().items():
         translated = load_catalog(locale)
         for key in translated.keys() & source.keys():
             if protected_syntax(translated[key]) != protected_syntax(source[key]):
                 failures.append(f"{locale}/{key}: protected syntax drift")
-        if translated.keys() != source.keys():
+        if (role == "overlay" and not translated.keys() <= source.keys()) or (
+                role != "overlay" and translated.keys() != source.keys()):
             raise ValueError(f"Catalog key mismatch: {locale}")
         path = STATUS_ROOT / f"{locale}.json"
         if args.write:
@@ -102,7 +134,7 @@ def main() -> int:
             if not isinstance(previous_entries, dict):
                 raise ValueError(f"Malformed review ledger entries: {path}")
             records = {}
-            for key in sorted(source):
+            for key in sorted(translated):
                 value = translated[key]
                 status = ("invariant" if key in invariant and value == source[key]
                           else "untriaged" if value == source[key] else "candidate")
@@ -131,7 +163,7 @@ def main() -> int:
         ledger = load_object(path, "Review ledger")
         entries = ledger.get("entries")
         if (ledger.get("version") != 1 or ledger.get("locale") != locale or
-                not isinstance(entries, dict) or entries.keys() != source.keys()):
+                not isinstance(entries, dict) or entries.keys() != translated.keys()):
             raise ValueError(f"Malformed or incomplete review ledger: {locale}")
         counts = {"candidate": 0, "untriaged": 0, "invariant": 0,
                   "intentional-source-text": 0, "ai-reviewed": 0, "human-reviewed": 0}
@@ -197,13 +229,34 @@ def main() -> int:
             counts[status] += 1
             if review in ("ai-reviewed", "human-reviewed"):
                 counts[review] += 1
-        print(f"{locale}: {len(source)} populated; {counts['candidate']} translation candidates; "
+        print(f"{locale}: {len(translated)} populated; {counts['candidate']} translation candidates; "
               f"{counts['untriaged']} unchanged/untriaged; "
               f"{counts['intentional-source-text']} intentional source text; "
               f"{counts['invariant']} exact invariants; "
               f"{counts['ai-reviewed']} AI-reviewed; {counts['human-reviewed']} human-reviewed")
-        if args.release and (counts["untriaged"] or counts["ai-reviewed"] + counts["human-reviewed"] != len(source)):
+        if args.release and (counts["untriaged"] or counts["ai-reviewed"] + counts["human-reviewed"] != len(translated)):
             failures.append(f"{locale}: translation triage or independent review incomplete")
+        if role == "overlay":
+            regional_path = STATUS_ROOT / f"{locale}-regional.json"
+            if not regional_path.exists():
+                if args.release:
+                    failures.append(f"{locale}: regional review evidence is missing")
+            else:
+                regional = load_object(regional_path, "Regional review evidence")
+                parent_path = ROOT / "resources" / "locales" / parent / "strings.json"
+                overlay_path = ROOT / "resources" / "locales" / locale / "strings.json"
+                expected_parent_hash = hashlib.sha256(parent_path.read_bytes()).hexdigest()
+                expected_overlay_hash = hashlib.sha256(overlay_path.read_bytes()).hexdigest()
+                if (regional.get("locale") != locale or regional.get("parent") != parent or
+                        regional.get("parentCatalogSha256") != expected_parent_hash or
+                        regional.get("overlayCatalogSha256") != expected_overlay_hash or
+                        regional.get("reviewerType") != "independent AI" or
+                        regional.get("verdict") != "accept" or
+                        not isinstance(regional.get("model"), str) or not regional["model"].strip() or
+                        not isinstance(regional.get("sessions"), list) or not regional["sessions"] or
+                        not isinstance(regional.get("residualUncertainty"), str) or
+                        not regional["residualUncertainty"].strip()):
+                    failures.append(f"{locale}: regional review evidence is stale or incomplete")
     for failure in failures[:20]:
         print(f"FAIL: {failure}")
     if len(failures) > 20:

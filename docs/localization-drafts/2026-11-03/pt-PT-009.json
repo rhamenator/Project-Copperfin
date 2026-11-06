@@ -1,0 +1,368 @@
+{
+  "session": "0596b65d-37fa-4853-a03a-e06ddf285d43",
+  "locale": "pt-PT",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
+      "source": "list-index",
+      "seed": "índice da lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle",
+      "source": "List-index",
+      "seed": "Índice da lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumn",
+      "source": "left-column",
+      "seed": "coluna esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumnTitle",
+      "source": "Left-column",
+      "seed": "Coluna esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+      "source": "display-value",
+      "seed": "valor exibido"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValueTitle",
+      "source": "Display-value",
+      "seed": "Valor exibido"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "source": "selected-back-color",
+      "seed": "cor de fundo selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "source": "Selected-back-color",
+      "seed": "Cor de fundo selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "source": "selected-fore-color",
+      "seed": "cor de primeiro plano selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "source": "Selected-fore-color",
+      "seed": "Cor de primeiro plano selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "source": "selected-item-back-color",
+      "seed": "cor de fundo do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "source": "Selected-item-back-color",
+      "seed": "Cor de fundo do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "source": "selected-item-fore-color",
+      "seed": "cor de primeiro plano do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "source": "Selected-item-fore-color",
+      "seed": "Cor de primeiro plano do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "source": "disabled-item-back-color",
+      "seed": "cor de fundo do item desabilitado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "source": "Disabled-item-back-color",
+      "seed": "Cor de fundo do item desabilitado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "source": "disabled-item-fore-color",
+      "seed": "cor de primeiro plano do item desabilitado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "source": "Disabled-item-fore-color",
+      "seed": "Cor de primeiro plano do item desabilitado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "source": "item-back-color",
+      "seed": "cor de fundo do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "source": "Item-back-color",
+      "seed": "Cor de fundo do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "source": "item-fore-color",
+      "seed": "cor de primeiro plano do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "source": "Item-fore-color",
+      "seed": "Cor de primeiro plano do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "source": "highlight-back-color",
+      "seed": "cor de fundo do realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "source": "Highlight-back-color",
+      "seed": "Cor de fundo do realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "source": "highlight-fore-color",
+      "seed": "cor de primeiro plano do realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "source": "Highlight-fore-color",
+      "seed": "Cor de primeiro plano do realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "source": "back-color",
+      "seed": "cor de fundo"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "source": "Back-color",
+      "seed": "Cor de fundo"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "source": "fore-color",
+      "seed": "cor de primeiro plano"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "source": "Fore-color",
+      "seed": "Cor de primeiro plano"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "source": "disabled-back-color",
+      "seed": "cor de fundo desabilitada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "source": "Disabled-back-color",
+      "seed": "Cor de fundo desabilitada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "source": "disabled-fore-color",
+      "seed": "cor de primeiro plano desabilitada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "source": "Disabled-fore-color",
+      "seed": "Cor de primeiro plano desabilitada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "source": "dynamic-back-color",
+      "seed": "cor de fundo dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "source": "Dynamic-back-color",
+      "seed": "Cor de fundo dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "source": "dynamic-fore-color",
+      "seed": "cor de primeiro plano dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "source": "Dynamic-fore-color",
+      "seed": "Cor de primeiro plano dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Closable",
+      "source": "closable",
+      "seed": "fechável"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+      "source": "Closable",
+      "seed": "Fechável"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
+      "translation": "índice da lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle",
+      "translation": "Índice da lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumn",
+      "translation": "coluna esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumnTitle",
+      "translation": "Coluna esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+      "translation": "valor apresentado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValueTitle",
+      "translation": "Valor apresentado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "translation": "cor de fundo selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "translation": "Cor de fundo selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "translation": "cor de primeiro plano selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "translation": "Cor de primeiro plano selecionada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "translation": "cor de fundo do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "translation": "Cor de fundo do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "translation": "cor de primeiro plano do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "translation": "Cor de primeiro plano do item selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "translation": "cor de fundo do item desativado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "translation": "Cor de fundo do item desativado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "translation": "cor de primeiro plano do item desativado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "translation": "Cor de primeiro plano do item desativado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "translation": "cor de fundo do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "translation": "Cor de fundo do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "translation": "cor de primeiro plano do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "translation": "Cor de primeiro plano do item"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "translation": "cor de fundo do destaque"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "translation": "Cor de fundo do destaque"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "translation": "cor de primeiro plano do destaque"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "translation": "Cor de primeiro plano do destaque"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "translation": "cor de fundo"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "translation": "Cor de fundo"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "translation": "cor de primeiro plano"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "translation": "Cor de primeiro plano"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "translation": "cor de fundo desativada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "translation": "Cor de fundo desativada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "translation": "cor de primeiro plano desativada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "translation": "Cor de primeiro plano desativada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "translation": "cor de fundo dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "translation": "Cor de fundo dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "translation": "cor de primeiro plano dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "translation": "Cor de primeiro plano dinâmica"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Closable",
+      "translation": "fechável"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+      "translation": "Fechável"
+    }
+  ]
+}

@@ -60,6 +60,54 @@ def main() -> int:
                 raise AssertionError(f"{label}: wrong failure: {result.stderr[:500]}")
 
         check(True, "complete fifth locale")
+        overlay_locale = f"{synthetic}-DE"
+        overlay_inventory = expanded_inventory.replace(
+            "qps-ploc pseudo\n", f"{overlay_locale} overlay {synthetic}\nqps-ploc pseudo\n")
+        (locales / "inventory.txt").write_text(overlay_inventory, encoding="utf-8")
+        overlay_path = locales / overlay_locale / "strings.json"
+        overlay_path.parent.mkdir()
+        overlay_path.write_text('{"Studio.OpenDialogTitle":"Öffnen"}\n', encoding="utf-8")
+        check(True, "sparse regional overlay")
+        overlay_path.write_text('{"Studio.OpenDialogTitle":"  "}\n', encoding="utf-8")
+        check(False, "blank overlay entry", "Catalog key is blank")
+        overlay_path.write_text('{"Studio.OpenDocumentStatus":"{wrong}"}\n', encoding="utf-8")
+        check(False, "overlay placeholder drift", "Catalog placeholder drift")
+        overlay_path.write_text('{"Unexpected.Key":"value"}\n', encoding="utf-8")
+        check(False, "overlay extra key", "Catalog contains undeclared key")
+        overlay_path.write_text('{}\n', encoding="utf-8")
+        check(True, "empty regional overlay inherits parent")
+        (locales / "inventory.txt").write_text(
+            overlay_inventory.replace(f"overlay {synthetic}", "overlay en-US"), encoding="utf-8")
+        check(False, "cross-language overlay parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        sibling_inventory = overlay_inventory.replace(
+            f"{overlay_locale} overlay {synthetic}\n",
+            f"{synthetic}-AT unreviewed\n{overlay_locale} overlay {synthetic}-AT\n")
+        (locales / "inventory.txt").write_text(sibling_inventory, encoding="utf-8")
+        check(False, "sibling regional parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        singleton_inventory = overlay_inventory.replace(
+            f"{overlay_locale} overlay {synthetic}\n",
+            f"{synthetic}-u unreviewed\n{synthetic}-u-co overlay {synthetic}-u\n")
+        (locales / "inventory.txt").write_text(singleton_inventory, encoding="utf-8")
+        check(False, "skipped extension parent", "Overlay parent must be a previously declared runtime fallback ancestor")
+        for regional in ("es-MX", "es-Latn-MX"):
+            regional_path = locales / regional / "strings.json"
+            regional_path.parent.mkdir(exist_ok=True)
+            regional_path.write_text('{}\n', encoding="utf-8")
+            regional_inventory = overlay_inventory.replace(
+                "qps-ploc pseudo\n", f"{regional} overlay es-419\nqps-ploc pseudo\n")
+            (locales / "inventory.txt").write_text(regional_inventory, encoding="utf-8")
+            check(True, f"Latin American {regional} parent")
+            shutil.rmtree(regional_path.parent)
+        portuguese_inventory = overlay_inventory.replace(
+            "qps-ploc pseudo\n", "pt overlay pt-BR\nqps-ploc pseudo\n")
+        (locales / "inventory.txt").write_text(portuguese_inventory, encoding="utf-8")
+        check(False, "neutral Portuguese cannot overlay Brazil", "Overlay parent must be a previously declared runtime fallback ancestor")
+        chained_inventory = overlay_inventory.replace(
+            "qps-ploc pseudo\n", f"{overlay_locale}-AT overlay {overlay_locale}\nqps-ploc pseudo\n")
+        (locales / "inventory.txt").write_text(chained_inventory, encoding="utf-8")
+        check(False, "chained regional overlay", "Overlay parent must be a previously declared runtime fallback ancestor")
+        (locales / "inventory.txt").write_text(expanded_inventory, encoding="utf-8")
+        shutil.rmtree(overlay_path.parent)
         missing = dict(complete)
         missing.pop("Studio.OpenDialogTitle")
         path.write_text(json.dumps(missing, ensure_ascii=False), encoding="utf-8")
@@ -67,7 +115,7 @@ def main() -> int:
         blank = dict(complete)
         blank["Studio.OpenDialogTitle"] = "  "
         path.write_text(json.dumps(blank, ensure_ascii=False), encoding="utf-8")
-        check(False, "blank fifth-locale value", "Catalog key is missing or blank")
+        check(False, "blank fifth-locale value", "Catalog key is blank")
         placeholder = dict(complete)
         placeholder["Studio.OpenDocumentStatus"] = "Bad {unexpected} placeholder"
         path.write_text(json.dumps(placeholder, ensure_ascii=False), encoding="utf-8")

@@ -1,0 +1,1311 @@
+{
+  "locale": "de-DE",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-locale-translation-v1/de-DE-007.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-008.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-009.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-010.json"
+    ],
+    "entryCount": 160
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_pt_revisions",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewedAtUtc": "2026-11-03T07:25:56.740683+00:00",
+  "uncertainty": "Text and CLI call-site review only. No native German speaker sign-off or rendered UI/runtime validation; long compound labels may still clip. Verdicts apply only to exact hashed values.",
+  "counts": {
+    "accept": 156,
+    "revise": 4
+  },
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "batch": 7,
+      "sourceSha256": "ebf9c4d8baa6158bd4d501fcd47e0e76e6d00d4d6e6cf1405bf1debbfe53593d",
+      "translationSha256": "fd4ef4826e1fc29eaf2166ee6b7c74cad365ef50d8c53c887616e85b9c5c693e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "batch": 7,
+      "sourceSha256": "dbbd5c3ee7bdfe1d033da310bc3442bf362503572e0451c62a30c50e1c64ba4a",
+      "translationSha256": "fd4ef4826e1fc29eaf2166ee6b7c74cad365ef50d8c53c887616e85b9c5c693e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "batch": 7,
+      "sourceSha256": "2b3668b473e5231961b0cf44549b27d0c5f9e2305cc9f209b96e1e55ae61337f",
+      "translationSha256": "c8a7b4383213631858ebdfa02c5ce5e2441388f89ad438a5859703a8c8cea21a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "batch": 7,
+      "sourceSha256": "2f971a2183cc9f7244a443e32f02c98bbf72cfc40ac34d1f582830c5dc7d74bc",
+      "translationSha256": "c8a7b4383213631858ebdfa02c5ce5e2441388f89ad438a5859703a8c8cea21a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "batch": 7,
+      "sourceSha256": "3cd2b8b9dcc3bb69e413892aa74c0d121cb77bbb526985e5157375d4a232d51c",
+      "translationSha256": "6e9064b08bc6236cabff36dd536c05b251c40771fe660c2da50291764d03fd85",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "batch": 7,
+      "sourceSha256": "7f229e19e9810d3e92fc8c9c1cd90acf8d088733b3cbe0f85d1d65083566fc54",
+      "translationSha256": "6e9064b08bc6236cabff36dd536c05b251c40771fe660c2da50291764d03fd85",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "batch": 7,
+      "sourceSha256": "08fe70d46780dd5b07d65e003da881999dc4ead0fb2113a47110ca691b305b20",
+      "translationSha256": "2147769e5bcd0a5fa4097c13e3e919f81884509e0251538bcefa6f262cdf798c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "batch": 7,
+      "sourceSha256": "3f55cec09c359f9b6db6ee133828dacc70516083f44e5e936fa40743854ddd7d",
+      "translationSha256": "2147769e5bcd0a5fa4097c13e3e919f81884509e0251538bcefa6f262cdf798c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "batch": 7,
+      "sourceSha256": "fb9cf75606b4070dd6a9705810906bba28d0e2ea74ff301b999a91dbb68c7d98",
+      "translationSha256": "10639ced8abf462b27793ae98b66394ad761dc73d7c90eab5635aeaa6d8e7bc2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "batch": 7,
+      "sourceSha256": "92c1cdfdf4cb9cf6fcca962f206de36fd5d60db1178bc9461052f8de703a0e06",
+      "translationSha256": "10639ced8abf462b27793ae98b66394ad761dc73d7c90eab5635aeaa6d8e7bc2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "batch": 7,
+      "sourceSha256": "3e53aca5eac738d4893cd18cf4204872394356d3b7f20f064bcb41365095e035",
+      "translationSha256": "e56fefc89db719cf1ba0e1462e569f5b31c13c6d2b9ca5ed78bdd214544e6c22",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "batch": 7,
+      "sourceSha256": "2c8239a80d0d0666036fbfbf62fe390192a92ee20838b50b4e5752d2ad196420",
+      "translationSha256": "e56fefc89db719cf1ba0e1462e569f5b31c13c6d2b9ca5ed78bdd214544e6c22",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "batch": 7,
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "90727fddcf9a5435b58855f82bf9887a29d55e086967453a487e5c2ab064ea94",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "batch": 7,
+      "sourceSha256": "cad419e6012bae9a0c8bfbca2fbb539c7a1dd98eb20bb0caccad751d0dff5c57",
+      "translationSha256": "90727fddcf9a5435b58855f82bf9887a29d55e086967453a487e5c2ab064ea94",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "batch": 7,
+      "sourceSha256": "690b0a0757b17f430d9ca223ad81bf3a890b02204a566ab05ed8138fc0f74bb3",
+      "translationSha256": "9962f3db2f0fb470b7fa1c1638627334dbf3f984f63b459e7ac51e1469082af5",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "batch": 7,
+      "sourceSha256": "7fb5073d6d798d43d03c716eb48737ca3534464b368748f2aa70bb1eda65ff78",
+      "translationSha256": "9962f3db2f0fb470b7fa1c1638627334dbf3f984f63b459e7ac51e1469082af5",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "batch": 7,
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "9057c7dd4bce800e3cd667f2e567450be89a8f196b4da4b12aff1b03019ef820",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "batch": 7,
+      "sourceSha256": "ccdaa4598fb12369c40d81a64a71512d4ce91141647491603f3cfdd5c465a423",
+      "translationSha256": "9057c7dd4bce800e3cd667f2e567450be89a8f196b4da4b12aff1b03019ef820",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "batch": 7,
+      "sourceSha256": "d0983396b0ae41f455674fb7cd47eab3d3c8f8edeb94e8c7cef823c1040a4cd8",
+      "translationSha256": "c0517d64ea02ac319ea76bdc0164c8d8b8c1b07958db6b13659d6b4d09e2c99c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "batch": 7,
+      "sourceSha256": "dde547a01ee4f782d9f10af7226ce67c595e1d2057318aea18c1516705fe4666",
+      "translationSha256": "c0517d64ea02ac319ea76bdc0164c8d8b8c1b07958db6b13659d6b4d09e2c99c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "batch": 7,
+      "sourceSha256": "303a9a98a85189558fd6b44d9cc969a98701f5f19457732f82c34957a9e9fef3",
+      "translationSha256": "dfa547de1f6904c5328879c7640c09aaa2cea359544331edf5df3bd4b7af7f39",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "batch": 7,
+      "sourceSha256": "73e6b7582f527c93af5a3200d796e57223062c6547f5f2c3e4763e52b7bf6301",
+      "translationSha256": "dfa547de1f6904c5328879c7640c09aaa2cea359544331edf5df3bd4b7af7f39",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "batch": 7,
+      "sourceSha256": "6d712f77078adffd528fa500c8681402f2aee7b88e21b108c38cbbe569f9f4d4",
+      "translationSha256": "0d5a0e840d915f8da4535c9f81dc9970ea54072e54bc10290ff979e57e6bda91",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "batch": 7,
+      "sourceSha256": "84c501fe54b91debcfd8b81425d7af927c3a2ddd9d2f3b009dc66a2fd1ca2809",
+      "translationSha256": "0d5a0e840d915f8da4535c9f81dc9970ea54072e54bc10290ff979e57e6bda91",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "batch": 7,
+      "sourceSha256": "386856983b660a78e8fdd86cad5dd3ad7d637174268e7d5fbbfcd2fb8b6389b8",
+      "translationSha256": "a7c91973dbb8f82d32f9f9ba69093d1d1b87ec26985bc7b03b91abae3728ad06",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "batch": 7,
+      "sourceSha256": "4c42fdf2b758ba93854c1863730c93bc4bf10f9aa658f0cf27752b137b60478a",
+      "translationSha256": "a7c91973dbb8f82d32f9f9ba69093d1d1b87ec26985bc7b03b91abae3728ad06",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "batch": 7,
+      "sourceSha256": "76982be7250a5f93f4200ba3eeae6da2b6c3b2944547ca8c6512727f104cdf8c",
+      "translationSha256": "65347b9dd3b2d848bcd220a5e826667b002c64eeadc8b64fbe8506ff5e30a8a9",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "batch": 7,
+      "sourceSha256": "2e7cd478f3aa209e9e3b688b2028245b09a55c170627bfa769c8d5412df81fa2",
+      "translationSha256": "65347b9dd3b2d848bcd220a5e826667b002c64eeadc8b64fbe8506ff5e30a8a9",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "batch": 7,
+      "sourceSha256": "c954ca80c7f519b8cba113c09c3183a0c983501dcaad63f78dab077c9d0f67ea",
+      "translationSha256": "773f4f443bbd5bb8a2a0e19c5abdf8ce4036b9df2daabf71fec41a64214d632d",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "batch": 7,
+      "sourceSha256": "addf5c6f7a3692de6bbf6b2e55dd502c92a417682e4ef07abdc68ab79808000b",
+      "translationSha256": "773f4f443bbd5bb8a2a0e19c5abdf8ce4036b9df2daabf71fec41a64214d632d",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "batch": 7,
+      "sourceSha256": "29020223b5d7f9f45068188ca29780b08a70257aab2d0e8dcea6eadda3d12642",
+      "translationSha256": "ece09342f4a1a3d98e4217443e23fa97ae0d9c4f6349061136ac2a6bac9ee5f4",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "batch": 7,
+      "sourceSha256": "4624637b09d6df32ab8e2e91cb2c324328a8a772887744378fb93ee2e717e0c5",
+      "translationSha256": "ece09342f4a1a3d98e4217443e23fa97ae0d9c4f6349061136ac2a6bac9ee5f4",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "batch": 7,
+      "sourceSha256": "a722d56c62dc4ceae6f59a36a3620805736765c3e995bb5d6a4a53d2fddf9f98",
+      "translationSha256": "98554eee6b8358d5f15cd2af345dd17a4cf6eb4bf18778d0367911a854bc0b75",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "batch": 7,
+      "sourceSha256": "36c546aa7afbdf8f4879bc79a18d3485319053e65a338fa63804d2a810dd6e12",
+      "translationSha256": "98554eee6b8358d5f15cd2af345dd17a4cf6eb4bf18778d0367911a854bc0b75",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "batch": 7,
+      "sourceSha256": "760724f89727cbc2ed58c3f2ab7a7fb6f4e88e45332e653b00fd80af053f1241",
+      "translationSha256": "87867253e6677c502e6773902bf7a8a19d2ad02afaf5a805915d9ae01ae904dc",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "batch": 7,
+      "sourceSha256": "e0fdf2c7e6d53a8539d08f9e41ff36c7c5449400e94f9ab27bde41b133609bdc",
+      "translationSha256": "87867253e6677c502e6773902bf7a8a19d2ad02afaf5a805915d9ae01ae904dc",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "batch": 7,
+      "sourceSha256": "bb074b6be1df481bd77d0415c542310d7c6f0cbf51b492b251b7fad552b2640f",
+      "translationSha256": "691cf8af523bb74c1cf5dd4d69b9a1666d3d4ccfb2d8889f77f5f7b3befb21cf",
+      "verdict": "revise",
+      "reason": "The CLI setter takes a numeric count; «Spalten sperren» reads like a command, not the property value.",
+      "proposal": "Anzahl gesperrter Spalten",
+      "proposalSha256": "c0e2fe04a2c66272e0218479df57fa42ec6572f3028e786c1b49c88960a490a2"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "batch": 7,
+      "sourceSha256": "68ee7e89c7510010b29932074fc280ca6fa422cc78025ee04bd9ad8edb19dae9",
+      "translationSha256": "323ca7c1f74c06595979ecc67a48ccada78e3066ae96672995d33534fa34cb7c",
+      "verdict": "revise",
+      "reason": "The CLI setter takes a numeric count of columns locked on the left; the current phrase reads like an imperative.",
+      "proposal": "Anzahl links gesperrter Spalten",
+      "proposalSha256": "ff70c153cc8653c92cae534e498e6de40fbfbd15112eb20e26ad7cac897e3954"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "batch": 7,
+      "sourceSha256": "8d6ca2e7b451efb01e96a70c48ebe9580a74ff0f5a9d62a004a4a0d0aaa12b54",
+      "translationSha256": "323ca7c1f74c06595979ecc67a48ccada78e3066ae96672995d33534fa34cb7c",
+      "verdict": "revise",
+      "reason": "The help label accompanies --lock-columns-left <n>; it should name the count rather than an action.",
+      "proposal": "Anzahl links gesperrter Spalten",
+      "proposalSha256": "ff70c153cc8653c92cae534e498e6de40fbfbd15112eb20e26ad7cac897e3954"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "batch": 7,
+      "sourceSha256": "f909a8a9cce0bc94e3b82bc8c4d795f710419947e277e5a9149d8c58866d2f6b",
+      "translationSha256": "691cf8af523bb74c1cf5dd4d69b9a1666d3d4ccfb2d8889f77f5f7b3befb21cf",
+      "verdict": "revise",
+      "reason": "The help label accompanies --lock-columns <n>; it should name the count rather than an action.",
+      "proposal": "Anzahl gesperrter Spalten",
+      "proposalSha256": "c0e2fe04a2c66272e0218479df57fa42ec6572f3028e786c1b49c88960a490a2"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "batch": 8,
+      "sourceSha256": "14493f5f5470ed48c3f103d917ec52ae9005fa3913128031d0fac2a49ac3cc41",
+      "translationSha256": "45f96e916050cd8a6465b8b36bea037d0b5e3642a13b253a23298fb1a67feb46",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "batch": 8,
+      "sourceSha256": "a424e33d90931d1ed22f2af37a3f3491a5c9de0dfae079f6f3ff4edf0309e07f",
+      "translationSha256": "45f96e916050cd8a6465b8b36bea037d0b5e3642a13b253a23298fb1a67feb46",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "batch": 8,
+      "sourceSha256": "a199ab162e587e6965652c321a1d508697f5f456a39a7983d929125e6cbbffbe",
+      "translationSha256": "cfc79ec787cf2a7acc379236fd6c41aee1f9b9cfdd7892e8ced90039e61cdd97",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "batch": 8,
+      "sourceSha256": "3b9e7d0cdf802cc344979561cd908c119c8e60afc2ff59384e1ea297672ea0bd",
+      "translationSha256": "cfc79ec787cf2a7acc379236fd6c41aee1f9b9cfdd7892e8ced90039e61cdd97",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "batch": 8,
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "16a0390512d8f4690bac2b3fd166ddd153a7d0d61d68ad64e124624f416f936f",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "batch": 8,
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "16a0390512d8f4690bac2b3fd166ddd153a7d0d61d68ad64e124624f416f936f",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "batch": 8,
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "a0a4966463b9f6b10e54dacb01ac4b26edcaafd1614ab5516f761800dddb0cf9",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "batch": 8,
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "a0a4966463b9f6b10e54dacb01ac4b26edcaafd1614ab5516f761800dddb0cf9",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "batch": 8,
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "62c956f54f57b893946e6ce92bf885474d055ef986885d48180c81798e5a2cd2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "batch": 8,
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "62c956f54f57b893946e6ce92bf885474d055ef986885d48180c81798e5a2cd2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "batch": 8,
+      "sourceSha256": "61a72e3085b7d2ecb4830c402af469e3ce622ee48dd0283402c54431a722a2a8",
+      "translationSha256": "4b2f2b09dd72ed04f246dc8e1be6cf51bac4fb7bc17e55541026d7e9054d2e4a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "batch": 8,
+      "sourceSha256": "61a72e3085b7d2ecb4830c402af469e3ce622ee48dd0283402c54431a722a2a8",
+      "translationSha256": "4b2f2b09dd72ed04f246dc8e1be6cf51bac4fb7bc17e55541026d7e9054d2e4a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "batch": 8,
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "9b21518a0fc910a655b0908f867068af7e85b467d30cefc19ecf234ee65797cd",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "batch": 8,
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "9b21518a0fc910a655b0908f867068af7e85b467d30cefc19ecf234ee65797cd",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "batch": 8,
+      "sourceSha256": "2cea274d0bedc39ec4ab6ba9e59ec889e3ed6fb56a1cf088a64d9b383378dc97",
+      "translationSha256": "375e84034b8ff2d62d9a7aaa7ed4691def814363a168483c5b836ad2b3885d9a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "batch": 8,
+      "sourceSha256": "9a1c54f55e7cfb1cc2cdad2991525037bc475a509fa37262e123c44e958d2d36",
+      "translationSha256": "375e84034b8ff2d62d9a7aaa7ed4691def814363a168483c5b836ad2b3885d9a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "batch": 8,
+      "sourceSha256": "c49c0ee674cbe62f769d52c56d8605f1693190a1d181d833065b81eb7a57295d",
+      "translationSha256": "a272f72cc0405f9ac0d04b64a3863efbbee9aa93871ecc106a1c2256b34eff9a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "batch": 8,
+      "sourceSha256": "b19746aded0d23ce7ca1aa2e36601f369c634a6905deca4fa6b7cb8b79327156",
+      "translationSha256": "a272f72cc0405f9ac0d04b64a3863efbbee9aa93871ecc106a1c2256b34eff9a",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "batch": 8,
+      "sourceSha256": "2df962d37ee229c547fb4ebef038a1eaecd0cd6f1c109746f4a9c1fa80329254",
+      "translationSha256": "4dbdd221e957eff27cc47796f3ed8447290f71c7ad8b95e5bd828b31c1858f15",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "batch": 8,
+      "sourceSha256": "4dbdd221e957eff27cc47796f3ed8447290f71c7ad8b95e5bd828b31c1858f15",
+      "translationSha256": "4dbdd221e957eff27cc47796f3ed8447290f71c7ad8b95e5bd828b31c1858f15",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "batch": 8,
+      "sourceSha256": "4fed3970dcc0d31dccddbf69ef55b00f32d2ca787f1757894914bc0365ea7aa5",
+      "translationSha256": "fd6589c032942f01809c75c5fbba6c060a14f9d38c3e82305166acd4274e184c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "batch": 8,
+      "sourceSha256": "72bb90897ab1eadc924fa1358773c5949372c1f06d8dd53d730bbfa3b0c5b695",
+      "translationSha256": "fd6589c032942f01809c75c5fbba6c060a14f9d38c3e82305166acd4274e184c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "batch": 8,
+      "sourceSha256": "bc41763b9c1ab33018029e38603b6712ac13eb956e76645f327116d4ba1bedcc",
+      "translationSha256": "140a7642a29a1f9c36c293fb2d676489f65068469d3c7b19623b5896dc943624",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "batch": 8,
+      "sourceSha256": "2916173840a7130564bf126fb4792b3bbbfb5f9a0aa4298558348bef321535c9",
+      "translationSha256": "140a7642a29a1f9c36c293fb2d676489f65068469d3c7b19623b5896dc943624",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "batch": 8,
+      "sourceSha256": "1ec33b64cb90d817458e2ef31a6a3cb8e690fdb1289e763e4dd94a970cb4e6fc",
+      "translationSha256": "8613dae0d697a0d027b96bcc2b18cb9724be74f850a387bba73c6cc53788bf9d",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "batch": 8,
+      "sourceSha256": "1615f896b9bda5ec622bd3b79326ca7163811206b317c3cf54098d203d8a5e97",
+      "translationSha256": "8613dae0d697a0d027b96bcc2b18cb9724be74f850a387bba73c6cc53788bf9d",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "batch": 8,
+      "sourceSha256": "50f01f1d98210e72ad86c6f10314248c5d084a9b0ec3568455f45ee14be412ec",
+      "translationSha256": "d4302fb6c79ef7314252e690b705cfa8e390984f58f31237d6ef04c4715d5157",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "batch": 8,
+      "sourceSha256": "de3aa297ced2279e4e5389e5ea35670c90a2643d7af2adeddd5d58bf86005757",
+      "translationSha256": "d4302fb6c79ef7314252e690b705cfa8e390984f58f31237d6ef04c4715d5157",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "batch": 8,
+      "sourceSha256": "d205b025f04a3196ef59e884aaa7a6a91aedded28072e2be092abf8d0a805ea1",
+      "translationSha256": "d8e6f1bb42ca3e4d8183d96a51fe2e17799f346880dec7052447a5c48cd8138e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "batch": 8,
+      "sourceSha256": "29467b793be1850ddc3d32968cb5aabbf78f7bfcbce0ab9b4f75ec4e75dd1c19",
+      "translationSha256": "d8e6f1bb42ca3e4d8183d96a51fe2e17799f346880dec7052447a5c48cd8138e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "batch": 8,
+      "sourceSha256": "38917df282470a2e2f85b9d86a8cf4b381869264d1ac50130d713dfbb6e12067",
+      "translationSha256": "65bc7c4f1f8e5bf5c25729453905975ba30bbe25cda6ae00783fc3471b792eee",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "batch": 8,
+      "sourceSha256": "654bc12a6cd4d98d84731cce7880aa386ca9c51726f650c634e4f8429cd8e975",
+      "translationSha256": "65bc7c4f1f8e5bf5c25729453905975ba30bbe25cda6ae00783fc3471b792eee",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "batch": 8,
+      "sourceSha256": "12af2b925d300a376adc9506f674814fa94d680a3da65d8635d550e6c9ffcac1",
+      "translationSha256": "f8eca15957a088ad92aa6830d795f60aeff85ed2d7bffa9c61eca3bffd753da2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "batch": 8,
+      "sourceSha256": "72465770ce2d927adc1d48e3448f6a21df77986fbee3c080af2cb5f26bc18be2",
+      "translationSha256": "f8eca15957a088ad92aa6830d795f60aeff85ed2d7bffa9c61eca3bffd753da2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "batch": 8,
+      "sourceSha256": "85154c5a81f5cba33c2bc958805fe3d83e7ea923e4de5ec0720d889fab31e6c1",
+      "translationSha256": "56b7684166bb28a962d1f2b66cd0c8320e6f220c6234ab1f866a645afa6fb56c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "batch": 8,
+      "sourceSha256": "5626847a3e3afcb5ea6bf0d34b1588814677916a5fef92cf4760a6d1291a17ea",
+      "translationSha256": "56b7684166bb28a962d1f2b66cd0c8320e6f220c6234ab1f866a645afa6fb56c",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "batch": 8,
+      "sourceSha256": "f566c722fb27ed6934fdae56e8e5fe2263022518d9588a9285dded885a247fbe",
+      "translationSha256": "752f62dd167ee7eeb076b741619d925dd2a7110b41c947a3219d3a11acc459b2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "batch": 8,
+      "sourceSha256": "78d10bf593789a4e0f2a1debba7f22dd2d5d1237b1aa5c2be009ebfb957d573b",
+      "translationSha256": "752f62dd167ee7eeb076b741619d925dd2a7110b41c947a3219d3a11acc459b2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "batch": 8,
+      "sourceSha256": "cb86eb2d914d37df6857c3cfe4827b5f770b01a86578120618b0b21572160be8",
+      "translationSha256": "5646ff0fd65f1cd3243993e4fd45225079ece3fb873f4c198ed79548c930e592",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "batch": 8,
+      "sourceSha256": "7e744141b40ea5501412e42c8b40fd0b05f1608aa2e4073944ccccbd82f24ee8",
+      "translationSha256": "5646ff0fd65f1cd3243993e4fd45225079ece3fb873f4c198ed79548c930e592",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
+      "batch": 9,
+      "sourceSha256": "ce27de2de9dd0d5faa12b0ae163a40c9a411e5e0f4b7d0b23c2949f038f51100",
+      "translationSha256": "7596ee8c239e49512df74d41bedab3d67f57e4807b806732b0a7a1536c205164",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle",
+      "batch": 9,
+      "sourceSha256": "adb88a45814bee08aaac918ace4305333d5acc9f80be049324544ab5e4bf6a36",
+      "translationSha256": "7596ee8c239e49512df74d41bedab3d67f57e4807b806732b0a7a1536c205164",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumn",
+      "batch": 9,
+      "sourceSha256": "454454bdd567bf09ac659a2c1e6dd3b12db1f1418d5d54317cbe517b5eece322",
+      "translationSha256": "1df479af85685e3c26cc1b22f9f6058ce1e5a3a72d7afed81794937e489d5cbf",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumnTitle",
+      "batch": 9,
+      "sourceSha256": "702a3da532b910671a5f454697cd1f1c700fd932e8da5b4a9ab880d354230f62",
+      "translationSha256": "1df479af85685e3c26cc1b22f9f6058ce1e5a3a72d7afed81794937e489d5cbf",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+      "batch": 9,
+      "sourceSha256": "0baeaa6ef801384ff09dbad3b5fe96cab284b83c5d9285ae4c9944f4f1e7eede",
+      "translationSha256": "afe696716bf0353b375f44b11045b87df9beb3122fb51257a48ff743d9b27b96",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValueTitle",
+      "batch": 9,
+      "sourceSha256": "a53eca16c1a1b17e2e0ff06bf5b894874235d1cbc6ca2e1c142f2f4fd9647c24",
+      "translationSha256": "afe696716bf0353b375f44b11045b87df9beb3122fb51257a48ff743d9b27b96",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "batch": 9,
+      "sourceSha256": "054bd5dbac7b64512629c317a517cd0d7c568ff32be804e1f0c47f7032453c28",
+      "translationSha256": "16d0af0593a29ddcbd75632b02bdd5349bac9fa025e3408f6e84ab9d9dc5ccb7",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "bfde0831a997a43609484c06d20a480baa27e4c7f5721e400a4a0dcbbff89fce",
+      "translationSha256": "16d0af0593a29ddcbd75632b02bdd5349bac9fa025e3408f6e84ab9d9dc5ccb7",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "batch": 9,
+      "sourceSha256": "e5196af519ac45071921258c9e57337828d7d19c6e7628b64ac5c7a39100c1b9",
+      "translationSha256": "e578c4a65393ab0d8959eee255dbf2cd4cafbed4c673db7aedd87840ecd9549b",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "6b94ee60c81f30b47f56de68a7c5756810dc3f11e12de785b7d5f86d0622c441",
+      "translationSha256": "e578c4a65393ab0d8959eee255dbf2cd4cafbed4c673db7aedd87840ecd9549b",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "batch": 9,
+      "sourceSha256": "4de423619f0df3af761a8a5886e421351d1669c8346c52b5e4a65a12b5d74cc1",
+      "translationSha256": "0bbd41176a5194b1b1022027bd03c7ccf8d6b8a8e5e29c1c13cc7d3530aae554",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "0fedcd8a4c644709a892103f8d7aba80e57810123469e7d5fbd9424ac73772f5",
+      "translationSha256": "0bbd41176a5194b1b1022027bd03c7ccf8d6b8a8e5e29c1c13cc7d3530aae554",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "batch": 9,
+      "sourceSha256": "5c79febe70a68746314c7f1a101f66e59fe13a37ebcff4a8a4dbd82c3556c6e9",
+      "translationSha256": "2ed7a6805fb93d313b782e9d3804e05793dbb809740e18135d6d98a606f2095e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "f1d882ade25b3977a8d6fc68848b423a89e23d14235c94e6e9e3987509d50add",
+      "translationSha256": "2ed7a6805fb93d313b782e9d3804e05793dbb809740e18135d6d98a606f2095e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "batch": 9,
+      "sourceSha256": "835408f4c3598b0104109c58dcd28411df1b87a013f8ff2bce22a327838605fe",
+      "translationSha256": "c877f63db0c411eaa2ae8e4d3ec3d72e6a47689812f2a262c2ea8d4e1ce2b11d",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "cc18d014cba048748078dd91d2bf48dc8679fce1acb4f00bab920e98b018b57b",
+      "translationSha256": "c877f63db0c411eaa2ae8e4d3ec3d72e6a47689812f2a262c2ea8d4e1ce2b11d",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "batch": 9,
+      "sourceSha256": "b63c87cd1d1975a0d7a56da083e2f22f7d04c9de725dded42cb5a723726473e8",
+      "translationSha256": "3bd24eb87eb46dcd2057e00addbdcf4c31c4fa118724ce96ee73dd631aaff527",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "e32bb3144d721dc8721edf1e65eff4bba61414f21b9e5a7c129eae13cdc58f1e",
+      "translationSha256": "3bd24eb87eb46dcd2057e00addbdcf4c31c4fa118724ce96ee73dd631aaff527",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "batch": 9,
+      "sourceSha256": "5ecc07c94c4c3b134bfb263f61267bcd9e98a841a407a6fe7a299fd2eeb411b6",
+      "translationSha256": "9c82baced4ecbc74c43fcb96123320720ab9fbde83b50a941a8c58154aa48c62",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "41b483a1b287bc5c82255feda67c67a112227142be1b74a594dd2677008ff2dc",
+      "translationSha256": "9c82baced4ecbc74c43fcb96123320720ab9fbde83b50a941a8c58154aa48c62",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "batch": 9,
+      "sourceSha256": "f01f293e34b33fe0563e7cd932cfb9c713730a159146fe8519ca2c9524218fb1",
+      "translationSha256": "ae8bfb639ba19ffae98abd94f0bb334cea280e7fc4cb5465508df0651324d5bc",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "dff3d8e2c66a38c0fd441664660442a58921377834317546d261663ff7bb1a5a",
+      "translationSha256": "ae8bfb639ba19ffae98abd94f0bb334cea280e7fc4cb5465508df0651324d5bc",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "batch": 9,
+      "sourceSha256": "38665025eb74534dd5be8301135ce33c2f37c5f9a37e4b013a028da6ffd1f290",
+      "translationSha256": "eb14219296f418752fff33bb74e3b9997ce093f1e8775eead40db2934bbfdc93",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "27a99894a5440c9c73dbb2b519ee119d7dfc9504e83afc7aaffc77e8cf00cc40",
+      "translationSha256": "eb14219296f418752fff33bb74e3b9997ce093f1e8775eead40db2934bbfdc93",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "batch": 9,
+      "sourceSha256": "48a31e8385c4b3e01d1aebd19f1c8b671b1c00b189193f950856d9d4c9e1c774",
+      "translationSha256": "e3082d59262fbb5e9336624f09f99a53615364335a34e57bff0de82195cdf7b7",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "8e5c8f9aefee8e94db020fdadb779945be742374bb3accab0ab3a244dfc82d85",
+      "translationSha256": "e3082d59262fbb5e9336624f09f99a53615364335a34e57bff0de82195cdf7b7",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "batch": 9,
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "ac31c0c1c7e79c37a493b3f7a49272585ebf63652beb47ffeb564dc06c8c56c6",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "batch": 9,
+      "sourceSha256": "d1701cd37ba2b079230b26a3301bb236ae7dc11b36aca0b21568a0b4cb97b766",
+      "translationSha256": "ac31c0c1c7e79c37a493b3f7a49272585ebf63652beb47ffeb564dc06c8c56c6",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "batch": 9,
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "529529265a190b07bb03348b8732bebe76bda622230e04860115489270a60ce1",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "39247fc8d9b001be65247c08859d7678db77c6d1e3d645124cbf657dbf97a55a",
+      "translationSha256": "529529265a190b07bb03348b8732bebe76bda622230e04860115489270a60ce1",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "batch": 9,
+      "sourceSha256": "2c295feede12610805a3ca63514f0f730b3e8d0401e71876d78672e3f431183f",
+      "translationSha256": "99b2e90bb01547974f7b81fa9e936fc383dbe8855839303e940cf79e1fd70ad2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "991b3a7b4f4480c84a4df600c975bfa78409e661873865e85a15fca8c0686e03",
+      "translationSha256": "99b2e90bb01547974f7b81fa9e936fc383dbe8855839303e940cf79e1fd70ad2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "batch": 9,
+      "sourceSha256": "782c06964ce188f0f765f0242dafd9671ca6771f2a9601107f74ba265711cfbc",
+      "translationSha256": "4d0e710ea1b7dc0e61fc0380143a222f18bd5180d4977113d295e240655e7da3",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "5db0ad82f9301b5f0215a2d24f618574da4fb48cd2887cd118ef0903ae455c0b",
+      "translationSha256": "4d0e710ea1b7dc0e61fc0380143a222f18bd5180d4977113d295e240655e7da3",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "batch": 9,
+      "sourceSha256": "0ba497bcaac024b53bb36829fae9e4bb5999a93edf44cb10d9c3eafa0b84dd53",
+      "translationSha256": "c64de752a340e6ea70bd816cc21168d7cad134d0c9526cc66d9267f5eb95b7ff",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "a1935c9fd202318f97f8ff8670382510fe91b8c2c431318cf9b1773c431d12f8",
+      "translationSha256": "c64de752a340e6ea70bd816cc21168d7cad134d0c9526cc66d9267f5eb95b7ff",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "batch": 9,
+      "sourceSha256": "5563a9f02cb5508c682d05175cdcc1a871ef1932d731551249998d7058383b55",
+      "translationSha256": "f93477b72b4c68f9313b9ada8cc241114a7a7bccb93aa9b10d7e46bc9e157c0e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "41ef944040935aa7de9470ebe42a02902d865033dd6707ca9e83e8655d171581",
+      "translationSha256": "f93477b72b4c68f9313b9ada8cc241114a7a7bccb93aa9b10d7e46bc9e157c0e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Closable",
+      "batch": 9,
+      "sourceSha256": "b3d815b8871abe0dd22c84176a988b7add186044dcc093d564bbe0abbafb648b",
+      "translationSha256": "a4d1685e1efc9cccf86b22532e587016fe9f880910b3a5ee1cd44af20e90bfd6",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+      "batch": 9,
+      "sourceSha256": "9e0d84c0b9ee841616fd69ae3f5a49097b805c5ddbe466b0155d213bb95cc500",
+      "translationSha256": "a4d1685e1efc9cccf86b22532e587016fe9f880910b3a5ee1cd44af20e90bfd6",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+      "batch": 10,
+      "sourceSha256": "bf2501139f0afd8187156370051c0101764676fb351043307220f09de7e63d96",
+      "translationSha256": "a929e5a9dc245fc35d5abbf85353d3ff6f380f182802613677c9c20266dd527b",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+      "batch": 10,
+      "sourceSha256": "96dad78db84d8830aaebfd64cac0bf4d1c8d382e45f1844a797bf650e7c31338",
+      "translationSha256": "a929e5a9dc245fc35d5abbf85353d3ff6f380f182802613677c9c20266dd527b",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+      "batch": 10,
+      "sourceSha256": "c5a85da91776255cafd61fe57c199adf46e1251917b57fa1b1c5d8e95229c5fe",
+      "translationSha256": "b67391e4b59fd5a36162ede351e92e113a3769ed6bef08502318a00bcd6bf427",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+      "batch": 10,
+      "sourceSha256": "a6382b2bdeab04ea630cd2e65656e2a56cb597a9e11185c605fe6f3ffc7a13d1",
+      "translationSha256": "b67391e4b59fd5a36162ede351e92e113a3769ed6bef08502318a00bcd6bf427",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+      "batch": 10,
+      "sourceSha256": "7f603664413d55c8bc9acf02d03a19ae2ec2738a82fb6944efc4bab48bea0a18",
+      "translationSha256": "83312d0915a20561b23ad6f70bb2cf5864d63f0929ed264f649544c69f2d85a3",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle",
+      "batch": 10,
+      "sourceSha256": "cdbb7fa30ae44aa6453fdb1b2de67d95dd951204f7d10fcce4edc423701f40f1",
+      "translationSha256": "83312d0915a20561b23ad6f70bb2cf5864d63f0929ed264f649544c69f2d85a3",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu",
+      "batch": 10,
+      "sourceSha256": "46f31934f7a4b2410a882fff50d2bd8bd2830d99e2356183119c17bc55c99f70",
+      "translationSha256": "b3a1eac55fd47067a3b4700b06e64392d2ec793643621a3ad64bd1d756c8dcff",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle",
+      "batch": 10,
+      "sourceSha256": "c1b138a437b75b3d532934c531815b7e1f0a4dc107c810af2c723dd6b680575e",
+      "translationSha256": "b3a1eac55fd47067a3b4700b06e64392d2ec793643621a3ad64bd1d756c8dcff",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+      "batch": 10,
+      "sourceSha256": "68693d02ab4fbb2331b8cc39915322e48e61f06d4d1b31e7d19913202857bc8a",
+      "translationSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DesktopTitle",
+      "batch": 10,
+      "sourceSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "translationSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreview",
+      "batch": 10,
+      "sourceSha256": "fed2d82b6738c9c5e6ad021db6941f959c5e78caa00bc805df9f771957c1f81b",
+      "translationSha256": "61b0046a68f1b9ed9a14956fde2ecdf672eface917271349006eccccdb50df7f",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle",
+      "batch": 10,
+      "sourceSha256": "d9c8efe6ff9e1e5621863d21db10d6645e19ec5719028cab78ef7671b5633ef9",
+      "translationSha256": "61b0046a68f1b9ed9a14956fde2ecdf672eface917271349006eccccdb50df7f",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+      "batch": 10,
+      "sourceSha256": "87ca5ee7de4c7947b0162a295bb7d0d6c909d13472e38ba6bd5236ca9cfc116d",
+      "translationSha256": "cac2d7cc5a07fed62c9d7a5bcec49c03928c0db013fa81e982e011e126c19067",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle",
+      "batch": 10,
+      "sourceSha256": "941efb4fd39c1ad0c8496fbff7d56496c89f4a4f543fd220eef3b0f5ec5bf0ce",
+      "translationSha256": "cac2d7cc5a07fed62c9d7a5bcec49c03928c0db013fa81e982e011e126c19067",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "batch": 10,
+      "sourceSha256": "e232d03abcf3be121743dfdcaee54adc482895179c0fdcbde42f177e97f7192d",
+      "translationSha256": "763b58147c0e9b3577fbf058c59c1f8a285ad9cb56955f6e1114692b9c93b57e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "batch": 10,
+      "sourceSha256": "275ffa4ac0448f38dea3e28f404e38d8727b3cde18238559042451a999545d5d",
+      "translationSha256": "763b58147c0e9b3577fbf058c59c1f8a285ad9cb56955f6e1114692b9c93b57e",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "batch": 10,
+      "sourceSha256": "331a4a6f28b83963f2342e3a736a0c8125ba087ced05e64e000e26f393a6697f",
+      "translationSha256": "045046bf603a0ea880f917805836dd340dc1af030da3177d6f7a2894b232b628",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "batch": 10,
+      "sourceSha256": "9eaf277597b73df97c83ae90e3b8ef688f0fd67d7170ce7e24b23d74627aa01f",
+      "translationSha256": "045046bf603a0ea880f917805836dd340dc1af030da3177d6f7a2894b232b628",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+      "batch": 10,
+      "sourceSha256": "2079f071f86b8cafe7e0566e8c2d42cd893720ee4fb8a555d20a2b5c735de42a",
+      "translationSha256": "3344f3dddc56cc5e520a6cfed347a763e775bff5b050a01faa7e58fb0cbd67a1",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle",
+      "batch": 10,
+      "sourceSha256": "595ad9a8aaa03755e38a412f7b873e2e9217c5026b64aef7fd54310fc26bfce2",
+      "translationSha256": "3344f3dddc56cc5e520a6cfed347a763e775bff5b050a01faa7e58fb0cbd67a1",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+      "batch": 10,
+      "sourceSha256": "baacc163cc2ac975a775aab6dc9a659fdac28672a966c23912903c383d18eba1",
+      "translationSha256": "31cdc27d3c6e20164a1ffdc502f522d717460925216531b6defcc47eaad825b4",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle",
+      "batch": 10,
+      "sourceSha256": "02ba1c127c8f9c7ec64444b6e0dfa6ad6d8022ef655aa2dec224945ee2a7c6d0",
+      "translationSha256": "31cdc27d3c6e20164a1ffdc502f522d717460925216531b6defcc47eaad825b4",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "batch": 10,
+      "sourceSha256": "51f60edc63ca67071914d447b5d8d444b770a00a732cb6c4494daee0af6c713a",
+      "translationSha256": "162e348e5c4a957ff73b877872d5b3df77ee507f30489af6f828ecf0708eeaf6",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "batch": 10,
+      "sourceSha256": "f6e8b915627e42f1f28aaeaf0541cc7c5321b3d32f327bbcda1e9d429aa67fe1",
+      "translationSha256": "162e348e5c4a957ff73b877872d5b3df77ee507f30489af6f828ecf0708eeaf6",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Movable",
+      "batch": 10,
+      "sourceSha256": "2b8589fcfcd770884a9bf6cee2495e3a3f6a93c6f366a703454ac750cb0cc79c",
+      "translationSha256": "3ea854fb0d4e44f45b317205af26a7dfd473b39f87c6da46a2e482c3aa4cc0de",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MovableTitle",
+      "batch": 10,
+      "sourceSha256": "2a233986edba0c589621d8786750a1268848c24aab0d1723fcf2c6271956fad8",
+      "translationSha256": "3ea854fb0d4e44f45b317205af26a7dfd473b39f87c6da46a2e482c3aa4cc0de",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption",
+      "batch": 10,
+      "sourceSha256": "7567116a53c573f8f89c25bfc4f95d43510d40915d30e275acdc1b5c1d96b9ed",
+      "translationSha256": "87d2afcdb9f5625e22ecc68b6d89f65277837c378e04f36c194e4841d902c1d0",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle",
+      "batch": 10,
+      "sourceSha256": "b9d73f354c1269b5b0f931960dc35768b0f93a719ed7f35dfc39b23fa6032434",
+      "translationSha256": "87d2afcdb9f5625e22ecc68b6d89f65277837c378e04f36c194e4841d902c1d0",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "4b6d678f89cd36de1a9918afb53bbfa3f7773aa82a4c2eddcefeecee8e122f55",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "4b6d678f89cd36de1a9918afb53bbfa3f7773aa82a4c2eddcefeecee8e122f55",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+      "batch": 10,
+      "sourceSha256": "8a7a132e8d5a70abeefd53ce3f9b03ac22b33cc5c52db4df1f86c7715c632988",
+      "translationSha256": "2e673ef882abd0df9c485d15086398c84f21880b97aa693b6346491ef9139367",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle",
+      "batch": 10,
+      "sourceSha256": "ae22ae112f95368b5fe120ceb3fb1065f12c9fc0b388a3ff86b085cfe2ecdc98",
+      "translationSha256": "2e673ef882abd0df9c485d15086398c84f21880b97aa693b6346491ef9139367",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+      "batch": 10,
+      "sourceSha256": "852d12ee4870f2267e514c49c11779f30d7e45b5fdfd1e0e886a62e5f4a9ce47",
+      "translationSha256": "0f6f1a89aab45cc86121583c65b4cdd67f17a5fcb96aef802a30b461711fe24f",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle",
+      "batch": 10,
+      "sourceSha256": "aa596267318ae7fc4b12834ccc3b337343fba96332e222a7a8e935100198164c",
+      "translationSha256": "0f6f1a89aab45cc86121583c65b4cdd67f17a5fcb96aef802a30b461711fe24f",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+      "batch": 10,
+      "sourceSha256": "385a872760e7ab4fcc48da36a57630f0b22dc7de39c0bcc8ebcf3c4c6b9b68ac",
+      "translationSha256": "39416227b469d955ad57a55e7139c3ed6e7254722002ee122fc21870bdc28683",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle",
+      "batch": 10,
+      "sourceSha256": "46960bfe393bb7f3525fd96650e1901dfda2b8e3b548674a1c78a53e388e0d5b",
+      "translationSha256": "39416227b469d955ad57a55e7139c3ed6e7254722002ee122fc21870bdc28683",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "batch": 10,
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "d2b1843041c29c971c498834832dcec4fe557eded090a04723caf73d3ce26210",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "batch": 10,
+      "sourceSha256": "5598b8b46f6dee4030996bf7c6d956e707ed4525839897af96f3262894215d0f",
+      "translationSha256": "d2b1843041c29c971c498834832dcec4fe557eded090a04723caf73d3ce26210",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+      "batch": 10,
+      "sourceSha256": "5b159fe91e0009d47abf46665ef7829bc6f74a51335d815b1981829cd4f78b14",
+      "translationSha256": "64999915ccc323d8f081eab76a4b504a3d49bf9e53376777a677caa68ac207e2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffectTitle",
+      "batch": 10,
+      "sourceSha256": "3588b1d5361ba2cf4f44c64ce38ffb3577b6a330bdee98dfc022e983e7bb742d",
+      "translationSha256": "64999915ccc323d8f081eab76a4b504a3d49bf9e53376777a677caa68ac207e2",
+      "verdict": "accept",
+      "reason": "German wording conveys the property label and preserves protected syntax in this text review."
+    }
+  ]
+}

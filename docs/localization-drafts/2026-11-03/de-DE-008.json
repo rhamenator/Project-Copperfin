@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_en_gb_revisions/de-DE-first-pass-008-2026-11-03",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "source": "locked"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "source": "Locked"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "source": "mouse-icon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "source": "Mouse-icon"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "source": "OLE drag-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "source": "OLE drag-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "source": "OLE drag-picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "source": "OLE drag-picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "source": "OLE drop-effects"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "source": "OLE drop-effects"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "source": "OLE drop-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "source": "OLE drop-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "source": "OLE drop text-insertion"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "source": "OLE drop text-insertion"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "source": "picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "source": "Picture"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "source": "list-item-id"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "source": "List-item-id"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "source": "partition"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "source": "Partition"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "source": "read-only"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "source": "Read-only"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "source": "record-source-type"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "source": "Record-source-type"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "source": "record source"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "source": "Record-source"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "source": "row-source"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "source": "Row-source"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "source": "row-source-type"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "source": "Row-source-type"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "source": "bound-column"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "source": "Bound-column"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "source": "column-widths"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "source": "Column-widths"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "source": "column-lines"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "source": "Column-lines"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "source": "column-count"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "source": "Column-count"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "source": "style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "source": "Style"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "translation": "Gesperrt"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "translation": "Gesperrt"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "translation": "Maussymbol"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "translation": "Maussymbol"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "translation": "OLE-Ziehmodus"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "translation": "OLE-Ziehmodus"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "translation": "OLE-Ziehbild"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "translation": "OLE-Ziehbild"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "translation": "OLE-Ablegeeffekte"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "translation": "OLE-Ablegeeffekte"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "translation": "OLE-Ablegemodus"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "translation": "OLE-Ablegemodus"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "translation": "OLE-Texteinfügung beim Ablegen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "translation": "OLE-Texteinfügung beim Ablegen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "translation": "Bild"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "translation": "Bild"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "translation": "Listenelement-ID"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "translation": "Listenelement-ID"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "translation": "Partition"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "translation": "Partition"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "translation": "Schreibgeschützt"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "translation": "Schreibgeschützt"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "translation": "Datensatzquellentyp"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "translation": "Datensatzquellentyp"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "translation": "Datensatzquelle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "translation": "Datensatzquelle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "translation": "Zeilenquelle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "translation": "Zeilenquelle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "translation": "Zeilenquellentyp"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "translation": "Zeilenquellentyp"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "translation": "Gebundene Spalte"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "translation": "Gebundene Spalte"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "translation": "Spaltenbreiten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "translation": "Spaltenbreiten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "translation": "Spaltenlinien"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "translation": "Spaltenlinien"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "translation": "Spaltenanzahl"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "translation": "Spaltenanzahl"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "translation": "Stil"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "translation": "Stil"
+    }
+  ]
+}

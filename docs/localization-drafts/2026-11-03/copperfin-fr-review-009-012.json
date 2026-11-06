@@ -1,0 +1,1331 @@
+{
+  "locale": "fr-FR",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-locale-translation-v1/fr-FR-009.json",
+      "/tmp/copperfin-locale-translation-v1/fr-FR-010.json",
+      "/tmp/copperfin-locale-translation-v1/fr-FR-011.json",
+      "/tmp/copperfin-locale-translation-v1/fr-FR-012.json"
+    ],
+    "entryCount": 160
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_pt_revisions",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewedAtUtc": "2026-11-03T07:51:55.868496+00:00",
+  "uncertainty": "Text and CLI call-site review only. No native French speaker sign-off or rendered UI/runtime validation. Sparse retains its VFP identifier pending a domain-verified French term; long labels may clip. Verdicts apply only to exact hashed values.",
+  "counts": {
+    "accept": 146,
+    "revise": 14
+  },
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
+      "batch": 9,
+      "sourceSha256": "ce27de2de9dd0d5faa12b0ae163a40c9a411e5e0f4b7d0b23c2949f038f51100",
+      "translationSha256": "5125d747869d71a8d184932aafe219d66c380c3a20e58febd8f516ae88fb7ec7",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle",
+      "batch": 9,
+      "sourceSha256": "adb88a45814bee08aaac918ace4305333d5acc9f80be049324544ab5e4bf6a36",
+      "translationSha256": "2d78f0728dab7ad81554099f33cdc42c532048a26fd7879b53c474590d061a67",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumn",
+      "batch": 9,
+      "sourceSha256": "454454bdd567bf09ac659a2c1e6dd3b12db1f1418d5d54317cbe517b5eece322",
+      "translationSha256": "8584a2491fe2fc85467f9720971156aab068fe846885960970682be048fe1422",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumnTitle",
+      "batch": 9,
+      "sourceSha256": "702a3da532b910671a5f454697cd1f1c700fd932e8da5b4a9ab880d354230f62",
+      "translationSha256": "47e3a3fff2cc3b5576023ab32253d729090c77e597fa0827c3016f676869558e",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+      "batch": 9,
+      "sourceSha256": "0baeaa6ef801384ff09dbad3b5fe96cab284b83c5d9285ae4c9944f4f1e7eede",
+      "translationSha256": "61506286fbfd8a16577b851c3e62b6feeccad9f3afb9c33c3294e2db6d839900",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValueTitle",
+      "batch": 9,
+      "sourceSha256": "a53eca16c1a1b17e2e0ff06bf5b894874235d1cbc6ca2e1c142f2f4fd9647c24",
+      "translationSha256": "c297d263bc24cd6ca3ab4015f79b88980202a03e985bf78a67bcde0e79c0077b",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "batch": 9,
+      "sourceSha256": "054bd5dbac7b64512629c317a517cd0d7c568ff32be804e1f0c47f7032453c28",
+      "translationSha256": "6235dc7098464ed39a7c6c230962c1c0431b8431fc379316982c2f8d09d947cc",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "bfde0831a997a43609484c06d20a480baa27e4c7f5721e400a4a0dcbbff89fce",
+      "translationSha256": "2f8d10cafe08c34760ea98ddbc2c41ca46b89a19fa1b1dc8d6063eb4be6a3b53",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "batch": 9,
+      "sourceSha256": "e5196af519ac45071921258c9e57337828d7d19c6e7628b64ac5c7a39100c1b9",
+      "translationSha256": "efcaefcc68c9d66b5348e65282aafc741fcc910ede3641b271623adb2f864239",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "6b94ee60c81f30b47f56de68a7c5756810dc3f11e12de785b7d5f86d0622c441",
+      "translationSha256": "65c82fc23143002fb92605ae82d3b7233332f5d0309e7f3b5e96316cdd0c965c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "batch": 9,
+      "sourceSha256": "4de423619f0df3af761a8a5886e421351d1669c8346c52b5e4a65a12b5d74cc1",
+      "translationSha256": "bfef1a3e647e8829eaccbd5e2a257998063dcace3ac9566006e66f88a980bdaa",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "0fedcd8a4c644709a892103f8d7aba80e57810123469e7d5fbd9424ac73772f5",
+      "translationSha256": "40653fa7a8cdb694092f19c7a5c675dc5d6cd00f269faef5ab2ee302b2d04334",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "batch": 9,
+      "sourceSha256": "5c79febe70a68746314c7f1a101f66e59fe13a37ebcff4a8a4dbd82c3556c6e9",
+      "translationSha256": "0f9262b8abd916f595a3943324183e2a2bde636ff83adec298e0afc45bc25184",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "f1d882ade25b3977a8d6fc68848b423a89e23d14235c94e6e9e3987509d50add",
+      "translationSha256": "ac0766d70c5297a60b3e0a9e7fa8195a49cc396ee452530006560a8e7ef5d93f",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "batch": 9,
+      "sourceSha256": "835408f4c3598b0104109c58dcd28411df1b87a013f8ff2bce22a327838605fe",
+      "translationSha256": "20ab532612f6e48f6c0c1e05fa7ebcc4a12dc6160449c299a8b8f59a846c0585",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "cc18d014cba048748078dd91d2bf48dc8679fce1acb4f00bab920e98b018b57b",
+      "translationSha256": "6c6d2717c9c819edd371d90f2627152cea782979eb3208b997e8db7d330b1e46",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "batch": 9,
+      "sourceSha256": "b63c87cd1d1975a0d7a56da083e2f22f7d04c9de725dded42cb5a723726473e8",
+      "translationSha256": "c444eb5bcd9972e5543df51792249418ef696f82dbf7032204035166175896f3",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "e32bb3144d721dc8721edf1e65eff4bba61414f21b9e5a7c129eae13cdc58f1e",
+      "translationSha256": "fa2bb831bf6a689a810cf0b88bac0c32f2724929ee8ce56135ab7820b223c4b4",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "batch": 9,
+      "sourceSha256": "5ecc07c94c4c3b134bfb263f61267bcd9e98a841a407a6fe7a299fd2eeb411b6",
+      "translationSha256": "860a523235428dc389130ce8595dd2989d180388e8148f4ba063cb17efa53bd8",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "41b483a1b287bc5c82255feda67c67a112227142be1b74a594dd2677008ff2dc",
+      "translationSha256": "feef631951adc062f418d36d7bc65878fb1e7ae0af14eb3ab773198ae93fed47",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "batch": 9,
+      "sourceSha256": "f01f293e34b33fe0563e7cd932cfb9c713730a159146fe8519ca2c9524218fb1",
+      "translationSha256": "37a1168d2a71be6a9da6ad22af56b6355b0227e510cc4507d747e10f9d46373a",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "dff3d8e2c66a38c0fd441664660442a58921377834317546d261663ff7bb1a5a",
+      "translationSha256": "283e69e5016372ac6bbae397de6707596edd0e343c1093e9fc7a5b6cc66511b2",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "batch": 9,
+      "sourceSha256": "38665025eb74534dd5be8301135ce33c2f37c5f9a37e4b013a028da6ffd1f290",
+      "translationSha256": "f93a897e7ae8619c27e7e49b13e835debfd4b1bbfb4875af6f7df40fab350be5",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "27a99894a5440c9c73dbb2b519ee119d7dfc9504e83afc7aaffc77e8cf00cc40",
+      "translationSha256": "1763b506e3d062c65c8cec135f2ba34e077f41c9f515fb1ec1460ce038478c5b",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "batch": 9,
+      "sourceSha256": "48a31e8385c4b3e01d1aebd19f1c8b671b1c00b189193f950856d9d4c9e1c774",
+      "translationSha256": "464848c964e91cf31882d903058536191e6ed6644c226bc346cc1202f52f41a9",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "8e5c8f9aefee8e94db020fdadb779945be742374bb3accab0ab3a244dfc82d85",
+      "translationSha256": "e45e1a8cf963ef9a9dcc8f6f69a221afeacf1ef85599ad0ef9362cc16cef087c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "batch": 9,
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "ce4b46302a3e5ab87f090ff1a6f314c558be0586478b382c91ac02390e1a4528",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "batch": 9,
+      "sourceSha256": "d1701cd37ba2b079230b26a3301bb236ae7dc11b36aca0b21568a0b4cb97b766",
+      "translationSha256": "d1aedb1ba5cb9a5aa5cc50a4c4ccfbfd02c6354d4722243fb135d5c9f8d9e940",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "batch": 9,
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "176639f9a8f50d88803923ebd10a45a5a4e0a17fdcb6417d8e69f554135816df",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "39247fc8d9b001be65247c08859d7678db77c6d1e3d645124cbf657dbf97a55a",
+      "translationSha256": "b55df59c2812221ffc8e3625db4a02b85495ae1ee86560ec2a75e299dded4bfe",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "batch": 9,
+      "sourceSha256": "2c295feede12610805a3ca63514f0f730b3e8d0401e71876d78672e3f431183f",
+      "translationSha256": "9dffd112c8a9be901ce5ab613a1451895d0ad72f4052336e2e84e7a0fe0b40c0",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "991b3a7b4f4480c84a4df600c975bfa78409e661873865e85a15fca8c0686e03",
+      "translationSha256": "1785fdc39de6e99c8bd7220c1cbe779abe832c2b2f35e9761d3500bb59d51a63",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "batch": 9,
+      "sourceSha256": "782c06964ce188f0f765f0242dafd9671ca6771f2a9601107f74ba265711cfbc",
+      "translationSha256": "4a1d9ed56bd64c54785a989264b9b41863237c2065725efcd90e1c22f1a36f33",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "5db0ad82f9301b5f0215a2d24f618574da4fb48cd2887cd118ef0903ae455c0b",
+      "translationSha256": "fe6fca2df3e33aff7f4dc8a561854ba97743b9e440608cb05ceb8aad0c90bb06",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "batch": 9,
+      "sourceSha256": "0ba497bcaac024b53bb36829fae9e4bb5999a93edf44cb10d9c3eafa0b84dd53",
+      "translationSha256": "5a797730272c1c5000b47d694e0887ce49b1a6c6897a88d76514b4a1da6dedfe",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "a1935c9fd202318f97f8ff8670382510fe91b8c2c431318cf9b1773c431d12f8",
+      "translationSha256": "58c6554dda49c5715065402d534edef2c1101016e99b02158af6504843da2917",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "batch": 9,
+      "sourceSha256": "5563a9f02cb5508c682d05175cdcc1a871ef1932d731551249998d7058383b55",
+      "translationSha256": "bd20a62f8d7839780e0afec5ecb0a4c5454ecc73cc1c9ec54d880c7566ecc01f",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "41ef944040935aa7de9470ebe42a02902d865033dd6707ca9e83e8655d171581",
+      "translationSha256": "e316b7ede52d93246fa1c5bf6e6e1ffcf19d5a85a06f80355b1e8249a6df85ab",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Closable",
+      "batch": 9,
+      "sourceSha256": "b3d815b8871abe0dd22c84176a988b7add186044dcc093d564bbe0abbafb648b",
+      "translationSha256": "e53841307dc5dd80cdf327d1d5b11f1e77e58300231bd2b2efdcf35eeecdd97d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+      "batch": 9,
+      "sourceSha256": "9e0d84c0b9ee841616fd69ae3f5a49097b805c5ddbe466b0155d213bb95cc500",
+      "translationSha256": "005215f217269d110f69605fbc141d7ab0c78564794bdbb647a5875b2d1dcc38",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+      "batch": 10,
+      "sourceSha256": "bf2501139f0afd8187156370051c0101764676fb351043307220f09de7e63d96",
+      "translationSha256": "3a0cea54ae23c8cc96ee47dd7ddffc7ed1452690c5c4752e7ae1511a9dfe16ed",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+      "batch": 10,
+      "sourceSha256": "96dad78db84d8830aaebfd64cac0bf4d1c8d382e45f1844a797bf650e7c31338",
+      "translationSha256": "6b43e99798ca2c5031a2e61308e3c9686461dbaa9c17ed9e7d4a470b5cce539d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+      "batch": 10,
+      "sourceSha256": "c5a85da91776255cafd61fe57c199adf46e1251917b57fa1b1c5d8e95229c5fe",
+      "translationSha256": "d24483348e8fe0992376d542dfcc6b6b713137bfe26dcae5ea8fb3e8d8fbe5fe",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+      "batch": 10,
+      "sourceSha256": "a6382b2bdeab04ea630cd2e65656e2a56cb597a9e11185c605fe6f3ffc7a13d1",
+      "translationSha256": "1e0eed11c5116c5920f4f2600100332870fba53554bc411d824d0e320a9dcc8a",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+      "batch": 10,
+      "sourceSha256": "7f603664413d55c8bc9acf02d03a19ae2ec2738a82fb6944efc4bab48bea0a18",
+      "translationSha256": "0e3524a86272d121a12dd4c1c702542cb218bce9744c6a9193f6d18f6ec29df7",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle",
+      "batch": 10,
+      "sourceSha256": "cdbb7fa30ae44aa6453fdb1b2de67d95dd951204f7d10fcce4edc423701f40f1",
+      "translationSha256": "27b86c03ca52000a716751eb7697f11f3b99e0bed6f1ef3ac0db9cc7c9b21061",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu",
+      "batch": 10,
+      "sourceSha256": "46f31934f7a4b2410a882fff50d2bd8bd2830d99e2356183119c17bc55c99f70",
+      "translationSha256": "9af7b2947e5b0000647f6623c3b60a32c8f1be623acb60e7eee7964fd7320962",
+      "verdict": "revise",
+      "reason": "AutoVerbMenu refers to the OLE verb menu. Generic «actions» loses the technical OLE meaning.",
+      "proposal": "menu automatique des verbes OLE",
+      "proposalSha256": "eb4d09db1fa208f800057a7bf01d8fa01d35f5e7fc691746deb628e7031fabb8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle",
+      "batch": 10,
+      "sourceSha256": "c1b138a437b75b3d532934c531815b7e1f0a4dc107c810af2c723dd6b680575e",
+      "translationSha256": "ed4a15e302550349c41b0b097fee8488d41bf78b5d95a2e72a09b066bef0139b",
+      "verdict": "revise",
+      "reason": "AutoVerbMenu refers to the OLE verb menu. Generic «actions» loses the technical OLE meaning.",
+      "proposal": "Menu automatique des verbes OLE",
+      "proposalSha256": "18aa11a350d46544d1c75d4b4f2719b184aaf85a3a39e4267a2de6d47efc2997"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+      "batch": 10,
+      "sourceSha256": "68693d02ab4fbb2331b8cc39915322e48e61f06d4d1b31e7d19913202857bc8a",
+      "translationSha256": "210760fba8185013b53530a17160a0cb03788b5c9e1c1426154eae50b6b562b4",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DesktopTitle",
+      "batch": 10,
+      "sourceSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "translationSha256": "d67769ec203c973b5b4535dab5412be3b58e38789b7ce7106c0a9e623b481a62",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreview",
+      "batch": 10,
+      "sourceSha256": "fed2d82b6738c9c5e6ad021db6941f959c5e78caa00bc805df9f771957c1f81b",
+      "translationSha256": "a1ccdaa90ec03def278490a775424b88437f65f3d6181c12426cd3007d57571a",
+      "verdict": "revise",
+      "reason": "KeyPreview routes key events to the form before the active control; «aperçu» suggests a visual preview.",
+      "proposal": "traitement prioritaire des touches",
+      "proposalSha256": "e26ebf4434fed1468bab52a1a2e14d97317f072ecab7c0e9fd8acae435d21bee"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle",
+      "batch": 10,
+      "sourceSha256": "d9c8efe6ff9e1e5621863d21db10d6645e19ec5719028cab78ef7671b5633ef9",
+      "translationSha256": "c5a047833d89b493e30043a115ad78011ea26e98166b14e9661e9dd1c8071abc",
+      "verdict": "revise",
+      "reason": "KeyPreview routes key events to the form before the active control; «aperçu» suggests a visual preview.",
+      "proposal": "Traitement prioritaire des touches",
+      "proposalSha256": "04cba4a55d8d8cbd21f723264c4b8eb567330f8faf8eff5e5b23af5b55f5ab24"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+      "batch": 10,
+      "sourceSha256": "87ca5ee7de4c7947b0162a295bb7d0d6c909d13472e38ba6bd5236ca9cfc116d",
+      "translationSha256": "5617ebb61bbda7b5b7697c0ef4eeee1c3d305ece4142ba579f8e7ef8fa6a6f5b",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle",
+      "batch": 10,
+      "sourceSha256": "941efb4fd39c1ad0c8496fbff7d56496c89f4a4f543fd220eef3b0f5ec5bf0ce",
+      "translationSha256": "8460c9180628141e76cd2276a47d1e026d81f855acf3a4ebaf15cd2e932aad33",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "batch": 10,
+      "sourceSha256": "e232d03abcf3be121743dfdcaee54adc482895179c0fdcbde42f177e97f7192d",
+      "translationSha256": "965df0210d5c6bdf04386926770cc9ca4aeba8df295cd0c3240151b8e7f05cdb",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "batch": 10,
+      "sourceSha256": "275ffa4ac0448f38dea3e28f404e38d8727b3cde18238559042451a999545d5d",
+      "translationSha256": "ea7e41c800cba704336c8183bb652be6060f17cebe1f3991b98bc13fd5b5c7e4",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "batch": 10,
+      "sourceSha256": "331a4a6f28b83963f2342e3a736a0c8125ba087ced05e64e000e26f393a6697f",
+      "translationSha256": "b49dbc007400f11a5db34988fc01393dac0b5bfedf0783e9a96eee2eb050a472",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "batch": 10,
+      "sourceSha256": "9eaf277597b73df97c83ae90e3b8ef688f0fd67d7170ce7e24b23d74627aa01f",
+      "translationSha256": "db28b3bec45c1843e3a5becc43f9ca1fc3670b6c7f79b9fdc98b02b5fb9028e0",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+      "batch": 10,
+      "sourceSha256": "2079f071f86b8cafe7e0566e8c2d42cd893720ee4fb8a555d20a2b5c735de42a",
+      "translationSha256": "0496d7656dcc812a3461d5fa9478972c300a0ab7a269b005da4c6b2c614537fb",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle",
+      "batch": 10,
+      "sourceSha256": "595ad9a8aaa03755e38a412f7b873e2e9217c5026b64aef7fd54310fc26bfce2",
+      "translationSha256": "b1b5e0a30ce833ee66575fc5a045daa90f7d00b24746fae2560f0437fc5bcdab",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+      "batch": 10,
+      "sourceSha256": "baacc163cc2ac975a775aab6dc9a659fdac28672a966c23912903c383d18eba1",
+      "translationSha256": "08f5a815d0e6eae481b24db1fa30273da030aac05f6ab844d8a73b1431c6b7cf",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle",
+      "batch": 10,
+      "sourceSha256": "02ba1c127c8f9c7ec64444b6e0dfa6ad6d8022ef655aa2dec224945ee2a7c6d0",
+      "translationSha256": "b85852ee799a31dbd8bdb80155e26bfa19d630879289a289bcd7a853f18ae68f",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "batch": 10,
+      "sourceSha256": "51f60edc63ca67071914d447b5d8d444b770a00a732cb6c4494daee0af6c713a",
+      "translationSha256": "73c4f7e6fed2b26b2421f3497fafb8996ec41ee5c23c57ba7b5bc3cd90f6339e",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "batch": 10,
+      "sourceSha256": "f6e8b915627e42f1f28aaeaf0541cc7c5321b3d32f327bbcda1e9d429aa67fe1",
+      "translationSha256": "0eb951655dbdf1b98ad402fda7aa0a1f895190d31a445e83f0d3162c445a0a86",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Movable",
+      "batch": 10,
+      "sourceSha256": "2b8589fcfcd770884a9bf6cee2495e3a3f6a93c6f366a703454ac750cb0cc79c",
+      "translationSha256": "6acc8bf4f48d64c64c80fde0fd5ffdb13ce28ab3c382ca0ae6624888f6c8719c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MovableTitle",
+      "batch": 10,
+      "sourceSha256": "2a233986edba0c589621d8786750a1268848c24aab0d1723fcf2c6271956fad8",
+      "translationSha256": "251f76fea6bb7a52a627c6e831f3a6e2bdf6bcafb7f4f2dd07d3aea84da5a214",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption",
+      "batch": 10,
+      "sourceSha256": "7567116a53c573f8f89c25bfc4f95d43510d40915d30e275acdc1b5c1d96b9ed",
+      "translationSha256": "7822391785a3be11f97ea18c24b79c3c2107e6d9857018f91c1ec37febd2589d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle",
+      "batch": 10,
+      "sourceSha256": "b9d73f354c1269b5b0f931960dc35768b0f93a719ed7f35dfc39b23fa6032434",
+      "translationSha256": "41ac860d12ad73e47ae10676381b3d35911f0940b990f809b7c798cdd3771b1c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "90e2052f37b8de89c58a6ce4b5784d7a9a52b975923e740c8b9a2085118c226a",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "9ece4f4962b49a7e8ac04980f05fc5cc604a2c5906b29246985ea1e39dce337e",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+      "batch": 10,
+      "sourceSha256": "8a7a132e8d5a70abeefd53ce3f9b03ac22b33cc5c52db4df1f86c7715c632988",
+      "translationSha256": "699b21ef42611d3580822e17e2776053d04cf9e5dfcc5d6afcfd0e9654bbae7d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle",
+      "batch": 10,
+      "sourceSha256": "ae22ae112f95368b5fe120ceb3fb1065f12c9fc0b388a3ff86b085cfe2ecdc98",
+      "translationSha256": "f60433854ff8bd31da82df78a79ad268779850ac95def788081756b8f41d82f8",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+      "batch": 10,
+      "sourceSha256": "852d12ee4870f2267e514c49c11779f30d7e45b5fdfd1e0e886a62e5f4a9ce47",
+      "translationSha256": "89f9eaac4e9593881a071544a7c185c94f62df2523cdc54bf86b1a23ae42c6af",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle",
+      "batch": 10,
+      "sourceSha256": "aa596267318ae7fc4b12834ccc3b337343fba96332e222a7a8e935100198164c",
+      "translationSha256": "4cd9f83eaeed0ca4f021b64c6c70de97efb36949236f012a4ab0ee535fd2ecc4",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+      "batch": 10,
+      "sourceSha256": "385a872760e7ab4fcc48da36a57630f0b22dc7de39c0bcc8ebcf3c4c6b9b68ac",
+      "translationSha256": "decabb0377d12dfe456770c5943503f8c178eb8b30cfbf2e9f691191e8d9c0b3",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle",
+      "batch": 10,
+      "sourceSha256": "46960bfe393bb7f3525fd96650e1901dfda2b8e3b548674a1c78a53e388e0d5b",
+      "translationSha256": "b133cfc2bc23b6d330ef8eeb526d00c1ae33cbe9a83360782f7420314e52879a",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "batch": 10,
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "8bb7e25a1d55e6d50668952b310cf64614d193fbb6a0323d84debff8869ed4d8",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "batch": 10,
+      "sourceSha256": "5598b8b46f6dee4030996bf7c6d956e707ed4525839897af96f3262894215d0f",
+      "translationSha256": "f11233be51058f19fbf3ff4e9d4c2915a4c4624812fa22a8dc26a50ee9a6c8b5",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+      "batch": 10,
+      "sourceSha256": "5b159fe91e0009d47abf46665ef7829bc6f74a51335d815b1981829cd4f78b14",
+      "translationSha256": "63e2284f5ea49fb561adbe1637388375ee135485d270ec88714f72c518494828",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffectTitle",
+      "batch": 10,
+      "sourceSha256": "3588b1d5361ba2cf4f44c64ce38ffb3577b6a330bdee98dfc022e983e7bb742d",
+      "translationSha256": "06ae2c1ca267e1cf434e8f26105c522f9fdd4fb4b75fc7a2c0ec03000e846db6",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBars",
+      "batch": 11,
+      "sourceSha256": "9dda07aa660121e91f394cf85a1f6018a8de3868bc7ac9e3b6c57eae4f4602cd",
+      "translationSha256": "7899330077f750221b09b479d018f046dd32dfbc6ca9e7f3f4f9600dedc0877c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBarsTitle",
+      "batch": 11,
+      "sourceSha256": "70bef0cb1f91d7a91b2f9e80853b19ee93d3123da1bdb8063b1883708af7cd93",
+      "translationSha256": "fb82f0eb95e05cd4ec4476bcf73e9022f80f988e592ae2326361f65ac8b3395d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+      "batch": 11,
+      "sourceSha256": "a8ee23732a04abaa28ed119773cb8e624010d3fe33f2de02e45e090f5235a517",
+      "translationSha256": "2013e29e8baa2199ff8520e19d7fe5047277c862bab97c1fcf3d51eeb7b438eb",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowStateTitle",
+      "batch": 11,
+      "sourceSha256": "058de4e9bab5748fc60c4c95e4ca8cccf40191a558cefea72c9a30d7a7bb95ee",
+      "translationSha256": "03d4e1ddb93ca36571d304cf8f307cc8b5616c8d01dae424a3f70d94f64fd664",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindow",
+      "batch": 11,
+      "sourceSha256": "4ee0c5cae7662b168ec5859a29dc9e431960690640f9417fa760c224321e0848",
+      "translationSha256": "e5d03f9038ef5908a3f5e00fb3de715e9d56b113fbd1d6b759293044b66c5122",
+      "verdict": "revise",
+      "reason": "The --show-window property takes a numeric display mode; «afficher la fenêtre» reads as an action.",
+      "proposal": "mode d’affichage de la fenêtre",
+      "proposalSha256": "a0a361a25f7d8254e1c5d0d562afb8c556761f4f05e967f8ac2f06f7fca29af9"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindowTitle",
+      "batch": 11,
+      "sourceSha256": "e21a9a6993c71d87eacddb971e234a9dc44072ec1c05ba130f0f392c0ace679d",
+      "translationSha256": "5dca69ce1905cadfb3fd4481db31c9348f578dadff07ff3b25c0f1e7ebbdf076",
+      "verdict": "revise",
+      "reason": "The --show-window property takes a numeric display mode; «afficher la fenêtre» reads as an action.",
+      "proposal": "Mode d’affichage de la fenêtre",
+      "proposalSha256": "a47450ae3a90b32e4e92071c38c2622002475c043b81f0d868f89eeb0d999035"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBar",
+      "batch": 11,
+      "sourceSha256": "29a74ca8939d32319ac698a4c1ca814e0e12985f13319bcfe69ed1effb0d2195",
+      "translationSha256": "714e50a5c063bedddd855dd664bdebd38db0b8dd4ec9d00d1f961ab3ebcfc249",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBarTitle",
+      "batch": 11,
+      "sourceSha256": "de4297574458572ab9687908c7e969cda35dd126088cd929000566e0b118c3e6",
+      "translationSha256": "1dec8731ec4133b09d74bed1a27ec25ddb3187eb456073a0c6bc8b1045e1dc2d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointer",
+      "batch": 11,
+      "sourceSha256": "a40f00aab9bbce3309b3c77f451820b735029d9777073546a50d5dbedf876595",
+      "translationSha256": "53b8d7895fbb2e2edf1a7b0bf34c49af723b010f963ea56c4c98cb42b7281533",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointerTitle",
+      "batch": 11,
+      "sourceSha256": "7ca7eac922cb390844243fb541fe1db3045fa8cea8e744210e8dbea69c7ed447",
+      "translationSha256": "6dd1d65753cc90bc1bb907a8961027a723bd298b61027c9c2b96c8c314e0ba1b",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMargin",
+      "batch": 11,
+      "sourceSha256": "7192e6e5c5ee8df4698d1c7d321c9c4bee99ddb089607cd312a16068b7210b68",
+      "translationSha256": "6e3f8959c2a5c4b94fb7debeba2ae12cb9ad4e136c148d03979cd5ee31ac1e77",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMarginTitle",
+      "batch": 11,
+      "sourceSha256": "599ae36435a7aef79613bc2b49df8859d3327f3cd5935f84fc8da43fe0d78467",
+      "translationSha256": "8eb7f8b97ba96ecd1e8a71e749fd76ffd4fd8eb451289b5541e85cc6d6b310a0",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePosition",
+      "batch": 11,
+      "sourceSha256": "98609cf77dff2225941c4954469259983eea2791e6b90dcef7e51c81bd64a90f",
+      "translationSha256": "8fe0de59d6e7990ef844cd85ca053010d8922e3e0a05fa7ea1acf37c585d35fb",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePositionTitle",
+      "batch": 11,
+      "sourceSha256": "1fb4f389dbd852c691c710271d3ae18b8ec8a278f8d244453896d0288a212beb",
+      "translationSha256": "a996d26774701f75da5a3440cd50111c313b1931c4f90745571967a702932624",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacing",
+      "batch": 11,
+      "sourceSha256": "11420290f455f7ca6da281293529a2c0b7a286491104d0ad3295e79d39b90846",
+      "translationSha256": "a307d4b387b2a6dd3c0f8451ac48bf73bc3a604837ff10830862834ed8014f39",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacingTitle",
+      "batch": 11,
+      "sourceSha256": "42b71128c004de4cb958bfd4ec3ec20c7e44a3377f6240abaebedec3c77cad90",
+      "translationSha256": "b77228f0b6f423716ace884edc7db62ee218eacfbefd2b422e2a6cb1053749c7",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplay",
+      "batch": 11,
+      "sourceSha256": "115ea893c579f7278791868c151b0cc31addc30bb1f59c5e6249a33873253b88",
+      "translationSha256": "3367e9686c70e026be5e87bc7a8731c97963199a10021335d5431ac2b460aee5",
+      "verdict": "revise",
+      "reason": "The source names how picture selection is displayed; «l’image sélectionnée» changes the referent to a selected image.",
+      "proposal": "affichage de la sélection d’image",
+      "proposalSha256": "cebcd4841c1ec004e8fe18454ea4cd6f0ad3a2984b6856ddf5052472b70929be"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle",
+      "batch": 11,
+      "sourceSha256": "a1919037861df6ef1741a6db111abda0e13860daea3b3a0501377a82647ad1bb",
+      "translationSha256": "5e5e81900e72d0ccc48bca9ab44249a2c5c4ccfeab66b990d3be629ec73a2085",
+      "verdict": "revise",
+      "reason": "The source names how picture selection is displayed; «l’image sélectionnée» changes the referent to a selected image.",
+      "proposal": "Affichage de la sélection d’image",
+      "proposalSha256": "2f7302481849e4d9b432af08ee658d51728ef8da6134d84199abfe28236088fc"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask",
+      "batch": 11,
+      "sourceSha256": "6f58b47998496f9d1ed24b9fa8c9192bfe23386add2346312bd1aa94712b139e",
+      "translationSha256": "41140e13e127696c9fdba0bd6675e8ec5247d9ab66936b8fcbe0c049c948d4e3",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle",
+      "batch": 11,
+      "sourceSha256": "40f670a250d166555e4c537b4b6df74936724e362267af58af241473aa25a64a",
+      "translationSha256": "d35f28d865ccb6b8ba5fbde645d322de52e01eb36491a5374d0d298edb355b17",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight",
+      "batch": 11,
+      "sourceSha256": "26d10b6eec6e252ad2cfdbd7bc4ced1d408afeb0535a84dc0970825d8ecb9da9",
+      "translationSha256": "0bc231e785d8550cb9da10f36f5160c73e1654d83d31ad35603e2102be41bfd5",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeightTitle",
+      "batch": 11,
+      "sourceSha256": "e0cda22217c83ed0afe05c9fa9ed902905ed8cb09d2415cba6f0f1fa446bbd60",
+      "translationSha256": "7b00d6559b77c41f3876308570c2ac7b93cbc4dd3d329761050e7317eaaf5223",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment",
+      "batch": 11,
+      "sourceSha256": "1eb2a51156d6e016fe35dbad9b119a40a1c645a24c85e9c342d5794e5945c1e3",
+      "translationSha256": "437832c7f755e79daa7e3707abbee368c093f3780998ae32b1d0816e87baf62d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignmentTitle",
+      "batch": 11,
+      "sourceSha256": "3473046877c0f09d8ff6f961e37fc54005dc6997f8fdda7d7ef56eef63a2fd85",
+      "translationSha256": "081d83c2d0891a0731862a186c4cf917c7e3746fe9e2a09ac18b05930ca57a24",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl",
+      "batch": 11,
+      "sourceSha256": "239574689d99e9d861e8af9c31513d5ed6869c004afc6a54d358bd3e9e6ca851",
+      "translationSha256": "c7d491c424f7dcf4b0a35eebcff90ca8e9b56a38556f697bfb74db032bff273d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle",
+      "batch": 11,
+      "sourceSha256": "c8f2c673af00aa43301cdf5f02c0c95f10083dece6fc01cab7c25b41011cb94f",
+      "translationSha256": "2e19bc15ffc25e9ba3ad002ca78fe1ede2bad9453676867c265628e92286c86c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontName",
+      "batch": 11,
+      "sourceSha256": "2eb5419b7acc68a603f997ed172f5c80e91723038d290de4a6aa467974626696",
+      "translationSha256": "daf9d6ccc02495f48dbd0c4334f0faebdace2818d373c4556f4152c34969ab92",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle",
+      "batch": 11,
+      "sourceSha256": "9cc978f66a5e1c7f5a0d404087f79923feab34c42a4eec244aa10f3fa163221b",
+      "translationSha256": "10a7b83601b5621451be60af72ca224bcb815b037abfc089c43d6cdde21652a3",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
+      "batch": 11,
+      "sourceSha256": "267375976644ada809c9f29ff32fa5dc9438ef8eeb0d1873f93ff8163f68ecf2",
+      "translationSha256": "03c8c517b44b9c60ebed1eef1bbd787ec009745acf859bba5d5e10572c8bcbfd",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
+      "batch": 11,
+      "sourceSha256": "e4882984cb9205050697e1bd188024772b95abd42cfaa39771864d8759f1348f",
+      "translationSha256": "42f77fca233e32b398dcfb3f51912f68d168503dfe88dae4a493e3480feebdda",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold",
+      "batch": 11,
+      "sourceSha256": "144ddcd63948ef47aaafc34d81ea28876d711142efba9f8d02cb08b1164b376b",
+      "translationSha256": "7a527fdd1ffe7319d38549a4fee2506302afbfd1fa69a0dc2986c9aa91a871fc",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle",
+      "batch": 11,
+      "sourceSha256": "3ef55e67dc54885d7819efc52075802d23d41e6e614bc3d4a2c6da95837b9096",
+      "translationSha256": "70de350b1883b1f67af79b18e17608e6ee46bc38163b0305c9922b9729931539",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic",
+      "batch": 11,
+      "sourceSha256": "5e6c6387beca686b110e2d8c2539f2362e8475184830f42aec1f529e0d9471ed",
+      "translationSha256": "0d1d8dc6bac6884bac53ee6391c062ed7758d3fbfe37c24a9aafa1d118a388fd",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle",
+      "batch": 11,
+      "sourceSha256": "9706c06f5b2bd7c00ef841a6de3f3c08939b1514edc6b588f32d4bd8aad1d0b7",
+      "translationSha256": "9be1626c7c8dd6e746fe9c7c1ab4653fd3cbd34bfe8a129d28c1ad266965da45",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline",
+      "batch": 11,
+      "sourceSha256": "4b9b5830ebaeb20173916bc27ac62b077626f09cb04cb5e9c3e8c288b691fc11",
+      "translationSha256": "35408d9a3c7ce73a46e36c5b558e6a8cb2e023a34376c12af59a40139b447ba2",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle",
+      "batch": 11,
+      "sourceSha256": "e3a8e12efcf97680274877206d249b37e49b6e102367a875f46b5de0bac1624f",
+      "translationSha256": "a37b724d504db2f45be8d0b871b86c1121bf85cdb184c846a4006267cad24343",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru",
+      "batch": 11,
+      "sourceSha256": "1efc2ff5e3d98653541ab701889ed72c44ec661fd24b215c4ad20159ca65287b",
+      "translationSha256": "5a018d7d9e925c838251b4324aefff5b912af3c7f633df75acd44a7a5f10dba9",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle",
+      "batch": 11,
+      "sourceSha256": "e164abde9bb4ed371a89223c8760ea4557ab86f4bfdde25514bb8c31e1c34c85",
+      "translationSha256": "53b40d8bb4ca96ade1930742dd5f01da4e7376746f05b05189233d2c08331025",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline",
+      "batch": 11,
+      "sourceSha256": "3bdccb833f8773d8aa7b817fac5ca5effa7eec7be54c6bef72724626a561611b",
+      "translationSha256": "ec2d6f260fb0de569e7994d8bb214b27b72a424cdd9543c5d901a0e59675dc17",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle",
+      "batch": 11,
+      "sourceSha256": "5c4fe0ecb29a43ab8236c2b4af580183da8aa011a3b7fb3d1517d40e252f48f5",
+      "translationSha256": "6fbf59e8a478914cb3d9ec11257b6b2b1b336f43e0dfb7347fe8b6f7f72089e7",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow",
+      "batch": 12,
+      "sourceSha256": "02a354b91c72c38f561b93a3d8e091bbca63806d4e5569eeeadaaaa0199d7dd9",
+      "translationSha256": "54c2fc70198fa448c1998d650997bd83ee823a8ae416b5b0dbba419c4f26f5f3",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadowTitle",
+      "batch": 12,
+      "sourceSha256": "bffd801c74a629c3609d10c2de5a3c43175be6a53892537d5d6df8ffb753d547",
+      "translationSha256": "eaa5dc039ff28f042150fed996af71bbcd7e7f6428be59c717ed26bc0d22f476",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontName",
+      "batch": 12,
+      "sourceSha256": "553f512bd55f6c9cc2c3638edf37a71181a1a3c2966a0db6555fb5fcb964121d",
+      "translationSha256": "cbae6f9e60ecd321f699179984a4fe96d8b8fe980ba4a274445ec524f6bb3711",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontNameTitle",
+      "batch": 12,
+      "sourceSha256": "1e05e75682dcd1cc768d4887e4012ee0d3d99508e595c23f8557c482b9cefcb8",
+      "translationSha256": "ef53acf06078626b50b43b6455f240dc0d91e89cd9b7b2fded54bb36c8338015",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSize",
+      "batch": 12,
+      "sourceSha256": "ed492b22543d1a8f008c7d408db2dd0729d276659a4e89018115904d36f8ef08",
+      "translationSha256": "48b1b006be52c8b88755be7a22198853352225af70635f4e07ac9c4fec47e231",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSizeTitle",
+      "batch": 12,
+      "sourceSha256": "f725924f4289c4e3f9c75d483866dd05a62c7135075d8121ebcf7709e190c194",
+      "translationSha256": "f19e80a713c4e5007590c2131b860f082f11d42fa6be16e0ad38056a0ed53507",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBold",
+      "batch": 12,
+      "sourceSha256": "06707103933ed7251a1d722075524ea9dd147b60c9bb04e00ab80b10ac70e4f3",
+      "translationSha256": "a796244dd1b296a4dbff73ebf51e204bb5f39d92e6df9f3f482a5107bfab947c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBoldTitle",
+      "batch": 12,
+      "sourceSha256": "08981db2072d0ed5b48e573404cbcd41d21aa44fba1a1b2eb7549db839533fb2",
+      "translationSha256": "593bc776efd07033ad094390b73c7073b2752ae1d6ef4e8b392b469e53360e17",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalic",
+      "batch": 12,
+      "sourceSha256": "71ec72c4c1ad9d32c21dfefb45c87cdee759e3c7285462b0920782799679c925",
+      "translationSha256": "8cc5caaf48c2485789662f6f68a0ef6236eed1ab1ef8a753d6663f415537ddff",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalicTitle",
+      "batch": 12,
+      "sourceSha256": "a7c1cc3b344e7fe77b434984aaad7aaa83764e909f82b6f68021b196ed3a74b8",
+      "translationSha256": "8d45a1212fef86143036a4ed1a9b98a2f26e100a3bd19fbc708c5426a4bf8bb4",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderline",
+      "batch": 12,
+      "sourceSha256": "bd980e2e392d07475a41cca971b5bf8485f1d0b1169bad51a6032b2700372a92",
+      "translationSha256": "8bab754ec6d4abba58c37c94b2f6cc17dd0dfd622b27de9c2a42414de6ab2645",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderlineTitle",
+      "batch": 12,
+      "sourceSha256": "b9cb9b35f2859cf498963003bb877acea3efbda925f1d4a477ff594a240f4ff3",
+      "translationSha256": "92bae48c18d624984d3ea5157c5e6c31e3a67102a1d48adad2972ac052ff3155",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethru",
+      "batch": 12,
+      "sourceSha256": "976f352fb17fb1aeadf4bd2812403fb14d479adc728090e8fef6580b92efa190",
+      "translationSha256": "015c5610f56daf99f89aec2c8e13aa850cc2bb0bbf37657cf57149b2fe8323bd",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethruTitle",
+      "batch": 12,
+      "sourceSha256": "331191d650240771341487be92402745406f537db3935ab8f28c2732a28e4605",
+      "translationSha256": "dfabb327a5ab61d200af1682de5574cea02b0c420f0711ad4bec5be8f4a748ba",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutline",
+      "batch": 12,
+      "sourceSha256": "a96c1beac1cc6bbae3d24fa876decb6c51e5d61b71fb9298e48d137fcf660485",
+      "translationSha256": "4a48699fc1872c78320f23cc75a52608ba7254b1178ff6a509e2d36ed94273ba",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutlineTitle",
+      "batch": 12,
+      "sourceSha256": "4384a43968e497ac323e1c2fa36cd96b910744c3801818543e9a7ac19131dc86",
+      "translationSha256": "8738fa77fa9ec3a906567c205343ef01ccb73ed57b26f6c355f6992171516054",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadow",
+      "batch": 12,
+      "sourceSha256": "302f75a4e52ee869f688c9b716081b6045832a0cd4ab64c6371837c62bf43c8d",
+      "translationSha256": "c48d1b6e02aa653dfd90a41dfc2e367bf4bef224cce99b98ec259a1ad53d5213",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadowTitle",
+      "batch": 12,
+      "sourceSha256": "b7d5a6ebbb08265d122770426ea4691b26141b2629b2c29494240f52de492767",
+      "translationSha256": "63b3eb45134b30874358cae17f89aa63400f37a90984386ea2b7cce57fa22b53",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidth",
+      "batch": 12,
+      "sourceSha256": "6fbb3710b489a450e4553eb83a73e3b0296c1f9242b1216d918054d13e8173ba",
+      "translationSha256": "57638496c7adc73dbaf14e6276f0becade4b6368cbb5835f4dc7ed8c80ccaf65",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidthTitle",
+      "batch": 12,
+      "sourceSha256": "5489acac513039f02e106ed712f164529c26e23954e91c3101ed3925df0dead1",
+      "translationSha256": "0ab2363754c03ca87a3371f3336bd138c9365af6482f5f4afb44b3698b816eaf",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeft",
+      "batch": 12,
+      "sourceSha256": "42e15e79ea29151dfba7343ff3f88701a911c302f5f6b868272eba188601c2b7",
+      "translationSha256": "c2de45515153ed0e07b7dc09acf8693319eb6510cad28828064ed21ed03351e8",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeftTitle",
+      "batch": 12,
+      "sourceSha256": "e3f1d53c7a4b59b93cd500c1ebd5c3182e53f05e905dbd6188c038f950394a2a",
+      "translationSha256": "3a46ca9192f7c7ed000f72f93a1719aa337a18064143dfaf92ed72dc5b036f8d",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTop",
+      "batch": 12,
+      "sourceSha256": "26811a8b955dbcc670a8280e9643cdb46726a46ef00f441695c15b835be51e0a",
+      "translationSha256": "a399b88034263d94087bfece2969dbb25f21190061f325a2c68cc7dbdcd28c06",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTopTitle",
+      "batch": 12,
+      "sourceSha256": "d7e8f0e0499bb27c98964a73dfaa8e4be7543d6e42b8ecc21fba22132e9d881d",
+      "translationSha256": "8f309aec29ae20ad0a7bfcb10bf0766edfcdf0710f7aa378979b84e392132d5a",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenter",
+      "batch": 12,
+      "sourceSha256": "57afb0caad2390523d75eed7d10ae1df825a2c341a54e1740975ca809c7c7898",
+      "translationSha256": "371dd764e84d022a2bc628908441314ebf690bc6ebd6cf63118248638e04005b",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenterTitle",
+      "batch": 12,
+      "sourceSha256": "8d105c0c8e9e4a28d3a98776958f684817e37fab6d5cd0a1c819ea6c9519a929",
+      "translationSha256": "2ebfb8e625bb3df8b2464a7b0c40be5d25c119a651565f419b119fcb41a895b8",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSize",
+      "batch": 12,
+      "sourceSha256": "b1a79dd81ccfa017f91fb7fc998d6acd70928c9d827acb513ee816d8b54f0e9a",
+      "translationSha256": "4dc03965c3df06f95900df7f29e2447ab0452ce68ee300eda0000b7640affc8a",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSizeTitle",
+      "batch": 12,
+      "sourceSha256": "78a64afa9685570a31c5a4fd279e530291a064b99b64f5f8039cef4c1171f2f5",
+      "translationSha256": "5092521c824ba09ec73710c4aa348a50e023c71b7c77c78838b2042eb518553c",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoRelease",
+      "batch": 12,
+      "sourceSha256": "eefcb30caaab6ffd4bdbe63b38e16f81ad6e1e498256791556da39b9d0ef5218",
+      "translationSha256": "c9b2b1b6d3afa483c01da77375fb773638a29462e8625c8d2666e3631e771fa9",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoReleaseTitle",
+      "batch": 12,
+      "sourceSha256": "debc98cc993e0f410e9c700642ba2439712685c4e244da6c1bc408d488ff0c96",
+      "translationSha256": "a23e66363cb6e237b9b9aac0d9d760d4343d0702cedfb1a03211b84d8aa64242",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScroll",
+      "batch": 12,
+      "sourceSha256": "74c9a9a56d6b9fabf1a77511d9599a3a95503b81d2ef98fdd9a4a77f5dcbb510",
+      "translationSha256": "b6130f72a2d27cb34d1192689757db27baa43b41d0d3b2faf87178926ec6b4a7",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScrollTitle",
+      "batch": 12,
+      "sourceSha256": "01777cfb0af8c60733723dea9e6758a75ed337f942853d3a03ab3fdddef350ff",
+      "translationSha256": "d9d05aea6f98731fc7a33a011a969b526e1403451ee1e7512d4a38ff3b479ea9",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Dockable",
+      "batch": 12,
+      "sourceSha256": "3a3f7879d9988f7bae75c58c0f1884f8f09eb2e9c4618d4ec0dc9f79f11c96c1",
+      "translationSha256": "374e59f4ffeb8479c8a767a072c7e114929479aa87ad86e6db96fe2dfd7b24cb",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DockableTitle",
+      "batch": 12,
+      "sourceSha256": "83edc99acad6f09f4b4221147dc3c75f03c63efe6123152b4ab244964db92cbc",
+      "translationSha256": "aa73a849382f5a654121fc0878a697cf9da81a49974b600e7b457f6024662442",
+      "verdict": "accept",
+      "reason": "French label conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControls",
+      "batch": 12,
+      "sourceSha256": "8ccfed593ced1814375382054a8e629d01f494dd6147407b8b91027caa8342f6",
+      "translationSha256": "20b5188e64e5f028149ee33d8929411159964000d6a992e30210f8f7913bb07d",
+      "verdict": "revise",
+      "reason": "ClipControls is a clipping property, not an imperative to crop controls as image content.",
+      "proposal": "limitation de l’affichage des contrôles",
+      "proposalSha256": "ef7170d3a3bbb59ec680dc547442530e86b39c786d4ad2773fa9c2f801e52f89"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControlsTitle",
+      "batch": 12,
+      "sourceSha256": "94744a602c6748080e419da831c18ad1d390677f070ee959fa509963e8d96d96",
+      "translationSha256": "4ba39eb174f0e13fa8fc8b28734c8fdf28a5b6fca0c72610fe80c115943caebb",
+      "verdict": "revise",
+      "reason": "ClipControls is a clipping property, not an imperative to crop controls as image content.",
+      "proposal": "Limitation de l’affichage des contrôles",
+      "proposalSha256": "d725f1101a0231f19b1473676d2742f8d231e357c5ef2a3d6379af8dc237a243"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Sparse",
+      "batch": 12,
+      "sourceSha256": "d7af78c1f4c4a2defc54302095df328cc37c57ae94b7b45fb62a1a437eb3dcc3",
+      "translationSha256": "a4983ece303cca9de577dcbac8fdb041b958ddd9d40526fe3be03d0f1cfce847",
+      "verdict": "revise",
+      "reason": "VFP Sparse is a technical property controlling per-cell control display; «affichage clairsemé» suggests low density. Retain exact identifier pending a verified French domain term.",
+      "proposal": "Sparse",
+      "proposalSha256": "92e5c493cc80a22f902f7a1fdcd999d10f59c86b6cb690e65bcaebb45dea722f"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SparseTitle",
+      "batch": 12,
+      "sourceSha256": "92e5c493cc80a22f902f7a1fdcd999d10f59c86b6cb690e65bcaebb45dea722f",
+      "translationSha256": "12086c0bea79f8232315880825fa0c8ad33f536ba3f2629fc21b9474d95c72d1",
+      "verdict": "revise",
+      "reason": "VFP Sparse is a technical property controlling per-cell control display; «affichage clairsemé» suggests low density. Retain exact identifier pending a verified French domain term.",
+      "proposal": "Sparse",
+      "proposalSha256": "92e5c493cc80a22f902f7a1fdcd999d10f59c86b6cb690e65bcaebb45dea722f"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreen",
+      "batch": 12,
+      "sourceSha256": "988353ed6ef25580e1d10ba2a78f70d6f7dfe0f9a07d6953a41f536043b62b09",
+      "translationSha256": "845bd460f815abce942e35ddc38208ee1d57c1ee4ba814925ee73bf8c4d4d23d",
+      "verdict": "revise",
+      "reason": "VFP LockScreen suppresses screen redraw; «verrouiller l’écran» suggests an operating-system lock screen.",
+      "proposal": "bloquer le rafraîchissement de l’écran",
+      "proposalSha256": "a0adec53f28461e229349e65c6b73c03a58cb76df9d94c2be629eec896a9d233"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreenTitle",
+      "batch": 12,
+      "sourceSha256": "6deb94ac6c8bcb412d268ea7b8e5a7e4c2b62e9bd78f385d7b547ea1a40c7f1a",
+      "translationSha256": "92393e3095f93f5ddc3c83469e22d02c90c2598a04136e727341a39cfd832e2a",
+      "verdict": "revise",
+      "reason": "VFP LockScreen suppresses screen redraw; «verrouiller l’écran» suggests an operating-system lock screen.",
+      "proposal": "Bloquer le rafraîchissement de l’écran",
+      "proposalSha256": "3f376448a4faeb56f1b4f7dc3e4aa106a40d150f144382838bc1636dc2dc525e"
+    }
+  ]
+}

@@ -1,0 +1,328 @@
+{
+  "session": "692c0b30-fb54-404c-a7a2-f44792dd4132",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoAssetPath",
+      "source": "No asset path was provided."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoSelectionContext",
+      "source": "No selection context was provided."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxContext",
+      "source": "No toolbox context was provided."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemId",
+      "source": "No toolbox item id was provided."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemIds",
+      "source": "No toolbox item ids were provided."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand",
+      "source": "No toolbox launch command was provided."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchCreateItemRequiresToolboxItem",
+      "source": "Selection toolbox batch create item options require a preceding {toolboxItemOption}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchDispatchItemRequiresToolboxItem",
+      "source": "Selection toolbox batch dispatch item options require a preceding {toolboxItemOption}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchItemRequiresToolboxItem",
+      "source": "Selection toolbox batch item options require a preceding {toolboxItemOption}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}"
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+      "source": "Unknown selection context token: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+      "source": "Unknown toolbox context token: {token}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+      "source": "Anchor selectors can only be used with {alignOption} or {resizeOption}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+      "source": "Field values must use {syntax} syntax."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.IntegerValueRequired",
+      "source": "The {option} value must be an integer."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.LogicalValueRequired",
+      "source": "The {option} value must be a logical value."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+      "source": "Missing value after {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+      "source": "Object commands cannot be combined with property commands."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+      "source": "The {option} value must be non-negative."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+      "source": "The {option} value must not be negative."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NumericValueRequired",
+      "source": "The {option} value must be numeric."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+      "source": "{propertyName} arguments can only be used with {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+      "source": "{actionName} arguments can only be used with {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+      "source": "An object {actionName} requires {firstOption} or {secondOption}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+      "source": "An object {actionName} requires {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+      "source": "An object {actionName} requires at least one target selector."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Alignment",
+      "source": "alignment"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.AlignmentTitle",
+      "source": "Alignment"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Distribution",
+      "source": "distribution"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+      "source": "Distribution"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Nudge",
+      "source": "nudge"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.NudgeTitle",
+      "source": "Nudge"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Resize",
+      "source": "resize"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
+      "source": "Resize"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Snap",
+      "source": "snap"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.SnapTitle",
+      "source": "Snap"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+      "source": "An object {propertyName} assignment requires {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+      "source": "An object {propertyName} assignment requires a non-negative {valueName}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+      "source": "An object {propertyName} assignment requires at least one target selector."
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoAssetPath",
+      "translation": "Es wurde kein Asset-Pfad angegeben."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoSelectionContext",
+      "translation": "Es wurde kein Auswahlkontext angegeben."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxContext",
+      "translation": "Es wurde kein Toolbox-Kontext angegeben."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemId",
+      "translation": "Es wurde keine Toolbox-Element-ID angegeben."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemIds",
+      "translation": "Es wurden keine Toolbox-Element-IDs angegeben."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand",
+      "translation": "Es wurde kein Toolbox-Startbefehl angegeben."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+      "translation": "Der Wert von {option} muss eine nicht negative ganze Zahl sein."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchCreateItemRequiresToolboxItem",
+      "translation": "Optionen für das Erstellen von Elementen im Toolbox-Auswahlstapel erfordern ein vorangehendes {toolboxItemOption}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchDispatchItemRequiresToolboxItem",
+      "translation": "Optionen für das Auslösen von Elementen im Toolbox-Auswahlstapel erfordern ein vorangehendes {toolboxItemOption}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchItemRequiresToolboxItem",
+      "translation": "Elementoptionen des Toolbox-Auswahlstapels erfordern ein vorangehendes {toolboxItemOption}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownOption",
+      "translation": "Unbekannte Option für {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+      "translation": "Unbekanntes Auswahlkontext-Token: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+      "translation": "Unbekanntes Toolbox-Kontext-Token: {token}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+      "translation": "Anker-Selektoren können nur mit {alignOption} oder {resizeOption} verwendet werden."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+      "translation": "Feldwerte müssen die Syntax {syntax} verwenden."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.IntegerValueRequired",
+      "translation": "Der Wert von {option} muss eine ganze Zahl sein."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.LogicalValueRequired",
+      "translation": "Der Wert von {option} muss ein logischer Wert sein."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+      "translation": "Fehlender Wert nach {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+      "translation": "Objektbefehle können nicht mit Eigenschaftsbefehlen kombiniert werden."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+      "translation": "Der Wert von {option} darf nicht negativ sein."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+      "translation": "Der Wert von {option} darf nicht negativ sein."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NumericValueRequired",
+      "translation": "Der Wert von {option} muss numerisch sein."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+      "translation": "{propertyName}-Argumente können nur mit {option} verwendet werden."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+      "translation": "{actionName}-Argumente können nur mit {option} verwendet werden."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+      "translation": "Für die Objektaktion {actionName} ist {firstOption} oder {secondOption} erforderlich."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+      "translation": "Für die Objektaktion {actionName} ist {option} erforderlich."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+      "translation": "Für die Objektaktion {actionName} ist mindestens ein Zielselektor erforderlich."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Alignment",
+      "translation": "Ausrichtung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.AlignmentTitle",
+      "translation": "Ausrichtung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Distribution",
+      "translation": "Verteilung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+      "translation": "Verteilung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Nudge",
+      "translation": "Verschieben"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.NudgeTitle",
+      "translation": "Verschieben"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Resize",
+      "translation": "Größenänderung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
+      "translation": "Größenänderung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Snap",
+      "translation": "Einrasten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.SnapTitle",
+      "translation": "Einrasten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+      "translation": "Für die Objektzuweisung {propertyName} ist {option} erforderlich."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+      "translation": "Für die Objektzuweisung {propertyName} ist ein nicht negativer Wert für {valueName} erforderlich."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+      "translation": "Für die Objektzuweisung {propertyName} ist mindestens ein Zielselektor erforderlich."
+    }
+  ]
+}
