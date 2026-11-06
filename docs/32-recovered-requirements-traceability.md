@@ -433,16 +433,22 @@ historical frozen fixture manifests remain intact with this explicit erratum.
 PR #7238 integrated the ListItem caller at exact reviewed head
 `e2418fcd418aeff70bcfbd7cedccf9e805631ca8` as merge
 `23250292cccc06a1d5043fbf9735452725b53fdb` after all hosted checks and
-conversations cleared. The bounded follow-up protects the selector suffix only
-for valid two-selector `ListItem` parenthesis/bracket reads while splitting
-nested native member paths. Its direct
-`VR-5611-LISTITEM-COLUMN-NUMERIC-001` extension compares fractional and integral
-route action counts for both delimiter forms, control classes, modes and data
-sessions; GNU and Clang focused verification pass all four 116-case shards,
-including decimal-selector preservation for unrelated legacy methods, while hosted integration and
-exact-head review remain open. This does not admit malformed or unrelated
-member/parser paths, legacy multi-selector methods, writes, other IDs, #7151 or
-#7186.
+conversations cleared. PR #7262 protects the selector suffix for valid
+two-selector `ListItem` parenthesis/bracket reads while splitting nested native
+member paths. Its direct `VR-5611-LISTITEM-COLUMN-NUMERIC-001` extension compares
+fractional and integral route action counts for both delimiter forms, control
+classes, modes and data sessions; GNU and Clang focused verification pass all
+four 116-case shards, including decimal-selector preservation for unrelated
+legacy methods. The bounded one-selector continuation applies the same narrow
+protection to `ListItem(id)` and `ListItem[id]`; its
+`VR-5611-LISTITEM-NUMERIC-001` extension compares decimal `2.5` with integral
+`2` across both delimiters, control classes, dense/sparse controls, modes and
+data sessions. The one-selector guard is Numeric-only; a dotted Character
+literal selector preservation case retains legacy catchable error 1. Currency
+decimal/integral route controls pin Currency on its established route; other
+non-Numeric selector kinds remain unchanged. This
+does not admit malformed or unrelated member/parser paths,
+legacy multi-selector methods, writes, other IDs, #7151 or #7186.
 
 ## AddListItem missing-ID supplied numeric column
 
