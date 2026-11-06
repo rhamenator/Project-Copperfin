@@ -3227,8 +3227,13 @@ namespace copperfin::runtime
                 std::vector<std::string> segments;
                 const std::size_t selector_open = member_name.find_first_of("([");
                 std::size_t protected_selector_open = std::string::npos;
-                if (raw_selector != nullptr && raw_secondary_selector != nullptr &&
-                    selector_open != std::string::npos && !member_name.empty())
+                // Keep decimal points inside valid Numeric one-selector and
+                // existing two-selector ListItem paths from being mistaken
+                // for member separators.
+                const bool protect_selector = raw_selector != nullptr &&
+                    (raw_secondary_selector != nullptr ||
+                     raw_selector->kind == PrgValueKind::number);
+                if (protect_selector && selector_open != std::string::npos)
                 {
                     const char selector_close = member_name[selector_open] == '(' ? ')' : ']';
                     const std::size_t leaf_separator = member_name.rfind('.', selector_open);

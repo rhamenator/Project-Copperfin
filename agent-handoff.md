@@ -1,25 +1,20 @@
 # Agent Handoff
 
-## Active slice — ListItem decimal selector member path (2026-11-06)
+## Active slice — one-selector ListItem decimal member path (2026-11-06)
 
-PR #7238 merged as `23250292cccc06a1d5043fbf9735452725b53fdb`
-after exact-head local Claude review, all hosted checks and seven resolved
-conversations. Continue in dedicated worktree
-`/home/rich/.codex/worktrees/listitem-selector-member-path-7189/Project-Copperfin`
-on `fix/listitem-selector-member-path-7189`, based on that merge. The admitted
-#7189 follow-up protects the selector suffix only for valid two-selector
-`ListItem` parenthesis/bracket reads when splitting native member paths,
-preventing decimal columns from leaving the property-first route without
-changing other members or malformed paths. Fail-first ListBox/ComboBox coverage
-showed fractional reads incurred one extra action versus integral controls; the
-bounded repair makes their route counts equal in both delimiter forms. GNU and
-Clang pass all four COPPERFIN/VFP9 data-session shards at 116 cases each,
-including decimal-selector preservation for unrelated legacy methods.
-Changelog assembly and diff checks pass. NEXT: push this signed+DCO commit, open
-the PR, request Claude-first exact-head review, reach hosted green, resolve all
-conversations and merge.
-Preserve legacy two-selector method fallthrough and do not broaden into
-unrelated parser paths.
+PR #7264 is open from
+`/home/rich/.codex/worktrees/listitem-selector-first-member-path-7189/Project-Copperfin`
+on `fix/listitem-selector-first-member-path-7189`, based on PR #7262 merge
+`0f091a5497f6bc19203f27b9a8e72a563bcccb67`. This admitted #7189 sibling
+keeps decimal Numeric IDs inside valid `ListItem(id)`/`ListItem[id]` member
+paths while preserving two-selector behavior and non-Numeric fallthrough.
+GNU and Clang each pass all four 1,032-case mode/session shards; the matrix
+includes direct/nested `2.5`, `0.5`, `-0.5`, dotted Character error 1 and
+Currency-route controls. Both compilers also pass the direct helper and four
+116-case supplied-column preservation shards. Changelog and all five
+documentation/isolation contracts pass. NEXT: push the signed+DCO exact head,
+request a fresh Claude review, require hosted green and zero unresolved
+conversations, then merge and clean the slice worktree.
 
 ## Active slice — PR #7238 ListItem supplied-column review repair (2026-11-03)
 

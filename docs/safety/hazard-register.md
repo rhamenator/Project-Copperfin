@@ -531,16 +531,21 @@ exact head `d24e468c3`; the repeat walkthrough is clean at `659a3f558`. The
 frozen exact-head broader qualification and integration gates remain open.
 PR #7238 subsequently merged as `23250292cccc06a1d5043fbf9735452725b53fdb`
 after clean exact-head Claude review, all hosted checks and resolved
-conversations. A bounded follow-up protects the selector suffix only for valid
-two-selector `ListItem` parenthesis/bracket reads while splitting nested member
-paths, so fractional supplied columns retain the same property-first
-containment as integral controls. Focused ListBox/ComboBox mode/session route
-comparison in both delimiter forms is the direct regression gate; malformed
-delimiters and unrelated member paths remain on their established paths, with
-decimal-selector legacy-method cases proving the neighboring fallthrough is
-unchanged. Hazard identities and severity remain unchanged; GNU
-and Clang focused matrices pass, while hosted integration and exact-head review
-are still gates.
+conversations. PR #7262 protects the selector suffix for valid two-selector
+`ListItem` parenthesis/bracket reads while splitting nested member paths, so
+fractional supplied columns retain the same property-first containment as
+integral controls. The bounded one-selector continuation applies that same
+narrow protection to `ListItem(id)` and `ListItem[id]`, with focused
+ListBox/ComboBox dense/sparse, mode/session route comparisons between decimal
+`2.5` and integral `2`. The one-selector guard is Numeric-only, and a dotted
+Character literal selector case retains legacy catchable error 1; Currency and
+Numeric boundary route controls pin the selected and excluded paths. Other
+non-Numeric kinds remain on their established routes. Malformed
+delimiters and unrelated member paths remain
+outside the selected leaf-and-closing-delimiter guard; the two-selector
+legacy-method cases continue to prove neighboring fallthrough is unchanged.
+Hazard identities and severity remain unchanged; hosted integration and
+exact-head review remain gates.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 
