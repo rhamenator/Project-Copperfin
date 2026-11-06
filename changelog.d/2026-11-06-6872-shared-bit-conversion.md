@@ -1,0 +1,1 @@
+- 2026-11-06: Consolidate BITAND/BITOR/BITXOR/BITNOT/BITSET/BITCLEAR/BITTEST onto one checked bit-pattern converter and one checked 0..31 index converter, preserving the independently recovered BITNOT nonfinite rejection and sibling explicit-VFP9 infinity-zero behavior (#6872/#5611/#6776). Shift conversion remains separate because its coercion boundary differs.

@@ -338,29 +338,20 @@ int default_set_century_epoch();
 // accepts only values representable as signed int64. A missing result means
 // the caller must raise localized, catchable error 11 before invoking native
 // or managed code.
-// RQ-CF-PRG-BITNOT-NUMERIC-001 (#5611/#6776); only BITNOT, not other bit functions.
-std::optional<std::int32_t> checked_bitnot_argument(const PrgValue& value, NumericBehavior behavior);
-// RQ-CF-PRG-BITAND-NUMERIC-001: native infinity0 only in explicit VFP9;
-// otherwise the independently recovered signed32/truncation boundary.
-std::optional<std::int32_t> checked_bitand_argument(const PrgValue& value, NumericBehavior behavior);
-// RQ-CF-PRG-BITOR-NUMERIC-001: independently observed identity0 conversion;
-// native infinity0 in explicit VFP9, exact64/NaN safety parent-derived.
-std::optional<std::int32_t> checked_bitor_argument(const PrgValue& value, NumericBehavior behavior);
-// RQ-CF-PRG-BITXOR-NUMERIC-001: independently observed identity0 conversion;
-// native infinity0 in explicit VFP9, exact64/NaN safety parent-derived.
-std::optional<std::int32_t> checked_bitxor_argument(const PrgValue& value, NumericBehavior behavior);
-// RQ-CF-PRG-BITSET-NUMERIC-001: independently recovered value/position;
-// exact64/NaN safety parent-derived; position always validated after conversion.
-std::optional<std::int32_t> checked_bitset_value_argument(const PrgValue& value, NumericBehavior behavior);
-std::optional<std::int32_t> checked_bitset_position_argument(const PrgValue& value, NumericBehavior behavior);
-// RQ-CF-PRG-BITCLEAR-NUMERIC-001: independent value/position recovery;
-// exact64/NaN safety parent-derived; validate position even after value0.
-std::optional<std::int32_t> checked_bitclear_value_argument(const PrgValue& value, NumericBehavior behavior);
-std::optional<std::int32_t> checked_bitclear_position_argument(const PrgValue& value, NumericBehavior behavior);
-// RQ-CF-PRG-BITTEST-NUMERIC-001: independent all32 value bits/positions;
-// exact64/NaN safety parent-derived; position checked even after zero value.
-std::optional<std::int32_t> checked_bittest_value_argument(const PrgValue& value, NumericBehavior behavior);
-std::optional<std::int32_t> checked_bittest_position_argument(const PrgValue& value, NumericBehavior behavior);
+// RQ-CF-PRG-BIT-FAMILY-SHARED-CONVERSION-001 (#6872/#5611/#6776): the
+// seven non-shift BIT* functions share one checked bit-pattern converter and
+// one checked 0..31 index converter. BITNOT rejects nonfinite values; the six
+// independently recovered VFP9 operations preserve their observed infinity0.
+enum class BitPatternNonfinitePolicy {
+    reject,
+    vfp9_infinity_zero,
+};
+std::optional<std::int32_t> checked_bit_pattern_argument(
+    const PrgValue& value,
+    NumericBehavior behavior,
+    BitPatternNonfinitePolicy nonfinite_policy);
+std::optional<std::int32_t> checked_bit_index_argument(
+    const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int32_t> checked_declared_int32_argument(const PrgValue& value, NumericBehavior behavior);
 std::optional<std::int64_t> checked_declared_int64_argument(const PrgValue& value);
 // RQ-CF-PRG-CAST-INT64-NUMERIC-001: owner-derived signed64 CAST extension;

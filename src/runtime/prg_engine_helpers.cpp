@@ -2450,10 +2450,14 @@ int default_set_century_epoch() {
     return default_set_century_epoch_for_year(local.tm_year + 1900);
 }
 
-// RQ-CF-PRG-BITNOT-NUMERIC-001: independently recovered truncation/low32,
-// exact extension and nonfinite containment derive from #5611/#6776.
-std::optional<std::int32_t> checked_bitnot_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
+// RQ-CF-PRG-BIT-FAMILY-SHARED-CONVERSION-001: shared checked conversion for
+// BITAND/BITOR/BITXOR/BITNOT/BITSET/BITCLEAR/BITTEST. The policy parameter
+// retains BITNOT's independently recovered nonfinite rejection while the six
+// sibling operations retain their independently recovered VFP9 infinity0.
+std::optional<std::int32_t> checked_bit_pattern_argument(
+    const PrgValue& value,
+    const NumericBehavior behavior,
+    const BitPatternNonfinitePolicy nonfinite_policy) {
     const bool numeric = value.kind == PrgValueKind::number ||
                          value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
     if (!numeric) {
@@ -2462,6 +2466,10 @@ std::optional<std::int32_t> checked_bitnot_argument(
         return rounded ? std::optional<std::int32_t>(declared_int32_from_int64(*rounded)) : std::nullopt;
     }
     if (value.kind == PrgValueKind::number && !std::isfinite(value.number_value)) {
+        if (behavior == NumericBehavior::vfp9 && std::isinf(value.number_value) &&
+            nonfinite_policy == BitPatternNonfinitePolicy::vfp9_infinity_zero) {
+            return 0;
+        }
         return std::nullopt;
     }
     if (behavior == NumericBehavior::vfp9) {
@@ -2474,110 +2482,21 @@ std::optional<std::int32_t> checked_bitnot_argument(
     return static_cast<std::int32_t>(*converted);
 }
 
-// RQ-CF-PRG-BITAND-NUMERIC-001: independently recovered in all operand slots.
-// Infinity is observed0 in VFP9, unlike BITNOT's unrecovered boundary;
-// exact64/NaN safety derives from #5611/#6776. Kept unused during originals.
-std::optional<std::int32_t> checked_bitand_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    if (value.kind == PrgValueKind::number && std::isinf(value.number_value) &&
-        behavior == NumericBehavior::vfp9) {
-        return 0;
-    }
-    // Independent finite evidence matches BITNOT's conversion, not complement.
-    // Preserve its checked non-Numeric coercion boundary without claiming parity.
-    return checked_bitnot_argument(value, behavior);
-}
-
-// RQ-CF-PRG-BITOR-NUMERIC-001: independent BITOR identity0 observations match
-// BITAND's finite/low32/huge/infinity0 conversion, not its AND operation.
-// Exact64/NaN safety parent-derived; unused through BOTH original baselines.
-std::optional<std::int32_t> checked_bitor_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    return checked_bitand_argument(value, behavior);
-}
-
-// RQ-CF-PRG-BITXOR-NUMERIC-001: independent BITXOR identity0 observations
-// match BITAND's finite/low32/huge/infinity0 conversion, not its AND operation.
-// Exact64/NaN safety parent-derived; unused through BOTH original baselines.
-std::optional<std::int32_t> checked_bitxor_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    return checked_bitand_argument(value, behavior);
-}
-
-// RQ-CF-PRG-BITSET-NUMERIC-001: independent positions0/1 expose value bits;
-// native finite/low32/huge/infinity0 observations match checked BITAND conversion.
-// Kept unused by BITSET through BOTH frozen original compiler baselines.
-std::optional<std::int32_t> checked_bitset_value_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    return checked_bitand_argument(value, behavior);
-}
-
-std::optional<std::int32_t> checked_bitset_position_argument(
+std::optional<std::int32_t> checked_bit_index_argument(
     const PrgValue& value, const NumericBehavior behavior) {
     const bool numeric = value.kind == PrgValueKind::number ||
                          value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
     if (!numeric) {
-        // Preserve safe existing half-away coercion, not native type parity.
-        // Check the position before narrowing; never wrap other-type positions.
+        // Preserve the shared safe half-away coercion, not native type parity.
+        // Check the index before narrowing; never wrap other-type positions.
         const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
         if (!rounded || *rounded < 0 || *rounded > 31) {
             return std::nullopt;
         }
         return static_cast<std::int32_t>(*rounded);
     }
-    const auto converted = checked_bitset_value_argument(value, behavior);
-    if (!converted || *converted < 0 || *converted > 31) {
-        return std::nullopt;
-    }
-    return converted;
-}
-
-// RQ-CF-PRG-BITCLEAR-NUMERIC-001: independent clear-bit0/1 observations
-// recover conversion matching checked BITAND; unused through BOTH originals.
-std::optional<std::int32_t> checked_bitclear_value_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    return checked_bitand_argument(value, behavior);
-}
-
-std::optional<std::int32_t> checked_bitclear_position_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    const bool numeric = value.kind == PrgValueKind::number ||
-                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
-    if (!numeric) {
-        // Safe original half-away coercion only; not native type parity.
-        const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
-        if (!rounded || *rounded < 0 || *rounded > 31) {
-            return std::nullopt;
-        }
-        return static_cast<std::int32_t>(*rounded);
-    }
-    const auto converted = checked_bitclear_value_argument(value, behavior);
-    if (!converted || *converted < 0 || *converted > 31) {
-        return std::nullopt;
-    }
-    return converted;
-}
-
-// RQ-CF-PRG-BITTEST-NUMERIC-001: independent all32 bit observations recover
-// conversion matching checked BITAND; unused through BOTH original baselines.
-std::optional<std::int32_t> checked_bittest_value_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    return checked_bitand_argument(value, behavior);
-}
-
-std::optional<std::int32_t> checked_bittest_position_argument(
-    const PrgValue& value, const NumericBehavior behavior) {
-    const bool numeric = value.kind == PrgValueKind::number ||
-                         value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64;
-    if (!numeric) {
-        // Safe original half-away coercion only; not native type parity.
-        const auto rounded = checked_truncated_numeric_to_int64(std::round(value_as_number(value)));
-        if (!rounded || *rounded < 0 || *rounded > 31) {
-            return std::nullopt;
-        }
-        return static_cast<std::int32_t>(*rounded);
-    }
-    const auto converted = checked_bittest_value_argument(value, behavior);
+    const auto converted = checked_bit_pattern_argument(
+        value, behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
     if (!converted || *converted < 0 || *converted > 31) {
         return std::nullopt;
     }
