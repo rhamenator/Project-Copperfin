@@ -52,10 +52,12 @@ int public_count=0;
 std::string get(const RuntimePauseState& state,const char* key){
  const auto found=state.globals.find(key);return found==state.globals.end()?"<missing>":format_value(found->second);
 }
-void invoke(const fs::path& path,const std::string& mode,int selected,const std::string& cls,int target,
- const std::string& source,Column column,const std::string& config={},const std::string& localized={}){
+int invoke(const fs::path& path,const std::string& mode,int selected,const std::string& cls,int target,
+ const std::string& source,Column column,const std::string& config={},const std::string& localized={},
+ bool bracket=false){
  ++public_count;const std::string other=mode=="VFP9"?"COPPERFIN":"VFP9";
- const std::string tag=mode+" session"+std::to_string(selected)+" "+cls+" id"+std::to_string(target)+" "+source;
+ const std::string expression=std::string{"o.ListItem"}+(bracket?"[":"(")+std::to_string(target)+","+source+(bracket?"]":")");
+ const std::string tag=mode+" session"+std::to_string(selected)+" "+cls+" "+expression;
  std::string setup;
  for(int row=1;row<=3;++row){const int id=row*11;setup+="o.AddListItem('id"+std::to_string(id)+"c1',"+std::to_string(id)+")\n";
   for(int col=2;col<=9;++col)setup+="o.List("+std::to_string(row)+","+std::to_string(col)+")='id"+
@@ -70,7 +72,7 @@ void invoke(const fs::path& path,const std::string& mode,int selected,const std:
   "cResult='sentinel'\nnCode=0\ncMessage=''\nlAfter=.F.\nCREATE CURSOR guard (label C(8))\nINSERT INTO guard VALUES ('guard')\n"
   "o=CREATEOBJECT('"+cls+"')\no.ColumnCount=9\n"+config+setup+"cBefore="+snapshot+"\n"
   "cContextBefore=SET('DATASESSION')+'|'+SET('NUMERICBEHAVIOR')+'|'+UPPER(ALIAS())+'|'+TRANSFORM(RECNO())+'|'+ALLTRIM(label)\n"
-  "TRY\ncResult=o.ListItem("+std::to_string(target)+","+source+")\nCATCH TO problem\nnCode=problem.ErrorNo\ncMessage=problem.Message\nENDTRY\n"
+  "TRY\ncResult="+expression+"\nCATCH TO problem\nnCode=problem.ErrorNo\ncMessage=problem.Message\nENDTRY\n"
   "lAfter=.T.\nnGuard=CAST(1.9 AS INTEGER)\ncAfter="+snapshot+"\n"
   "cContextAfter=SET('DATASESSION')+'|'+SET('NUMERICBEHAVIOR')+'|'+UPPER(ALIAS())+'|'+TRANSFORM(RECNO())+'|'+ALLTRIM(label)\n"
   "USE IN guard\nSET DATASESSION TO 1\ncOther=SET('NUMERICBEHAVIOR')\nSET NUMERICBEHAVIOR TO COPPERFIN\n"
@@ -90,20 +92,22 @@ void invoke(const fs::path& path,const std::string& mode,int selected,const std:
  expect(get(state,"cbefore")==get(state,"cafter"),"ListItem COLUMN read-only state "+tag);
  if(column)expect(get(state,"cmessage").empty(),"ListItem COLUMN success message "+tag);
  if(!localized.empty())expect(get(state,"cmessage")==localized,"ListItem COLUMN localized31 "+tag);
- bool seen=false;for(const auto& object:state.ole_objects)if(copperfin::runtime::lowercase_copy(object.base_class_name)==
+ bool seen=false;int action_count=-1;for(const auto& object:state.ole_objects)if(copperfin::runtime::lowercase_copy(object.base_class_name)==
   copperfin::runtime::lowercase_copy(cls)){
-  seen=true;expect(object.list_rows.size()==3&&object.collection_item_keys==std::vector<std::string>{"11","22","33"}&&
+  seen=true;action_count=object.action_count;expect(object.list_rows.size()==3&&object.collection_item_keys==std::vector<std::string>{"11","22","33"}&&
    object.list_item_data.size()==3&&object.list_selected==std::vector<bool>({false,true,false}),"ListItem COLUMN coherent state "+tag);
   if(object.list_rows.size()==3)for(std::size_t row=0;row<3;++row){expect(object.list_rows[row].size()==9,"ListItem COLUMN width "+tag);
    for(std::size_t col=0;col<object.list_rows[row].size();++col)expect(format_value(object.list_rows[row][col])==
     "id"+std::to_string((row+1)*11)+"c"+std::to_string(col+1),"ListItem COLUMN retained cell "+tag);}}
  expect(seen,"ListItem COLUMN captured control "+tag);
  for(const auto& event:state.events)expect(event.category!="prg.object.selected"&&event.category!="ole.invoke","ListItem COLUMN no external event "+tag);
+ return action_count;
 }
 void invoke_preserved_secondary_selector_route(const fs::path& path,const std::string& mode,int selected,
- const std::string& cls,const std::string& member,const std::string& first,const std::string& expected,bool bracket){
+ const std::string& cls,const std::string& member,const std::string& first,const std::string& second,
+ const std::string& expected,bool bracket){
  ++public_count;const std::string other=mode=="VFP9"?"COPPERFIN":"VFP9";
- const std::string expression="o."+member+(bracket?"[":"(")+first+",2"+(bracket?"]":")");
+ const std::string expression="o."+member+(bracket?"[":"(")+first+","+second+(bracket?"]":")");
  const std::string tag=mode+" session"+std::to_string(selected)+" "+cls+" "+expression;
  write_text(path,(selected==2?"SET NUMERICBEHAVIOR TO "+other+"\nSET DATASESSION TO 2\n":"")+
   "SET NUMERICBEHAVIOR TO "+mode+"\nPUBLIC o,cResult,nCode,lAfter,nGuard\n"
@@ -150,10 +154,19 @@ void public_cases(const std::string& mode,int selected,bool hostile){
   {"en-US","Subscript is outside defined range."},{"es-419","El subíndice está fuera del intervalo definido."},
   {"pt-BR","O subscrito está fora do intervalo definido."},{"qps-ploc","[!! Šµþšçŕïþţ ïš øµţšïðë ðëƒïñëð ŕåñğë. !!]"}}){
   set_env_value("COPPERFIN_LOCALE",locale.first,true);invoke(path,mode,selected,cls,22,"0.9",{}, {},locale.second);}
- for(const std::string cls:{"ListBox","ComboBox"})for(const bool bracket:{false,true}){
-  invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemData","1","101",bracket);
-  invoke_preserved_secondary_selector_route(path,mode,selected,cls,"IndexToItemID","1","11",bracket);
-  invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemIDToIndex","11","1",bracket);
+ for(const std::string cls:{"ListBox","ComboBox"}){
+  for(const bool bracket:{false,true}){
+   const int fractional_count=invoke(path,mode,selected,cls,22,"2.5",2,{}, {},bracket);
+   const int integral_count=invoke(path,mode,selected,cls,22,"2",2,{}, {},bracket);
+   expect(fractional_count==integral_count,"ListItem COLUMN "+std::string(bracket?"bracket":"parenthesis")+
+    " property route "+mode+" session"+std::to_string(selected)+" "+cls+" fractional "+
+    std::to_string(fractional_count)+" integral "+std::to_string(integral_count));
+  }
+  for(const bool bracket:{false,true}){
+   invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemData","1","2","101",bracket);
+   invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemData","1","2.5","101",bracket);
+   invoke_preserved_secondary_selector_route(path,mode,selected,cls,"IndexToItemID","1","2","11",bracket);
+   invoke_preserved_secondary_selector_route(path,mode,selected,cls,"ItemIDToIndex","11","2","1",bracket);}
  }
  set_env_value("COPPERFIN_LOCALE","en-US",true);std::error_code ignored;fs::remove_all(dir,ignored);
 }
@@ -164,6 +177,6 @@ int main(int argc,char** argv){ScopedEnvironmentValue locale("COPPERFIN_LOCALE")
  else if((argc==3||argc==4)&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
   (std::string(argv[2])=="1"||std::string(argv[2])=="2")&&(argc==3||std::string(argv[3])=="--fixed-only-hostile")){
   public_cases(argv[1],std::string(argv[2])=="1"?1:2,argc==4);
-  expect(public_count==(argc==4?56:104),"ListItem COLUMN complete public count");}
+  expect(public_count==(argc==4?56:116),"ListItem COLUMN complete public count");}
  else{std::cerr<<"Expected COPPERFIN|VFP9 1|2 [--fixed-only-hostile]\n";return 2;}
  std::cout<<"ListItem supplied-column frozen public cases="<<public_count<<'\n';return test_failures()==0?0:1;}

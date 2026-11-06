@@ -529,6 +529,18 @@ frozen input plus nine-library hashes reverify. This closes only the modeled
 excluded-scope preservation gate. Five bounded development contracts pass at
 exact head `d24e468c3`; the repeat walkthrough is clean at `659a3f558`. The
 frozen exact-head broader qualification and integration gates remain open.
+PR #7238 subsequently merged as `23250292cccc06a1d5043fbf9735452725b53fdb`
+after clean exact-head Claude review, all hosted checks and resolved
+conversations. A bounded follow-up protects the selector suffix only for valid
+two-selector `ListItem` parenthesis/bracket reads while splitting nested member
+paths, so fractional supplied columns retain the same property-first
+containment as integral controls. Focused ListBox/ComboBox mode/session route
+comparison in both delimiter forms is the direct regression gate; malformed
+delimiters and unrelated member paths remain on their established paths, with
+decimal-selector legacy-method cases proving the neighboring fallthrough is
+unchanged. Hazard identities and severity remain unchanged; GNU
+and Clang focused matrices pass, while hosted integration and exact-head review
+are still gates.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 
