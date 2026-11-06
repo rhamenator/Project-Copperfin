@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## Active slice — remove obsolete unsafe bit converters (2026-11-06)
+
+Work in
+`/home/rich/.codex/worktrees/remove-obsolete-bitwise-converters-6871/Project-Copperfin`
+on `fix/remove-obsolete-bitwise-converters-6871`, based on PR #7264 merge
+`f2f94c2008521ac3280e2a88c3dc5e9257652e3e`. Under admitted #6871/#5611/#6776,
+remove the now-unreferenced `bitwise_value` and `bit_position` helpers whose
+unchecked `llround` conversions predate the checked per-operation bit-family
+helpers. This is a dead-code safety cleanup only: active BITAND/BITOR/BITXOR/
+BITNOT/BITSET/BITCLEAR/BITTEST dispatch and behavior remain unchanged. GNU
+Debug builds the runtime and all seven bit-family Numeric targets; focused
+tests pass 7/7 in 45.74s. Issue-intake, contributor-signoff, changelog and
+native-isolation contracts pass 5/5 in 6.60s; 251 changelog fragments validate,
+the live-source reference audit finds no remaining helper definition or call,
+the safety-traceability workflow contract passes in 340.44s, and
+`git diff --check` passes. NEXT: commit signed+DCO, push, open a PR, request
+Claude-first exact-head review, require green hosted checks and zero unresolved
+conversations, then merge and clean the worktree and owned `/tmp` build.
+
 ## Active slice — one-selector ListItem decimal member path (2026-11-06)
 
 PR #7264 is open from
