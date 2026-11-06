@@ -479,10 +479,14 @@ pairs224/188/360 now retain actual type/BRS/setup/sample-state/context and
 near-integer promotion requiring further allowed recovery; capture audits0
 are not a conversion table or completed assurance. See
 [recovery checkpoint](../../tests/fixtures/vfp9-listitem-column-numeric/recovery-observations.md).
-MEDIUM misuse analysis and
-delegated walkthrough remain planned before behavior completion. No helper,
-assertion, configuration, caller migration or acceptance claim is introduced;
-no hazard severity/status, independent-human/system/release or parent closure.
+The initial MEDIUM delegated development walkthrough at exact head
+`d24e468c3` was NOT CLEAN: it found missing arithmetic-requirement traceability,
+an incomplete assurance plan and stale pre-wire wording. The fixture now records
+the slice-specific procedural delta, misuse boundaries, rollback and field-
+notification plan. A later repeat walkthrough is clean at exact head
+`659a3f558`; the frozen 131-test-per-compiler broader gate remains unexecuted.
+This is maintainer development review, not independent-human, system, release,
+hazard or parent closure.
 Further native recovery demonstrates identical observed Numeric/BRS/context/
 sample-state inputs with distinct results and32of120 outcome changes after a
 documented bit-preserving double roundtrip. This cannot be turned into an
@@ -492,15 +496,39 @@ prerequisite blocks pre-code requirements/helper/assertion/wiring. See
 [specific options and complete retained evidence](../../tests/fixtures/vfp9-listitem-column-numeric/numeric-origin-policy-gap.md).
 That owner-choice pause is historical: direct owner steering on 2026-10-15
 selects the wider Numeric compatibility prerequisite under #5611/#6776.
-Published-interface interventions establish decimal-place metadata as causal;
-the complete conversion formula remains unrecovered. See the
+Published-interface interventions establish decimal-place metadata as causal.
+The retained factorial/settings audit now recovers decimal quantization at the
+attached decimal count plus two followed by integer projection, explaining all
+1,816 first/repeat invocations without a binary tolerance. See the
 [prerequisite recovery](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-foundation.md)
 and [bounded value-carrier map](../../tests/fixtures/vfp9-listitem-column-numeric/metadata-carrier-requirements.md).
-The first carrier slice only adds optional value-owned attributes, not producers,
-display or index interpretation, allocation or casts. Consumers must rebuild
-against the changed C++ value layout; future conversions still require
-operation-specific bounds/safety evidence. No new hazard severity/status,
-Numeric/list family, independent-human or release closure is claimed.
+The first carrier slice only added optional value-owned attributes. The bounded
+consumer foundation then added a distinct supplied-column helper and direct
+fixture preserving exact integral checked conversion and the recovered
+metadata-sensitive fractional formula. Both original106 compiler suites
+completed before wiring, failing only the four expected public shards; the
+exact-two-argument existing-ID adapter was then wired without changing the
+first selector or other routes. Both fixed106 suites pass all subjects and the
+eight pre-wire-authored hostile shards pass56 reads each with empty sanitizer
+diagnostics and unchanged frozen inputs. Missing/malformed fractional metadata
+remains fail-closed in VFP9 mode. SAME-compiler modeled preservation, five
+bounded development contracts and the clean repeat walkthrough are complete as
+recorded below; the frozen broader qualification, exact-head review and hosted
+integration remain open. No hazard severity/status, Numeric/list family,
+independent-human, system, release or parent closure is claimed. See the
+[unused-helper phase](../../tests/fixtures/vfp9-listitem-column-numeric/unused-helper-phase.md)
+and [fixed-only hostile phase](../../tests/fixtures/vfp9-listitem-column-numeric/fixed-only-hostile-phase.md).
+The separately frozen excluded-scope harness now audits 256 calls in eight
+contexts across arity, unsupported second types, unusual first selectors,
+binding/RowSourceType, missing-column and ordinary-control groups. GNU and
+Clang sanitizer baseline/fixed SAME-compiler outputs are whole-byte identical
+at raw SHA-256
+`90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
+all compile/run/audit/comparison statuses are zero, diagnostics are empty, and
+frozen input plus nine-library hashes reverify. This closes only the modeled
+excluded-scope preservation gate. Five bounded development contracts pass at
+exact head `d24e468c3`; the repeat walkthrough is clean at `659a3f558`. The
+frozen exact-head broader qualification and integration gates remain open.
 
 ## Bounded AddListItem missing-ID numeric-column linkage
 

@@ -260,10 +260,18 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
 
         // RQ-CF-PRG-LISTITEM-NUMERIC-001: implicit column 1 READ only.
-        // Explicit columns and unsupported types retain the legacy path.
         if (arguments.size() == 1U) {
             if (auto result = read_native_list_control_item_cell_numeric(
                     runtime_object, arguments.front(), behavior); result.has_value()) {
+                return result;
+            }
+        }
+        // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: exact-two-argument,
+        // existing-ID READ only. Unsupported column types and every other
+        // arity retain the legacy path.
+        if (arguments.size() == 2U) {
+            if (auto result = read_native_list_control_item_cell_supplied_column_numeric(
+                    runtime_object, arguments[0], arguments[1], behavior); result.has_value()) {
                 return result;
             }
         }
@@ -967,6 +975,63 @@ std::optional<PrgValue> read_native_list_control_item_cell_numeric(
         return make_string_value("");
     }
     return read_native_list_control_item_cell(runtime_object, *checked_item_id, 0U);
+}
+
+// RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001;
+// VR-5611-LISTITEM-COLUMN-NUMERIC-001/002. The checked second-selector
+// conversion is admitted only for an existing ordinary Numeric item ID on a
+// coherent, unbound RowSourceType=0 control. Every excluded first selector,
+// binding and incoherent state returns to the pre-existing property route.
+// Materialization continues to precede conversion.
+std::optional<PrgValue> read_native_list_control_item_cell_supplied_column_numeric(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& item_id,
+    const PrgValue& column,
+    NumericBehavior behavior)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) || column.is_null ||
+        (column.kind != PrgValueKind::number && column.kind != PrgValueKind::int64 &&
+         column.kind != PrgValueKind::uint64)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const auto row_source_type = runtime_object.properties.find("rowsourcetype");
+    const auto control_source = runtime_object.properties.find("controlsource");
+    const bool materialized_unbound =
+        (row_source_type == runtime_object.properties.end() ||
+         (!row_source_type->second.is_null &&
+          ((row_source_type->second.kind == PrgValueKind::number &&
+            row_source_type->second.number_value == 0.0) ||
+           (row_source_type->second.kind == PrgValueKind::int64 &&
+            row_source_type->second.int64_value == 0) ||
+           (row_source_type->second.kind == PrgValueKind::uint64 &&
+            row_source_type->second.uint64_value == 0U)))) &&
+        (control_source == runtime_object.properties.end() ||
+         (!control_source->second.is_null &&
+          control_source->second.kind == PrgValueKind::string &&
+          trim_copy(control_source->second.string_value).empty())) &&
+        runtime_object.collection_item_keys.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_rows.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_item_data.size() == runtime_object.collection_items.size() &&
+        runtime_object.list_selected.size() == runtime_object.collection_items.size();
+    if (!materialized_unbound || item_id.is_null || item_id.kind != PrgValueKind::number ||
+        !std::isfinite(item_id.number_value) || item_id.number_value < 1.0 ||
+        item_id.number_value > 32767.0 ||
+        std::trunc(item_id.number_value) != item_id.number_value) {
+        return std::nullopt;
+    }
+    const auto requested_item_id = static_cast<long long>(item_id.number_value);
+    if (!find_native_list_control_row_by_item_id(runtime_object, requested_item_id).has_value()) {
+        return std::nullopt;
+    }
+
+    const auto checked_column = checked_listitem_column_numeric_argument(column, behavior);
+    if (!checked_column.has_value()) {
+        throw PrgCompatibilityError(runtime_text("Runtime.Prg.Array.Error.SubscriptOutOfRange"), 31);
+    }
+    return read_native_list_control_item_cell(
+        runtime_object, requested_item_id, static_cast<std::size_t>(*checked_column - 1));
 }
 
 std::optional<PrgValue> read_native_list_control_item_id_for_slot(

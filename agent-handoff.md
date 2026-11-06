@@ -1,5 +1,48 @@
 # Agent Handoff
 
+## Active slice — PR #7238 ListItem supplied-column review repair (2026-11-03)
+
+This section supersedes the stale retained-division "Active slice" below. Work
+in `/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin` on
+branch `fix/listitem-column-read-5611`; PR #7238 is open. Signed+DCO product
+head `736357435c33f1577425fb3637ecea1fb667c0f2` is pushed. It resolves all
+old-head automated findings: property-first side-effect-free reads retain both
+typed selectors; admission is limited to an ordinary existing Numeric ID on a
+coherent unbound RowSourceType-zero control; fractional conversion uses a
+separate exact-binary quantizer without changing ROUND; the helper test fails
+on assertions; and preservation requires the invoke phase. The existing
+one-selector `List` hook is explicitly protected from two-selector reads.
+
+Focused GNU and Clang each pass the helper, four public class/mode/session
+shards and the runtime-surface regression. Exact-head preservation v2 passes
+all GNU/Clang baseline/fixed lanes byte-identically at SHA-256
+`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`
+with zero-status audits/comparisons. Frozen-v6 broader qualification passes
+131/131 for GNU in 785.22s and Clang sanitizers in 5051.29s; log/JUnit hashes
+are GNU `92a1444a4a41a6736fe1b5e4c08c5264fa6e1cc5e1e87a68adae8499df73c179` /
+`778e2cf4ddd7f4765c19ef608752244a794dc43c150c90e877269e80ee219cc1`
+and Clang `6579d54f135544456c8157ca823a45bd31cb47f943f667894e5226247830748c` /
+`de12f935906e92346aa849104f028e7e8b1291b4127a3c557544d06e7be49526`.
+Ignored receipts are under `build/listitem-column-native/preservation-v2/` and
+`build/listitem-column-native/broader-v6/`; failed v5 evidence remains
+retained. Hosted checks on the pushed product head are green or in progress.
+NEXT commit/push this documentation-only checkpoint, request Claude review on
+the new exact head, require an actual clean authorized review and all hosted
+checks green, then resolve fully addressed conversations and merge. No review
+conversation is yet resolved.
+
+Nov06 local Claude `/code-review` of exact head
+`cfd5fbbd8103376a2ba0ac09ac95223d9fa46163` found one actionable medium
+regression: the new raw-selector transport let two-selector `ItemData`,
+`IndexToItemID`, and `ItemIDToIndex` calls enter one-selector property-read
+routing. Fail-first public coverage reproduced the route loss. The bounded
+repair requires both the typed hooks and fallback property resolvers to see no
+secondary selector, preserving the legacy method route. The expanded 104-case
+public shard passes all four mode/session combinations under GNU and all four
+under Clang. NEXT: signed+DCO commit/push, fresh hosted checks and a clean
+Claude exact-head review; then re-audit conversations and merge only if every
+gate is clean.
+
 ## Active Numeric compatibility workstream — 2026-10-29
 
 Owner resumed #5611/#6776/#7189; all remain OPEN and owner-authored. `main` is
