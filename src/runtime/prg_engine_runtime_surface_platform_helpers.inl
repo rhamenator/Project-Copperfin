@@ -2,25 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-std::uint32_t bitwise_value(const PrgValue& value) {
-    return static_cast<std::uint32_t>(
-        static_cast<std::int32_t>(std::llround(value_as_number(value))));
-}
 std::int64_t signed_bitwise_result(std::uint32_t value) {
     return static_cast<std::int64_t>(static_cast<std::int32_t>(value));
-}
-
-int bit_position(const PrgValue& value) {
-    const int position = static_cast<int>(std::llround(value_as_number(value)));
-    if (position < 0 || position > 31) {
-        throw std::runtime_error(runtime_text(
-            "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange",
-            {
-                {"maximum", "31"},
-                {"minimum", "0"}
-            }));
-    }
-    return position;
 }
 
 [[noreturn]] void throw_invalid_bit_shift_argument() {
