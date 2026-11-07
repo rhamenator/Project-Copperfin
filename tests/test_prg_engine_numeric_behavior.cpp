@@ -22,6 +22,7 @@
 #include <optional>
 #include <string>
 #include <system_error>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -81,88 +82,125 @@ struct Row {
     std::string expected;    // "C:<text>" or "ERR<number>"
 };
 
-struct BitIndexCase {
-    const char* function;
-    const char* value;
-    const char* index;
-    const char* copperfin_expected;
-    const char* vfp9_expected;
+struct BitFamilyCase {
+    std::string function;
+    std::string arguments;
+    std::string mode;
+    std::string expected;
 };
 
-// RQ-CF-PRG-BIT-INDEX-BOUNDARIES-001: one portable table pins the shared
-// 0..31 index contract for all three index-taking BIT* functions. The VFP9
-// infinity rows reproduce the retained installed-VFP9 observations; rejecting
-// them in COPPERFIN mode is the deliberate checked-conversion divergence.
-const std::vector<BitIndexCase> kBitIndexCases{
-    {"BITSET", "0", "-1", "ERR11", "ERR11"},
-    {"BITSET", "0", "0", "I:1", "I:1"},
-    {"BITSET", "0", "31", "I:-2147483648", "I:-2147483648"},
-    {"BITSET", "0", "31.5", "I:-2147483648", "I:-2147483648"},
-    {"BITSET", "0", "32", "ERR11", "ERR11"},
-    {"BITSET", "0", "EXP(1000)", "ERR11", "I:1"},
-    {"BITCLEAR", "-1", "-1", "ERR11", "ERR11"},
-    {"BITCLEAR", "-1", "0", "I:-2", "I:-2"},
-    {"BITCLEAR", "-1", "31", "I:2147483647", "I:2147483647"},
-    {"BITCLEAR", "-1", "31.5", "I:2147483647", "I:2147483647"},
-    {"BITCLEAR", "-1", "32", "ERR11", "ERR11"},
-    {"BITCLEAR", "-1", "EXP(1000)", "ERR11", "I:-2"},
-    {"BITTEST", "-1", "-1", "ERR11", "ERR11"},
-    {"BITTEST", "-1", "0", "L:true", "L:true"},
-    {"BITTEST", "-1", "31", "L:true", "L:true"},
-    {"BITTEST", "-1", "31.5", "L:true", "L:true"},
-    {"BITTEST", "-1", "32", "ERR11", "ERR11"},
-    {"BITTEST", "-1", "EXP(1000)", "ERR11", "L:true"},
-};
+// RQ-CF-PRG-BIT-FAMILY-COVERAGE-001: this is the single portable table for
+// every BIT* function in both modes. The retained per-function requirements
+// still govern their boundary meanings; this builder only consolidates the
+// already-evidenced rows without changing an expected result.
+std::vector<BitFamilyCase> build_bit_family_cases() {
+    std::vector<BitFamilyCase> cases;
+    const auto add = [&cases](const char* function, const std::string& arguments,
+                              const char* mode, const char* expected) {
+        cases.push_back({function, arguments, mode, expected});
+    };
+    const auto add_both = [&add](const char* function, const std::string& arguments,
+                                 const char* copperfin_expected, const char* vfp9_expected) {
+        add(function, arguments, "COPPERFIN", copperfin_expected);
+        add(function, arguments, "VFP9", vfp9_expected);
+    };
 
-struct BitFoldCase {
-    const char* function;
-    const char* arguments;
-    const char* expected;
-};
+    // RQ-CF-PRG-BIT-INDEX-BOUNDARIES-001. The VFP9 infinity results are
+    // retained native observations; COPPERFIN's rejection is deliberate.
+    for (const auto& [function, value, index, copperfin_expected, vfp9_expected] :
+         std::vector<std::tuple<const char*, const char*, const char*, const char*, const char*>>{
+             {"BITSET", "0", "-1", "ERR11", "ERR11"},
+             {"BITSET", "0", "0", "I:1", "I:1"},
+             {"BITSET", "0", "31", "I:-2147483648", "I:-2147483648"},
+             {"BITSET", "0", "31.5", "I:-2147483648", "I:-2147483648"},
+             {"BITSET", "0", "32", "ERR11", "ERR11"},
+             {"BITSET", "0", "EXP(1000)", "ERR11", "I:1"},
+             {"BITCLEAR", "-1", "-1", "ERR11", "ERR11"},
+             {"BITCLEAR", "-1", "0", "I:-2", "I:-2"},
+             {"BITCLEAR", "-1", "31", "I:2147483647", "I:2147483647"},
+             {"BITCLEAR", "-1", "31.5", "I:2147483647", "I:2147483647"},
+             {"BITCLEAR", "-1", "32", "ERR11", "ERR11"},
+             {"BITCLEAR", "-1", "EXP(1000)", "ERR11", "I:-2"},
+             {"BITTEST", "-1", "-1", "ERR11", "ERR11"},
+             {"BITTEST", "-1", "0", "L:true", "L:true"},
+             {"BITTEST", "-1", "31", "L:true", "L:true"},
+             {"BITTEST", "-1", "31.5", "L:true", "L:true"},
+             {"BITTEST", "-1", "32", "ERR11", "ERR11"},
+             {"BITTEST", "-1", "EXP(1000)", "ERR11", "L:true"}}) {
+        add_both(function, std::string(value) + "," + index, copperfin_expected, vfp9_expected);
+    }
 
-// RQ-CF-PRG-BIT-FOLD-COVERAGE-001: pin the shared arity boundary and the
-// existing multi-operand fold for every folding BIT* function in both modes.
-// The fractional folds reproduce retained installed-VFP9 observations. The
-// mixed-type rows are preservation controls for Copperfin's established safe
-// Logical, Character and Currency coercions; they do not claim native type
-// parity.
-const std::vector<BitFoldCase> kBitFoldCases{
-    {"BITAND", "7", "ERR1229"},
-    {"BITAND", "7.9,3.9,1.9", "I:1"},
-    {"BITAND", ".T.,'1.9',$1.5", "I:0"},
-    {"BITOR", "7", "ERR1229"},
-    {"BITOR", "7.9,3.9,1.9", "I:7"},
-    {"BITOR", ".T.,'1.9',$1.5", "I:3"},
-    {"BITXOR", "7", "ERR1229"},
-    {"BITXOR", "7.9,3.9,1.9", "I:5"},
-    {"BITXOR", ".T.,'1.9',$1.5", "I:1"},
-};
+    // RQ-CF-PRG-BIT-FOLD-COVERAGE-001. Mixed-type rows preserve Copperfin's
+    // existing safe coercions and do not claim native type parity.
+    for (const auto& [function, arguments, expected] :
+         std::vector<std::tuple<const char*, const char*, const char*>>{
+             {"BITAND", "7", "ERR1229"}, {"BITAND", "7.9,3.9,1.9", "I:1"},
+             {"BITAND", ".T.,'1.9',$1.5", "I:0"}, {"BITOR", "7", "ERR1229"},
+             {"BITOR", "7.9,3.9,1.9", "I:7"}, {"BITOR", ".T.,'1.9',$1.5", "I:3"},
+             {"BITXOR", "7", "ERR1229"}, {"BITXOR", "7.9,3.9,1.9", "I:5"},
+             {"BITXOR", ".T.,'1.9',$1.5", "I:1"}}) {
+        add_both(function, arguments, expected, expected);
+    }
 
-struct BitNotCase {
-    const char* operand;
-    const char* copperfin_expected;
-    const char* vfp9_expected;
-};
+    // RQ-CF-PRG-BITNOT-COVERAGE-001. Out-of-range finite operands diverge:
+    // COPPERFIN rejects them while VFP9 projects the low 32 bits.
+    for (const auto& [operand, copperfin_expected, vfp9_expected] :
+         std::vector<std::tuple<const char*, const char*, const char*>>{
+             {"1.9", "I:-2", "I:-2"}, {"-1.9", "I:0", "I:0"},
+             {"2.5", "I:-3", "I:-3"}, {"-0.5", "I:-1", "I:-1"},
+             {"2147483647", "I:-2147483648", "I:-2147483648"},
+             {"2147483648", "ERR11", "I:2147483647"},
+             {"4294967295", "ERR11", "I:0"}, {"4294967296", "ERR11", "I:-1"},
+             {"-2147483648", "I:2147483647", "I:2147483647"},
+             {"-2147483649", "ERR11", "I:-2147483648"},
+             {"1E20", "ERR11", "I:-1"}, {"EXP(1000)", "ERR11", "ERR11"},
+             {"-EXP(1000)", "ERR11", "ERR11"}}) {
+        add_both("BITNOT", operand, copperfin_expected, vfp9_expected);
+    }
 
-// RQ-CF-PRG-BITNOT-COVERAGE-001: expose BITNOT in the portable two-mode
-// numeric table using retained installed-VFP9 finite observations and the
-// existing checked nonfinite policy. Out-of-range finite operands deliberately
-// diverge: COPPERFIN rejects them while VFP9 projects the low 32 bits.
-const std::vector<BitNotCase> kBitNotCases{
-    {"1.9", "I:-2", "I:-2"},
-    {"-1.9", "I:0", "I:0"},
-    {"2.5", "I:-3", "I:-3"},
-    {"-0.5", "I:-1", "I:-1"},
-    {"2147483647", "I:-2147483648", "I:-2147483648"},
-    {"2147483648", "ERR11", "I:2147483647"},
-    {"4294967295", "ERR11", "I:0"},
-    {"4294967296", "ERR11", "I:-1"},
-    {"-2147483648", "I:2147483647", "I:2147483647"},
-    {"-2147483649", "ERR11", "I:-2147483648"},
-    {"1E20", "ERR11", "I:-1"},
-    {"EXP(1000)", "ERR11", "ERR11"},
-    {"-EXP(1000)", "ERR11", "ERR11"},
-};
+    // RQ-CF-PRG-BITSHIFT-BOUNDARIES-001. These rows preserve the complete
+    // portable shift coverage, including the three previously omitted VFP9
+    // operand conversions from the retained native fixture.
+    for (const auto& [function, arguments, expected] :
+         std::vector<std::tuple<const char*, const char*, const char*>>{
+             {"BITLSHIFT", "1,-1", "ERR11"}, {"BITRSHIFT", "256,-1", "ERR11"},
+             {"BITLSHIFT", "1,-0.5", "I:1"}, {"BITRSHIFT", "256,0.5", "I:256"},
+             {"BITLSHIFT", "1,2.9", "I:4"}, {"BITRSHIFT", "256,2.9", "I:64"},
+             {"BITLSHIFT", "1,31", "I:-2147483648"}, {"BITRSHIFT", "256,31", "I:0"},
+             {"BITLSHIFT", "1,32", "ERR11"}, {"BITRSHIFT", "256,64", "ERR11"},
+             {"BITLSHIFT", "2147483647,1", "I:-2"}, {"BITLSHIFT", "-1,1", "I:-2"},
+             {"BITLSHIFT", "-0.5,1", "I:0"}, {"BITLSHIFT", "1.9,1", "I:2"},
+             {"BITRSHIFT", "-1,1", "I:2147483647"},
+             {"BITRSHIFT", "-2147483648,31", "I:1"},
+             {"BITLSHIFT", "4294967295,0", "I:-1"},
+             {"BITRSHIFT", "10000000000,1", "I:705032704"}}) {
+        add_both(function, arguments, expected, expected);
+    }
+    for (const auto& [operand, expected] :
+         std::vector<std::pair<const char*, const char*>>{{"-2147483649", "I:2147483647"},
+                                                          {"-4294967297", "I:-1"},
+                                                          {"4294967296", "I:0"}}) {
+        add("BITLSHIFT", std::string(operand) + ",0", "VFP9", expected);
+        add("BITRSHIFT", std::string(operand) + ",0", "VFP9", expected);
+    }
+    for (const char* count : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300",
+                              "4294967296", "9007199254740992"}) {
+        add_both("BITLSHIFT", std::string("1,") + count, "ERR11", "I:1");
+        add_both("BITRSHIFT", std::string("256,") + count, "ERR11", "I:256");
+    }
+    for (const char* count : {"2147483647", "2147483648", "-2147483648", "-2147483649",
+                              "4294967295", "10000000000"}) {
+        add("BITLSHIFT", std::string("1,") + count, "VFP9", "ERR11");
+        add("BITRSHIFT", std::string("256,") + count, "VFP9", "ERR11");
+    }
+    for (const char* operand : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300"}) {
+        add_both("BITLSHIFT", std::string(operand) + ",1", "ERR11", "I:0");
+        add_both("BITRSHIFT", std::string(operand) + ",1", "ERR11", "I:0");
+    }
+    return cases;
+}
+
+const std::vector<BitFamilyCase> kBitFamilyCases = build_bit_family_cases();
 
 // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: independent conversion
 // table anchored by 41 native Numeric queries; nonzero absent-handle results
@@ -1247,81 +1285,9 @@ std::vector<Row> build_rows() {
         rows.push_back({"", "b[1]+b[2]+b[3]", "C:xyz"});
     }
 
-    for (const char* mode : {"COPPERFIN", "VFP9"}) {
-        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
-        for (const auto& row : kBitIndexCases) {
-            const std::string expression = std::string(row.function) + "(" + row.value + "," + row.index + ")";
-            rows.push_back({set, expression,
-                            std::string(mode) == "VFP9" ? row.vfp9_expected : row.copperfin_expected});
-        }
-    }
-
-    for (const char* mode : {"COPPERFIN", "VFP9"}) {
-        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
-        for (const auto& row : kBitFoldCases) {
-            rows.push_back({set, std::string(row.function) + "(" + row.arguments + ")", row.expected});
-        }
-    }
-
-    for (const char* mode : {"COPPERFIN", "VFP9"}) {
-        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
-        for (const auto& row : kBitNotCases) {
-            rows.push_back({set, std::string("BITNOT(") + row.operand + ")",
-                            std::string(mode) == "VFP9" ? row.vfp9_expected : row.copperfin_expected});
-        }
-    }
-
-    // BITLSHIFT/BITRSHIFT (#5765 under #5611/#6776). Both functions operate on 32-bit bit patterns and truncate
-    // ordinary fractional arguments. VFP9's out-of-range double conversion is selectable; COPPERFIN rejects it.
-    for (const char *mode : {"COPPERFIN", "VFP9"}) {
-        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
-        rows.push_back({set, "BITLSHIFT(1,-1)", "ERR11"});
-        rows.push_back({set, "BITRSHIFT(256,-1)", "ERR11"});
-        rows.push_back({set, "BITLSHIFT(1,-0.5)", "I:1"});
-        rows.push_back({set, "BITRSHIFT(256,0.5)", "I:256"});
-        rows.push_back({set, "BITLSHIFT(1,2.9)", "I:4"});
-        rows.push_back({set, "BITRSHIFT(256,2.9)", "I:64"});
-        rows.push_back({set, "BITLSHIFT(1,31)", "I:-2147483648"});
-        rows.push_back({set, "BITRSHIFT(256,31)", "I:0"});
-        rows.push_back({set, "BITLSHIFT(1,32)", "ERR11"});
-        rows.push_back({set, "BITRSHIFT(256,64)", "ERR11"});
-        rows.push_back({set, "BITLSHIFT(2147483647,1)", "I:-2"});
-        rows.push_back({set, "BITLSHIFT(-1,1)", "I:-2"});
-        rows.push_back({set, "BITLSHIFT(-0.5,1)", "I:0"});
-        rows.push_back({set, "BITLSHIFT(1.9,1)", "I:2"});
-        rows.push_back({set, "BITRSHIFT(-1,1)", "I:2147483647"});
-        rows.push_back({set, "BITRSHIFT(-2147483648,31)", "I:1"});
-        rows.push_back({set, "BITLSHIFT(4294967295,0)", "I:-1"});
-        rows.push_back({set, "BITRSHIFT(10000000000,1)", "I:705032704"});
-    }
-    // RQ-CF-PRG-BITSHIFT-BOUNDARIES-001 / #6875: pin the three retained
-    // VFP9 operand conversions omitted from the original portable table.
-    for (const auto& [operand, expected] : std::vector<std::pair<const char*, const char*>>{
-             {"-2147483649", "I:2147483647"},
-             {"-4294967297", "I:-1"},
-             {"4294967296", "I:0"}}) {
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
-                        std::string("BITLSHIFT(") + operand + ",0)", expected});
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
-                        std::string("BITRSHIFT(") + operand + ",0)", expected});
-    }
-    for (const char *count : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300",
-                              "4294967296", "9007199254740992"}) {
-        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITLSHIFT(1,") + count + ")", "ERR11"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITRSHIFT(256,") + count + ")", "ERR11"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(1,") + count + ")", "I:1"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(256,") + count + ")", "I:256"});
-    }
-    for (const char *count : {"2147483647", "2147483648", "-2147483648", "-2147483649",
-                              "4294967295", "10000000000"}) {
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(1,") + count + ")", "ERR11"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(256,") + count + ")", "ERR11"});
-    }
-    for (const char *operand : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300"}) {
-        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITLSHIFT(") + operand + ",1)", "ERR11"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITRSHIFT(") + operand + ",1)", "ERR11"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITLSHIFT(") + operand + ",1)", "I:0"});
-        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9", std::string("BITRSHIFT(") + operand + ",1)", "I:0"});
+    for (const auto& row : kBitFamilyCases) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO " + row.mode,
+                        row.function + "(" + row.arguments + ")", row.expected});
     }
 
     // Governing requirement: RQ-CF-PRG-ROUND-BOUNDARIES-001.
@@ -4967,6 +4933,18 @@ void test_numeric_behavior_script_rows() {
     fs::remove_all(dir, ignored);
     fs::create_directories(dir);
     write_text(dir / "MiXeD.txt", "Harmless ADIR display-flag fixture.\n");
+    expect(kBitFamilyCases.size() == 182U,
+           "BIT-family table must retain every consolidated portable row");
+    for (const char* function : {"BITAND", "BITOR", "BITXOR", "BITNOT", "BITSET",
+                                 "BITCLEAR", "BITTEST", "BITLSHIFT", "BITRSHIFT"}) {
+        for (const char* mode : {"COPPERFIN", "VFP9"}) {
+            bool found = false;
+            for (const auto& row : kBitFamilyCases) {
+                found = found || (row.function == function && row.mode == mode);
+            }
+            expect(found, std::string(function) + " must appear in the BIT-family table for " + mode);
+        }
+    }
     const std::vector<Row> rows = build_rows();
     const std::string output = run_rows(dir, rows);
     expect(output.rfind("<incomplete", 0U) != 0U, "numeric behavior: the script should complete: " + output);
