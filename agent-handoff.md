@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## Active slice — shared BIT index boundary table (2026-11-07)
+
+Work in `/home/rich/.codex/worktrees/bit-index-error-6874/Project-Copperfin`
+on `fix/bit-index-error-6874`, based on PR #7272 merge
+`6a781dbc6fd92ef4ea8dc77002e17892244ae033`. Under admitted
+#6874/#6875/#5611/#6776, add only one portable two-mode table for
+BITSET/BITCLEAR/BITTEST indexes -1, 0, 31, 31.5, 32 and positive infinity.
+Preserve the existing checked implementation and detailed per-function frozen
+suites. Do not decide #6873 operand policy, remove localization resources, or
+claim full #6874/#6875 acceptance. GNU15.2 Debug builds the unchanged Numeric
+behavior target, which passes 1/1 in 65.04s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.95s; the safety traceability workflow contract passes 1/1 in 312.18s. NEXT:
+signed+DCO commit, push, Claude-first exact-head review, strict-green hosted
+integration, merge and cleanup.
+
 ## Active slice — missing VFP9 BIT shift operand rows (2026-11-07)
 
 Work in

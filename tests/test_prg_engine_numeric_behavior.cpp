@@ -81,6 +81,39 @@ struct Row {
     std::string expected;    // "C:<text>" or "ERR<number>"
 };
 
+struct BitIndexCase {
+    const char* function;
+    const char* value;
+    const char* index;
+    const char* copperfin_expected;
+    const char* vfp9_expected;
+};
+
+// RQ-CF-PRG-BIT-INDEX-BOUNDARIES-001: one portable table pins the shared
+// 0..31 index contract for all three index-taking BIT* functions. The VFP9
+// infinity rows reproduce the retained installed-VFP9 observations; rejecting
+// them in COPPERFIN mode is the deliberate checked-conversion divergence.
+const std::vector<BitIndexCase> kBitIndexCases{
+    {"BITSET", "0", "-1", "ERR11", "ERR11"},
+    {"BITSET", "0", "0", "I:1", "I:1"},
+    {"BITSET", "0", "31", "I:-2147483648", "I:-2147483648"},
+    {"BITSET", "0", "31.5", "I:-2147483648", "I:-2147483648"},
+    {"BITSET", "0", "32", "ERR11", "ERR11"},
+    {"BITSET", "0", "EXP(1000)", "ERR11", "I:1"},
+    {"BITCLEAR", "-1", "-1", "ERR11", "ERR11"},
+    {"BITCLEAR", "-1", "0", "I:-2", "I:-2"},
+    {"BITCLEAR", "-1", "31", "I:2147483647", "I:2147483647"},
+    {"BITCLEAR", "-1", "31.5", "I:2147483647", "I:2147483647"},
+    {"BITCLEAR", "-1", "32", "ERR11", "ERR11"},
+    {"BITCLEAR", "-1", "EXP(1000)", "ERR11", "I:-2"},
+    {"BITTEST", "-1", "-1", "ERR11", "ERR11"},
+    {"BITTEST", "-1", "0", "L:true", "L:true"},
+    {"BITTEST", "-1", "31", "L:true", "L:true"},
+    {"BITTEST", "-1", "31.5", "L:true", "L:true"},
+    {"BITTEST", "-1", "32", "ERR11", "ERR11"},
+    {"BITTEST", "-1", "EXP(1000)", "ERR11", "L:true"},
+};
+
 // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: independent conversion
 // table anchored by 41 native Numeric queries; nonzero absent-handle results
 // cannot distinguish every index, so those use documented shared-model policy.
@@ -1162,6 +1195,15 @@ std::vector<Row> build_rows() {
         rows.push_back({"", "a[1]+a[2]+a[3]", "C:abc"});
         rows.push_back({set + copy_setup, "ACOPY(a,b,1E20)", "ERR1234"});
         rows.push_back({"", "b[1]+b[2]+b[3]", "C:xyz"});
+    }
+
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const auto& row : kBitIndexCases) {
+            const std::string expression = std::string(row.function) + "(" + row.value + "," + row.index + ")";
+            rows.push_back({set, expression,
+                            std::string(mode) == "VFP9" ? row.vfp9_expected : row.copperfin_expected});
+        }
     }
 
     // BITLSHIFT/BITRSHIFT (#5765 under #5611/#6776). Both functions operate on 32-bit bit patterns and truncate
