@@ -1,0 +1,1297 @@
+{
+  "schemaVersion": 1,
+  "purpose": "planning-only",
+  "authority": "owner-approved issue #7075; BCP 47/IANA tags; CLDR script/region guidance",
+  "fallbackPolicy": "Preferred parent is an editorial proposal only. Runtime fallback needs separately reviewed and tested implementation; absent/unqualified parents must never imply shipped translation.",
+  "entryEvidenceSchema": "docs/contracts/locale-entry-evidence-v1.schema.json",
+  "locales": [
+    {
+      "tag": "en-US",
+      "phase": "v1-owned",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "source",
+      "releaseStatus": "source-baseline",
+      "entryEvidence": "source-baseline",
+      "prerequisites": [
+        "source-key-integrity",
+        "machine-contract"
+      ]
+    },
+    {
+      "tag": "es-419",
+      "phase": "v1-owned",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "present-unqualified",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "pt-BR",
+      "phase": "v1-owned",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "present-unqualified",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "en-GB",
+      "phase": "v1-owned",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "en-US",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "en-CA",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "en-US",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "en-AU",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "en-US",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "en-IN",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "en-US",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "es-ES",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "es-MX",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "es-419",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "es-AR",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "es-419",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "es-CL",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "es-419",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "es-CO",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "es-419",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "pt-PT",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "fr-FR",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "fr-CA",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "fr-FR",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "de-DE",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "de-AT",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "de-DE",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "de-CH",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "de-DE",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "it-IT",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "nl-NL",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "nl-BE",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "nl-NL",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "da-DK",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sv-SE",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "nb-NO",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "fi-FI",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "is-IS",
+      "phase": "western",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "pl-PL",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "cs-CZ",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sk-SK",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "hu-HU",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "ro-RO",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "bg-BG",
+      "phase": "european",
+      "script": "Cyrl",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "uk-UA",
+      "phase": "european",
+      "script": "Cyrl",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "ru-RU",
+      "phase": "european",
+      "script": "Cyrl",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sr-Cyrl-RS",
+      "phase": "european",
+      "script": "Cyrl",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sr-Latn-RS",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "hr-HR",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sl-SI",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "el-GR",
+      "phase": "european",
+      "script": "Grek",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "et-EE",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "lv-LV",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "lt-LT",
+      "phase": "european",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "ja-JP",
+      "phase": "cjk",
+      "script": "Jpan",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "ko-KR",
+      "phase": "cjk",
+      "script": "Kore",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "zh-Hans-CN",
+      "phase": "cjk",
+      "script": "Hans",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "zh-Hant-TW",
+      "phase": "cjk",
+      "script": "Hant",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "zh-Hant-HK",
+      "phase": "cjk",
+      "script": "Hant",
+      "direction": "ltr",
+      "preferredParent": "zh-Hant-TW",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "ar",
+      "phase": "rtl",
+      "script": "Arab",
+      "direction": "rtl",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping"
+      ]
+    },
+    {
+      "tag": "ar-EG",
+      "phase": "rtl",
+      "script": "Arab",
+      "direction": "rtl",
+      "preferredParent": "ar",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "ar-SA",
+      "phase": "rtl",
+      "script": "Arab",
+      "direction": "rtl",
+      "preferredParent": "ar",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "ar-MA",
+      "phase": "rtl",
+      "script": "Arab",
+      "direction": "rtl",
+      "preferredParent": "ar",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "he-IL",
+      "phase": "rtl",
+      "script": "Hebr",
+      "direction": "rtl",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping"
+      ]
+    },
+    {
+      "tag": "fa-IR",
+      "phase": "rtl",
+      "script": "Arab",
+      "direction": "rtl",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping"
+      ]
+    },
+    {
+      "tag": "ur-PK",
+      "phase": "rtl",
+      "script": "Arab",
+      "direction": "rtl",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "bidi-layout",
+        "bidi-isolation",
+        "keyboard-input",
+        "font-shaping"
+      ]
+    },
+    {
+      "tag": "hi-IN",
+      "phase": "south-southeast",
+      "script": "Deva",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "bn-BD",
+      "phase": "south-southeast",
+      "script": "Beng",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "ta-IN",
+      "phase": "south-southeast",
+      "script": "Taml",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "te-IN",
+      "phase": "south-southeast",
+      "script": "Telu",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "mr-IN",
+      "phase": "south-southeast",
+      "script": "Deva",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "gu-IN",
+      "phase": "south-southeast",
+      "script": "Gujr",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "pa-IN",
+      "phase": "south-southeast",
+      "script": "Guru",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "th-TH",
+      "phase": "south-southeast",
+      "script": "Thai",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "font-shaping",
+        "ime-input",
+        "line-breaking"
+      ]
+    },
+    {
+      "tag": "vi-VN",
+      "phase": "south-southeast",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "id-ID",
+      "phase": "south-southeast",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "ms-MY",
+      "phase": "south-southeast",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "fil-PH",
+      "phase": "south-southeast",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "tr-TR",
+      "phase": "further",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sw-KE",
+      "phase": "further",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "sw-TZ",
+      "phase": "further",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": "sw-KE",
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging",
+        "regional-terminology"
+      ]
+    },
+    {
+      "tag": "af-ZA",
+      "phase": "further",
+      "script": "Latn",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "not-created",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "required-per-key",
+      "prerequisites": [
+        "catalog",
+        "per-entry-provenance",
+        "linguistic-review",
+        "platform-ui",
+        "packaging"
+      ]
+    },
+    {
+      "tag": "qps-ploc",
+      "phase": "test-only",
+      "script": "pseudo",
+      "direction": "ltr",
+      "preferredParent": null,
+      "catalogStatus": "test-only",
+      "releaseStatus": "not-qualified",
+      "entryEvidence": "pseudo-generated",
+      "prerequisites": [
+        "pseudo-coverage",
+        "never-advertise"
+      ]
+    }
+  ]
+}
