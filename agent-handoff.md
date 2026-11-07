@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## Active slice — folding BIT arity and multi-operand table (2026-11-07)
+
+Work in `/home/rich/.codex/worktrees/bit-fold-mode-table-6875/Project-Copperfin`
+on `test/bit-fold-mode-table-6875`, based on PR #7274 merge
+`d42b82d2dc2646d0f68357a38db21b69dc9bc049`. Under admitted
+#6874/#6875/#5611/#6776, add one portable two-mode table for BITAND, BITOR and
+BITXOR one-argument rejection, retained three-operand fractional folds, and
+existing safe mixed-type preservation controls. The first frozen run exposed
+that malformed one-argument calls fell through and returned the lowercase
+function name. A fresh installed-VFP9 7423 probe records error 1229 for all
+three calls, so the bounded production repair rejects the evidenced one operand
+before unresolved-routine fallback. Do not decide #6873 operand policy, claim
+native type parity for mixed-type rows, alter valid folds, or claim full
+#6874/#6875 acceptance.
+GNU15.2 Debug builds the changed runtime and five focused targets. The Numeric
+behavior target plus BITAND/BITOR/BITXOR and NULL-neighbor suites pass 5/5 in
+79.20s on the final source tree. Issue-intake, contributor-signoff, changelog and native-isolation
+contracts pass 5/5 in 8.29s; 256 changelog fragments validate; the safety
+traceability workflow contract passes on the final tree. The VFP9
+VM is shut down. NEXT: verify diff/scope, commit signed+DCO, push, request
+Claude-first exact-head review, require strict-green hosted integration, merge
+and clean up.
+
 ## Active slice — shared BIT index boundary table (2026-11-07)
 
 Work in `/home/rich/.codex/worktrees/bit-index-error-6874/Project-Copperfin`
