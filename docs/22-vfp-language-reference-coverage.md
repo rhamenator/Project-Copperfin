@@ -397,14 +397,19 @@
   Claude-first/fallback, and zero unresolved conversations (gate6093226220).
 
 - BIT-family 32-bit contract (#6874/#5611/#6776,2026-11-07): all nine
-  `BIT*` functions operate on `std::uint32_t` bit patterns. BITAND, BITOR and
+  `BIT*` functions perform their bit operations on `std::uint32_t` patterns.
+  In COPPERFIN mode, the non-shift functions currently reject finite Numeric
+  operands outside signed-32, while BITLSHIFT and BITRSHIFT accept int64-range
+  operands and project their low 32 bits; #6873 retains the unresolved policy
+  decision for the former range. BITAND, BITOR and
   BITXOR fold two or more operands; BITNOT complements one pattern; BITSET,
   BITCLEAR and BITTEST validate a converted index in 0..31 before constructing
   a mask; BITLSHIFT and BITRSHIFT validate a converted count in 0..31 before
   shifting. Numeric results are returned using the corresponding signed
   32-bit Integer value, while BITTEST returns Logical. Invalid indexes, shift
-  counts and rejected operands use catchable compatibility errors rather than
-  `std::runtime_error`. The unified two-mode table exercises every function;
+  counts plus the table's range/nonfinite rejections use catchable
+  compatibility errors; the BIT-family paths do not directly construct a
+  plain `std::runtime_error`. The unified two-mode table exercises every function;
   the detailed per-function fixtures retain their independently recovered
   conversion boundaries. This contract does not decide #6873's unresolved
   COPPERFIN operand range/type policy or claim mixed-type native parity.
