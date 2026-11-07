@@ -4651,6 +4651,12 @@ copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
 
+# RQ-CF-VFP-DBC-CATALOG-REGULAR-FILE-001: DBC catalog readers bind
+# regular-file admission to the opened object and never block on POSIX FIFOs.
+copperfin_add_test(test_dbc_catalog_regular_file_admission cf_vfp_assets
+    test_dbc_catalog_regular_file_admission.cpp
+)
+
 copperfin_add_test(test_vfp_sidecar_path cf_design_model
     test_vfp_sidecar_path.cpp
 )
