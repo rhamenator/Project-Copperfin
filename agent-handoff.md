@@ -1,5 +1,26 @@
 # Agent Handoff
 
+## Active slice — shared non-shift BIT conversion pair (2026-11-06)
+
+Work in
+`/home/rich/.codex/worktrees/bit-family-shared-conversion-6872/Project-Copperfin`
+on `refactor/bit-family-shared-conversion-6872`, based on PR #7266 merge
+`5876cb9761e08a002cfa69d6977f5165639e087a`. Under admitted #6872/#5611/#6776,
+replace the seven non-shift BIT operations' ten per-operation converter entry
+points with one checked bit-pattern converter and one checked 0..31 index
+converter. Preserve the independently recovered BITNOT nonfinite rejection and
+the six siblings' explicit-VFP9 infinity-zero policy; shift helpers remain
+separate because their coercion boundary differs. GNU15.2 Debug builds the
+runtime and all seven targets; all seven unchanged frozen Numeric suites pass
+7/7 in 44.89s. Their only source edits select the new helper names/policy; no
+input, expectation or assertion changed. Issue-intake, contributor-signoff,
+changelog and native-isolation contracts pass 5/5 in 5.51s; the safety
+traceability workflow contract passes in 339.05s; source audit finds no old
+per-operation converter definition or live call outside retained historical
+fixtures; `git diff --check` passes. NEXT: record signed+DCO, push, open a PR,
+request Claude-first exact-head review and merge only after strict-green hosted
+gates and zero unresolved conversations.
+
 ## Active slice — remove obsolete unsafe bit converters (2026-11-06)
 
 Work in
