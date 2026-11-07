@@ -1187,6 +1187,17 @@ std::vector<Row> build_rows() {
         rows.push_back({set, "BITLSHIFT(4294967295,0)", "I:-1"});
         rows.push_back({set, "BITRSHIFT(10000000000,1)", "I:705032704"});
     }
+    // RQ-CF-PRG-BITSHIFT-BOUNDARIES-001 / #6875: pin the three retained
+    // VFP9 operand conversions omitted from the original portable table.
+    for (const auto& [operand, expected] : std::vector<std::pair<const char*, const char*>>{
+             {"-2147483649", "I:2147483647"},
+             {"-4294967297", "I:-1"},
+             {"4294967296", "I:0"}}) {
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("BITLSHIFT(") + operand + ",0)", expected});
+        rows.push_back({"SET NUMERICBEHAVIOR TO VFP9",
+                        std::string("BITRSHIFT(") + operand + ",0)", expected});
+    }
     for (const char *count : {"EXP(1000)", "-EXP(1000)", "1E20", "-1E20", "1E300",
                               "4294967296", "9007199254740992"}) {
         rows.push_back({"SET NUMERICBEHAVIOR TO COPPERFIN", std::string("BITLSHIFT(1,") + count + ")", "ERR11"});
