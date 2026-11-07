@@ -1,5 +1,32 @@
 # Agent Handoff
 
+## Active slice — DBC catalog regular-file admission (2026-11-07)
+
+PR #7280 merged the BIT-family width-contract qualification as
+`4281921692f1bbddc619f4b4f6da98a14d767139`; its exact reviewed head was
+`ffecf7dc4d341b0b1109bd2eaf941b60fee6304f`, every hosted check passed, issue
+#6874 closed, and the dedicated worktree, branches and scratch build were
+removed. Continue in
+`/home/rich/.codex/worktrees/dbc-catalog-fifo-7275/Project-Copperfin` on
+`fix/dbc-catalog-fifo-7275`, based on that merge. Under admitted #7275, bind
+DBC catalog regular-file admission and reads to one opened descriptor/handle;
+on POSIX, open nonblocking so a direct FIFO or symlink-to-FIFO is rejected
+before it can wait for a writer. Preserve symlink-to-regular behavior and the
+valid regular DBC extraction/export controls. The shared reader audit covers
+all three internal call sites; only DBC catalog loading opts into regular-file
+admission so the separate memo and generic-table paths retain their prior
+behavior. This slice does not close primary DBF #7273,
+DBT sidecar #7268, Access LVAL #7271, or redefine symlink policy. The focused
+GNU15.2 Debug target builds; the focused test, broader VFP asset suite and
+issue-intake/signoff/changelog/isolation contracts pass 7/7 in 7.69s,
+including a retained symlink-to-regular control and six watchdog-bounded FIFO
+cases. The exact-tree safety traceability
+contract passes 1/1 in 317.89s. Retained reproduction evidence is
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/dbc-catalog-fifo-20261107/result.md`.
+PR #7281 is open. NEXT: push the bounded review corrections, obtain a clean
+Claude-first exact-head review, require strict-green hosted integration, merge
+and clean up.
+
 ## Active slice — BIT-family 32-bit contract qualification (2026-11-07)
 
 PR #7279 merged the unified BIT-family table as
