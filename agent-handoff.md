@@ -1,5 +1,27 @@
 # Agent Handoff
 
+## Active slice — portable BITNOT mode table (2026-11-07)
+
+PR #7276 merged the preceding folding-BIT slice at
+`4a230c5d2e9bb97883f61cb8c53af7dd9d5a0bda`; its exact reviewed head was
+`58e9b9cf3c72803e3747ccb61232ca351a770702`, every hosted check passed, and
+the dedicated worktree, branch and scratch build were removed. Continue in
+`/home/rich/.codex/worktrees/bitnot-mode-table-6875/Project-Copperfin` on
+`test/bitnot-mode-table-6875`, based on that merge. Under admitted
+#6875/#5611/#6776, expose only BITNOT in the portable two-mode Numeric table
+across retained fractions, signed-32 edges, selected wide finite values and
+positive/negative infinity. Preserve the existing checked converter and
+detailed frozen BITNOT suite; do not change production behavior, decide #6873,
+claim mixed-type/native-exact64 parity, implement binary BITNOT, or claim full
+#6875 acceptance. The test table, traceability row and changelog fragment are
+complete. GNU15.2 Debug builds the Numeric behavior, frozen BITNOT and
+NULL-neighbor targets; all three pass in 65.83s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.92s; 257 changelog fragments validate; the safety traceability workflow
+contract passes against the exact tree in 313.63s. NEXT: verify the exact diff,
+commit signed+DCO, push, request Claude-first exact-head review, require
+strict-green hosted integration, merge and clean up.
+
 ## Active slice — folding BIT arity and multi-operand table (2026-11-07)
 
 Work in `/home/rich/.codex/worktrees/bit-fold-mode-table-6875/Project-Copperfin`

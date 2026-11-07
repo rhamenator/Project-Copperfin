@@ -138,6 +138,32 @@ const std::vector<BitFoldCase> kBitFoldCases{
     {"BITXOR", ".T.,'1.9',$1.5", "I:1"},
 };
 
+struct BitNotCase {
+    const char* operand;
+    const char* copperfin_expected;
+    const char* vfp9_expected;
+};
+
+// RQ-CF-PRG-BITNOT-COVERAGE-001: expose BITNOT in the portable two-mode
+// numeric table using retained installed-VFP9 finite observations and the
+// existing checked nonfinite policy. Out-of-range finite operands deliberately
+// diverge: COPPERFIN rejects them while VFP9 projects the low 32 bits.
+const std::vector<BitNotCase> kBitNotCases{
+    {"1.9", "I:-2", "I:-2"},
+    {"-1.9", "I:0", "I:0"},
+    {"2.5", "I:-3", "I:-3"},
+    {"-0.5", "I:-1", "I:-1"},
+    {"2147483647", "I:-2147483648", "I:-2147483648"},
+    {"2147483648", "ERR11", "I:2147483647"},
+    {"4294967295", "ERR11", "I:0"},
+    {"4294967296", "ERR11", "I:-1"},
+    {"-2147483648", "I:2147483647", "I:2147483647"},
+    {"-2147483649", "ERR11", "I:-2147483648"},
+    {"1E20", "ERR11", "I:-1"},
+    {"EXP(1000)", "ERR11", "ERR11"},
+    {"-EXP(1000)", "ERR11", "ERR11"},
+};
+
 // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: independent conversion
 // table anchored by 41 native Numeric queries; nonzero absent-handle results
 // cannot distinguish every index, so those use documented shared-model policy.
@@ -1234,6 +1260,14 @@ std::vector<Row> build_rows() {
         const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
         for (const auto& row : kBitFoldCases) {
             rows.push_back({set, std::string(row.function) + "(" + row.arguments + ")", row.expected});
+        }
+    }
+
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const auto& row : kBitNotCases) {
+            rows.push_back({set, std::string("BITNOT(") + row.operand + ")",
+                            std::string(mode) == "VFP9" ? row.vfp9_expected : row.copperfin_expected});
         }
     }
 
