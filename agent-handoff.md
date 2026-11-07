@@ -1,5 +1,27 @@
 # Agent Handoff
 
+## Active slice — unified BIT-family mode table (2026-11-07)
+
+PR #7277 merged the portable BITNOT slice at
+`d994325c236a00e2889ecb3fb71ace7a0e5e6aa9`; its exact reviewed head was
+`2095152befc86b1072e867ab528f10c190528dab`, every hosted check passed, and
+the dedicated worktree, branches and scratch build were removed. Continue in
+`/home/rich/.codex/worktrees/bit-family-unified-table-6875/Project-Copperfin`
+on `test/bit-family-unified-table-6875`, based on that merge. Under admitted
+#6875/#5611/#6776, consolidate every existing portable BIT-family expectation
+into one `{function, arguments, mode, expected}` collection without changing
+production behavior or any expected result. This is the final table-structure
+acceptance slice for #6875 only; do not decide #6873, broaden #6874, claim
+unevidenced mixed-type/native-exact64 parity, implement binary BITNOT, or close
+the parent compatibility/hazard workstreams. The exact table contains 182 rows
+and asserts all nine functions in both modes. The GNU15.2 Debug Numeric
+behavior target builds and passes 1/1 in 64.36s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.52s; 258 changelog fragments validate; the safety traceability workflow
+contract passes in 311.92s. NEXT: verify the exact diff, commit signed+DCO,
+push, request Claude-first exact-head review, require strict-green hosted
+integration, merge and clean up.
+
 ## Active slice — portable BITNOT mode table (2026-11-07)
 
 PR #7276 merged the preceding folding-BIT slice at
