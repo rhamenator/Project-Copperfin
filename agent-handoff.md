@@ -20,9 +20,12 @@ behavior target, which passes 1/1 in 61.87s with no diagnostic; the focused
 BIT-family source audit finds no `std::runtime_error` path. Issue-intake,
 contributor-signoff, changelog and native-isolation contracts pass 5/5 in
 5.76s, and 259 changelog fragments validate. The exact-tree safety
-traceability contract passes 1/1 in 312.21s. NEXT: verify the final diff,
-commit signed+DCO, push, request Claude-first exact-head review, require
-strict-green hosted integration, merge and clean up.
+traceability contract passes 1/1 in 312.21s. PR #7280 is open. The first two
+local exact-head reviews identified and then narrowed the COPPERFIN
+shift/non-shift conversion, compatibility-error and folding-arity wording;
+the latest correction explicitly excludes zero-argument fold behavior. NEXT:
+rerun exact-tree verification, obtain a clean exact-head Claude-first review,
+require strict-green hosted integration, merge and clean up.
 
 ## Active slice — unified BIT-family mode table (2026-11-07)
 

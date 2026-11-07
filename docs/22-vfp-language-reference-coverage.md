@@ -401,8 +401,10 @@
   In COPPERFIN mode, the non-shift functions currently reject finite Numeric
   operands outside signed-32, while BITLSHIFT and BITRSHIFT accept int64-range
   operands and project their low 32 bits; #6873 retains the unresolved policy
-  decision for the former range. BITAND, BITOR and
-  BITXOR fold two or more operands; BITNOT complements one pattern; BITSET,
+  decision for the former range. BITAND, BITOR and BITXOR reject a
+  one-argument call with error 1229 and fold two or more operands;
+  zero-argument behavior remains outside this contract. BITNOT complements
+  one pattern; BITSET,
   BITCLEAR and BITTEST validate a converted index in 0..31 before constructing
   a mask; BITLSHIFT and BITRSHIFT validate a converted count in 0..31 before
   shifting. Numeric results are returned using the corresponding signed
