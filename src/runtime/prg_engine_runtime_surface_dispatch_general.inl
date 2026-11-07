@@ -748,7 +748,7 @@
         // operands. Reject here rather than falling through as an unresolved
         // routine and fabricating the lowercase function name as a string.
         throw PrgCompatibilityError(
-            runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 1229);
+            runtime_text("Runtime.Prg.Dll.Error.TooFewArguments"), 1229);
     }
     if (function == "bitand" && arguments.size() >= 2U) {
         // RQ-CF-PRG-BITAND-NUMERIC-001: selected-session checked conversion;
