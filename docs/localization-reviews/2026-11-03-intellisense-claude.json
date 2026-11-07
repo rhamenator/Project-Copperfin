@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "claude-sonnet-5-5",
+  "mode": "Claude Code CLI print mode with tools disabled",
+  "sessions": [
+    "a61f28a2-5a56-4c6a-85a2-3a599f025b6e",
+    "5e9bf211-1f2d-48f7-ac9d-f1210fb38c89",
+    "a4babc51-4b2c-470b-9430-fc293adcd035"
+  ],
+  "scope": "Four IntelliSense descriptions in es-419 and pt-BR; a third read-only pass accepted clearer CreateObject wording after review feedback.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.Use",
+      "sourceSha256": "c116cc9118f2d5e19043637568973f5e92c8f719a594e4c74717eb55f1b7c497",
+      "translationSha256": "d23646827cadf87513e365082fde8270b459e472a86becccf94ad1dc69113316",
+      "verdict": "accept",
+      "reason": "Faithful and natural. USE IN preserved. 'tabla libre' and 'cursor' are standard in Spanish VFP docs. Neutral Latin American register."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.In",
+      "sourceSha256": "3c6da4b6af7e4fca2b70bdf2eccf3a7e1745e08b5084cd1f8c513126c6b2bbed",
+      "translationSha256": "5d92739ce65c012badd226f95d7be842576046da028f6216479559ba5c76e664",
+      "verdict": "accept",
+      "reason": "Accurate. 'Palabra clave' is standard; 'área de trabajo' matches Spanish VFP terminology; 'alias' kept; tokens 'USE IN' and 'GO ... IN' unchanged."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.Set",
+      "sourceSha256": "93ec157093f49627ffa52a83bc4e73373092196ecff890cb26b08c809630915a",
+      "translationSha256": "9781f29a039bfb4956a81992e9d89279635d3edcfb54f3d275564431d93edd06",
+      "verdict": "accept",
+      "reason": "Meaning preserved, all four tokens (SAFETY, DELETED, EXCLUSIVE, TALK) intact. 'Estado de ejecución' is a natural rendering of 'runtime state'. Optional: 'como' instead of 'por ejemplo' would mirror the source's 'such as' more closely, but the current wording is fine."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.CreateObject",
+      "sourceSha256": "5c5ccb9464a9de5156c7d2a823a78fb772a2ccad9f0868ba3bdfa3295c2e08be",
+      "translationSha256": "cecbf47089a57f608250b468552b1f858cebe04445c5c0ece2cfce34597223f5",
+      "verdict": "accept",
+      "reason": "Third independent pass accepted “Función que crea un objeto de automatización COM o Copperfin.” Natural Latin American Spanish; “crea” expresses CreateObject instantiation more clearly than “activa”; COM and Copperfin remain invariant."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Use",
+      "sourceSha256": "c116cc9118f2d5e19043637568973f5e92c8f719a594e4c74717eb55f1b7c497",
+      "translationSha256": "936fca6476afdc6b12314f408fe89433e0ad991d04e49cd21d55590caad3a681",
+      "verdict": "accept",
+      "reason": "Faithful and natural in Brazilian Portuguese. 'Tabela livre', 'cursor', and 'fecha um deles' are idiomatic and correct; USE IN preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.In",
+      "sourceSha256": "3c6da4b6af7e4fca2b70bdf2eccf3a7e1745e08b5084cd1f8c513126c6b2bbed",
+      "translationSha256": "7de1be909713d52b64359fcdca7b9b66c81a4f3792182f10da73c14c7b4c9a74",
+      "verdict": "accept",
+      "reason": "Accurate. 'Palavra-chave' is the correct pt-BR hyphenated form; 'área de trabalho' is standard VFP terminology; tokens preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.Set",
+      "sourceSha256": "93ec157093f49627ffa52a83bc4e73373092196ecff890cb26b08c809630915a",
+      "translationSha256": "89e33bca0dfb5b0bc64f5d1bf67d2302ca2c30f3c1bd405fe660e003ad071b46",
+      "verdict": "accept",
+      "reason": "Meaning and all four tokens preserved. 'Estado de execução' is natural and 'como' mirrors 'such as' well."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Keyword.CreateObject",
+      "sourceSha256": "5c5ccb9464a9de5156c7d2a823a78fb772a2ccad9f0868ba3bdfa3295c2e08be",
+      "translationSha256": "d4629c9648327ee7062b1cf7a47beaf1a7cf163c5a4bccb470d441cc93b54bb1",
+      "verdict": "accept",
+      "reason": "Third independent pass accepted “Função que cria um objeto de automação COM ou Copperfin.” Natural Brazilian Portuguese; “cria” expresses CreateObject instantiation more clearly than “ativa”; COM and Copperfin remain invariant."
+    }
+  ],
+  "residualUncertainty": "Independent automated review only. The eight entries have not received human or native-speaker certification. Full-pack terminology, cultural suitability, tone, accessibility, layout and rendered context remain unreviewed.",
+  "limits": "No human or native-speaker cultural certification. Official localized VFP terminology was not independently verified."
+}

@@ -82,7 +82,16 @@ Pseudo-localization is a test tool, not a production language pack.
 
 The `test_localization` CTest entry is the technical catalog gate. It compares every production locale with its managed catalog values and fails for missing or extra keys, blank values, or a changed placeholder name/multiplicity. The managed catalog generator treats `qps-ploc` as intentionally decorated: it enforces key presence and nonblank values without requiring byte-for-byte English text. The gate also translates every `qps-ploc` key with marker values and verifies the result remains decorated while each marker survives. This protects runtime substitution and pseudo-locale coverage without changing JSON fields, command switches, diagnostic identities, or other machine contracts.
 
-Passing the technical gate does not approve a regional language pack. A human linguistic and cultural review is still required before `es-419` or `pt-BR` can be marked production-ready; record the reviewer, source, date, terminology decisions, regional suitability, tone/formality, euphemism/directness, and offensive-wording review with the release evidence.
+Passing the technical gate does not approve a regional language pack. For v1.0,
+the owner accepted independent AI linguistic review with disclosed limits on
+2026-11-03. Before `es-419` or `pt-BR` is marked production-ready, record
+per-entry source and translation identity, independent review provenance,
+regional references where useful, terminology decisions, regional suitability,
+tone/formality, euphemism/directness, offensive-wording concerns, and residual
+uncertainty with release evidence. AI review is not native-speaker or human
+cultural certification. Any unresolved source-identical prose, stale review,
+or known runtime leak blocks promotion. A qualified human review remains
+valuable but is not the v1.0 release gate under this owner decision.
 
 ## Invariant Contracts
 
@@ -123,4 +132,6 @@ When adding new user-facing text:
 4. Add or update tests for fallback, placeholder preservation, and default `en-US` output when the surface is user-visible.
 5. If a surface cannot yet use the catalog, isolate the string in the smallest helper or constant and add `TODO(localization): move this user-facing string into catalog; see #1779`.
 
-Do not add production non-English translations without a reviewed language-pack issue. Placeholder catalogs and machine-generated translations are not production-ready.
+Add non-English translation candidates only within an owner-authorized
+language-pack workstream. Populated keys and machine-generated translations
+remain unreviewed until the per-entry and rendered-surface release gates pass.

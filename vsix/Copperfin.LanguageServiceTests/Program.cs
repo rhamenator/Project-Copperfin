@@ -55,6 +55,7 @@ internal static partial class Program
         TestReportSectionsPreserveNullableOrdinalMetadata();
         TestHostSnapshotPreservesUnplacedReportLayoutObjects();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
+        TestLocalizedIntelliSenseExamplesUseSelectedLocale();
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
         TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset();
         TestLocalizationCatalogFormatsWithInvariantCulture();
@@ -294,6 +295,33 @@ internal static partial class Program
 
                 Expect(FoxProIntelliSenseCatalog.DescribeToken("SELECT") == localeCase.Description,
                     $"{localeCase.Locale} SELECT Quick Info should consume the shared catalog description");
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
+        }
+    }
+
+    private static void TestLocalizedIntelliSenseExamplesUseSelectedLocale()
+    {
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        try
+        {
+            foreach (var example in new[]
+            {
+                (Locale: "es-419", Use: "Comando: abre una tabla, una tabla libre o un cursor, o cierra uno con USE IN."),
+                (Locale: "pt-BR", Use: "Comando: abre uma tabela, uma tabela livre ou um cursor, ou fecha um deles com USE IN.")
+            })
+            {
+                Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", example.Locale);
+                var completion = FoxProIntelliSenseCatalog.BuildEntries(null, string.Empty, "USE")
+                    .SingleOrDefault(entry => entry.DisplayText == "USE");
+                Expect(completion is not null && completion.Description == example.Use &&
+                       completion.Kind == "keyword",
+                    $"#7073: {example.Locale} USE completion should localize prose and preserve VFP identity");
+                Expect(FoxProIntelliSenseCatalog.DescribeToken("USE") == example.Use,
+                    $"#7073: {example.Locale} USE Quick Info should show the selected-language prose");
             }
         }
         finally

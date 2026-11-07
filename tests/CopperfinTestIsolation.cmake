@@ -988,6 +988,19 @@ function(copperfin_configure_native_test_isolation)
         )
     endif()
 
+    if(TEST test_locale_review_status)
+        copperfin_set_test_isolation(test_locale_review_status
+            PARALLEL_SAFE
+            FILESYSTEM read-only
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM configured
+            AUDIT complete
+        )
+    endif()
+
     copperfin_set_test_isolation(test_github_actions_contract
         FILESYSTEM read-only
         ENVIRONMENT none
