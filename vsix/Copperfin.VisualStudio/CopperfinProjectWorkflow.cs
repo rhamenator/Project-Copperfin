@@ -108,7 +108,7 @@ internal static class CopperfinProjectWorkflow
         if (!string.IsNullOrWhiteSpace(localization.Locale))
         {
             buildArguments.Add("--locale");
-            buildArguments.Add(Quote(localization.Locale));
+            buildArguments.Add(Quote(localization.NativeHostLocale));
         }
         if (ShouldEmitDotNetLauncher())
         {
