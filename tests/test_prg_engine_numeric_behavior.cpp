@@ -114,6 +114,30 @@ const std::vector<BitIndexCase> kBitIndexCases{
     {"BITTEST", "-1", "EXP(1000)", "ERR11", "L:true"},
 };
 
+struct BitFoldCase {
+    const char* function;
+    const char* arguments;
+    const char* expected;
+};
+
+// RQ-CF-PRG-BIT-FOLD-COVERAGE-001: pin the shared arity boundary and the
+// existing multi-operand fold for every folding BIT* function in both modes.
+// The fractional folds reproduce retained installed-VFP9 observations. The
+// mixed-type rows are preservation controls for Copperfin's established safe
+// Logical, Character and Currency coercions; they do not claim native type
+// parity.
+const std::vector<BitFoldCase> kBitFoldCases{
+    {"BITAND", "7", "ERR1229"},
+    {"BITAND", "7.9,3.9,1.9", "I:1"},
+    {"BITAND", ".T.,'1.9',$1.5", "I:0"},
+    {"BITOR", "7", "ERR1229"},
+    {"BITOR", "7.9,3.9,1.9", "I:7"},
+    {"BITOR", ".T.,'1.9',$1.5", "I:3"},
+    {"BITXOR", "7", "ERR1229"},
+    {"BITXOR", "7.9,3.9,1.9", "I:5"},
+    {"BITXOR", ".T.,'1.9',$1.5", "I:1"},
+};
+
 // RQ-CF-PRG-SQLGETPROP-HANDLE-NUMERIC-001: independent conversion
 // table anchored by 41 native Numeric queries; nonzero absent-handle results
 // cannot distinguish every index, so those use documented shared-model policy.
@@ -1203,6 +1227,13 @@ std::vector<Row> build_rows() {
             const std::string expression = std::string(row.function) + "(" + row.value + "," + row.index + ")";
             rows.push_back({set, expression,
                             std::string(mode) == "VFP9" ? row.vfp9_expected : row.copperfin_expected});
+        }
+    }
+
+    for (const char* mode : {"COPPERFIN", "VFP9"}) {
+        const std::string set = std::string("SET NUMERICBEHAVIOR TO ") + mode;
+        for (const auto& row : kBitFoldCases) {
+            rows.push_back({set, std::string(row.function) + "(" + row.arguments + ")", row.expected});
         }
     }
 
