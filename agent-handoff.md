@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## Active slice — BIT-family 32-bit contract qualification (2026-11-07)
+
+PR #7279 merged the unified BIT-family table as
+`43ddcaff04abc284d38914a4da9d3449b142692d`; its exact reviewed head was
+`a7fcd0acdc374f1360b75a4004ec357e2e595110`, every hosted check passed, and
+the dedicated worktree, branches and 565 MB scratch build were removed. Work
+in `/home/rich/.codex/worktrees/bit-family-width-contract-6874/Project-Copperfin`
+on `docs/bit-family-width-contract-6874`, based on that merge. Under admitted
+#6874/#5611/#6776, state the existing family-wide 32-bit bit-pattern,
+checked-index/count, signed-result and catchable-error contract, then qualify
+the unified all-nine-function table under Clang shift/float-cast-overflow
+sanitizers and audit the BIT-family dispatch/converters for `std::runtime_error`.
+Do not change production behavior or expected results, decide #6873's
+COPPERFIN operand range/type policy, claim mixed-type native parity, implement
+binary BITNOT, or close the parent compatibility/hazard workstreams. Clang 21
+with `shift`/`float-cast-overflow` sanitizers builds the unchanged Numeric
+behavior target, which passes 1/1 in 61.87s with no diagnostic; the focused
+BIT-family source audit finds no `std::runtime_error` path. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.76s, and 259 changelog fragments validate. The exact-tree safety
+traceability contract passes 1/1 in 312.21s. NEXT: verify the final diff,
+commit signed+DCO, push, request Claude-first exact-head review, require
+strict-green hosted integration, merge and clean up.
+
 ## Active slice — unified BIT-family mode table (2026-11-07)
 
 PR #7277 merged the portable BITNOT slice at
