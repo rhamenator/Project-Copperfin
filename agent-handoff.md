@@ -1,5 +1,21 @@
 # Agent Handoff
 
+## Active slice — missing VFP9 BIT shift operand rows (2026-11-07)
+
+Work in
+`/home/rich/.codex/worktrees/bit-family-mode-table-6875/Project-Copperfin` on
+`test/bit-family-mode-table-6875`, based on PR #7269 merge
+`908595096e91311b1fdd20091b07c5fff208694e`. Under admitted
+#6875/#5611/#6776, add only the six portable BITLSHIFT/BITRSHIFT rows that pin
+the retained VFP9 operand conversions for `-2147483649`, `-4294967297`, and
+`4294967296`. Do not decide #6873's unresolved COPPERFIN range policy or broaden
+this slice into #6875's full nine-function table. GNU15.2 Debug builds the
+unchanged Numeric behavior target, which passes 1/1 in 66.21s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.49s; the safety traceability workflow contract passes 1/1 in 365.76s. NEXT:
+signed+DCO commit, push, Claude-first exact-head review, strict-green hosted
+integration, merge and cleanup.
+
 ## Active slice — shared BIT shift conversion core (2026-11-06)
 
 Work in
