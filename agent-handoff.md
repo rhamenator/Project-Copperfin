@@ -1,5 +1,24 @@
 # Agent Handoff
 
+## Active slice — shared BIT shift conversion core (2026-11-06)
+
+Work in
+`/home/rich/.codex/worktrees/bit-shift-shared-core-6872/Project-Copperfin`
+on `refactor/bit-shift-shared-core-6872`, based on PR #7267 merge
+`2ca7cffb024eade4266a11e5b0968f00b242a8f7`. Under admitted
+#6872/#5611/#6776, deduplicate only the identical signed conversion branch in
+`bit_shift_operand` and `bit_shift_count` behind `bit_shift_argument`.
+Preserve the operand's unsigned-32 projection, the count's 0..31 validation,
+both numeric modes and every existing error path. The non-shift BIT converter
+pair remains separate because its recovered exact-kind and nonfinite policies
+differ. GNU15.2 Debug builds the unchanged Numeric behavior target, which passes
+1/1 in 66.61s. Issue-intake, contributor-signoff, changelog and native-isolation
+contracts pass 5/5 in 5.44s; the safety traceability workflow contract passes
+in 351.14s. Structural audit finds one conversion branch shared by both shift
+adapters, and `git diff --check` passes. NEXT: commit signed+DCO, push, request
+Claude-first exact-head review, and merge only after hosted checks are green and
+every review conversation is resolved.
+
 ## Active slice — shared non-shift BIT conversion pair (2026-11-06)
 
 Work in
