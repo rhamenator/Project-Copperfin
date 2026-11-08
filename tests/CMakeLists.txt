@@ -4657,6 +4657,13 @@ copperfin_add_test(test_dbc_catalog_regular_file_admission cf_vfp_assets
     test_dbc_catalog_regular_file_admission.cpp
 )
 
+# RQ-CF-VFP-DBF-PRIMARY-REGULAR-FILE-001: primary DBF readers bind
+# regular-file admission to the opened object and never block on POSIX FIFOs.
+copperfin_add_test(test_dbf_primary_regular_file_admission cf_xbase_runtime
+    test_dbf_primary_regular_file_admission.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_vfp_sidecar_path cf_design_model
     test_vfp_sidecar_path.cpp
 )

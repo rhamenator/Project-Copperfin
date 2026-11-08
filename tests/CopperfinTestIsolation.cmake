@@ -2505,6 +2505,19 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_dbf_primary_regular_file_admission
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        CLOCK monotonic-deadline
+        RANDOMNESS test-owned-unique
+        GLOBAL_STATE none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
 
     foreach(test_name IN ITEMS
             test_prg_engine_aggregate_array_functions
