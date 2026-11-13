@@ -494,7 +494,7 @@ require_text_count(".github/workflows/build-installers.yml"
     2
     "POSIX installer install-tree materialization")
 require_text(".github/workflows/build-installers.yml"
-    "-DINSTALL_ROOT=build/standalone-studio-install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake"
+    "cmake \"-DINSTALL_ROOT=build/standalone-studio-install\" \"-DSOURCE_DIR=.\" -P tests/run_locale_catalog_install_contract_check.cmake"
     "Windows installer locale install contract invocation")
 require_text_count(".github/workflows/build-installers.yml"
     "-DINSTALL_ROOT=build/install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake"

@@ -82,7 +82,7 @@ jobs:
 
       - name: Verify localized catalog install
         shell: pwsh
-        run: cmake -DINSTALL_ROOT=build/standalone-studio-install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake
+        run: cmake "-DINSTALL_ROOT=build/standalone-studio-install" "-DSOURCE_DIR=." -P tests/run_locale_catalog_install_contract_check.cmake
 
       - name: Package (NSIS and ZIP)
         run: |
