@@ -947,8 +947,6 @@ function(copperfin_configure_native_test_isolation)
         )
     endif()
 
-    # #6554: the assembler self-test works in its own temporary directory;
-    # the fragment check only reads the checked-in changelog.d/ files.
     # #7075: Python -B disables bytecode writes; this test only reads its
     # registry and module from the checkout and mutates in-memory copies.
     if(TEST test_post_v1_locale_registry)
@@ -959,10 +957,13 @@ function(copperfin_configure_native_test_isolation)
             CHILD_PROCESSES none
             NETWORK none
             SAMPLES none
-            PLATFORM configured
+            PLATFORM portable
             AUDIT complete
         )
     endif()
+
+    # #6554: the assembler self-test works in its own temporary directory;
+    # the fragment check only reads the checked-in changelog.d/ files.
 
     if(TEST test_cloud_validation_sanitizer_selection)
         copperfin_set_test_isolation(test_cloud_validation_sanitizer_selection

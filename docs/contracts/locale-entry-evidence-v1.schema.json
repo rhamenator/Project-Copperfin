@@ -1,17 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/rhamenator/Project-Copperfin/blob/main/docs/contracts/locale-entry-evidence-v1.schema.json",
-  "title": "Copperfin locale entry evidence, planning contract v1",
-  "description": "One record per source key and locale, per exact source/artifact revision. A populated string is never a human review claim.",
+  "title": "Copperfin post-v1 locale entry evidence, planning contract v1",
+  "description": "One record per unique source key and locale, per exact source/artifact revision. A populated string is never a human review claim. This planning vocabulary is not the live v1 ledger vocabulary and requires an explicit migration mapping before operational use.",
   "type": "object",
   "additionalProperties": false,
   "required": ["locale", "sourceRevision", "catalogRevision", "entries"],
   "properties": {
-    "locale": {"type": "string", "minLength": 2},
+    "locale": {"type": "string", "pattern": "^(?:qps-ploc|[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?)$"},
     "sourceRevision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "catalogRevision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "entries": {
       "type": "array",
+      "uniqueItems": true,
+      "x-copperfin-uniqueEntryKey": true,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -23,13 +25,25 @@
           "translationStatus": {"enum": ["missing", "inherited-unverified", "draft-ai-advisory", "draft-human", "complete-unreviewed", "reviewed"]},
           "reviewStatus": {"enum": ["none", "ai-advisory", "human-linguistic", "human-cultural-and-terminology"]},
           "translatorEvidence": {"type": "string", "minLength": 1},
-          "reviewerEvidence": {"type": "string", "minLength": 1},
+          "reviewerEvidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reviewerId", "qualification", "reviewedAt", "evidenceLink"],
+            "properties": {
+              "reviewerId": {"type": "string", "minLength": 1},
+              "qualification": {"type": "string", "minLength": 1},
+              "reviewedAt": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+              "evidenceLink": {"type": "string", "minLength": 1}
+            }
+          },
           "regionalNotes": {"type": "string"},
-          "unresolvedRisk": {"type": "string"}
+          "unresolvedRisk": {"type": "string", "minLength": 1}
         },
         "allOf": [
+          {"if": {"required": ["translationStatus"], "properties": {"translationStatus": {"enum": ["inherited-unverified", "draft-ai-advisory", "draft-human", "complete-unreviewed", "reviewed"]}}}, "then": {"required": ["translationSha256", "translatorEvidence"]}},
+          {"if": {"required": ["reviewStatus"], "properties": {"reviewStatus": {"enum": ["ai-advisory", "human-linguistic", "human-cultural-and-terminology"]}}}, "then": {"required": ["translationSha256"], "properties": {"translationStatus": {"enum": ["inherited-unverified", "draft-ai-advisory", "draft-human", "complete-unreviewed", "reviewed"]}}}},
           {"if": {"properties": {"translationStatus": {"const": "reviewed"}}}, "then": {"required": ["translationSha256", "reviewerEvidence"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}},
-          {"if": {"required": ["reviewStatus"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}, "then": {"required": ["reviewerEvidence"]}}
+          {"if": {"required": ["reviewStatus"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}, "then": {"required": ["reviewerEvidence", "unresolvedRisk"]}}
         ]
       }
     }
