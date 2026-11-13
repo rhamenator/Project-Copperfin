@@ -624,6 +624,10 @@ PrgValue currency_mod_numeric(
 
 }  // namespace
 
+std::optional<double> round_decimal_value_checked(const double value, const int decimal_places) {
+    return round_decimal_value(value, decimal_places);
+}
+
 std::optional<PrgValue> evaluate_numeric_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,

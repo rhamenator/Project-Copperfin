@@ -1,0 +1,1 @@
+- 2026-11-06: Remove obsolete, unreferenced bit-family helpers that still used unchecked `llround` conversions after BITAND/BITOR/BITXOR/BITNOT/BITSET/BITCLEAR/BITTEST migrated to their checked per-operation Numeric conversion paths (#6871/#5611/#6776). Active bit-function routing and compatibility behavior are unchanged.

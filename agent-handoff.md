@@ -1,5 +1,326 @@
 # Agent Handoff
 
+## Active slice — explicit empty WHERE mutation admission (2026-11-13)
+
+Continue in
+`/home/rich/.codex/worktrees/empty-where-admission-7254/Project-Copperfin`
+on `fix/empty-where-admission-7254`, based on origin/main
+`50babe2d2839b8bcba4396534f4b9599cf262bc0`. Under admitted issue #7254,
+the parser now preserves explicit `WHERE` presence for `UPDATE` and
+`DELETE FROM`, and dispatch raises catchable syntax error 10 before target resolution
+or mutation when the clause is empty. Bare all-row and populated-filter forms
+remain unchanged. Public PRG tests verify retained multirow state, successful
+filtered and bare controls, and the absence of success events for rejected
+commands. The focused GNU Debug mutation and runtime-pipeline targets pass
+2/2 in 79.52s. Issue-intake, contributor-signoff, changelog assembler,
+changelog-fragment, and native-isolation contracts pass; the exact-tree safety
+traceability contract passes in 329.19s. Retained VFP9 evidence also audits the
+sibling `FOR` forms, but VFP9
+rejects populated and empty variants alike; their documented Copperfin
+extension policy is therefore deliberately unchanged. Signed+DCO commit
+`6f085b109cc3ad3bf253e0cb25bcb737ef37edbe` opened PR #7325; hosted checks
+started and the verified `@claude review` trigger was posted after the owner's
+reauthorization. NEXT: obtain a clean Claude-first exact-head review and
+strict-green hosted checks, resolve every conversation, merge, synchronize
+origin/main, and clean up. If hosted review stalls,
+use the owner's authorized local Codex adversarial fallback rather than
+waiting indefinitely.
+
+## Active slice — primary DBF regular-file admission (2026-11-07)
+
+PR #7281 merged DBC catalog regular-file admission as
+`19afa498a55231a4fa8bbafba29ffc327230794c`; exact reviewed head
+`b5b67b9e98a5e8055a232822718011811337cffb` passed every hosted gate, issue
+#7275 closed, and the dedicated worktree, branches and scratch evidence were
+removed. Continue in
+`/home/rich/.codex/worktrees/dbf-primary-regular-file-7273/Project-Copperfin`
+on `fix/dbf-primary-regular-file-7273`, based on that merge. Under admitted
+#7273, bind primary DBF table, header and fields-only reads to one opened
+regular file; on POSIX, open nonblocking so direct FIFOs and symlinks resolving
+to FIFOs are rejected without waiting for a writer. Preserve symlinks resolving
+to regular files, ordinary table/header/fields parsing, `max_records=0`, and
+PRG `USE`. DBF import, Studio and visual-asset editor callers inherit the table
+parser boundary; DBT sidecar #7268 and Access LVAL #7271 remain separate.
+Focused GNU15.2 Debug builds the new test, and its regular/symlink controls plus
+ten watchdog-bounded direct/symlink FIFO cases pass 1/1 in 0.92s. The final
+nine-test local gate (focused parser/runtime regressions, intake, signoff,
+changelog and native-isolation contracts) passes 9/9 after reconfiguration;
+the safety traceability contract separately passes 1/1 in 327.21s, and
+`git diff --check` is clean. NEXT: commit signed+DCO, push, open a PR, request
+Claude-first exact-head review, and merge only after strict-green hosted checks
+and zero unresolved conversations.
+
+## Active slice — DBC catalog regular-file admission (2026-11-07)
+
+PR #7280 merged the BIT-family width-contract qualification as
+`4281921692f1bbddc619f4b4f6da98a14d767139`; its exact reviewed head was
+`ffecf7dc4d341b0b1109bd2eaf941b60fee6304f`, every hosted check passed, issue
+#6874 closed, and the dedicated worktree, branches and scratch build were
+removed. Continue in
+`/home/rich/.codex/worktrees/dbc-catalog-fifo-7275/Project-Copperfin` on
+`fix/dbc-catalog-fifo-7275`, based on that merge. Under admitted #7275, bind
+DBC catalog regular-file admission and reads to one opened descriptor/handle;
+on POSIX, open nonblocking so a direct FIFO or symlink-to-FIFO is rejected
+before it can wait for a writer. Preserve symlink-to-regular behavior and the
+valid regular DBC extraction/export controls. The shared reader audit covers
+all three internal call sites; only DBC catalog loading opts into regular-file
+admission so the separate memo and generic-table paths retain their prior
+behavior. This slice does not close primary DBF #7273,
+DBT sidecar #7268, Access LVAL #7271, or redefine symlink policy. The focused
+GNU15.2 Debug target builds; the focused test, broader VFP asset suite and
+issue-intake/signoff/changelog/isolation contracts pass 7/7 in 7.69s,
+including a retained symlink-to-regular control and six watchdog-bounded FIFO
+cases. The exact-tree safety traceability
+contract passes 1/1 in 317.89s. Retained reproduction evidence is
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/dbc-catalog-fifo-20261107/result.md`.
+PR #7281 is open. NEXT: push the bounded review corrections, obtain a clean
+Claude-first exact-head review, require strict-green hosted integration, merge
+and clean up.
+
+## Active slice — BIT-family 32-bit contract qualification (2026-11-07)
+
+PR #7279 merged the unified BIT-family table as
+`43ddcaff04abc284d38914a4da9d3449b142692d`; its exact reviewed head was
+`a7fcd0acdc374f1360b75a4004ec357e2e595110`, every hosted check passed, and
+the dedicated worktree, branches and 565 MB scratch build were removed. Work
+in `/home/rich/.codex/worktrees/bit-family-width-contract-6874/Project-Copperfin`
+on `docs/bit-family-width-contract-6874`, based on that merge. Under admitted
+#6874/#5611/#6776, state the existing family-wide 32-bit bit-pattern,
+checked-index/count, signed-result and catchable-error contract, then qualify
+the unified all-nine-function table under Clang shift/float-cast-overflow
+sanitizers and audit the BIT-family dispatch/converters for `std::runtime_error`.
+Do not change production behavior or expected results, decide #6873's
+COPPERFIN operand range/type policy, claim mixed-type native parity, implement
+binary BITNOT, or close the parent compatibility/hazard workstreams. Clang 21
+with `shift`/`float-cast-overflow` sanitizers builds the unchanged Numeric
+behavior target, which passes 1/1 in 61.87s with no diagnostic; the focused
+BIT-family source audit finds no `std::runtime_error` path. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.76s, and 259 changelog fragments validate. The exact-tree safety
+traceability contract passes 1/1 in 312.21s. PR #7280 is open. The first two
+local exact-head reviews identified and then narrowed the COPPERFIN
+shift/non-shift conversion, compatibility-error and folding-arity wording;
+the latest correction explicitly excludes zero-argument fold behavior. NEXT:
+rerun exact-tree verification, obtain a clean exact-head Claude-first review,
+require strict-green hosted integration, merge and clean up.
+
+## Active slice — unified BIT-family mode table (2026-11-07)
+
+PR #7277 merged the portable BITNOT slice at
+`d994325c236a00e2889ecb3fb71ace7a0e5e6aa9`; its exact reviewed head was
+`2095152befc86b1072e867ab528f10c190528dab`, every hosted check passed, and
+the dedicated worktree, branches and scratch build were removed. Continue in
+`/home/rich/.codex/worktrees/bit-family-unified-table-6875/Project-Copperfin`
+on `test/bit-family-unified-table-6875`, based on that merge. Under admitted
+#6875/#5611/#6776, consolidate every existing portable BIT-family expectation
+into one `{function, arguments, mode, expected}` collection without changing
+production behavior or any expected result. This is the final table-structure
+acceptance slice for #6875 only; do not decide #6873, broaden #6874, claim
+unevidenced mixed-type/native-exact64 parity, implement binary BITNOT, or close
+the parent compatibility/hazard workstreams. The exact table contains 182 rows
+and asserts all nine functions in both modes. The GNU15.2 Debug Numeric
+behavior target builds and passes 1/1 in 64.36s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.52s; 258 changelog fragments validate; the safety traceability workflow
+contract passes in 311.92s. NEXT: verify the exact diff, commit signed+DCO,
+push, request Claude-first exact-head review, require strict-green hosted
+integration, merge and clean up.
+
+## Active slice — portable BITNOT mode table (2026-11-07)
+
+PR #7276 merged the preceding folding-BIT slice at
+`4a230c5d2e9bb97883f61cb8c53af7dd9d5a0bda`; its exact reviewed head was
+`58e9b9cf3c72803e3747ccb61232ca351a770702`, every hosted check passed, and
+the dedicated worktree, branch and scratch build were removed. Continue in
+`/home/rich/.codex/worktrees/bitnot-mode-table-6875/Project-Copperfin` on
+`test/bitnot-mode-table-6875`, based on that merge. Under admitted
+#6875/#5611/#6776, expose only BITNOT in the portable two-mode Numeric table
+across retained fractions, signed-32 edges, selected wide finite values and
+positive/negative infinity. Preserve the existing checked converter and
+detailed frozen BITNOT suite; do not change production behavior, decide #6873,
+claim mixed-type/native-exact64 parity, implement binary BITNOT, or claim full
+#6875 acceptance. The test table, traceability row and changelog fragment are
+complete. GNU15.2 Debug builds the Numeric behavior, frozen BITNOT and
+NULL-neighbor targets; all three pass in 65.83s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.92s; 257 changelog fragments validate; the safety traceability workflow
+contract passes against the exact tree in 313.63s. NEXT: verify the exact diff,
+commit signed+DCO, push, request Claude-first exact-head review, require
+strict-green hosted integration, merge and clean up.
+
+## Active slice — folding BIT arity and multi-operand table (2026-11-07)
+
+Work in `/home/rich/.codex/worktrees/bit-fold-mode-table-6875/Project-Copperfin`
+on `test/bit-fold-mode-table-6875`, based on PR #7274 merge
+`d42b82d2dc2646d0f68357a38db21b69dc9bc049`. Under admitted
+#6874/#6875/#5611/#6776, add one portable two-mode table for BITAND, BITOR and
+BITXOR one-argument rejection, retained three-operand fractional folds, and
+existing safe mixed-type preservation controls. The first frozen run exposed
+that malformed one-argument calls fell through and returned the lowercase
+function name. A fresh installed-VFP9 7423 probe records error 1229 for all
+three calls, so the bounded production repair rejects the evidenced one operand
+before unresolved-routine fallback. Do not decide #6873 operand policy, claim
+native type parity for mixed-type rows, alter valid folds, or claim full
+#6874/#6875 acceptance.
+GNU15.2 Debug builds the changed runtime and five focused targets. The Numeric
+behavior target plus BITAND/BITOR/BITXOR and NULL-neighbor suites pass 5/5 in
+79.20s on the final source tree. Issue-intake, contributor-signoff, changelog and native-isolation
+contracts pass 5/5 in 8.29s; 256 changelog fragments validate; the safety
+traceability workflow contract passes on the final tree. The VFP9
+VM is shut down. NEXT: verify diff/scope, commit signed+DCO, push, request
+Claude-first exact-head review, require strict-green hosted integration, merge
+and clean up.
+
+## Active slice — shared BIT index boundary table (2026-11-07)
+
+Work in `/home/rich/.codex/worktrees/bit-index-error-6874/Project-Copperfin`
+on `fix/bit-index-error-6874`, based on PR #7272 merge
+`6a781dbc6fd92ef4ea8dc77002e17892244ae033`. Under admitted
+#6874/#6875/#5611/#6776, add only one portable two-mode table for
+BITSET/BITCLEAR/BITTEST indexes -1, 0, 31, 31.5, 32 and positive infinity.
+Preserve the existing checked implementation and detailed per-function frozen
+suites. Do not decide #6873 operand policy, remove localization resources, or
+claim full #6874/#6875 acceptance. GNU15.2 Debug builds the unchanged Numeric
+behavior target, which passes 1/1 in 65.04s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.95s; the safety traceability workflow contract passes 1/1 in 312.18s. NEXT:
+signed+DCO commit, push, Claude-first exact-head review, strict-green hosted
+integration, merge and cleanup.
+
+## Active slice — missing VFP9 BIT shift operand rows (2026-11-07)
+
+Work in
+`/home/rich/.codex/worktrees/bit-family-mode-table-6875/Project-Copperfin` on
+`test/bit-family-mode-table-6875`, based on PR #7269 merge
+`908595096e91311b1fdd20091b07c5fff208694e`. Under admitted
+#6875/#5611/#6776, add only the six portable BITLSHIFT/BITRSHIFT rows that pin
+the retained VFP9 operand conversions for `-2147483649`, `-4294967297`, and
+`4294967296`. Do not decide #6873's unresolved COPPERFIN range policy or broaden
+this slice into #6875's full nine-function table. GNU15.2 Debug builds the
+unchanged Numeric behavior target, which passes 1/1 in 66.21s. Issue-intake,
+contributor-signoff, changelog and native-isolation contracts pass 5/5 in
+5.49s; the safety traceability workflow contract passes 1/1 in 365.76s. NEXT:
+signed+DCO commit, push, Claude-first exact-head review, strict-green hosted
+integration, merge and cleanup.
+
+## Active slice — shared BIT shift conversion core (2026-11-06)
+
+Work in
+`/home/rich/.codex/worktrees/bit-shift-shared-core-6872/Project-Copperfin`
+on `refactor/bit-shift-shared-core-6872`, based on PR #7267 merge
+`2ca7cffb024eade4266a11e5b0968f00b242a8f7`. Under admitted
+#6872/#5611/#6776, deduplicate only the identical signed conversion branch in
+`bit_shift_operand` and `bit_shift_count` behind `bit_shift_argument`.
+Preserve the operand's unsigned-32 projection, the count's 0..31 validation,
+both numeric modes and every existing error path. The non-shift BIT converter
+pair remains separate because its recovered exact-kind and nonfinite policies
+differ. GNU15.2 Debug builds the unchanged Numeric behavior target, which passes
+1/1 in 66.61s. Issue-intake, contributor-signoff, changelog and native-isolation
+contracts pass 5/5 in 5.44s; the safety traceability workflow contract passes
+in 351.14s. Structural audit finds one conversion branch shared by both shift
+adapters, and `git diff --check` passes. NEXT: commit signed+DCO, push, request
+Claude-first exact-head review, and merge only after hosted checks are green and
+every review conversation is resolved.
+
+## Active slice — shared non-shift BIT conversion pair (2026-11-06)
+
+Work in
+`/home/rich/.codex/worktrees/bit-family-shared-conversion-6872/Project-Copperfin`
+on `refactor/bit-family-shared-conversion-6872`, based on PR #7266 merge
+`5876cb9761e08a002cfa69d6977f5165639e087a`. Under admitted #6872/#5611/#6776,
+replace the seven non-shift BIT operations' ten per-operation converter entry
+points with one checked bit-pattern converter and one checked 0..31 index
+converter. Preserve the independently recovered BITNOT nonfinite rejection and
+the six siblings' explicit-VFP9 infinity-zero policy; shift helpers remain
+separate because their coercion boundary differs. GNU15.2 Debug builds the
+runtime and all seven targets; all seven unchanged frozen Numeric suites pass
+7/7 in 44.89s. Their only source edits select the new helper names/policy; no
+input, expectation or assertion changed. Issue-intake, contributor-signoff,
+changelog and native-isolation contracts pass 5/5 in 5.51s; the safety
+traceability workflow contract passes in 339.05s; source audit finds no old
+per-operation converter definition or live call outside retained historical
+fixtures; `git diff --check` passes. NEXT: record signed+DCO, push, open a PR,
+request Claude-first exact-head review and merge only after strict-green hosted
+gates and zero unresolved conversations.
+
+## Active slice — remove obsolete unsafe bit converters (2026-11-06)
+
+Work in
+`/home/rich/.codex/worktrees/remove-obsolete-bitwise-converters-6871/Project-Copperfin`
+on `fix/remove-obsolete-bitwise-converters-6871`, based on PR #7264 merge
+`f2f94c2008521ac3280e2a88c3dc5e9257652e3e`. Under admitted #6871/#5611/#6776,
+remove the now-unreferenced `bitwise_value` and `bit_position` helpers whose
+unchecked `llround` conversions predate the checked per-operation bit-family
+helpers. This is a dead-code safety cleanup only: active BITAND/BITOR/BITXOR/
+BITNOT/BITSET/BITCLEAR/BITTEST dispatch and behavior remain unchanged. GNU
+Debug builds the runtime and all seven bit-family Numeric targets; focused
+tests pass 7/7 in 45.74s. Issue-intake, contributor-signoff, changelog and
+native-isolation contracts pass 5/5 in 6.60s; 251 changelog fragments validate,
+the live-source reference audit finds no remaining helper definition or call,
+the safety-traceability workflow contract passes in 340.44s, and
+`git diff --check` passes. NEXT: commit signed+DCO, push, open a PR, request
+Claude-first exact-head review, require green hosted checks and zero unresolved
+conversations, then merge and clean the worktree and owned `/tmp` build.
+
+## Active slice — one-selector ListItem decimal member path (2026-11-06)
+
+PR #7264 is open from
+`/home/rich/.codex/worktrees/listitem-selector-first-member-path-7189/Project-Copperfin`
+on `fix/listitem-selector-first-member-path-7189`, based on PR #7262 merge
+`0f091a5497f6bc19203f27b9a8e72a563bcccb67`. This admitted #7189 sibling
+keeps decimal Numeric IDs inside valid `ListItem(id)`/`ListItem[id]` member
+paths while preserving two-selector behavior and non-Numeric fallthrough.
+GNU and Clang each pass all four 1,032-case mode/session shards; the matrix
+includes direct/nested `2.5`, `0.5`, `-0.5`, dotted Character error 1 and
+Currency-route controls. Both compilers also pass the direct helper and four
+116-case supplied-column preservation shards. Changelog and all five
+documentation/isolation contracts pass. NEXT: push the signed+DCO exact head,
+request a fresh Claude review, require hosted green and zero unresolved
+conversations, then merge and clean the slice worktree.
+
+## Active slice — PR #7238 ListItem supplied-column review repair (2026-11-03)
+
+This section supersedes the stale retained-division "Active slice" below. Work
+in `/home/rich/.codex/worktrees/listitem-column-read-5611/Project-Copperfin` on
+branch `fix/listitem-column-read-5611`; PR #7238 is open. Signed+DCO product
+head `736357435c33f1577425fb3637ecea1fb667c0f2` is pushed. It resolves all
+old-head automated findings: property-first side-effect-free reads retain both
+typed selectors; admission is limited to an ordinary existing Numeric ID on a
+coherent unbound RowSourceType-zero control; fractional conversion uses a
+separate exact-binary quantizer without changing ROUND; the helper test fails
+on assertions; and preservation requires the invoke phase. The existing
+one-selector `List` hook is explicitly protected from two-selector reads.
+
+Focused GNU and Clang each pass the helper, four public class/mode/session
+shards and the runtime-surface regression. Exact-head preservation v2 passes
+all GNU/Clang baseline/fixed lanes byte-identically at SHA-256
+`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`
+with zero-status audits/comparisons. Frozen-v6 broader qualification passes
+131/131 for GNU in 785.22s and Clang sanitizers in 5051.29s; log/JUnit hashes
+are GNU `92a1444a4a41a6736fe1b5e4c08c5264fa6e1cc5e1e87a68adae8499df73c179` /
+`778e2cf4ddd7f4765c19ef608752244a794dc43c150c90e877269e80ee219cc1`
+and Clang `6579d54f135544456c8157ca823a45bd31cb47f943f667894e5226247830748c` /
+`de12f935906e92346aa849104f028e7e8b1291b4127a3c557544d06e7be49526`.
+Ignored receipts are under `build/listitem-column-native/preservation-v2/` and
+`build/listitem-column-native/broader-v6/`; failed v5 evidence remains
+retained. Hosted checks on the pushed product head are green or in progress.
+NEXT commit/push this documentation-only checkpoint, request Claude review on
+the new exact head, require an actual clean authorized review and all hosted
+checks green, then resolve fully addressed conversations and merge. No review
+conversation is yet resolved.
+
+Nov06 local Claude `/code-review` of exact head
+`cfd5fbbd8103376a2ba0ac09ac95223d9fa46163` found one actionable medium
+regression: the new raw-selector transport let two-selector `ItemData`,
+`IndexToItemID`, and `ItemIDToIndex` calls enter one-selector property-read
+routing. Fail-first public coverage reproduced the route loss. The bounded
+repair requires both the typed hooks and fallback property resolvers to see no
+secondary selector, preserving the legacy method route. The expanded 104-case
+public shard passes all four mode/session combinations under GNU and all four
+under Clang. NEXT: signed+DCO commit/push, fresh hosted checks and a clean
+Claude exact-head review; then re-audit conversations and merge only if every
+gate is clean.
+
 ## Active Numeric compatibility workstream — 2026-10-29
 
 Owner resumed #5611/#6776/#7189; all remain OPEN and owner-authored. `main` is

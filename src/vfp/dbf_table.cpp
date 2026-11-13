@@ -6,6 +6,7 @@
 #include "copperfin/vfp/dbf_text_encoding.h"
 
 #include "dbf_table_raw_mutation.h"
+#include "dbf_regular_file_reader.h"
 #include "../security/secure_clear.h"
 #include "../security/sha256_native.h"
 
@@ -2258,15 +2259,12 @@ DbfTableParseResult parse_dbf_table_from_file(
         resolved_memo_sidecar_path = selected_sidecar_path(memo_resolution);
     }
 
-    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
-    if (!input) {
+    detail::RegularFileReadResult input = detail::read_regular_file(
+        platform::path_from_utf8_string(path));
+    if (!input.ok) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
-
-    std::vector<std::uint8_t> bytes = {
-        std::istreambuf_iterator<char>(input),
-        std::istreambuf_iterator<char>()
-    };
+    std::vector<std::uint8_t> bytes = std::move(input.bytes);
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
@@ -2421,22 +2419,23 @@ DbfTableParseResult parse_dbf_table_from_file(
 }
 
 DbfFieldsOnlyParseResult parse_dbf_fields_from_file(const std::string& path) {
-    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
-    if (!input) {
+    // The stored header length is a uint16. Read at most that entire range
+    // from one admitted descriptor/handle so the fixed-header probe and the
+    // descriptor block cannot observe different replacement objects.
+    detail::RegularFileReadResult input = detail::read_regular_file(
+        platform::path_from_utf8_string(path),
+        std::numeric_limits<std::uint16_t>::max());
+    if (!input.ok) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
-    // The 32-byte fixed header alone (parse_dbf_header() only needs
-    // this much) tells us the real header_length -- only THEN do we
-    // know how many bytes the field-descriptor block actually needs,
-    // so the real read below is bounded to exactly that, never the
-    // whole file.
-    std::vector<std::uint8_t> probe_bytes(32U, 0U);
-    input.read(reinterpret_cast<char*>(probe_bytes.data()), static_cast<std::streamsize>(probe_bytes.size()));
-    if (static_cast<std::size_t>(input.gcount()) < probe_bytes.size()) {
+    // The 32-byte fixed header tells us how much of the already bounded,
+    // same-object snapshot belongs to the descriptor block. The table's
+    // record payload is never read by this fields-only path.
+    if (input.bytes.size() < 32U) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
-    const DbfParseResult header_result = parse_dbf_header(probe_bytes);
+    const DbfParseResult header_result = parse_dbf_header(input.bytes);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
     }
@@ -2445,13 +2444,11 @@ DbfFieldsOnlyParseResult parse_dbf_fields_from_file(const std::string& path) {
     result.header = header_result.header;
     const DbfReadLayout layout = dbf_read_layout(result.header);
 
-    std::vector<std::uint8_t> bytes(result.header.header_length, 0U);
-    input.seekg(0, std::ios::beg);
-    input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-    if (static_cast<std::size_t>(input.gcount()) < bytes.size()) {
+    if (input.bytes.size() < result.header.header_length) {
         result.error = dbf_table_text("Vfp.DbfTable.Error.HeaderLengthExceedsFile");
         return result;
     }
+    std::vector<std::uint8_t>& bytes = input.bytes;
 
     FieldDescriptorParseResult field_result = parse_dbf_field_descriptor_block(bytes, result.header, layout);
     if (!field_result.ok) {
