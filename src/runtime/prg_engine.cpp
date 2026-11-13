@@ -23,6 +23,7 @@
 #include "prg_numeric_runtime_division.h"
 #include "prg_numeric_constant_division_intrinsic.h"
 #include "prg_numeric_constant_division_materialization.h"
+#include "prg_numeric_constant_arithmetic_metadata.h"
 #include "prg_numeric_unary_metadata.h"
 #include "prg_numeric_expression_context.h"
 #include "prg_engine_internal.h"
@@ -1345,7 +1346,8 @@ namespace copperfin::runtime
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
             const Frame &source_frame,
-            const PrgValue *raw_selector = nullptr);
+            const PrgValue *raw_selector = nullptr,
+            const PrgValue *raw_secondary_selector = nullptr);
         std::optional<std::string> read_native_property_expression_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name);
@@ -3212,7 +3214,8 @@ namespace copperfin::runtime
                 return object.has_value() ? *object : nullptr;
             },
             [this, &frame](const PrgValue &value, const std::string &member_name,
-                           const PrgValue *raw_selector) -> std::optional<PrgValue>
+                           const PrgValue *raw_selector,
+                           const PrgValue *raw_secondary_selector) -> std::optional<PrgValue>
             {
                 auto object = resolve_ole_object(value);
                 if (!object.has_value())
@@ -3222,10 +3225,37 @@ namespace copperfin::runtime
 
                 RuntimeOleObjectState *target_object = *object;
                 std::vector<std::string> segments;
+                const std::size_t selector_open = member_name.find_first_of("([");
+                std::size_t protected_selector_open = std::string::npos;
+                // Keep decimal points inside valid Numeric one-selector and
+                // existing two-selector ListItem paths from being mistaken
+                // for member separators.
+                const bool protect_selector = raw_selector != nullptr &&
+                    (raw_secondary_selector != nullptr ||
+                     raw_selector->kind == PrgValueKind::number);
+                if (protect_selector && selector_open != std::string::npos)
+                {
+                    const char selector_close = member_name[selector_open] == '(' ? ')' : ']';
+                    const std::size_t leaf_separator = member_name.rfind('.', selector_open);
+                    const std::size_t leaf_start =
+                        leaf_separator == std::string::npos ? 0U : leaf_separator + 1U;
+                    const std::string leaf_name = normalize_identifier(trim_copy(
+                        member_name.substr(leaf_start, selector_open - leaf_start)));
+                    if (leaf_name == "listitem" && member_name.back() == selector_close)
+                    {
+                        protected_selector_open = selector_open;
+                    }
+                }
                 std::size_t start = 0U;
                 while (start <= member_name.size())
                 {
-                    const std::size_t separator = member_name.find('.', start);
+                    std::size_t separator = member_name.find('.', start);
+                    if (protected_selector_open != std::string::npos &&
+                        separator != std::string::npos &&
+                        separator > protected_selector_open)
+                    {
+                        separator = std::string::npos;
+                    }
                     std::string segment = separator == std::string::npos
                                               ? member_name.substr(start)
                                               : member_name.substr(start, separator - start);
@@ -3288,7 +3318,12 @@ namespace copperfin::runtime
                             "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
                             {{"memberIdentifier", detail}}));
                 }
-                return read_native_property_if_present(*target_object, leaf_member_name, frame, raw_selector);
+                return read_native_property_if_present(
+                    *target_object,
+                    leaf_member_name,
+                    frame,
+                    raw_selector,
+                    raw_secondary_selector);
             },
             [this, &frame](
                 const PrgValue &value,

@@ -288,7 +288,9 @@ int direct_count=0, public_count=0;
 void direct_cases() {
  const auto check=[](const PrgValue& v,NumericBehavior mode,std::optional<std::int64_t> result,bool position,const char* tag) {
   ++direct_count;
-  const auto operand=position?checked_bitset_position_argument(v,mode):checked_bitset_value_argument(v,mode);
+  const auto operand=position
+      ? checked_bit_index_argument(v,mode)
+      : checked_bit_pattern_argument(v,mode,BitPatternNonfinitePolicy::vfp9_infinity_zero);
   const bool match=result?operand&&static_cast<std::int64_t>(*operand)==*result:!operand;
   expect(match,std::string("BITSET direct ")+(position?"position ":"value ")+tag);
  };

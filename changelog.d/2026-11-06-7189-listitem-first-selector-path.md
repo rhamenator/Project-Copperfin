@@ -1,0 +1,1 @@
+- 2026-11-06: Preserve decimal Numeric item IDs inside valid one-selector `ListItem(id)` and `ListItem[id]` native member paths so both forms retain the property-first, side-effect-free item-ID read. Add ListBox/ComboBox dense/sparse coverage that checks fractional and integral routing across both numeric modes and data sessions.
