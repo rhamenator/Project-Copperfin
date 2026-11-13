@@ -1,0 +1,1 @@
+- 2026-11-02: Add a planning-only post-v1 locale inventory, per-entry evidence contract, phased rollout plan and fail-closed registry checks (#7075).
