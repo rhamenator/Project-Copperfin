@@ -385,6 +385,7 @@ void append_ir_routine_json(
                << ", \"secondary_expression\": \"" << json_escape(statement.secondary_expression) << "\""
                << ", \"tertiary_expression\": \"" << json_escape(statement.tertiary_expression) << "\""
                << ", \"quaternary_expression\": \"" << json_escape(statement.quaternary_expression) << "\""
+               << ", \"where_clause_present\": " << (statement.where_clause_present ? "true" : "false")
                << ", \"operand_count\": " << statement.names.size() << "}";
         if (index + 1U != statements.size()) {
             stream << ",";
