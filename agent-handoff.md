@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## Active slice — primary DBF regular-file admission (2026-11-07)
+
+PR #7281 merged DBC catalog regular-file admission as
+`19afa498a55231a4fa8bbafba29ffc327230794c`; exact reviewed head
+`b5b67b9e98a5e8055a232822718011811337cffb` passed every hosted gate, issue
+#7275 closed, and the dedicated worktree, branches and scratch evidence were
+removed. Continue in
+`/home/rich/.codex/worktrees/dbf-primary-regular-file-7273/Project-Copperfin`
+on `fix/dbf-primary-regular-file-7273`, based on that merge. Under admitted
+#7273, bind primary DBF table, header and fields-only reads to one opened
+regular file; on POSIX, open nonblocking so direct FIFOs and symlinks resolving
+to FIFOs are rejected without waiting for a writer. Preserve symlinks resolving
+to regular files, ordinary table/header/fields parsing, `max_records=0`, and
+PRG `USE`. DBF import, Studio and visual-asset editor callers inherit the table
+parser boundary; DBT sidecar #7268 and Access LVAL #7271 remain separate.
+Focused GNU15.2 Debug builds the new test, and its regular/symlink controls plus
+ten watchdog-bounded direct/symlink FIFO cases pass 1/1 in 0.92s. The final
+nine-test local gate (focused parser/runtime regressions, intake, signoff,
+changelog and native-isolation contracts) passes 9/9 after reconfiguration;
+the safety traceability contract separately passes 1/1 in 327.21s, and
+`git diff --check` is clean. NEXT: commit signed+DCO, push, open a PR, request
+Claude-first exact-head review, and merge only after strict-green hosted checks
+and zero unresolved conversations.
+
 ## Active slice — DBC catalog regular-file admission (2026-11-07)
 
 PR #7280 merged the BIT-family width-contract qualification as
