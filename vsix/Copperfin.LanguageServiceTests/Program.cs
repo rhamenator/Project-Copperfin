@@ -55,6 +55,7 @@ internal static partial class Program
         TestReportSectionsPreserveNullableOrdinalMetadata();
         TestHostSnapshotPreservesUnplacedReportLayoutObjects();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
+        TestLocalizedIntelliSenseExamplesUseSelectedLocale();
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
         TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset();
         TestLocalizationCatalogFormatsWithInvariantCulture();
@@ -62,6 +63,7 @@ internal static partial class Program
         TestStudioOpenDialogFilterPreservesInvariantPatterns();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
+        TestLocalizationCatalogResolvesRegionalExternalFallbacks();
         TestLocalizationCatalogDiscoversInstalledStudioLayout();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestReportLayoutObjectPreservesPictureMetadata();
@@ -146,16 +148,16 @@ internal static partial class Program
     private static void TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales()
     {
         var spanish = new CopperfinLocalization("es-MX");
-        Expect(spanish.Locale == CopperfinLocalization.SpanishLatinAmericaLocale,
-            "Spanish regional locales should normalize to the Latin America catalog");
+        Expect(spanish.Locale == "es-MX",
+            "Spanish regional locale identity should survive normalization");
         Expect(spanish.Text("Studio.OpenDialogTitle") == "Abrir activo de Copperfin",
             "Spanish catalog should localize the standalone Studio open dialog title");
         Expect(spanish.Text("Studio.OpenDocumentStatus").Contains("Pestañas abiertas", StringComparison.Ordinal),
             "Spanish catalog should localize standalone Studio tab status text");
 
         var portuguese = new CopperfinLocalization("pt");
-        Expect(portuguese.Locale == CopperfinLocalization.PortugueseBrazilLocale,
-            "Portuguese neutral locale should normalize to the Brazilian Portuguese catalog");
+        Expect(portuguese.Locale == "pt",
+            "neutral Portuguese locale identity should survive normalization");
         Expect(portuguese.Text("Studio.OpenDialogTitle") == "Abrir ativo do Copperfin",
             "Portuguese catalog should localize the standalone Studio open dialog title");
         Expect(portuguese.Text("Studio.OpenDocumentStatus").Contains("Abas abertas", StringComparison.Ordinal),
@@ -165,8 +167,8 @@ internal static partial class Program
     private static void TestLocalizationCatalogFallsBackToEnglish()
     {
         var unsupported = new CopperfinLocalization("de-DE");
-        Expect(unsupported.Locale == CopperfinLocalization.DefaultLocale,
-            "unsupported locales should normalize to English");
+        Expect(unsupported.Locale == "de-DE",
+            "an uninstalled locale should retain its requested identity for external lookup");
         Expect(unsupported.Text("Studio.OpenDialogTitle") == "Open Copperfin Asset",
             "unsupported locales should use the English catalog");
 
@@ -294,6 +296,33 @@ internal static partial class Program
 
                 Expect(FoxProIntelliSenseCatalog.DescribeToken("SELECT") == localeCase.Description,
                     $"{localeCase.Locale} SELECT Quick Info should consume the shared catalog description");
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
+        }
+    }
+
+    private static void TestLocalizedIntelliSenseExamplesUseSelectedLocale()
+    {
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        try
+        {
+            foreach (var example in new[]
+            {
+                (Locale: "es-419", Use: "Comando: abre una tabla, una tabla libre o un cursor, o cierra uno con USE IN."),
+                (Locale: "pt-BR", Use: "Comando: abre uma tabela, uma tabela livre ou um cursor, ou fecha um deles com USE IN.")
+            })
+            {
+                Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", example.Locale);
+                var completion = FoxProIntelliSenseCatalog.BuildEntries(null, string.Empty, "USE")
+                    .SingleOrDefault(entry => entry.DisplayText == "USE");
+                Expect(completion is not null && completion.Description == example.Use &&
+                       completion.Kind == "keyword",
+                    $"#7073: {example.Locale} USE completion should localize prose and preserve VFP identity");
+                Expect(FoxProIntelliSenseCatalog.DescribeToken("USE") == example.Use,
+                    $"#7073: {example.Locale} USE Quick Info should show the selected-language prose");
             }
         }
         finally

@@ -4,6 +4,8 @@
 
 #include "test_localization_support.h"
 
+#include <set>
+
 void test_catalog_loading_and_fallback() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_catalog_tests";
@@ -135,6 +137,36 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
         spanish_script_chain ==
             std::vector<std::string>({"es-Latn-MX", "es-Latn", "es-419", "es", "en-US"}),
         "#3894: script-qualified Spanish should preserve the Latin American fallback contract");
+    expect(
+        locale_fallback_chain("es-Latn-419") ==
+            std::vector<std::string>({"es-Latn-419", "es-Latn", "es-419", "es", "en-US"}),
+        "#7074: a numeric Latin American region retains the regional catalog after its script parent");
+    expect(
+        locale_fallback_chain("es-ES") ==
+            std::vector<std::string>({"es-ES", "es", "en-US"}) &&
+            locale_fallback_chain("es-Latn-ES") ==
+                std::vector<std::string>({"es-Latn-ES", "es-Latn", "es", "en-US"}) &&
+            locale_fallback_chain("es-Latn") ==
+                std::vector<std::string>({"es-Latn", "es", "en-US"}),
+        "#7074: Spain and regionless Spanish must not inherit Latin American prose");
+    expect(
+        locale_fallback_chain("es-AR") ==
+            std::vector<std::string>({"es-AR", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-US") ==
+                std::vector<std::string>({"es-US", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-BR") ==
+                std::vector<std::string>({"es-BR", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-BZ") ==
+                std::vector<std::string>({"es-BZ", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-JP") ==
+                std::vector<std::string>({"es-JP", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-419") ==
+                std::vector<std::string>({"es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-MX-x-ES") ==
+                std::vector<std::string>({"es-MX-x-es", "es-MX", "es-419", "es", "en-US"}) &&
+            locale_fallback_chain("es-x-MX") ==
+                std::vector<std::string>({"es-x-mx", "es", "en-US"}),
+        "#7074: Latin American region policy must use the region subtag, not private-use text");
     const std::vector<std::string> pseudo_chain = locale_fallback_chain("qPs-pLoC");
     expect(
         pseudo_chain == std::vector<std::string>({"qps-ploc", "qps", "en-US"}),
@@ -171,6 +203,8 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
         temp_root,
         "sr-Latn",
         "{\"Script.Message\":\"Serbian Latin exact locale\"}\n");
+    write_catalog(temp_root, "es-419", "{\"Regional.Message\":\"Texto latinoamericano\"}\n");
+    write_catalog(temp_root, "es-ES", "{\"Regional.Message\":\"Texto de España\"}\n");
 
     const auto traditional_taiwan =
         copperfin::localization::load_catalogs(temp_root, "ZH_hANT_tw");
@@ -189,6 +223,19 @@ void test_bcp47_script_locale_normalization_and_catalog_fallback() {
             serbian_latin.translate("Script.Message") == "Serbian Latin exact locale" &&
             serbian_latin.translate("Fallback.Message") == "English fallback",
         "#3894: canonical script-only directories should load on case-sensitive filesystems");
+    const auto spain = copperfin::localization::load_catalogs(temp_root, "es-ES");
+    const auto mexico = copperfin::localization::load_catalogs(temp_root, "es-MX");
+    expect(
+        spain.translate("Regional.Message") == "Texto de España" &&
+            mexico.translate("Regional.Message") == "Texto latinoamericano",
+        "#7074: exact Spain catalog wins and absent Mexican catalog uses es-419");
+    fs::remove(temp_root / "es-ES" / "strings.json", ignored);
+    const auto spain_without_exact_catalog =
+        copperfin::localization::load_catalogs(temp_root, "es-ES");
+    expect(
+        spain_without_exact_catalog.translate("Regional.Message") == "Regional.Message" &&
+            spain_without_exact_catalog.translate("Fallback.Message") == "English fallback",
+        "#7074: absent Spain catalog must not display Latin American prose");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -345,6 +392,69 @@ std::vector<std::string> placeholder_names(std::string_view pattern) {
 void test_product_locale_catalogs_have_key_parity() {
     namespace fs = std::filesystem;
     const fs::path catalog_root = copperfin::localization::resolve_catalog_root();
+    std::ifstream inventory(catalog_root / "inventory.txt");
+    expect(inventory.good(), "#7072: product locale inventory must be present");
+    if (!inventory.good()) {
+        return;
+    }
+    std::string inventory_line;
+    std::getline(inventory, inventory_line);
+    expect(inventory_line == "version 1", "#7072: locale inventory version must be recognized");
+    if (inventory_line != "version 1") {
+        return;
+    }
+    std::set<std::string> declared_locales;
+    std::size_t source_count = 0U;
+    std::size_t pseudo_count = 0U;
+    while (std::getline(inventory, inventory_line)) {
+        std::istringstream fields(inventory_line);
+        std::string locale;
+        std::string role;
+        std::string extra;
+        fields >> locale >> role;
+        const bool valid = !(fields >> extra) &&
+            (role == "source" || role == "unreviewed" || role == "pseudo") &&
+            locale == copperfin::localization::normalize_locale(locale) &&
+            locale.find("/") == std::string::npos &&
+            locale.find("\\") == std::string::npos &&
+            locale.find(".") == std::string::npos &&
+            declared_locales.insert(locale).second;
+        expect(valid, "#7072: locale inventory entry must be canonical and unique: " + inventory_line);
+        if (!valid) {
+            continue;
+        }
+        if (role == "source") {
+            ++source_count;
+            expect(locale == "en-US", "#7072: en-US must be the only source locale");
+        }
+        if (role == "pseudo") {
+            ++pseudo_count;
+            expect(locale == "qps-ploc", "#7072: qps-ploc must be the only pseudo locale");
+        }
+    }
+    expect(source_count == 1U && pseudo_count == 1U,
+        "#7072: inventory must declare one source and one pseudo locale");
+    for (const auto& child : fs::directory_iterator(catalog_root)) {
+        if (child.path().filename() == "inventory.txt") {
+            continue;
+        }
+        expect(child.is_directory() && !child.is_symlink() &&
+                declared_locales.contains(child.path().filename().string()),
+            "#7072: packaged locale directory must be declared: " + child.path().string());
+    }
+    for (const std::string& locale : declared_locales) {
+        const fs::path locale_path = catalog_root / locale;
+        const bool valid_directory = fs::is_directory(locale_path) && !fs::is_symlink(locale_path);
+        expect(valid_directory,
+            "#7072: declared locale must be a regular directory: " + locale_path.string());
+        if (!valid_directory) {
+            continue;
+        }
+        for (const auto& child : fs::directory_iterator(locale_path)) {
+            expect(child.path().filename() == "strings.json" && child.is_regular_file() && !child.is_symlink(),
+                "#7072: locale directory must contain only a regular strings.json: " + child.path().string());
+        }
+    }
     const auto english = copperfin::localization::load_catalog_file(
         catalog_root / "en-US" / "strings.json");
     expect(english.ok, "product en-US localization catalog should parse");
@@ -352,7 +462,10 @@ void test_product_locale_catalogs_have_key_parity() {
         return;
     }
 
-    for (const std::string locale : {"es-419", "pt-BR", "qps-ploc"}) {
+    for (const std::string& locale : declared_locales) {
+        if (locale == "en-US") {
+            continue;
+        }
         const auto localized = copperfin::localization::load_catalog_file(
             catalog_root / locale / "strings.json");
         expect(localized.ok, "product " + locale + " localization catalog should parse");

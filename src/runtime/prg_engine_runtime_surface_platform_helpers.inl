@@ -2,58 +2,32 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-std::uint32_t bitwise_value(const PrgValue& value) {
-    return static_cast<std::uint32_t>(
-        static_cast<std::int32_t>(std::llround(value_as_number(value))));
-}
 std::int64_t signed_bitwise_result(std::uint32_t value) {
     return static_cast<std::int64_t>(static_cast<std::int32_t>(value));
-}
-
-int bit_position(const PrgValue& value) {
-    const int position = static_cast<int>(std::llround(value_as_number(value)));
-    if (position < 0 || position > 31) {
-        throw std::runtime_error(runtime_text(
-            "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange",
-            {
-                {"maximum", "31"},
-                {"minimum", "0"}
-            }));
-    }
-    return position;
 }
 
 [[noreturn]] void throw_invalid_bit_shift_argument() {
     throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
 }
 
-std::uint32_t bit_shift_operand(const PrgValue& value, NumericBehavior behavior) {
+std::int64_t bit_shift_argument(const PrgValue& value, NumericBehavior behavior) {
     const double raw = value_as_number(value);
-    std::int64_t converted = 0;
     if (behavior == NumericBehavior::vfp9) {
-        converted = vfp9_numeric_to_int32(raw);
-    } else {
-        const auto checked = checked_truncated_numeric_to_int64(raw);
-        if (!checked.has_value()) {
-            throw_invalid_bit_shift_argument();
-        }
-        converted = *checked;
+        return vfp9_numeric_to_int32(raw);
     }
-    return static_cast<std::uint32_t>(converted);
+    const auto converted = checked_truncated_numeric_to_int64(raw);
+    if (!converted.has_value()) {
+        throw_invalid_bit_shift_argument();
+    }
+    return *converted;
+}
+
+std::uint32_t bit_shift_operand(const PrgValue& value, NumericBehavior behavior) {
+    return static_cast<std::uint32_t>(bit_shift_argument(value, behavior));
 }
 
 int bit_shift_count(const PrgValue& value, NumericBehavior behavior) {
-    const double raw = value_as_number(value);
-    std::int64_t converted = 0;
-    if (behavior == NumericBehavior::vfp9) {
-        converted = vfp9_numeric_to_int32(raw);
-    } else {
-        const auto checked = checked_truncated_numeric_to_int64(raw);
-        if (!checked.has_value()) {
-            throw_invalid_bit_shift_argument();
-        }
-        converted = *checked;
-    }
+    const std::int64_t converted = bit_shift_argument(value, behavior);
     if (converted < 0 || converted > 31) {
         throw_invalid_bit_shift_argument();
     }

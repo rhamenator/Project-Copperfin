@@ -29,7 +29,7 @@
         },
         "allOf": [
           {"if": {"properties": {"translationStatus": {"const": "reviewed"}}}, "then": {"required": ["translationSha256", "reviewerEvidence"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}},
-          {"if": {"properties": {"reviewStatus": {"const": "human-cultural-and-terminology"}}}, "then": {"required": ["reviewerEvidence"]}}
+          {"if": {"required": ["reviewStatus"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}, "then": {"required": ["reviewerEvidence"]}}
         ]
       }
     }

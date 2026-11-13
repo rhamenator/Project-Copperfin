@@ -18,6 +18,19 @@ share/copperfin/locales/
 
 Each `strings.json` file is a UTF-8 JSON object with stable semantic keys and localized string values. Use keys such as `Command.Build`, `Diagnostic.ExpectedTokenBeforeToken`, or `Inspect.Usage`; do not use English prose as lookup keys.
 
+`resources/locales/inventory.txt` is the versioned list of every packaged
+catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`.
+The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
+catalog whose wording has not passed qualified human review), and `pseudo`
+(only test-only `qps-ploc`). Adding a locale requires a complete catalog and
+an inventory entry in the same change. The catalog generator, native parity
+test, and installer contract reject undeclared directories or unexpected
+per-locale artifacts. The generator additionally rejects invalid UTF-8; the
+generator and native parity test reject missing keys, blank values, and changed
+placeholders; and the installer contract rejects missing or changed installed
+artifacts. `unreviewed` reports review status, not
+content completeness; equal key counts do not establish translation quality.
+
 The source-of-truth locale is `en-US`. Placeholder catalogs currently exist for `es-419`, `pt-BR`, and `qps-ploc`. The Spanish and Portuguese catalogs are not production-ready language packs until a separate reviewed language-pack issue says so.
 
 ## Locale Selection
@@ -46,11 +59,25 @@ Fallback is deterministic:
 ```text
 es-MX -> es-MX -> es-419 -> es -> en-US
 es-AR -> es-AR -> es-419 -> es -> en-US
+es-US -> es-US -> es-419 -> es -> en-US
+es-Latn-419 -> es-Latn-419 -> es-Latn -> es-419 -> es -> en-US
+es-ES -> es-ES -> es -> en-US
+es-Latn-ES -> es-Latn-ES -> es-Latn -> es -> en-US
 pt-BR -> pt-BR -> pt -> en-US
 pt-PT -> pt-PT -> pt -> en-US
 fr-CA -> fr-CA -> fr -> en-US
 unknown -> unknown -> en-US
 ```
+
+An explicit Spanish region uses `es-419` when it is in the
+[CLDR `es_419` parent-locale set](https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml):
+AR, BO, BR, BZ, CL, CO, CR, CU, DO, EC, GT, HN, JP, MX, NI, PA, PE, PR,
+PY, SV, US, UY, and VE. The numeric region `419` also uses that catalog.
+A script subtag before the region does not change that decision.
+`es-ES`, regionless Spanish, and Spanish with other regional subtags use their
+exact/script/language catalogs and then `en-US`; they do not inherit the Latin
+American pack. This is a fallback policy, not an assertion that `es-419` is
+linguistically unsuitable for every speaker outside the listed regions.
 
 Missing keys fall back through the locale chain. If no catalog provides a key, the lookup returns the stable key rather than blank text.
 
@@ -82,7 +109,20 @@ Pseudo-localization is a test tool, not a production language pack.
 
 The `test_localization` CTest entry is the technical catalog gate. It compares every production locale with its managed catalog values and fails for missing or extra keys, blank values, or a changed placeholder name/multiplicity. The managed catalog generator treats `qps-ploc` as intentionally decorated: it enforces key presence and nonblank values without requiring byte-for-byte English text. The gate also translates every `qps-ploc` key with marker values and verifies the result remains decorated while each marker survives. This protects runtime substitution and pseudo-locale coverage without changing JSON fields, command switches, diagnostic identities, or other machine contracts.
 
-Passing the technical gate does not approve a regional language pack. A human linguistic and cultural review is still required before `es-419` or `pt-BR` can be marked production-ready; record the reviewer, source, date, terminology decisions, regional suitability, tone/formality, euphemism/directness, and offensive-wording review with the release evidence.
+Passing the technical gate does not approve a regional language pack. For v1.0,
+the owner accepted independent AI linguistic review with disclosed limits on
+2026-11-03. Before `es-419` or `pt-BR` is marked production-ready, record
+per-entry source and translation identity, independent review provenance,
+regional references where useful, terminology decisions, regional suitability,
+tone/formality, euphemism/directness, offensive-wording concerns, and residual
+uncertainty with release evidence. Repository review evidence is self-attested;
+it identifies the reviewer or model/session but does not authenticate that the
+review occurred. AI review is not native-speaker or human
+cultural certification. Any unresolved source-identical prose, stale review,
+blocks promotion. Rendered-surface validation and known runtime leaks are
+separate release-readiness evidence rather than checks performed by the ledger
+script. A qualified human review remains
+valuable but is not the v1.0 release gate under this owner decision.
 
 ## Invariant Contracts
 
@@ -123,4 +163,7 @@ When adding new user-facing text:
 4. Add or update tests for fallback, placeholder preservation, and default `en-US` output when the surface is user-visible.
 5. If a surface cannot yet use the catalog, isolate the string in the smallest helper or constant and add `TODO(localization): move this user-facing string into catalog; see #1779`.
 
-Do not add production non-English translations without a reviewed language-pack issue. Placeholder catalogs and machine-generated translations are not production-ready.
+Add non-English translation candidates only within an owner-authorized
+language-pack workstream. Populated keys and machine-generated translations
+remain unreviewed until the per-entry ledger gate and separate rendered-surface
+release validation pass.

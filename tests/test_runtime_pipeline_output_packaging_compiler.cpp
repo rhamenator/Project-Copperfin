@@ -123,6 +123,8 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ON ESCAPE DO escape_handler\n"
                "ON PAGE AT LINE 42 DO page_handler\n"
                "EJECT PAGE\n"
+               "UPDATE People SET AGE = 1 WHERE\n"
+               "DELETE FROM People\n"
                "EXPORT DATABASE 'catalog.dbc' TO 'catalog.json' TYPE JSON\n"
                "RETURN\n"
                "PROCEDURE worker\n"
@@ -204,6 +206,10 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ir manifest should map EJECT PAGE statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"export_database_command\"") != std::string::npos,
                "ir manifest should map EXPORT DATABASE statements to a stable opcode");
+        expect(ir_manifest.find("\"text\": \"UPDATE People SET AGE = 1 WHERE\", \"identifier\": \"People\", \"expression\": \"AGE = 1\", \"secondary_expression\": \"\", \"tertiary_expression\": \"\", \"quaternary_expression\": \"\", \"where_clause_present\": true") != std::string::npos,
+               "ir manifest should preserve an explicitly empty UPDATE WHERE clause");
+        expect(ir_manifest.find("\"text\": \"DELETE FROM People\", \"identifier\": \"People\", \"expression\": \"\", \"secondary_expression\": \"\", \"tertiary_expression\": \"\", \"quaternary_expression\": \"\", \"where_clause_present\": false") != std::string::npos,
+               "ir manifest should distinguish an omitted DELETE FROM WHERE clause");
         expect(ir_manifest.find("\"opcode\": \"wait_command\"") != std::string::npos,
                "ir manifest should map WAIT WINDOW statements to a stable opcode");
         expect(ir_manifest.find("\"text\": \"WAIT WINDOW 'ir\\u001fcontrol'\"") != std::string::npos,

@@ -396,6 +396,26 @@
   with all36checks/all11required green, actual clean Codex6092967948 after
   Claude-first/fallback, and zero unresolved conversations (gate6093226220).
 
+- BIT-family 32-bit contract (#6874/#5611/#6776,2026-11-07): all nine
+  `BIT*` functions perform their bit operations on `std::uint32_t` patterns.
+  In COPPERFIN mode, the non-shift functions currently reject finite Numeric
+  operands outside signed-32, while BITLSHIFT and BITRSHIFT accept int64-range
+  operands and project their low 32 bits; #6873 retains the unresolved policy
+  decision for the former range. BITAND, BITOR and BITXOR reject a
+  one-argument call with error 1229 and fold two or more operands;
+  zero-argument behavior remains outside this contract. BITNOT complements
+  one pattern; BITSET,
+  BITCLEAR and BITTEST validate a converted index in 0..31 before constructing
+  a mask; BITLSHIFT and BITRSHIFT validate a converted count in 0..31 before
+  shifting. Numeric results are returned using the corresponding signed
+  32-bit Integer value, while BITTEST returns Logical. Invalid indexes, shift
+  counts plus the table's range/nonfinite rejections use catchable
+  compatibility errors; the BIT-family paths do not directly construct a
+  plain `std::runtime_error`. The unified two-mode table exercises every function;
+  the detailed per-function fixtures retain their independently recovered
+  conversion boundaries. This contract does not decide #6873's unresolved
+  COPPERFIN operand range/type policy or claim mixed-type native parity.
+
 - BITSET Numeric/exact recovery (#5611/#6776/#6871,2026-10-09):
   RQ-CF-PRG-BITSET-NUMERIC-001 mapped before helpers/tests/migration.
   Independent initial plus3 matching186-line/184call installed VFP9 7423
@@ -3066,8 +3086,8 @@ The native runtime/parser currently has first-pass support for these command fam
 - `GATHER MEMVAR` / `GATHER FROM <array>` — write `m.<fieldname>` variables or array elements back to current record via direct `replace_record_field_value` calls (type-faithful, no string-quote round-trip); `FIELDS` and `FOR` are honored, including single-field `FIELDS NAME` filters on both memvar and `GATHER NAME <object>` forms plus deeper `EXCEPT` coverage on object-target flows, date/datetime/blank runtime strings now restore consistently into DBF storage, and macro-expanded array-name sources are supported, including direct true second-hop holder forms such as `&cMacroRowNameDeepHolder`, while `GATHER NAME <object>` macro object targets now also have direct true second-hop proof via forms such as `&cObjectNameDeepHolder`; first-pass
 - wildcard `FIELDS LIKE` / `FIELDS EXCEPT` coverage now also explicitly defends the MEMVAR scatter/gather path instead of only the NAME-object and array-transfer paths
 - `SCATTER MEMVAR BLANK` (and other BLANK forms) now succeeds on zero-record tables by deriving typed blank values from the cursor schema instead of requiring a current record; `blank_value_for_field` now correctly returns an empty string for character ('C') and varchar ('V') fields, matching VFP behavior where `SCATTER BLANK` creates `''` for character-type memvars
-- `UPDATE` — first-pass local/remote cursor command forms, including `UPDATE <alias> SET ...`, `UPDATE SET ...` against the selected cursor, and `UPDATE IN <alias> SET ...`; `WHERE`/`FOR` scope clauses reuse scoped record replacement semantics, including macro-expanded `FOR &cExpr` filters
-- `DELETE FROM` / `INSERT INTO` — first-pass SQL-style local/remote cursor mutation forms; `DELETE FROM <target> WHERE/FOR <expr>` tombstones matching target rows and defaults to all rows when no condition is supplied, including macro-expanded `FOR &cExpr` filters and true second-hop local forms such as `FOR &cDeleteExprDeepHolder`; `INSERT INTO <target> [(fields)] VALUES (...)` appends through the shared blank-row plus field-replacement path, including expression-driven cursor targets, schema-order mapping when the field list is omitted, selected-cursor preservation, local DBF persistence, and synthetic SQL result cursor parity; `INSERT INTO <target> [(fields)] SELECT ...` now materializes through the same first-pass single/joined-cursor query planner used by native list-control `Requery()`, preserves selected/source cursor state, and rolls the complete append batch back if any target row fails
+- `UPDATE` — first-pass local/remote cursor command forms, including `UPDATE <alias> SET ...`, `UPDATE SET ...` against the selected cursor, and `UPDATE IN <alias> SET ...`; `WHERE`/`FOR` scope clauses reuse scoped record replacement semantics, including macro-expanded `FOR &cExpr` filters. Omitting `WHERE` retains the all-row form, while writing `WHERE` without a predicate raises catchable syntax error 10 before any row changes.
+- `DELETE FROM` / `INSERT INTO` — first-pass SQL-style local/remote cursor mutation forms; `DELETE FROM <target> WHERE/FOR <expr>` tombstones matching target rows and defaults to all rows when no condition is supplied, including macro-expanded `FOR &cExpr` filters and true second-hop local forms such as `FOR &cDeleteExprDeepHolder`. An explicitly written empty `WHERE` raises catchable syntax error 10 before any row is tombstoned; it is distinct from omitting the clause. `INSERT INTO <target> [(fields)] VALUES (...)` appends through the shared blank-row plus field-replacement path, including expression-driven cursor targets, schema-order mapping when the field list is omitted, selected-cursor preservation, local DBF persistence, and synthetic SQL result cursor parity; `INSERT INTO <target> [(fields)] SELECT ...` now materializes through the same first-pass single/joined-cursor query planner used by native list-control `Requery()`, preserves selected/source cursor state, and rolls the complete append batch back if any target row fails
 - `INSERT INTO` failure rollback — local and synthetic remote inserts now restore the previous record count when a field write fails after the blank-row append step, preventing a failed insert from leaving an extra blank row behind
 - `PACK`, `PACK MEMO`, and `ZAP` — first-pass local DBF table-maintenance commands; `PACK` physically removes deleted records while preserving schema and kept-row order, `PACK MEMO` rewrites the memo sidecar from current memo values to compact stale memo blocks, and `ZAP` truncates the table to zero records while keeping it appendable; local cursors now honor first-pass exclusive-use guards from `SET EXCLUSIVE` / `USE ... SHARED|EXCLUSIVE`; synthetic remote/result cursors get matching in-memory behavior where applicable
 - `SET REPROCESS`, `SET MULTILOCKS`, `RLOCK()`, `FLOCK()` / `LOCK()`, `ISRLOCKED()`, `ISFLOCKED()`, and `UNLOCK` — first-pass in-process lock-state tracking for open local/runtime cursors, including `SET()` readback, `UNLOCK ALL`, record-specific `UNLOCK RECORD <n>` release, `AUTOMATIC` default `REPROCESS` semantics, and bounded retry/timeout behavior across explicit lock attempts plus shipped local mutation paths; this establishes runtime-visible lock semantics but does not yet claim cross-process OS locking or transaction journaling

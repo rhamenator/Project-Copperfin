@@ -104,6 +104,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_numeric_real_assignment_helper
             test_prg_numeric_runtime_division_helper
             test_prg_numeric_constant_division_intrinsic_helper
+            test_prg_numeric_constant_arithmetic_metadata_helper
             test_prg_numeric_nonwhole_division_helper
             test_prg_numeric_small_divisor_helper
             test_prg_numeric_value_display_helper
@@ -1002,6 +1003,32 @@ function(copperfin_configure_native_test_isolation)
         )
     endif()
 
+    if(TEST test_locale_review_status)
+        copperfin_set_test_isolation(test_locale_review_status
+            PARALLEL_SAFE
+            FILESYSTEM read-only
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM configured
+            AUDIT complete
+        )
+    endif()
+
+    if(TEST test_locale_review_status_negative)
+        copperfin_set_test_isolation(test_locale_review_status_negative
+            PARALLEL_SAFE
+            FILESYSTEM test-owned-unique
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM configured
+            AUDIT complete
+        )
+    endif()
+
     copperfin_set_test_isolation(test_github_actions_contract
         FILESYSTEM read-only
         ENVIRONMENT none
@@ -1198,6 +1225,17 @@ function(copperfin_configure_native_test_isolation)
         test_prg_engine_addlistitem_column_numeric_copperfin_session2
         test_prg_engine_addlistitem_column_numeric_vfp9_session1
         test_prg_engine_addlistitem_column_numeric_vfp9_session2
+        # RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: direct-only deterministic
+        # helper fixture; no child/network/filesystem/external resources.
+        test_prg_engine_listitem_column_numeric
+        # RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 public originals: generated
+        # PRGs/workareas/private unique temps/scoped locale; no child/network/
+        # samples/external resources. Conservative serial scheduling.
+        test_prg_engine_listitem_column_numeric_public
+        test_prg_engine_listitem_column_numeric_public_copperfin_session1
+        test_prg_engine_listitem_column_numeric_public_copperfin_session2
+        test_prg_engine_listitem_column_numeric_public_vfp9_session1
+        test_prg_engine_listitem_column_numeric_public_vfp9_session2
         # RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 source audit: private
         # generated PRGs/workareas/unique owned temps/scoped locale; no child,
         # network, samples or external resources. Conservative SERIAL, not DV.
@@ -2495,6 +2533,29 @@ function(copperfin_configure_native_test_isolation)
         CHILD_PROCESSES none
         NETWORK none
         SAMPLES read-only
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_dbc_catalog_regular_file_admission
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_dbf_primary_regular_file_admission
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        CLOCK monotonic-deadline
+        RANDOMNESS test-owned-unique
+        GLOBAL_STATE none
+        SAMPLES none
         PLATFORM portable
         AUDIT complete
     )

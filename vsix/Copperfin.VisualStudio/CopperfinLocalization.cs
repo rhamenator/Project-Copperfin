@@ -3,6 +3,7 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -1201,14 +1202,14 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Debugger.Column.Action"] = "Acción",
                 ["LanguageService.IntelliSense.Keyword.Select"] = "Comando: selecciona un área de trabajo o evalúa una llamada a SELECT() según el contexto.",
                 ["LanguageService.IntelliSense.CompletionSet.FoxPro"] = "FoxPro de Copperfin",
-                ["LanguageService.IntelliSense.Keyword.Use"] = "Command: opens a table, free table, cursor, or closes one with USE IN.",
-                ["LanguageService.IntelliSense.Keyword.In"] = "Keyword: targets a work area or alias in commands like USE IN and GO ... IN.",
+                ["LanguageService.IntelliSense.Keyword.Use"] = "Comando: abre una tabla, una tabla libre o un cursor, o cierra uno con USE IN.",
+                ["LanguageService.IntelliSense.Keyword.In"] = "Palabra clave: indica un área de trabajo o alias en comandos como USE IN y GO ... IN.",
                 ["LanguageService.IntelliSense.Keyword.Alias"] = "Keyword: assigns or references a work-area alias.",
                 ["LanguageService.IntelliSense.Keyword.Do"] = "Command: runs a procedure, program, or form.",
                 ["LanguageService.IntelliSense.Keyword.DoForm"] = "Command: runs a form and enters its event lifecycle.",
                 ["LanguageService.IntelliSense.Keyword.ReportForm"] = "Command: runs a report, often with PREVIEW.",
                 ["LanguageService.IntelliSense.Keyword.LabelForm"] = "Command: runs a label layout.",
-                ["LanguageService.IntelliSense.Keyword.Set"] = "Command: updates runtime state such as SAFETY, DELETED, EXCLUSIVE, and TALK.",
+                ["LanguageService.IntelliSense.Keyword.Set"] = "Comando: actualiza el estado de ejecución, por ejemplo SAFETY, DELETED, EXCLUSIVE y TALK.",
                 ["LanguageService.IntelliSense.Keyword.SetDataSessionTo"] = "Command: switches into a specific data session.",
                 ["LanguageService.IntelliSense.Keyword.ReadEvents"] = "Command: enters the event loop.",
                 ["LanguageService.IntelliSense.Keyword.ClearEvents"] = "Command: exits the event loop.",
@@ -1223,7 +1224,7 @@ internal sealed class CopperfinLocalization
                 ["LanguageService.IntelliSense.Keyword.For"] = "Keyword: starts a numeric loop.",
                 ["LanguageService.IntelliSense.Keyword.EndFor"] = "Keyword: ends a numeric loop.",
                 ["LanguageService.IntelliSense.Keyword.OnError"] = "Command: installs an error handler.",
-                ["LanguageService.IntelliSense.Keyword.CreateObject"] = "Function-style activation of a COM or Copperfin automation object.",
+                ["LanguageService.IntelliSense.Keyword.CreateObject"] = "Función que crea un objeto de automatización COM o Copperfin.",
                 ["LanguageService.IntelliSense.Keyword.GetObject"] = "Function-style bind to an existing COM or moniker-based automation object.",
                 ["LanguageService.IntelliSense.Keyword.SqlConnect"] = "Function: opens a SQL pass-through connection.",
                 ["LanguageService.IntelliSense.Keyword.SqlStringConnect"] = "Function: opens SQL pass-through with a raw connection string.",
@@ -2090,14 +2091,14 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Debugger.Column.Action"] = "Ação",
                 ["LanguageService.IntelliSense.Keyword.Select"] = "Comando: seleciona uma área de trabalho ou avalia uma chamada a SELECT() conforme o contexto.",
                 ["LanguageService.IntelliSense.CompletionSet.FoxPro"] = "FoxPro do Copperfin",
-                ["LanguageService.IntelliSense.Keyword.Use"] = "Command: opens a table, free table, cursor, or closes one with USE IN.",
-                ["LanguageService.IntelliSense.Keyword.In"] = "Keyword: targets a work area or alias in commands like USE IN and GO ... IN.",
+                ["LanguageService.IntelliSense.Keyword.Use"] = "Comando: abre uma tabela, uma tabela livre ou um cursor, ou fecha um deles com USE IN.",
+                ["LanguageService.IntelliSense.Keyword.In"] = "Palavra-chave: indica uma área de trabalho ou alias em comandos como USE IN e GO ... IN.",
                 ["LanguageService.IntelliSense.Keyword.Alias"] = "Keyword: assigns or references a work-area alias.",
                 ["LanguageService.IntelliSense.Keyword.Do"] = "Command: runs a procedure, program, or form.",
                 ["LanguageService.IntelliSense.Keyword.DoForm"] = "Command: runs a form and enters its event lifecycle.",
                 ["LanguageService.IntelliSense.Keyword.ReportForm"] = "Command: runs a report, often with PREVIEW.",
                 ["LanguageService.IntelliSense.Keyword.LabelForm"] = "Command: runs a label layout.",
-                ["LanguageService.IntelliSense.Keyword.Set"] = "Command: updates runtime state such as SAFETY, DELETED, EXCLUSIVE, and TALK.",
+                ["LanguageService.IntelliSense.Keyword.Set"] = "Comando: atualiza o estado de execução, como SAFETY, DELETED, EXCLUSIVE e TALK.",
                 ["LanguageService.IntelliSense.Keyword.SetDataSessionTo"] = "Command: switches into a specific data session.",
                 ["LanguageService.IntelliSense.Keyword.ReadEvents"] = "Command: enters the event loop.",
                 ["LanguageService.IntelliSense.Keyword.ClearEvents"] = "Command: exits the event loop.",
@@ -2112,7 +2113,7 @@ internal sealed class CopperfinLocalization
                 ["LanguageService.IntelliSense.Keyword.For"] = "Keyword: starts a numeric loop.",
                 ["LanguageService.IntelliSense.Keyword.EndFor"] = "Keyword: ends a numeric loop.",
                 ["LanguageService.IntelliSense.Keyword.OnError"] = "Command: installs an error handler.",
-                ["LanguageService.IntelliSense.Keyword.CreateObject"] = "Function-style activation of a COM or Copperfin automation object.",
+                ["LanguageService.IntelliSense.Keyword.CreateObject"] = "Função que cria um objeto de automação COM ou Copperfin.",
                 ["LanguageService.IntelliSense.Keyword.GetObject"] = "Function-style bind to an existing COM or moniker-based automation object.",
                 ["LanguageService.IntelliSense.Keyword.SqlConnect"] = "Function: opens a SQL pass-through connection.",
                 ["LanguageService.IntelliSense.Keyword.SqlStringConnect"] = "Function: opens SQL pass-through with a raw connection string.",
@@ -2700,14 +2701,27 @@ internal sealed class CopperfinLocalization
     public CopperfinLocalization(string? requestedLocale = null, string? catalogDirectory = null)
     {
         Locale = NormalizeLocale(requestedLocale);
-        externalCatalog = CopperfinExternalLocaleCatalog.Load(
-            Locale,
-            catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR"));
+        fallbackChain = LocaleFallbackChain(Locale);
+        catalogRoot = catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
+        externalCatalogs = new ConcurrentDictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
     }
 
     public string Locale { get; }
 
-    private readonly IReadOnlyDictionary<string, string>? externalCatalog;
+    // Native hosts do not have neutral pt/es catalogs; retain the requested UI
+    // identity while forwarding the same regional catalog used by managed lookup.
+    public string NativeHostLocale => Locale switch
+    {
+        "pt" => PortugueseBrazilLocale,
+        "es" => SpanishLatinAmericaLocale,
+        _ => Locale
+    };
+
+    private readonly IReadOnlyList<string> fallbackChain;
+    private readonly string? catalogRoot;
+    private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> externalCatalogs;
+    private static readonly IReadOnlyDictionary<string, string> EmptyExternalCatalog =
+        new Dictionary<string, string>(StringComparer.Ordinal);
 
     public static CopperfinLocalization FromEnvironment()
     {
@@ -2743,26 +2757,21 @@ internal sealed class CopperfinLocalization
         var locale = NormalizeLocale(requestedLocale);
         if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
         {
-            locale = DefaultLocale;
+            return Catalogs[DefaultLocale];
         }
-
-        return Catalogs.TryGetValue(locale, out var catalog)
-            ? catalog
-            : Catalogs[DefaultLocale];
+        foreach (var candidate in LocaleFallbackChain(locale))
+        {
+            if (Catalogs.TryGetValue(candidate, out var catalog))
+            {
+                return catalog;
+            }
+        }
+        return Catalogs[DefaultLocale];
     }
 
     public static IReadOnlyCollection<string> CatalogKeys(string? requestedLocale = null)
     {
-        var locale = NormalizeLocale(requestedLocale);
-        if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
-        {
-            return new List<string>(Catalogs[DefaultLocale].Keys);
-        }
-
-        var catalog = Catalogs.TryGetValue(locale, out var localizedCatalog)
-            ? localizedCatalog
-            : Catalogs[DefaultLocale];
-        return new List<string>(catalog.Keys);
+        return new List<string>(CatalogEntries(requestedLocale).Keys);
     }
 
     public static string NormalizeLocale(string? requestedLocale)
@@ -2772,32 +2781,148 @@ internal sealed class CopperfinLocalization
             return DefaultLocale;
         }
 
-        var normalized = (requestedLocale ?? string.Empty).Trim().Replace('_', '-');
-        if (normalized.Equals(DefaultLocale, StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith(DefaultLocale + "-", StringComparison.OrdinalIgnoreCase))
+        var normalized = requestedLocale.Trim();
+        var posixSuffix = normalized.IndexOfAny(new[] { '.', '@' });
+        if (posixSuffix >= 0)
         {
-            return DefaultLocale;
+            normalized = normalized.Substring(0, posixSuffix);
         }
-
-        if (normalized.Equals("es", StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith("es-", StringComparison.OrdinalIgnoreCase))
+        normalized = normalized.Replace('_', '-');
+        var parts = normalized.Split('-');
+        if (parts.Length == 0 || parts.Length > 16 || parts[0].Length < 2 ||
+            parts[0].Length > 8 || !IsAsciiLetters(parts[0]))
         {
-            return SpanishLatinAmericaLocale;
+            return "en-US";
         }
-
-        if (normalized.Equals("pt", StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith("pt-", StringComparison.OrdinalIgnoreCase))
+        for (var index = 1; index < parts.Length; index++)
         {
-            return PortugueseBrazilLocale;
+            if (parts[index].Length < 1 || parts[index].Length > 8 || !IsAsciiAlphaNumeric(parts[index]))
+            {
+                return "en-US";
+            }
         }
-
-        if (normalized.Equals(PseudoLocale, StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith(PseudoLocale + "-", StringComparison.OrdinalIgnoreCase))
+        var scriptSeen = false;
+        var regionSeen = false;
+        var suffixStarted = false;
+        var extlangCount = 0;
+        for (var index = 0; index < parts.Length; index++)
         {
-            return PseudoLocale;
+            var part = parts[index].ToLowerInvariant();
+            if (index > 0 && !suffixStarted && !scriptSeen && !regionSeen &&
+                part.Length == 4 && IsAsciiLetters(part))
+            {
+                part = char.ToUpperInvariant(part[0]) + part.Substring(1);
+                scriptSeen = true;
+            }
+            else if (index > 0 && !suffixStarted && !regionSeen &&
+                     ((part.Length == 2 && IsAsciiLetters(part)) ||
+                      (part.Length == 3 && IsAsciiDigits(part))))
+            {
+                part = part.ToUpperInvariant();
+                regionSeen = true;
+            }
+            else if (index > 0)
+            {
+                if (!suffixStarted && !scriptSeen && !regionSeen &&
+                    extlangCount < 3 && part.Length == 3 && IsAsciiLetters(part))
+                {
+                    extlangCount++;
+                }
+                else
+                {
+                    suffixStarted = true;
+                }
+            }
+            parts[index] = part;
         }
+        var result = string.Join("-", parts);
+        return (string.Equals(result, PseudoLocale, StringComparison.OrdinalIgnoreCase) ||
+                result.StartsWith(PseudoLocale + "-", StringComparison.OrdinalIgnoreCase))
+            ? PseudoLocale : result;
+    }
 
-        return DefaultLocale;
+    internal static IReadOnlyList<string> LocaleFallbackChain(string? requestedLocale)
+    {
+        var locale = NormalizeLocale(requestedLocale);
+        var chain = new List<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        void Add(string candidate)
+        {
+            if (seen.Add(candidate))
+            {
+                chain.Add(candidate);
+            }
+        }
+        // The compiled `en` catalog is the final source-text fallback.  Do not
+        // let that alias precede an installed en-US catalog for neutral or
+        // regional English requests.
+        if (!string.Equals(locale, DefaultLocale, StringComparison.Ordinal))
+        {
+            Add(locale);
+        }
+        var parts = locale.Split('-');
+        var regionIndex = parts.Length > 1 && parts[1].Length == 4 && IsAsciiLetters(parts[1])
+            ? 2 : 1;
+        var latinAmericanSpanish = parts[0] == "es" && parts.Length > regionIndex &&
+            LatinAmericanSpanishRegions.Contains(parts[regionIndex]);
+        var parent = locale;
+        while (parent.LastIndexOf('-') is var separator && separator >= 0)
+        {
+            parent = parent.Substring(0, separator);
+            var lastSeparator = parent.LastIndexOf('-');
+            if (parent.Length - lastSeparator - 1 == 1)
+            {
+                parent = lastSeparator < 0 ? string.Empty : parent.Substring(0, lastSeparator);
+            }
+            if (parent.Length == 0)
+            {
+                break;
+            }
+            if (latinAmericanSpanish && parent == "es")
+            {
+                Add(SpanishLatinAmericaLocale);
+            }
+            if (!string.Equals(parent, DefaultLocale, StringComparison.Ordinal))
+            {
+                Add(parent);
+            }
+        }
+        if (string.Equals(locale, "es", StringComparison.Ordinal))
+        {
+            Add(SpanishLatinAmericaLocale);
+        }
+        Add("en-US");
+        if (locale == "pt")
+        {
+            chain.Insert(chain.Count - 1, PortugueseBrazilLocale);
+        }
+        Add(DefaultLocale);
+        return chain;
+    }
+
+    private static readonly HashSet<string> LatinAmericanSpanishRegions = new(StringComparer.Ordinal)
+    {
+        "AR", "BO", "BR", "BZ", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
+        "JP", "MX", "NI", "PA", "PE", "PR", "PY", "SV", "US", "UY", "VE", "419"
+    };
+
+    private static bool IsAsciiLetters(string value) => IsAscii(value, allowLetters: true, allowDigits: false);
+
+    private static bool IsAsciiDigits(string value) => IsAscii(value, allowLetters: false, allowDigits: true);
+
+    private static bool IsAsciiAlphaNumeric(string value) => IsAscii(value, allowLetters: true, allowDigits: true);
+
+    private static bool IsAscii(string value, bool allowLetters, bool allowDigits)
+    {
+        foreach (var ch in value)
+        {
+            if (!((allowLetters && ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) ||
+                  (allowDigits && ch >= '0' && ch <= '9')))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public string Text(string key)
@@ -2808,14 +2933,21 @@ internal sealed class CopperfinLocalization
             return PseudoLocalize(pseudoSource);
         }
 
-        if (externalCatalog is not null && externalCatalog.TryGetValue(key, out var externalLocalized))
+        foreach (var locale in fallbackChain)
         {
-            return externalLocalized;
-        }
-
-        if (Catalogs.TryGetValue(Locale, out var catalog) && catalog.TryGetValue(key, out var localized))
-        {
-            return localized;
+            if (!string.Equals(Locale, PseudoLocale, StringComparison.Ordinal))
+            {
+                var externalCatalog = externalCatalogs.GetOrAdd(locale,
+                    candidate => CopperfinExternalLocaleCatalog.Load(candidate, catalogRoot) ?? EmptyExternalCatalog);
+                if (externalCatalog.TryGetValue(key, out var externalLocalized))
+                {
+                    return externalLocalized;
+                }
+            }
+            if (Catalogs.TryGetValue(locale, out var catalog) && catalog.TryGetValue(key, out var localized))
+            {
+                return localized;
+            }
         }
 
         return Catalogs[DefaultLocale].TryGetValue(key, out var fallback) ? fallback : key;
