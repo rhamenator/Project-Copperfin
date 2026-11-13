@@ -116,6 +116,8 @@ internal static partial class Program
             var britishEnglish = new CopperfinLocalization("en-GB", root);
             var nativeHostStart = new System.Diagnostics.ProcessStartInfo();
             CopperfinStudioHostBridge.ApplyLocalizationEnvironment(nativeHostStart, neutralPortuguese);
+            var nativeSpanishHostStart = new System.Diagnostics.ProcessStartInfo();
+            CopperfinStudioHostBridge.ApplyLocalizationEnvironment(nativeSpanishHostStart, neutralSpanish);
             Expect(neutralPortuguese.Locale == "pt" &&
                    neutralPortuguese.NativeHostLocale == "pt-BR" &&
                    nativeHostStart.EnvironmentVariables["COPPERFIN_UI_LOCALE"] == "pt-BR" &&
@@ -141,6 +143,9 @@ internal static partial class Program
                    mexico.Text("Studio.CloseMenu") == "&Cerrar",
                 "#7071: compiled Spanish fallback should win over a later installed English catalog");
             Expect(neutralSpanish.Text("Studio.OpenDialogTitle") == "Abrir recurso latinoamericano" &&
+                   neutralSpanish.NativeHostLocale == "es-419" &&
+                   nativeSpanishHostStart.EnvironmentVariables["COPPERFIN_UI_LOCALE"] == "es-419" &&
+                   nativeSpanishHostStart.EnvironmentVariables["COPPERFIN_LOCALE"] == "es-419" &&
                    CopperfinLocalization.LocaleFallbackChain("es").SequenceEqual(
                        new[] { "es", "es-419", "en-US", "en" }),
                 "#7071: neutral Spanish should retain the shipped es-419 fallback");

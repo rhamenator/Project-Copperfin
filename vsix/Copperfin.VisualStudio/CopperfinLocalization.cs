@@ -2708,10 +2708,14 @@ internal sealed class CopperfinLocalization
 
     public string Locale { get; }
 
-    // Native hosts do not have a neutral pt catalog; retain the requested UI identity
-    // while forwarding the same pt-BR catalog that the managed neutral-pt chain uses.
-    public string NativeHostLocale => string.Equals(Locale, "pt", StringComparison.Ordinal)
-        ? PortugueseBrazilLocale : Locale;
+    // Native hosts do not have neutral pt/es catalogs; retain the requested UI
+    // identity while forwarding the same regional catalog used by managed lookup.
+    public string NativeHostLocale => Locale switch
+    {
+        "pt" => PortugueseBrazilLocale,
+        "es" => SpanishLatinAmericaLocale,
+        _ => Locale
+    };
 
     private readonly IReadOnlyList<string> fallbackChain;
     private readonly string? catalogRoot;
