@@ -203,9 +203,10 @@ std::string get(const RuntimePauseState& state,const char* key) {
  const auto it=state.globals.find(key);
  return it==state.globals.end()?"<missing>":format_value(it->second);
 }
-void public_case(const fs::path& path,const std::string& mode,int selected,const std::string& cls,
+int public_case(const fs::path& path,const std::string& mode,int selected,const std::string& cls,
                  bool dense,bool bracket,const std::string& input,std::optional<std::int32_t> id,
-                 const std::string& message={},bool full_expression=false) {
+                 const std::string& message={},bool full_expression=false,
+                 std::optional<int> expected_error_code={}) {
  ++public_count;
  const std::string other=mode=="VFP9"?"COPPERFIN":"VFP9";
  const auto expression=full_expression?input:"oList.ListItem"+std::string(bracket?"[":"(")+input+(bracket?"]":")");
@@ -227,7 +228,8 @@ void public_case(const fs::path& path,const std::string& mode,int selected,const
  auto session=PrgRuntimeSession::create(make_runtime_session_options(path,path.parent_path(),false));
  const auto state=session.run(DebugResumeAction::continue_run);
  expect(state.completed,"ListItem completion "+tag+": "+state.message);
- expect(get(state,"ncode")==(id?"0":"31"),"ListItem error "+tag+" got "+get(state,"ncode"));
+ const std::string wanted_code=std::to_string(expected_error_code.value_or(id?0:31));
+ expect(get(state,"ncode")==wanted_code,"ListItem error "+tag+" got "+get(state,"ncode"));
  int row=0;
  if(id) {
   if(dense && *id>=1 && *id<=3) row=*id;
@@ -235,7 +237,9 @@ void public_case(const fs::path& path,const std::string& mode,int selected,const
   else if(!dense && *id==22) row=2;
   else if(!dense && *id==33) row=3;
  }
- expect(get(state,"cresult")==(id?(row==1?"first":row==2?"second":row==3?"third":""):"sentinel"),"ListItem result "+tag+" got "+get(state,"cresult"));
+ const std::string wanted_result=expected_error_code?"sentinel":
+  std::string(id?(row==1?"first":row==2?"second":row==3?"third":""):"sentinel");
+ expect(get(state,"cresult")==wanted_result,"ListItem result "+tag+" got "+get(state,"cresult"));
  const auto found=state.globals.find("cresult");
  expect(found!=state.globals.end()&&found->second.kind==PrgValueKind::string,
         "ListItem kind "+tag);
@@ -244,11 +248,12 @@ void public_case(const fs::path& path,const std::string& mode,int selected,const
  expect(get(state,"cbefore")==context&&get(state,"cafter")==context,"ListItem context "+tag);
  expect(get(state,"cother")==(selected==2?other:mode)&&get(state,"creset")=="1|COPPERFIN|",
         "ListItem isolation/reset "+tag);
- if(id) expect(get(state,"cmessage").empty(),"ListItem successful message "+tag);
+ if(id&&!expected_error_code) expect(get(state,"cmessage").empty(),"ListItem successful message "+tag);
  if(!message.empty()) expect(get(state,"cmessage")==message,"ListItem localized31 "+tag);
- bool object_seen=false;
+ bool object_seen=false;int action_count=-1;
  for(const auto& object:state.ole_objects) if(copperfin::runtime::lowercase_copy(object.base_class_name)==copperfin::runtime::lowercase_copy(cls)) {
   object_seen=true;
+  action_count=object.action_count;
   expect(object.list_rows.size()==3&&object.list_item_data.size()==3,"ListItem count "+tag);
   if(object.list_item_data.size()==3)
    expect(format_value(object.list_item_data[0])=="101"&&format_value(object.list_item_data[1])=="202"&&
@@ -265,6 +270,7 @@ void public_case(const fs::path& path,const std::string& mode,int selected,const
  expect(object_seen,"ListItem native object captured "+tag);
  for(const auto& event:state.events)
   expect(event.category!="prg.object.selected"&&event.category!="ole.invoke","ListItem no external/success event "+tag);
+ return action_count;
 }
 void public_cases(const std::string& mode,int selected) {
  expect(rows.size()==71&&exacts.size()==22,"ListItem frozen public input counts");
@@ -292,6 +298,40 @@ void public_cases(const std::string& mode,int selected) {
     else public_case(path,mode,selected,cls,dense,bracket,"4294967307",{},locale.second);
    }
   set_env_value("COPPERFIN_LOCALE","en-US",true);
+ }
+ for(const std::string cls:{"ListBox","ComboBox"}) for(const bool dense:{false,true}) for(const bool bracket:{false,true}) {
+  // Integral 2 contains no decimal separator, so it is the stable
+  // property-first control for the otherwise identical decimal 2.5 read.
+  const int fractional_count=public_case(path,mode,selected,cls,dense,bracket,"2.5",2);
+  const int integral_count=public_case(path,mode,selected,cls,dense,bracket,"2",2);
+  expect(fractional_count==integral_count,"ListItem "+std::string(bracket?"bracket":"parenthesis")+
+   " property route "+mode+" session"+std::to_string(selected)+" "+cls+(dense?" dense":" sparse")+" fractional "+
+   std::to_string(fractional_count)+" integral "+std::to_string(integral_count));
+  for(const std::string decimal:{"0.5","-0.5"}) {
+   const int boundary_count=public_case(path,mode,selected,cls,dense,bracket,decimal,0);
+   const int zero_count=public_case(path,mode,selected,cls,dense,bracket,"0",0);
+   expect(boundary_count==zero_count,"ListItem Numeric boundary property route "+decimal+" "+mode+
+    " session"+std::to_string(selected)+" "+cls+(dense?" dense":" sparse")+" "+
+    std::string(bracket?"bracket":"parenthesis")+" decimal "+std::to_string(boundary_count)+
+    " integral "+std::to_string(zero_count));
+  }
+  const std::string nested_prefix="IIF(.T.,oList,.NULL.).ListItem"+std::string(bracket?"[":"(");
+  const int nested_fractional_count=public_case(path,mode,selected,cls,dense,bracket,
+   nested_prefix+"2.5"+(bracket?"]":")"),2,{},true);
+  const int nested_integral_count=public_case(path,mode,selected,cls,dense,bracket,
+   nested_prefix+"2"+(bracket?"]":")"),2,{},true);
+  expect(nested_fractional_count==nested_integral_count,"nested ListItem "+
+   std::string(bracket?"bracket":"parenthesis")+" property route "+mode+" session"+
+   std::to_string(selected)+" "+cls+(dense?" dense":" sparse")+" fractional "+
+   std::to_string(nested_fractional_count)+" integral "+std::to_string(nested_integral_count));
+  public_case(path,mode,selected,cls,dense,bracket,"'oList.ListIndex'",{}, {},false,1);
+  const int decimal_currency_count=public_case(path,mode,selected,cls,dense,bracket,"$2.5",3);
+  const int integral_currency_count=public_case(path,mode,selected,cls,dense,bracket,"$2",2);
+  expect(decimal_currency_count==integral_currency_count&&integral_currency_count==integral_count+1,
+   "ListItem Currency legacy route "+mode+
+   " session"+std::to_string(selected)+" "+cls+(dense?" dense":" sparse")+" "+
+   std::string(bracket?"bracket":"parenthesis")+" decimal "+std::to_string(decimal_currency_count)+
+   " integral "+std::to_string(integral_currency_count));
  }
  const std::vector<Exact> postfix{
   {"22.9",22,22},
@@ -326,7 +366,7 @@ int main(int argc,char** argv) {
  } else if(argc==3&&(std::string(argv[1])=="COPPERFIN"||std::string(argv[1])=="VFP9")&&
            (std::string(argv[2])=="1"||std::string(argv[2])=="2")) {
   public_cases(argv[1],std::string(argv[2])=="1"?1:2);
-  expect(direct_count==0&&public_count==944,"ListItem complete public count");
+  expect(direct_count==0&&public_count==1032,"ListItem complete public count");
  } else {std::cerr<<"Expected no args or COPPERFIN|VFP9 1|2\n";return 2;}
  std::cout<<"ListItem frozen cases: direct="<<direct_count<<" public="<<public_count<<'\n';
  return test_failures()==0?0:1;

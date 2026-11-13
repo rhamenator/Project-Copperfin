@@ -12,6 +12,8 @@
 #include "copperfin/vfp/sidecar_path.h"
 #include "copperfin/vfp/staged_import_publish.h"
 
+#include "../platform/scoped_resource.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -32,6 +34,12 @@
 #include <sstream>
 #include <string_view>
 #include <vector>
+
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 namespace copperfin::vfp {
 
@@ -209,16 +217,98 @@ std::uint32_t read_be_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
            static_cast<std::uint32_t>(bytes[offset + 3U]);
 }
 
-std::vector<std::uint8_t> read_binary_file(const std::string& path) {
-    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
-    if (!input) {
-        return {};
+std::vector<std::uint8_t> read_binary_file(
+    const std::string& path,
+    bool require_regular_file = false) {
+    const std::filesystem::path native_path =
+        copperfin::platform::path_from_utf8_string(path);
+    if (!require_regular_file) {
+        std::ifstream input(native_path, std::ios::binary);
+        if (!input) {
+            return {};
+        }
+        return {
+            std::istreambuf_iterator<char>(input),
+            std::istreambuf_iterator<char>()
+        };
     }
 
-    return {
-        std::istreambuf_iterator<char>(input),
-        std::istreambuf_iterator<char>()
-    };
+    std::vector<std::uint8_t> bytes;
+    std::array<std::uint8_t, 64U * 1024U> buffer{};
+
+#if defined(_WIN32)
+    copperfin::platform::ScopedHandle handle(::CreateFileW(
+        native_path.c_str(), GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+    if (!handle.valid() || ::GetFileType(handle.get()) != FILE_TYPE_DISK) {
+        return {};
+    }
+    BY_HANDLE_FILE_INFORMATION information{};
+    if (::GetFileInformationByHandle(handle.get(), &information) == 0 ||
+        (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        return {};
+    }
+    const std::uint64_t file_size =
+        (static_cast<std::uint64_t>(information.nFileSizeHigh) << 32U) |
+        information.nFileSizeLow;
+    if (file_size <= bytes.max_size()) {
+        bytes.reserve(static_cast<std::size_t>(file_size));
+    }
+    for (;;) {
+        DWORD bytes_read = 0U;
+        if (::ReadFile(
+                handle.get(), buffer.data(), static_cast<DWORD>(buffer.size()),
+                &bytes_read, nullptr) == 0) {
+            return {};
+        }
+        if (bytes_read == 0U) {
+            break;
+        }
+        bytes.insert(bytes.end(), buffer.begin(), buffer.begin() + bytes_read);
+    }
+#else
+    // O_NONBLOCK makes opening a FIFO prompt; fstat() then binds the regular-
+    // file decision to the same descriptor that supplies every returned byte.
+    // Symlinks keep their prior follow-to-target behavior, but a symlink to a
+    // FIFO is rejected from the opened target without ever waiting for a writer.
+    copperfin::platform::ScopedFd descriptor(::open(
+        native_path.c_str(), O_RDONLY | O_CLOEXEC | O_NONBLOCK));
+    if (!descriptor.valid()) {
+        return {};
+    }
+    struct stat status {};
+    if (::fstat(descriptor.get(), &status) != 0 || !S_ISREG(status.st_mode)) {
+        return {};
+    }
+    const int descriptor_flags = ::fcntl(descriptor.get(), F_GETFL);
+    if (descriptor_flags < 0 ||
+        ::fcntl(descriptor.get(), F_SETFL, descriptor_flags & ~O_NONBLOCK) != 0) {
+        return {};
+    }
+    if (status.st_size > 0 &&
+        static_cast<std::uintmax_t>(status.st_size) <= bytes.max_size()) {
+        bytes.reserve(static_cast<std::size_t>(status.st_size));
+    }
+    for (;;) {
+        const ssize_t bytes_read = ::read(
+            descriptor.get(), buffer.data(), buffer.size());
+        if (bytes_read > 0) {
+            bytes.insert(
+                bytes.end(), buffer.begin(), buffer.begin() + bytes_read);
+            continue;
+        }
+        if (bytes_read == 0) {
+            break;
+        }
+        if (errno == EINTR) {
+            continue;
+        }
+        return {};
+    }
+#endif
+
+    return bytes;
 }
 
 std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length) {
@@ -1828,7 +1918,8 @@ DatabaseCatalogSnapshot load_database_catalog_snapshot(const std::string& dbc_pa
     const bool has_dct = dct_path.has_value();
 
     // Load the raw DBC bytes for direct field-pointer extraction
-    const std::vector<std::uint8_t> dbc_bytes = read_binary_file(dbc_path);
+    const std::vector<std::uint8_t> dbc_bytes = read_binary_file(
+        dbc_path, true);
     if (dbc_bytes.empty()) {
         snapshot.error = asset_inspector_text("Vfp.AssetInspector.Error.DbcReadFailed", {{"path", dbc_path}});
         return snapshot;
