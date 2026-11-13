@@ -962,9 +962,6 @@ function(copperfin_configure_native_test_isolation)
         )
     endif()
 
-    # #6554: the assembler self-test works in its own temporary directory;
-    # the fragment check only reads the checked-in changelog.d/ files.
-
     if(TEST test_cloud_validation_sanitizer_selection)
         copperfin_set_test_isolation(test_cloud_validation_sanitizer_selection
             PARALLEL_SAFE
@@ -978,6 +975,8 @@ function(copperfin_configure_native_test_isolation)
         )
     endif()
 
+    # #6554: the assembler self-test works in its own temporary directory;
+    # the fragment check only reads the checked-in changelog.d/ files.
     if(TEST test_changelog_fragment_assembler)
         copperfin_set_test_isolation(test_changelog_fragment_assembler
             PARALLEL_SAFE

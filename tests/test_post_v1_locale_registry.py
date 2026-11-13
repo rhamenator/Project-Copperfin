@@ -148,12 +148,17 @@ class RegistryTests(unittest.TestCase):
         data["locales"][1]["prerequisites"] = [""]
         data["locales"][2]["direction"] = []
         data["locales"][3]["preferredParent"] = []
+        data["locales"][4]["entryEvidence"] = []
+        next(x for x in data["locales"] if x["tag"] == "en-AU").pop("script")
+        next(x for x in data["locales"] if x["tag"] == "en-US")["preferredParent"] = []
         errors = validate(data)
         self.assertTrue(any("must be an object" in e for e in errors))
         self.assertTrue(any("unknown locale fields" in e for e in errors))
         self.assertTrue(any("missing prerequisites" in e for e in errors))
         self.assertTrue(any("invalid direction" in e for e in errors))
         self.assertTrue(any("invalid parent type" in e for e in errors))
+        self.assertTrue(any("invalid entry evidence" in e for e in errors))
+        self.assertTrue(any("missing/invalid script en-AU" in e for e in errors))
 
     def test_top_level_metadata_is_pinned(self):
         data = copy.deepcopy(self.registry)

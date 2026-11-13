@@ -155,7 +155,9 @@ def validate(data):
                 any(not isinstance(value, str) or not value.strip() for value in prerequisites) or
                 len(set(prerequisites)) != len(prerequisites)):
             errors.append(f"missing prerequisites {tag}")
-        if item.get("entryEvidence") not in {"source-baseline", "required-per-key", "pseudo-generated"}:
+        entry_evidence = item.get("entryEvidence")
+        if (not isinstance(entry_evidence, str) or
+                entry_evidence not in {"source-baseline", "required-per-key", "pseudo-generated"}):
             errors.append(f"invalid entry evidence policy {tag}")
     missing = REQUIRED - by_tag.keys()
     errors += [f"missing issue #7075 tag {tag}" for tag in sorted(missing)]
@@ -181,16 +183,16 @@ def validate(data):
                 errors.append(f"cross-language inheritance {tag} -> {parent}")
             if parent in {"es-ES", "pt-PT"}:
                 errors.append(f"disallowed regional parent {tag} -> {parent}")
-            child_script = item["script"]
-            parent_script = by_tag[parent]["script"]
+            child_script = item.get("script")
+            parent_script = by_tag[parent].get("script")
             if child_script != parent_script:
                 errors.append(f"cross-script inheritance {tag} -> {parent}")
         seen = {tag}
         node = parent
-        while node is not None and node not in seen and node in by_tag:
+        while isinstance(node, str) and node not in seen and node in by_tag:
             seen.add(node)
             node = by_tag[node].get("preferredParent")
-        if node in seen:
+        if isinstance(node, str) and node in seen:
             errors.append(f"fallback cycle at {tag}")
     return errors
 
