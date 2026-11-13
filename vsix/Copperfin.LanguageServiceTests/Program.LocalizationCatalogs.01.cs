@@ -111,6 +111,8 @@ internal static partial class Program
             var spain = new CopperfinLocalization("es-ES", root);
             var mexico = new CopperfinLocalization("es-MX", root);
             var neutralPortuguese = new CopperfinLocalization("pt", root);
+            var neutralEnglish = new CopperfinLocalization(null, root);
+            var britishEnglish = new CopperfinLocalization("en-GB", root);
             var nativeHostStart = new System.Diagnostics.ProcessStartInfo();
             CopperfinStudioHostBridge.ApplyLocalizationEnvironment(nativeHostStart, neutralPortuguese);
             Expect(neutralPortuguese.Locale == "pt" &&
@@ -137,6 +139,13 @@ internal static partial class Program
             Expect(mexico.Text("Studio.OpenDialogTitle") == "Abrir recurso latinoamericano" &&
                    mexico.Text("Studio.CloseMenu") == "&Cerrar",
                 "#7071: compiled Spanish fallback should win over a later installed English catalog");
+            Expect(neutralEnglish.Text("Studio.CloseMenu") == "English installed close" &&
+                   britishEnglish.Text("Studio.CloseMenu") == "English installed close" &&
+                   CopperfinLocalization.LocaleFallbackChain(null).SequenceEqual(
+                       new[] { "en-US", "en" }) &&
+                   CopperfinLocalization.LocaleFallbackChain("en-GB").SequenceEqual(
+                       new[] { "en-GB", "en-US", "en" }),
+                "#7071: installed English catalogs should precede the final compiled en alias");
             Expect(CopperfinLocalization.LocaleFallbackChain("es-Latn-MX").SequenceEqual(
                        new[] { "es-Latn-MX", "es-Latn", "es-419", "es", "en-US", "en" }) &&
                    CopperfinLocalization.CatalogEntries("es-MX")["Studio.ExitMenu"] == "&Salir" &&

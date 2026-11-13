@@ -2849,7 +2849,13 @@ internal sealed class CopperfinLocalization
                 chain.Add(candidate);
             }
         }
-        Add(locale);
+        // The compiled `en` catalog is the final source-text fallback.  Do not
+        // let that alias precede an installed en-US catalog for neutral or
+        // regional English requests.
+        if (!string.Equals(locale, DefaultLocale, StringComparison.Ordinal))
+        {
+            Add(locale);
+        }
         var parts = locale.Split('-');
         var regionIndex = parts.Length > 1 && parts[1].Length == 4 && IsAsciiLetters(parts[1])
             ? 2 : 1;
@@ -2872,7 +2878,10 @@ internal sealed class CopperfinLocalization
             {
                 Add(SpanishLatinAmericaLocale);
             }
-            Add(parent);
+            if (!string.Equals(parent, DefaultLocale, StringComparison.Ordinal))
+            {
+                Add(parent);
+            }
         }
         Add("en-US");
         if (locale == "pt")
