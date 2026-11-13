@@ -413,8 +413,14 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_installer_artifact_policy_contract_check.cmake
 )
 
-find_package(Python3 COMPONENTS Interpreter QUIET)
-set(COPPERFIN_PYTHON3_EXECUTABLE "${Python3_EXECUTABLE}")
+set(COPPERFIN_PYTHON3_EXECUTABLE "" CACHE FILEPATH "Python 3.9+ interpreter used by Copperfin tests")
+if(NOT COPPERFIN_PYTHON3_EXECUTABLE)
+    find_package(Python3 3.9 COMPONENTS Interpreter QUIET)
+    if(Python3_EXECUTABLE)
+        set(COPPERFIN_PYTHON3_EXECUTABLE "${Python3_EXECUTABLE}" CACHE FILEPATH
+            "Python 3.9+ interpreter used by Copperfin tests" FORCE)
+    endif()
+endif()
 if(COPPERFIN_PYTHON3_EXECUTABLE)
     add_test(
         NAME test_locale_review_status

@@ -115,9 +115,13 @@ the owner accepted independent AI linguistic review with disclosed limits on
 per-entry source and translation identity, independent review provenance,
 regional references where useful, terminology decisions, regional suitability,
 tone/formality, euphemism/directness, offensive-wording concerns, and residual
-uncertainty with release evidence. AI review is not native-speaker or human
+uncertainty with release evidence. Repository review evidence is self-attested;
+it identifies the reviewer or model/session but does not authenticate that the
+review occurred. AI review is not native-speaker or human
 cultural certification. Any unresolved source-identical prose, stale review,
-or known runtime leak blocks promotion. A qualified human review remains
+blocks promotion. Rendered-surface validation and known runtime leaks are
+separate release-readiness evidence rather than checks performed by the ledger
+script. A qualified human review remains
 valuable but is not the v1.0 release gate under this owner decision.
 
 ## Invariant Contracts
@@ -161,4 +165,5 @@ When adding new user-facing text:
 
 Add non-English translation candidates only within an owner-authorized
 language-pack workstream. Populated keys and machine-generated translations
-remain unreviewed until the per-entry and rendered-surface release gates pass.
+remain unreviewed until the per-entry ledger gate and separate rendered-surface
+release validation pass.

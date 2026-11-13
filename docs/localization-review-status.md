@@ -48,8 +48,9 @@ technical formatting guidance treats code keywords as invariant. These sources
 support the process and token boundary; they do not certify the wording of
 individual Copperfin sentences or regional cultural suitability.
 
-The corrected examples have local managed IntelliSense completion and Quick
-Info tests. Claude Sonnet 5.5 independently reviewed all eight corrected
+The corrected `USE` example has local managed IntelliSense completion and Quick
+Info coverage; catalog/compiled parity covers all eight corrected entries.
+Claude Sonnet 5.5 independently reviewed all eight corrected
 entries in three read-only passes; the third accepted clearer
 CreateObject wording after review feedback. Exact source/translation hashes, session provenance,
 decisions and residual uncertainty are retained in

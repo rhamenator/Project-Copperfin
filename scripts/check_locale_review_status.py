@@ -1,28 +1,51 @@
 #!/usr/bin/env python3
 """Track source, translation and independent-review state for v1 locale entries."""
 
+from __future__ import annotations
+
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCALES = ("es-419", "pt-BR")
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
+ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 
 
 def digest(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def load_json(path: Path) -> object:
+    return json.loads(
+        path.read_text(encoding="utf-8"), object_pairs_hook=reject_duplicate_keys)
+
+
 def load_catalog(locale: str) -> dict[str, str]:
     path = ROOT / "resources" / "locales" / locale / "strings.json"
-    return json.loads(path.read_text(encoding="utf-8"))
+    data = load_json(path)
+    if not isinstance(data, dict) or any(
+            not isinstance(key, str) or not isinstance(value, str)
+            for key, value in data.items()):
+        raise ValueError(f"Catalog must map string keys to string values: {path}")
+    return data
 
 
 def load_object(path: Path, label: str) -> dict:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = load_json(path)
     if not isinstance(data, dict):
         raise ValueError(f"{label} must be a JSON object: {path}")
     return data
@@ -52,7 +75,21 @@ def write_ledger(path: Path, ledger: dict) -> None:
         lines.append(f"    {json.dumps(key, ensure_ascii=False)}: "
                      f"{json.dumps(record, ensure_ascii=False, separators=(',', ':'))}{separator}")
     lines.extend(["  }", "}"])
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write("\n".join(lines) + "\n")
+
+
+def review_locales() -> tuple[str, ...]:
+    inventory = ROOT / "resources" / "locales" / "inventory.txt"
+    entries = []
+    for line in inventory.read_text(encoding="utf-8").splitlines()[1:]:
+        fields = line.split()
+        if len(fields) == 2 and fields[1] == "unreviewed":
+            entries.append(fields[0])
+    if tuple(entries) != LOCALES:
+        raise ValueError(
+            f"Review locale list does not match unreviewed inventory entries: {entries}")
+    return tuple(entries)
 
 
 def main() -> int:
@@ -67,7 +104,7 @@ def main() -> int:
             raise ValueError(f"Invariant exception source changed: {key}")
     failures = []
     evidence_cache = {}
-    for locale in LOCALES:
+    for locale in review_locales():
         translated = load_catalog(locale)
         if translated.keys() != source.keys():
             raise ValueError(f"Catalog key mismatch: {locale}")
@@ -145,7 +182,8 @@ def main() -> int:
                     if not isinstance(evidence_entries, list) or any(
                             not isinstance(entry, dict) for entry in evidence_entries):
                         raise ValueError(f"Malformed review evidence entries: {evidence_name}")
-                    if (not isinstance(evidence.get("date"), str) or not evidence["date"].strip() or
+                    if (not isinstance(evidence.get("date"), str) or
+                            not ISO_DATE.fullmatch(evidence["date"]) or
                             not isinstance(evidence.get("scope"), str) or not evidence["scope"].strip()):
                         raise ValueError(f"Review evidence lacks date or scope: {evidence_name}")
                     matching = [entry for entry in evidence.get("entries", [])
@@ -157,6 +195,13 @@ def main() -> int:
                             any(not isinstance(session, str) or not session.strip()
                                 for session in evidence["sessions"])):
                         raise ValueError(f"AI review evidence lacks model or session metadata: {evidence_name}")
+                    if review == "human-reviewed" and (
+                            not isinstance(evidence.get("reviewerId"), str) or
+                            not evidence["reviewerId"].strip() or
+                            not isinstance(evidence.get("qualifications"), str) or
+                            not evidence["qualifications"].strip()):
+                        raise ValueError(
+                            f"Human review evidence lacks reviewer identity or qualifications: {evidence_name}")
                     if (evidence.get("reviewerType") != expected_reviewer or
                             len(matching) != 1 or matching[0].get("verdict") != "accept" or
                             matching[0].get("sourceSha256") != record["sourceSha256"] or

@@ -16,7 +16,7 @@
       "sourceSha256": "c116cc9118f2d5e19043637568973f5e92c8f719a594e4c74717eb55f1b7c497",
       "translationSha256": "d23646827cadf87513e365082fde8270b459e472a86becccf94ad1dc69113316",
       "verdict": "accept",
-      "reason": "Faithful and natural. USE IN preserved. 'tabla libre' and 'cursor' are standard in Spanish VFP docs. Neutral Latin American register."
+      "reason": "The wording was judged faithful and natural, with USE IN preserved. 'Tabla libre' and 'cursor' fit the reviewed sentence, but official localized VFP terminology was not independently verified."
     },
     {
       "locale": "es-419",
@@ -24,7 +24,7 @@
       "sourceSha256": "3c6da4b6af7e4fca2b70bdf2eccf3a7e1745e08b5084cd1f8c513126c6b2bbed",
       "translationSha256": "5d92739ce65c012badd226f95d7be842576046da028f6216479559ba5c76e664",
       "verdict": "accept",
-      "reason": "Accurate. 'Palabra clave' is standard; 'área de trabajo' matches Spanish VFP terminology; 'alias' kept; tokens 'USE IN' and 'GO ... IN' unchanged."
+      "reason": "The wording was judged accurate; 'palabra clave', 'área de trabajo', and 'alias' fit the reviewed sentence, and the tokens 'USE IN' and 'GO ... IN' remain unchanged. Official localized VFP terminology was not independently verified."
     },
     {
       "locale": "es-419",
@@ -56,7 +56,7 @@
       "sourceSha256": "3c6da4b6af7e4fca2b70bdf2eccf3a7e1745e08b5084cd1f8c513126c6b2bbed",
       "translationSha256": "7de1be909713d52b64359fcdca7b9b66c81a4f3792182f10da73c14c7b4c9a74",
       "verdict": "accept",
-      "reason": "Accurate. 'Palavra-chave' is the correct pt-BR hyphenated form; 'área de trabalho' is standard VFP terminology; tokens preserved."
+      "reason": "The wording was judged accurate; 'palavra-chave' and 'área de trabalho' fit the reviewed sentence, and the command tokens remain unchanged. Official localized VFP terminology was not independently verified."
     },
     {
       "locale": "pt-BR",
