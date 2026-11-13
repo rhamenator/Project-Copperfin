@@ -413,7 +413,30 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_installer_artifact_policy_contract_check.cmake
 )
 
-find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
+set(COPPERFIN_PYTHON3_EXECUTABLE "" CACHE FILEPATH "Python 3 interpreter used by Copperfin tests")
+if(NOT COPPERFIN_PYTHON3_EXECUTABLE)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_EXECUTABLE)
+        set(COPPERFIN_PYTHON3_EXECUTABLE "${Python3_EXECUTABLE}" CACHE FILEPATH
+            "Python 3 interpreter used by Copperfin tests" FORCE)
+    endif()
+endif()
+if(COPPERFIN_PYTHON3_EXECUTABLE)
+    add_test(
+        NAME test_locale_review_status
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/scripts/check_locale_review_status.py"
+    )
+    add_test(
+        NAME test_locale_review_status_negative
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_locale_review_status.py"
+    )
+    set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;review-status")
+    set_tests_properties(test_locale_review_status_negative PROPERTIES LABELS "localization;review-status")
+else()
+    message(WARNING "Python 3 was not found; Python-backed Copperfin tests are unavailable")
+endif()
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
 if(COPPERFIN_POWERSHELL_EXECUTABLE AND COPPERFIN_POWERSHELL_EXECUTABLE MATCHES "^/snap/bin/")
