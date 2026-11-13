@@ -110,6 +110,7 @@ internal static partial class Program
             var taiwan = new CopperfinLocalization("zh-Hant-TW", root);
             var spain = new CopperfinLocalization("es-ES", root);
             var mexico = new CopperfinLocalization("es-MX", root);
+            var neutralSpanish = new CopperfinLocalization("es", root);
             var neutralPortuguese = new CopperfinLocalization("pt", root);
             var neutralEnglish = new CopperfinLocalization(null, root);
             var britishEnglish = new CopperfinLocalization("en-GB", root);
@@ -139,6 +140,10 @@ internal static partial class Program
             Expect(mexico.Text("Studio.OpenDialogTitle") == "Abrir recurso latinoamericano" &&
                    mexico.Text("Studio.CloseMenu") == "&Cerrar",
                 "#7071: compiled Spanish fallback should win over a later installed English catalog");
+            Expect(neutralSpanish.Text("Studio.OpenDialogTitle") == "Abrir recurso latinoamericano" &&
+                   CopperfinLocalization.LocaleFallbackChain("es").SequenceEqual(
+                       new[] { "es", "es-419", "en-US", "en" }),
+                "#7071: neutral Spanish should retain the shipped es-419 fallback");
             Expect(neutralEnglish.Text("Studio.CloseMenu") == "English installed close" &&
                    britishEnglish.Text("Studio.CloseMenu") == "English installed close" &&
                    CopperfinLocalization.LocaleFallbackChain(null).SequenceEqual(

@@ -2883,6 +2883,10 @@ internal sealed class CopperfinLocalization
                 Add(parent);
             }
         }
+        if (string.Equals(locale, "es", StringComparison.Ordinal))
+        {
+            Add(SpanishLatinAmericaLocale);
+        }
         Add("en-US");
         if (locale == "pt")
         {
