@@ -11,8 +11,20 @@ REGISTRY = ROOT / "docs" / "contracts" / "post-v1-locale-registry.json"
 TAG = re.compile(r"^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$")
 TOP_LEVEL_KEYS = {"schemaVersion", "purpose", "authority", "fallbackPolicy", "entryEvidenceSchema", "locales"}
 LOCALE_KEYS = {"tag", "phase", "script", "direction", "preferredParent", "catalogStatus", "releaseStatus", "entryEvidence", "prerequisites"}
-RTL_SCRIPTS = {"Arab", "Hebr"}
 INVENTORY = ROOT / "resources" / "locales" / "inventory.txt"
+AUTHORITY = "owner-approved issue #7075; BCP 47/IANA tags; CLDR script/region guidance"
+FALLBACK_POLICY = "Preferred parent is an editorial proposal only. Runtime fallback needs separately reviewed and tested implementation; absent/unqualified parents must never imply shipped translation."
+EVIDENCE_SCHEMA = "docs/contracts/locale-entry-evidence-v1.schema.json"
+EXPECTED_SCRIPT_BY_LANGUAGE = {
+    **{language: "Latn" for language in (
+        "en", "es", "pt", "fr", "de", "it", "nl", "da", "sv", "nb", "fi", "is",
+        "pl", "cs", "sk", "hu", "ro", "hr", "sl", "et", "lv", "lt", "vi", "id",
+        "ms", "fil", "tr", "sw", "af")},
+    "bg": "Cyrl", "uk": "Cyrl", "ru": "Cyrl", "el": "Grek", "ja": "Jpan",
+    "ko": "Kore", "ar": "Arab", "he": "Hebr", "fa": "Arab", "ur": "Arab",
+    "hi": "Deva", "mr": "Deva", "bn": "Beng", "ta": "Taml", "te": "Telu",
+    "gu": "Gujr", "pa": "Guru", "th": "Thai",
+}
 REQUIRED = {
     "en-US", "es-419", "pt-BR", "qps-ploc", "en-GB", "en-CA", "en-AU", "en-IN",
     "es-ES", "es-MX", "es-AR", "es-CL", "es-CO", "pt-PT", "fr-FR", "fr-CA",
@@ -66,6 +78,12 @@ def validate(data):
         errors.append(f"unknown registry fields: {', '.join(sorted(extra))}")
     if data.get("schemaVersion") != 1 or data.get("purpose") != "planning-only":
         errors.append("registry version/purpose must be planning-only v1")
+    if data.get("authority") != AUTHORITY:
+        errors.append("registry authority changed")
+    if data.get("fallbackPolicy") != FALLBACK_POLICY:
+        errors.append("registry fallback policy changed")
+    if data.get("entryEvidenceSchema") != EVIDENCE_SCHEMA or not (ROOT / EVIDENCE_SCHEMA).is_file():
+        errors.append("registry evidence schema pointer is invalid")
     locales = data.get("locales")
     if not isinstance(locales, list):
         return ["locales must be an array"]
@@ -90,13 +108,18 @@ def validate(data):
         by_tag[tag] = item
         if tag != "qps-ploc" and not TAG.fullmatch(tag):
             errors.append(f"noncanonical tag {tag}")
-        if item.get("direction") not in {"ltr", "rtl"}:
+        direction = item.get("direction")
+        script = item.get("script")
+        phase = item.get("phase")
+        catalog_status = item.get("catalogStatus")
+        parent = item.get("preferredParent")
+        if not isinstance(direction, str) or direction not in {"ltr", "rtl"}:
             errors.append(f"invalid direction {tag}")
-        if item.get("script") not in {"Latn", "Cyrl", "Grek", "Hans", "Hant", "Jpan", "Kore", "Arab", "Hebr", "Deva", "Beng", "Taml", "Telu", "Gujr", "Guru", "Thai", "pseudo"}:
+        if not isinstance(script, str) or script not in {"Latn", "Cyrl", "Grek", "Hans", "Hant", "Jpan", "Kore", "Arab", "Hebr", "Deva", "Beng", "Taml", "Telu", "Gujr", "Guru", "Thai", "pseudo"}:
             errors.append(f"missing/invalid script {tag}")
-        if item.get("phase") not in {"v1-owned", "western", "european", "cjk", "rtl", "south-southeast", "further", "test-only"}:
+        if not isinstance(phase, str) or phase not in {"v1-owned", "western", "european", "cjk", "rtl", "south-southeast", "further", "test-only"}:
             errors.append(f"invalid phase {tag}")
-        if item.get("catalogStatus") not in {"present-unqualified", "not-created", "source", "test-only"}:
+        if not isinstance(catalog_status, str) or catalog_status not in {"present-unqualified", "not-created", "source", "test-only"}:
             errors.append(f"invalid catalog status {tag}")
         if item.get("releaseStatus") != "not-qualified" and tag != "en-US":
             errors.append(f"unearned release status {tag}")
@@ -116,8 +139,12 @@ def validate(data):
                 item.get("releaseStatus") != "not-qualified" or
                 item.get("entryEvidence") != "pseudo-generated"):
             errors.append("qps-ploc test-only fields changed")
-        expected_direction = "rtl" if item.get("script") in RTL_SCRIPTS else "ltr"
-        if item.get("direction") != expected_direction:
+        language = tag.split("-", 1)[0]
+        expected_script = EXPECTED_SCRIPT_BY_LANGUAGE.get(language)
+        if expected_script is not None and script != expected_script:
+            errors.append(f"script does not match language {tag}")
+        expected_direction = "rtl" if language in {"ar", "he", "fa", "ur"} else "ltr"
+        if direction != expected_direction:
             errors.append(f"direction does not match script {tag}")
         tag_parts = tag.split("-")
         script_subtags = [part for part in tag_parts if len(part) == 4 and part.istitle()]
@@ -134,6 +161,8 @@ def validate(data):
     errors += [f"missing issue #7075 tag {tag}" for tag in sorted(missing)]
     unexpected = by_tag.keys() - REQUIRED
     errors += [f"undeclared issue #7075 tag {tag}" for tag in sorted(unexpected)]
+    absent_installed = installed.keys() - by_tag.keys()
+    errors += [f"installed locale absent from registry {tag}" for tag in sorted(absent_installed)]
     for tag in ("es-ES", "pt-PT"):
         if tag in by_tag and by_tag[tag].get("preferredParent") is not None:
             errors.append(f"disallowed automatic regional inheritance {tag}")
@@ -141,10 +170,17 @@ def validate(data):
         parent = item.get("preferredParent")
         if parent is None:
             continue
+        if not isinstance(parent, str):
+            errors.append(f"invalid parent type {tag}")
+            continue
         if parent not in by_tag or parent == tag:
             errors.append(f"invalid parent {tag} -> {parent}")
             continue
         if tag != "qps-ploc":
+            if tag.split("-", 1)[0] != parent.split("-", 1)[0]:
+                errors.append(f"cross-language inheritance {tag} -> {parent}")
+            if parent in {"es-ES", "pt-PT"}:
+                errors.append(f"disallowed regional parent {tag} -> {parent}")
             child_script = item["script"]
             parent_script = by_tag[parent]["script"]
             if child_script != parent_script:

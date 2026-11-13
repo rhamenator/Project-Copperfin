@@ -62,10 +62,10 @@ keyed by the exact `en-US` source revision, catalog revision and source-key
 hash. An entry records its translation and review status independently.
 The schema is a post-v1 planning vocabulary, not the live #7073 ledger
 vocabulary; an integration slice must define and test an explicit mapping
-before either format is converted or consumed operationally. JSON Schema
-cannot enforce uniqueness of one object property across an array, so every
-consumer must also enforce the schema's `x-copperfin-uniqueEntryKey` annotation
-and reject duplicate `key` values.
+before either format is converted or consumed operationally. Entries are keyed
+as JSON object properties so one parsed ledger cannot contain two records for
+the same source key; every loader must additionally reject duplicate JSON names
+before parsing collapses them.
 The current registry's `required-per-key` value is a **requirement to create
 that ledger**, not a claim that one exists. A source-string change invalidates
 the matching review until rechecked. Inherited text counts as inherited,

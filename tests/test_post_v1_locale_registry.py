@@ -1,6 +1,7 @@
 """Planning registry failures that could silently imply unsupported packs."""
 
 import copy
+import datetime
 import json
 import re
 import sys
@@ -33,11 +34,25 @@ def schema_accepts(value, schema):
             return False
         if "pattern" in schema and re.fullmatch(schema["pattern"], value) is None:
             return False
+        if schema.get("format") == "date":
+            try:
+                datetime.date.fromisoformat(value)
+            except ValueError:
+                return False
     if isinstance(value, dict):
+        if len(value) < schema.get("minProperties", 0):
+            return False
         if any(key not in value for key in schema.get("required", [])):
             return False
         properties = schema.get("properties", {})
         if schema.get("additionalProperties") is False and any(key not in properties for key in value):
+            return False
+        if isinstance(schema.get("additionalProperties"), dict) and any(
+                not schema_accepts(item, schema["additionalProperties"])
+                for key, item in value.items() if key not in properties):
+            return False
+        if "propertyNames" in schema and any(
+                not schema_accepts(key, schema["propertyNames"]) for key in value):
             return False
         if any(not schema_accepts(value[key], child)
                for key, child in properties.items() if key in value):
@@ -96,14 +111,27 @@ class RegistryTests(unittest.TestCase):
         data = copy.deepcopy(self.registry)
         next(x for x in data["locales"] if x["tag"] == "ar")["direction"] = "ltr"
         next(x for x in data["locales"] if x["tag"] == "zh-Hans-CN")["script"] = "Hant"
+        next(x for x in data["locales"] if x["tag"] == "ur-PK").update(
+            {"script": "Latn", "direction": "ltr"})
+        next(x for x in data["locales"] if x["tag"] == "he-IL")["script"] = "Arab"
+        next(x for x in data["locales"] if x["tag"] == "ja-JP")["script"] = "Latn"
         errors = validate(data)
         self.assertTrue(any("direction does not match" in e for e in errors))
         self.assertTrue(any("script does not match" in e for e in errors))
+        self.assertGreaterEqual(sum("script does not match language" in e for e in errors), 3)
 
     def test_non_latin_locale_cannot_inherit_from_en_us(self):
         data = copy.deepcopy(self.registry)
         next(x for x in data["locales"] if x["tag"] == "ja-JP")["preferredParent"] = "en-US"
         self.assertTrue(any("cross-script" in e for e in validate(data)))
+
+    def test_parent_must_share_language_and_cannot_be_disallowed_region(self):
+        data = copy.deepcopy(self.registry)
+        next(x for x in data["locales"] if x["tag"] == "fr-FR")["preferredParent"] = "es-419"
+        next(x for x in data["locales"] if x["tag"] == "es-MX")["preferredParent"] = "es-ES"
+        errors = validate(data)
+        self.assertTrue(any("cross-language inheritance fr-FR" in e for e in errors))
+        self.assertTrue(any("disallowed regional parent es-MX" in e for e in errors))
 
     def test_required_arabic_variant_and_no_es_es_inheritance(self):
         data = copy.deepcopy(self.registry)
@@ -118,10 +146,24 @@ class RegistryTests(unittest.TestCase):
         data["locales"].append("not-an-object")
         data["locales"][0]["installed"] = True
         data["locales"][1]["prerequisites"] = [""]
+        data["locales"][2]["direction"] = []
+        data["locales"][3]["preferredParent"] = []
         errors = validate(data)
         self.assertTrue(any("must be an object" in e for e in errors))
         self.assertTrue(any("unknown locale fields" in e for e in errors))
         self.assertTrue(any("missing prerequisites" in e for e in errors))
+        self.assertTrue(any("invalid direction" in e for e in errors))
+        self.assertTrue(any("invalid parent type" in e for e in errors))
+
+    def test_top_level_metadata_is_pinned(self):
+        data = copy.deepcopy(self.registry)
+        data["authority"] = ""
+        data["fallbackPolicy"] = ""
+        data["entryEvidenceSchema"] = "missing.json"
+        errors = validate(data)
+        self.assertTrue(any("authority changed" in e for e in errors))
+        self.assertTrue(any("fallback policy changed" in e for e in errors))
+        self.assertTrue(any("schema pointer is invalid" in e for e in errors))
 
     def test_duplicate_json_keys_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -132,7 +174,7 @@ class RegistryTests(unittest.TestCase):
 
     def test_both_human_review_statuses_require_reviewer_evidence(self):
         schema = json.loads(EVIDENCE_SCHEMA.read_text(encoding="utf-8"))
-        conditions = schema["properties"]["entries"]["items"]["allOf"]
+        conditions = schema["properties"]["entries"]["additionalProperties"]["allOf"]
         human_statuses = {"human-linguistic", "human-cultural-and-terminology"}
         matching = [condition for condition in conditions
                     if set(condition.get("if", {}).get("properties", {})
@@ -146,18 +188,17 @@ class RegistryTests(unittest.TestCase):
             "locale": "fr-FR",
             "sourceRevision": "1" * 40,
             "catalogRevision": "2" * 40,
-            "entries": [{
-                "key": "Example",
+            "entries": {"Example": {
                 "sourceSha256": "3" * 64,
                 "translationStatus": "missing",
                 "reviewStatus": "none",
-            }],
+            }},
         }
         self.assertTrue(schema_accepts(base, schema))
         human = copy.deepcopy(base)
-        human["entries"][0]["reviewStatus"] = "human-linguistic"
+        human["entries"]["Example"]["reviewStatus"] = "human-linguistic"
         self.assertFalse(schema_accepts(human, schema))
-        human["entries"][0].update({
+        human["entries"]["Example"].update({
             "translationStatus": "draft-human",
             "translationSha256": "4" * 64,
             "translatorEvidence": "translation://example",
@@ -170,6 +211,17 @@ class RegistryTests(unittest.TestCase):
             "unresolvedRisk": "None identified in the reviewed entry",
         })
         self.assertTrue(schema_accepts(human, schema))
+        cultural = copy.deepcopy(human)
+        cultural["entries"]["Example"]["reviewStatus"] = "human-cultural-and-terminology"
+        self.assertTrue(schema_accepts(cultural, schema))
+        del cultural["entries"]["Example"]["reviewerEvidence"]["qualification"]
+        self.assertFalse(schema_accepts(cultural, schema))
+        bad_date = copy.deepcopy(human)
+        bad_date["entries"]["Example"]["reviewerEvidence"]["reviewedAt"] = "2026-13-45"
+        self.assertFalse(schema_accepts(bad_date, schema))
+        reviewed = copy.deepcopy(human)
+        reviewed["entries"]["Example"]["translationStatus"] = "reviewed"
+        self.assertTrue(schema_accepts(reviewed, schema))
 
 
 if __name__ == "__main__":
