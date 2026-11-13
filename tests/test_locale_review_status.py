@@ -30,6 +30,7 @@ def run_main(module: object, *arguments: str) -> int:
 
 
 def main() -> int:
+    sys.dont_write_bytecode = True
     spec = importlib.util.spec_from_file_location("locale_review_status", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
@@ -96,6 +97,58 @@ def main() -> int:
 
         assert run_main(module) == 0
         assert run_main(module, "--release") == 1
+
+        translated["Pending"] = "Translated pending"
+        write_json(root / "resources/locales/test-locale/strings.json", translated)
+        pending_source_hash = module.digest(source["Pending"])
+        pending_translation_hash = module.digest(translated["Pending"])
+        evidence["entries"].append({
+            "locale": "test-locale", "key": "Pending", "verdict": "accept",
+            "sourceSha256": pending_source_hash,
+            "translationSha256": pending_translation_hash,
+        })
+        write_json(evidence_path, evidence)
+        ledger["entries"]["Pending"] = {
+            "sourceSha256": pending_source_hash, "sourceStatus": "current",
+            "translationSha256": pending_translation_hash, "translationStatus": "candidate",
+            "reviewStatus": "ai-reviewed",
+            "reviewProvenance": "evidence.json#test-locale/Pending",
+        }
+        write_json(ledger_path, ledger)
+        assert run_main(module, "--release") == 0
+
+        evidence_without_model = dict(evidence)
+        evidence_without_model.pop("model")
+        write_json(evidence_path, evidence_without_model)
+        try:
+            run_main(module)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("AI evidence without model metadata was accepted")
+        write_json(evidence_path, evidence)
+
+        evidence["entries"].append(dict(evidence["entries"][0]))
+        write_json(evidence_path, evidence)
+        assert run_main(module) == 1
+        evidence["entries"].pop()
+
+        evidence["reviewerType"] = "human"
+        ledger["entries"]["Reviewed"]["reviewStatus"] = "human-reviewed"
+        ledger["entries"]["Pending"]["reviewStatus"] = "human-reviewed"
+        write_json(evidence_path, evidence)
+        write_json(ledger_path, ledger)
+        try:
+            run_main(module)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("human evidence without reviewer metadata was accepted")
+        evidence["reviewerType"] = "independent AI"
+        ledger["entries"]["Reviewed"]["reviewStatus"] = "ai-reviewed"
+        ledger["entries"]["Pending"]["reviewStatus"] = "ai-reviewed"
+        write_json(evidence_path, evidence)
+        write_json(ledger_path, ledger)
 
         ledger["entries"]["Reviewed"]["sourceSha256"] = "0" * 64
         write_json(ledger_path, ledger)

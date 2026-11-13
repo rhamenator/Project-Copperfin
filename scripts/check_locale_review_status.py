@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import re
@@ -14,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 LOCALES = ("es-419", "pt-BR")
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
 ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
+INVENTORY_ENTRY = re.compile(r"[a-z][A-Za-z0-9-]* (source|unreviewed|pseudo)\Z")
 
 
 def digest(value: str) -> str:
@@ -86,11 +88,11 @@ def review_locales() -> tuple[str, ...]:
         raise ValueError("Malformed locale inventory header")
     entries = []
     for line in lines[1:]:
-        fields = line.split()
-        if len(fields) != 2 or fields[1] not in ("source", "unreviewed", "pseudo"):
+        if not INVENTORY_ENTRY.fullmatch(line):
             raise ValueError(f"Malformed locale inventory entry: {line}")
-        if fields[1] == "unreviewed":
-            entries.append(fields[0])
+        locale, role = line.split(" ")
+        if role == "unreviewed":
+            entries.append(locale)
     if tuple(entries) != LOCALES:
         raise ValueError(
             f"Review locale list does not match unreviewed inventory entries: {entries}")
@@ -194,6 +196,11 @@ def main() -> int:
                             not evidence["residualUncertainty"].strip()):
                         raise ValueError(
                             f"Review evidence lacks date, scope, or residual uncertainty: {evidence_name}")
+                    try:
+                        datetime.date.fromisoformat(evidence["date"])
+                    except ValueError:
+                        raise ValueError(
+                            f"Review evidence has an invalid date: {evidence_name}") from None
                     matching = [entry for entry in evidence.get("entries", [])
                                 if entry.get("locale") == locale and entry.get("key") == key]
                     expected_reviewer = "independent AI" if review == "ai-reviewed" else "human"
