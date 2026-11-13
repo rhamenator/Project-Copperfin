@@ -17,9 +17,12 @@ changelog-fragment, and native-isolation contracts pass; the exact-tree safety
 traceability contract passes in 329.19s. Retained VFP9 evidence also audits the
 sibling `FOR` forms, but VFP9
 rejects populated and empty variants alike; their documented Copperfin
-extension policy is therefore deliberately unchanged. NEXT: review the exact
-diff, commit signed+DCO, push, open a PR, and request Claude-first
-exact-head review. If hosted review stalls after the owner's reauthorization,
+extension policy is therefore deliberately unchanged. Signed+DCO commit
+`6f085b109cc3ad3bf253e0cb25bcb737ef37edbe` opened PR #7325; hosted checks
+started and the verified `@claude review` trigger was posted after the owner's
+reauthorization. NEXT: obtain a clean Claude-first exact-head review and
+strict-green hosted checks, resolve every conversation, merge, synchronize
+origin/main, and clean up. If hosted review stalls,
 use the owner's authorized local Codex adversarial fallback rather than
 waiting indefinitely.
 
