@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## Active slice — explicit empty WHERE mutation admission (2026-11-13)
+
+Continue in
+`/home/rich/.codex/worktrees/empty-where-admission-7254/Project-Copperfin`
+on `fix/empty-where-admission-7254`, based on origin/main
+`50babe2d2839b8bcba4396534f4b9599cf262bc0`. Under admitted issue #7254,
+the parser now preserves explicit `WHERE` presence for `UPDATE` and
+`DELETE FROM`, and dispatch raises catchable syntax error 10 before target resolution
+or mutation when the clause is empty. Bare all-row and populated-filter forms
+remain unchanged. Public PRG tests verify retained multirow state, successful
+filtered and bare controls, and the absence of success events for rejected
+commands. The focused GNU Debug mutation and runtime-pipeline targets pass
+2/2 in 79.52s. Issue-intake, contributor-signoff, changelog assembler,
+changelog-fragment, and native-isolation contracts pass; the exact-tree safety
+traceability contract passes in 329.19s. Retained VFP9 evidence also audits the
+sibling `FOR` forms, but VFP9
+rejects populated and empty variants alike; their documented Copperfin
+extension policy is therefore deliberately unchanged. NEXT: review the exact
+diff, commit signed+DCO, push, open a PR, and request Claude-first
+exact-head review. If hosted review stalls after the owner's reauthorization,
+use the owner's authorized local Codex adversarial fallback rather than
+waiting indefinitely.
+
 ## Active slice — primary DBF regular-file admission (2026-11-07)
 
 PR #7281 merged DBC catalog regular-file admission as
