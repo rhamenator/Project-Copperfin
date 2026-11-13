@@ -178,7 +178,7 @@ internal static class CopperfinRuntimeDebugClient
         }
 
         var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
-        var arguments = BuildPersistentArguments(effectiveDebugManifestPath, localization.Locale);
+        var arguments = BuildPersistentArguments(effectiveDebugManifestPath, localization.NativeHostLocale);
         ProcessStartInfo startInfo;
         try
         {
@@ -307,7 +307,7 @@ internal static class CopperfinRuntimeDebugClient
             var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
             var arguments = BuildReplayArguments(
                 effectiveDebugManifestPath,
-                localization.Locale,
+                localization.NativeHostLocale,
                 session.Commands,
                 session.StopOnEntry);
 
