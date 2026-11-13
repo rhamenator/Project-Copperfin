@@ -81,10 +81,15 @@ def write_ledger(path: Path, ledger: dict) -> None:
 
 def review_locales() -> tuple[str, ...]:
     inventory = ROOT / "resources" / "locales" / "inventory.txt"
+    lines = inventory.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "version 1":
+        raise ValueError("Malformed locale inventory header")
     entries = []
-    for line in inventory.read_text(encoding="utf-8").splitlines()[1:]:
+    for line in lines[1:]:
         fields = line.split()
-        if len(fields) == 2 and fields[1] == "unreviewed":
+        if len(fields) != 2 or fields[1] not in ("source", "unreviewed", "pseudo"):
+            raise ValueError(f"Malformed locale inventory entry: {line}")
+        if fields[1] == "unreviewed":
             entries.append(fields[0])
     if tuple(entries) != LOCALES:
         raise ValueError(
@@ -184,8 +189,11 @@ def main() -> int:
                         raise ValueError(f"Malformed review evidence entries: {evidence_name}")
                     if (not isinstance(evidence.get("date"), str) or
                             not ISO_DATE.fullmatch(evidence["date"]) or
-                            not isinstance(evidence.get("scope"), str) or not evidence["scope"].strip()):
-                        raise ValueError(f"Review evidence lacks date or scope: {evidence_name}")
+                            not isinstance(evidence.get("scope"), str) or not evidence["scope"].strip() or
+                            not isinstance(evidence.get("residualUncertainty"), str) or
+                            not evidence["residualUncertainty"].strip()):
+                        raise ValueError(
+                            f"Review evidence lacks date, scope, or residual uncertainty: {evidence_name}")
                     matching = [entry for entry in evidence.get("entries", [])
                                 if entry.get("locale") == locale and entry.get("key") == key]
                     expected_reviewer = "independent AI" if review == "ai-reviewed" else "human"

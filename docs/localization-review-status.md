@@ -50,8 +50,9 @@ individual Copperfin sentences or regional cultural suitability.
 
 The corrected `USE` example has local managed IntelliSense completion and Quick
 Info coverage; catalog/compiled parity covers all eight corrected entries.
-Claude Sonnet 5.5 independently reviewed all eight corrected
-entries in three read-only passes; the third accepted clearer
+Claude Sonnet 5.5 independently reviewed all eight corrected entries across
+three self-attested read-only sessions; per-entry session attribution was not
+retained. The third session accepted clearer
 CreateObject wording after review feedback. Exact source/translation hashes, session provenance,
 decisions and residual uncertainty are retained in
 `docs/localization-reviews/2026-11-03-intellisense-claude.json`. No native

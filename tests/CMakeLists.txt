@@ -422,12 +422,29 @@ if(NOT COPPERFIN_PYTHON3_EXECUTABLE)
     endif()
 endif()
 if(COPPERFIN_PYTHON3_EXECUTABLE)
+    execute_process(
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}" -c
+            "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)"
+        RESULT_VARIABLE COPPERFIN_PYTHON_VERSION_RESULT
+    )
+    if(NOT COPPERFIN_PYTHON_VERSION_RESULT EQUAL 0)
+        message(FATAL_ERROR
+            "COPPERFIN_PYTHON3_EXECUTABLE must identify a working Python 3.9+ interpreter")
+    endif()
     add_test(
         NAME test_locale_review_status
         COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/scripts/check_locale_review_status.py"
     )
+    add_test(
+        NAME test_locale_review_status_negative
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_locale_review_status.py"
+    )
     set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;review-status")
+    set_tests_properties(test_locale_review_status_negative PROPERTIES LABELS "localization;review-status")
+else()
+    message(WARNING "Python 3.9+ was not found; Python-backed Copperfin tests are unavailable")
 endif()
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
