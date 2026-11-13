@@ -61,6 +61,9 @@ require_text("${script}" "COPPERFIN_RPM_CONTAINER" "dedicated container authorit
 require_text("${script}" "/.dockerenv" "container identity check")
 require_text("${script}" "docker\\.io/library/fedora@sha256:" "digest-pinned Fedora identity")
 require_text("${script}" "--allow-container-mutation" "explicit container-mutation acknowledgement")
+require_text("${script}" "--source-directory" "locale contract source-directory input")
+require_text("${script}" [=[run_bounded cmake "-DINSTALL_ROOT=/usr" "-DSOURCE_DIR=$source_directory"]=]
+    "installed RPM locale inventory contract")
 require_text("${script}" "timeout --signal=KILL" "bounded package and process execution")
 require_text("${script}" "rpm --install" "native RPM package installation")
 require_text("${script}" "rpm --replacepkgs --install" "native RPM same-version reinstall")
@@ -92,8 +95,14 @@ require_text("${workflow}" "--platform linux/amd64" "explicit package architectu
 require_text("${workflow}" "--pull=never" "post-pull digest-only container execution")
 require_text("${workflow}" "timeout --signal=KILL 60 docker image inspect"
     "bounded resolved-container identity lookup")
-require_text("${workflow}" "install diffutils findutils gawk jq"
+require_text("${workflow}" "install cmake diffutils findutils gawk jq"
     "Fedora provider packages for the lifecycle helper commands")
+require_text("${workflow}"
+    [=[--volume "$PWD/tests/run_locale_catalog_install_contract_check.cmake:/source/tests/run_locale_catalog_install_contract_check.cmake:ro"]=]
+    "read-only locale contract mount")
+require_text("${workflow}"
+    [=[--volume "$PWD/resources/locales:/source/resources/locales:ro"]=]
+    "read-only source locale mount")
 require_text("${workflow}" "--cidfile" "daemon-owned container identity capture")
 require_text("${workflow}" "trap cleanup_rpm_container EXIT"
     "all-path daemon-container cleanup")
@@ -105,6 +114,8 @@ require_text("${workflow}" "scripts/test-linux-rpm-installer-lifecycle.sh"
     "RPM lifecycle helper invocation")
 require_text("${workflow}" "--allow-container-mutation"
     "explicit container-mutation acknowledgement")
+require_text("${workflow}" "--source-directory /source"
+    "container locale contract source directory")
 require_text("${workflow}" "artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.json"
     "retained RPM lifecycle evidence")
 require_text("${workflow}" "artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.log"

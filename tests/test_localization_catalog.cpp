@@ -4,6 +4,8 @@
 
 #include "test_localization_support.h"
 
+#include <set>
+
 void test_catalog_loading_and_fallback() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_catalog_tests";
@@ -390,6 +392,69 @@ std::vector<std::string> placeholder_names(std::string_view pattern) {
 void test_product_locale_catalogs_have_key_parity() {
     namespace fs = std::filesystem;
     const fs::path catalog_root = copperfin::localization::resolve_catalog_root();
+    std::ifstream inventory(catalog_root / "inventory.txt");
+    expect(inventory.good(), "#7072: product locale inventory must be present");
+    if (!inventory.good()) {
+        return;
+    }
+    std::string inventory_line;
+    std::getline(inventory, inventory_line);
+    expect(inventory_line == "version 1", "#7072: locale inventory version must be recognized");
+    if (inventory_line != "version 1") {
+        return;
+    }
+    std::set<std::string> declared_locales;
+    std::size_t source_count = 0U;
+    std::size_t pseudo_count = 0U;
+    while (std::getline(inventory, inventory_line)) {
+        std::istringstream fields(inventory_line);
+        std::string locale;
+        std::string role;
+        std::string extra;
+        fields >> locale >> role;
+        const bool valid = !(fields >> extra) &&
+            (role == "source" || role == "unreviewed" || role == "pseudo") &&
+            locale == copperfin::localization::normalize_locale(locale) &&
+            locale.find("/") == std::string::npos &&
+            locale.find("\\") == std::string::npos &&
+            locale.find(".") == std::string::npos &&
+            declared_locales.insert(locale).second;
+        expect(valid, "#7072: locale inventory entry must be canonical and unique: " + inventory_line);
+        if (!valid) {
+            continue;
+        }
+        if (role == "source") {
+            ++source_count;
+            expect(locale == "en-US", "#7072: en-US must be the only source locale");
+        }
+        if (role == "pseudo") {
+            ++pseudo_count;
+            expect(locale == "qps-ploc", "#7072: qps-ploc must be the only pseudo locale");
+        }
+    }
+    expect(source_count == 1U && pseudo_count == 1U,
+        "#7072: inventory must declare one source and one pseudo locale");
+    for (const auto& child : fs::directory_iterator(catalog_root)) {
+        if (child.path().filename() == "inventory.txt") {
+            continue;
+        }
+        expect(child.is_directory() && !child.is_symlink() &&
+                declared_locales.contains(child.path().filename().string()),
+            "#7072: packaged locale directory must be declared: " + child.path().string());
+    }
+    for (const std::string& locale : declared_locales) {
+        const fs::path locale_path = catalog_root / locale;
+        const bool valid_directory = fs::is_directory(locale_path) && !fs::is_symlink(locale_path);
+        expect(valid_directory,
+            "#7072: declared locale must be a regular directory: " + locale_path.string());
+        if (!valid_directory) {
+            continue;
+        }
+        for (const auto& child : fs::directory_iterator(locale_path)) {
+            expect(child.path().filename() == "strings.json" && child.is_regular_file() && !child.is_symlink(),
+                "#7072: locale directory must contain only a regular strings.json: " + child.path().string());
+        }
+    }
     const auto english = copperfin::localization::load_catalog_file(
         catalog_root / "en-US" / "strings.json");
     expect(english.ok, "product en-US localization catalog should parse");
@@ -397,7 +462,10 @@ void test_product_locale_catalogs_have_key_parity() {
         return;
     }
 
-    for (const std::string locale : {"es-419", "pt-BR", "qps-ploc"}) {
+    for (const std::string& locale : declared_locales) {
+        if (locale == "en-US") {
+            continue;
+        }
         const auto localized = copperfin::localization::load_catalog_file(
             catalog_root / locale / "strings.json");
         expect(localized.ok, "product " + locale + " localization catalog should parse");

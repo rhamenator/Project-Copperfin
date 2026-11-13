@@ -18,6 +18,19 @@ share/copperfin/locales/
 
 Each `strings.json` file is a UTF-8 JSON object with stable semantic keys and localized string values. Use keys such as `Command.Build`, `Diagnostic.ExpectedTokenBeforeToken`, or `Inspect.Usage`; do not use English prose as lookup keys.
 
+`resources/locales/inventory.txt` is the versioned list of every packaged
+catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`.
+The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
+catalog whose wording has not passed qualified human review), and `pseudo`
+(only test-only `qps-ploc`). Adding a locale requires a complete catalog and
+an inventory entry in the same change. The catalog generator, native parity
+test, and installer contract reject undeclared directories or unexpected
+per-locale artifacts. The generator additionally rejects invalid UTF-8; the
+generator and native parity test reject missing keys, blank values, and changed
+placeholders; and the installer contract rejects missing or changed installed
+artifacts. `unreviewed` reports review status, not
+content completeness; equal key counts do not establish translation quality.
+
 The source-of-truth locale is `en-US`. Placeholder catalogs currently exist for `es-419`, `pt-BR`, and `qps-ploc`. The Spanish and Portuguese catalogs are not production-ready language packs until a separate reviewed language-pack issue says so.
 
 ## Locale Selection
