@@ -263,6 +263,7 @@ jobs:
               --package "$PWD/${installers[0]}" \
               --package-version "$package_version" \
               --product-identifier "$product_identifier" \
+              --source-directory "$PWD" \
               --evidence-directory "$PWD/artifacts/macos-installer-lifecycle" \
               --allow-system-mutation \
             2>&1 | tee artifacts/macos-installer-lifecycle/macos-installer-lifecycle.log
@@ -358,6 +359,7 @@ jobs:
             "RUNNER_TEMP=$RUNNER_TEMP" \
             bash scripts/test-linux-installer-lifecycle.sh \
             --package "$PWD/${installers[0]}" \
+            --source-directory "$PWD" \
             --evidence-directory "$PWD/artifacts/linux-installer-lifecycle" \
             --allow-system-mutation \
             2>&1 | tee artifacts/linux-installer-lifecycle/linux-installer-lifecycle.log
@@ -408,9 +410,11 @@ jobs:
             --env "CONTAINER_IMAGE_ID=$rpm_image_id" \
             --volume "$PWD/${installers[0]}:/input/copperfin.rpm:ro" \
             --volume "$PWD/scripts/test-linux-rpm-installer-lifecycle.sh:/opt/copperfin/test-linux-rpm-installer-lifecycle.sh:ro" \
+            --volume "$PWD/tests/run_locale_catalog_install_contract_check.cmake:/source/tests/run_locale_catalog_install_contract_check.cmake:ro" \
+            --volume "$PWD/resources/locales:/source/resources/locales:ro" \
             --volume "$PWD/artifacts/linux-rpm-installer-lifecycle:/evidence:rw" \
             "$rpm_image" \
-            bash -c 'dnf --assumeyes --setopt=install_weak_deps=False install diffutils findutils gawk jq && exec bash /opt/copperfin/test-linux-rpm-installer-lifecycle.sh --package /input/copperfin.rpm --evidence-directory /evidence --allow-container-mutation' \
+            bash -c 'dnf --assumeyes --setopt=install_weak_deps=False install cmake diffutils findutils gawk jq && exec bash /opt/copperfin/test-linux-rpm-installer-lifecycle.sh --package /input/copperfin.rpm --source-directory /source --evidence-directory /evidence --allow-container-mutation' \
             2>&1 | tee artifacts/linux-rpm-installer-lifecycle/linux-rpm-installer-lifecycle.log
 
       - name: Create exact Corresponding Source archive

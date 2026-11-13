@@ -442,6 +442,19 @@ void test_product_locale_catalogs_have_key_parity() {
                 declared_locales.contains(child.path().filename().string()),
             "#7072: packaged locale directory must be declared: " + child.path().string());
     }
+    for (const std::string& locale : declared_locales) {
+        const fs::path locale_path = catalog_root / locale;
+        const bool valid_directory = fs::is_directory(locale_path) && !fs::is_symlink(locale_path);
+        expect(valid_directory,
+            "#7072: declared locale must be a regular directory: " + locale_path.string());
+        if (!valid_directory) {
+            continue;
+        }
+        for (const auto& child : fs::directory_iterator(locale_path)) {
+            expect(child.path().filename() == "strings.json" && child.is_regular_file() && !child.is_symlink(),
+                "#7072: locale directory must contain only a regular strings.json: " + child.path().string());
+        }
+    }
     const auto english = copperfin::localization::load_catalog_file(
         catalog_root / "en-US" / "strings.json");
     expect(english.ok, "product en-US localization catalog should parse");

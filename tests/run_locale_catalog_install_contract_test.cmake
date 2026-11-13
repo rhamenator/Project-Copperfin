@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.20)
 
 if(NOT DEFINED TEST_ROOT OR "${TEST_ROOT}" STREQUAL "")
     message(FATAL_ERROR "TEST_ROOT is required")
@@ -20,7 +20,7 @@ file(WRITE "${installed_locales}/inventory.txt" "${inventory}")
 foreach(locale IN ITEMS en-US es-419 pt-BR fr-FR qps-ploc)
     file(MAKE_DIRECTORY "${source_locales}/${locale}" "${installed_locales}/${locale}")
     file(WRITE "${source_locales}/${locale}/strings.json" "{\"test\":\"${locale}\"}\n")
-    file(COPY_FILE "${source_locales}/${locale}/strings.json" "${installed_locales}/${locale}/strings.json")
+    configure_file("${source_locales}/${locale}/strings.json" "${installed_locales}/${locale}/strings.json" COPYONLY)
 endforeach()
 
 function(check_install should_pass case_name expected_error)
@@ -63,10 +63,10 @@ file(REMOVE "${installed_locales}/fr-FR/strings.json")
 check_install(FALSE "missing fifth locale" "is missing or not a regular file")
 file(WRITE "${installed_locales}/fr-FR/strings.json" "")
 check_install(FALSE "empty fifth locale" "is empty")
-file(COPY_FILE "${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-FR/strings.json")
+configure_file("${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-FR/strings.json" COPYONLY)
 file(WRITE "${installed_locales}/fr-FR/strings.json" "{\"test\":\"changed\"}\n")
 check_install(FALSE "changed fifth locale" "differs from source")
-file(COPY_FILE "${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-FR/strings.json")
+configure_file("${source_locales}/fr-FR/strings.json" "${installed_locales}/fr-FR/strings.json" COPYONLY)
 file(MAKE_DIRECTORY "${installed_locales}/undeclared")
 check_install(FALSE "undeclared locale directory" "Undeclared or malformed installed locale")
 file(REMOVE_RECURSE "${installed_locales}/undeclared")

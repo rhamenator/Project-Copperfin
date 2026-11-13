@@ -9,10 +9,11 @@
 set -euo pipefail
 
 usage() {
-    printf 'Usage: %s --package <rpm> --evidence-directory <directory> --allow-container-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
+    printf 'Usage: %s --package <rpm> --source-directory <directory> --evidence-directory <directory> --allow-container-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
 }
 
 package_path=""
+source_directory=""
 evidence_directory=""
 process_timeout_seconds=180
 allow_container_mutation=0
@@ -24,6 +25,10 @@ while (($# > 0)); do
             ;;
         --evidence-directory)
             evidence_directory=${2-}
+            shift 2
+            ;;
+        --source-directory)
+            source_directory=${2-}
             shift 2
             ;;
         --process-timeout-seconds)
@@ -41,7 +46,7 @@ while (($# > 0)); do
     esac
 done
 
-if [[ -z "$package_path" || -z "$evidence_directory" || ! "$process_timeout_seconds" =~ ^[1-9][0-9]*$ \
+if [[ -z "$package_path" || -z "$source_directory" || -z "$evidence_directory" || ! "$process_timeout_seconds" =~ ^[1-9][0-9]*$ \
     || "$allow_container_mutation" != 1 ]]; then
     usage
     exit 2
@@ -61,7 +66,7 @@ if [[ ! ${CONTAINER_IMAGE_REFERENCE:-} =~ ^docker\.io/library/fedora@sha256:[0-9
     exit 1
 fi
 
-for command_name in awk cat cmp find grep jq mktemp realpath rpm sha256sum sort tee timeout wc; do
+for command_name in awk cat cmake cmp find grep jq mktemp realpath rpm sha256sum sort tee timeout wc; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         printf 'Required command is unavailable: %s\n' "$command_name" >&2
         exit 1
@@ -76,7 +81,13 @@ if [[ -L "$evidence_directory" || ! -d "$evidence_directory" ]]; then
     printf 'Evidence directory must be an existing regular directory: %s\n' "$evidence_directory" >&2
     exit 1
 fi
+if [[ -L "$source_directory" || ! -d "$source_directory" \
+    || ! -f "$source_directory/tests/run_locale_catalog_install_contract_check.cmake" ]]; then
+    printf 'Source directory must contain the locale install contract: %s\n' "$source_directory" >&2
+    exit 1
+fi
 package_path=$(realpath -e -- "$package_path")
+source_directory=$(realpath -e -- "$source_directory")
 evidence_directory=$(realpath -e -- "$evidence_directory")
 
 runner_temp=${RUNNER_TEMP:-}
@@ -170,6 +181,8 @@ for expected_path in "${expected_installed_files[@]}"; do
         exit 1
     fi
 done
+run_bounded cmake "-DINSTALL_ROOT=/usr" "-DSOURCE_DIR=$source_directory" \
+    -P "$source_directory/tests/run_locale_catalog_install_contract_check.cmake"
 
 rpm --query --list "$package_name" \
     | while IFS= read -r installed_path; do

@@ -43,6 +43,7 @@ foreach (var line in inventoryLines.Skip(1))
     var locale = match.Groups["locale"].Value;
     var role = match.Groups["role"].Value;
     if (locale.Contains("--", StringComparison.Ordinal) || locale.EndsWith("-", StringComparison.Ordinal) ||
+        !string.Equals(CopperfinLocalization.NormalizeLocale(locale), locale, StringComparison.Ordinal) ||
         !locales.TryAdd(locale, role))
     {
         throw new InvalidDataException($"Invalid or duplicate locale inventory entry: {locale}");
@@ -69,6 +70,20 @@ var localeRootFiles = Directory.EnumerateFiles(localeRoot)
 if (!localeRootFiles.SetEquals(new[] { "inventory.txt" }))
 {
     throw new InvalidDataException("Locale root files do not match inventory contract.");
+}
+foreach (var locale in locales.Keys)
+{
+    var localeDirectory = Path.Combine(localeRoot, locale);
+    if ((File.GetAttributes(localeDirectory) & FileAttributes.ReparsePoint) != 0)
+    {
+        throw new InvalidDataException($"Locale directory must not be a link: {locale}");
+    }
+    var localeEntries = Directory.EnumerateFileSystemEntries(localeDirectory)
+        .Select(Path.GetFileName).ToHashSet(StringComparer.Ordinal);
+    if (!localeEntries.SetEquals(new[] { "strings.json" }))
+    {
+        throw new InvalidDataException($"Locale directory content does not match inventory contract: {locale}");
+    }
 }
 var sourceEntries = JsonSerializer.Deserialize<Dictionary<string, string>>(
     ReadStrictUtf8(Path.Combine(localeRoot, "en-US", "strings.json")))

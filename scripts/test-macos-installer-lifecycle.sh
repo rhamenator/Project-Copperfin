@@ -9,12 +9,13 @@
 set -euo pipefail
 
 usage() {
-    printf 'Usage: %s --package <pkg> --package-version <version> --product-identifier <identifier> --evidence-directory <directory> --allow-system-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
+    printf 'Usage: %s --package <pkg> --package-version <version> --product-identifier <identifier> --source-directory <directory> --evidence-directory <directory> --allow-system-mutation [--process-timeout-seconds <seconds>]\n' "$0" >&2
 }
 
 package_path=""
 package_version=""
 product_identifier=""
+source_directory=""
 evidence_directory=""
 process_timeout_seconds=180
 allow_system_mutation=0
@@ -36,6 +37,10 @@ while (($# > 0)); do
             evidence_directory=${2-}
             shift 2
             ;;
+        --source-directory)
+            source_directory=${2-}
+            shift 2
+            ;;
         --process-timeout-seconds)
             process_timeout_seconds=${2-}
             shift 2
@@ -51,7 +56,7 @@ while (($# > 0)); do
     esac
 done
 
-if [[ -z "$package_path" || -z "$package_version" || -z "$product_identifier" \
+if [[ -z "$package_path" || -z "$package_version" || -z "$product_identifier" || -z "$source_directory" \
     || -z "$evidence_directory" || ! "$process_timeout_seconds" =~ ^[1-9][0-9]*$ \
     || "$allow_system_mutation" != 1 ]]; then
     usage
@@ -74,7 +79,7 @@ if [[ ! "$product_identifier" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]; then
     exit 1
 fi
 
-for command_name in awk dirname find grep installer lsbom mktemp pkgutil plutil python3 \
+for command_name in awk cmake dirname find grep installer lsbom mktemp pkgutil plutil python3 \
     rmdir shasum sort tee uname; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         printf 'Required command is unavailable: %s\n' "$command_name" >&2
@@ -98,7 +103,13 @@ if [[ -L "$evidence_directory" || ! -d "$evidence_directory" ]]; then
     printf 'Evidence directory must be an existing regular directory: %s\n' "$evidence_directory" >&2
     exit 1
 fi
+if [[ -L "$source_directory" || ! -d "$source_directory" \
+    || ! -f "$source_directory/tests/run_locale_catalog_install_contract_check.cmake" ]]; then
+    printf 'Source directory must contain the locale install contract: %s\n' "$source_directory" >&2
+    exit 1
+fi
 package_path=$(resolve_existing_path "$package_path")
+source_directory=$(resolve_existing_path "$source_directory")
 evidence_directory=$(resolve_existing_path "$evidence_directory")
 
 runner_temp=${RUNNER_TEMP:-}
@@ -337,6 +348,8 @@ runner_architecture=$(uname -m)
 printf 'Installing productbuild package %s at system root.\n' "$package_path"
 package_installed=1
 run_bounded installer -pkg "$package_path" -target /
+run_bounded cmake "-DINSTALL_ROOT=/Applications" "-DSOURCE_DIR=$source_directory" \
+    -P "$source_directory/tests/run_locale_catalog_install_contract_check.cmake"
 
 : >"$receipt_paths"
 for receipt in "${component_receipts[@]}"; do
