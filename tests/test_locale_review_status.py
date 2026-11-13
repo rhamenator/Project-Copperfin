@@ -4,9 +4,12 @@
 from __future__ import annotations
 
 import contextlib
+import errno
 import importlib.util
 import io
 import json
+import os
+import signal
 import sys
 import tempfile
 from pathlib import Path
@@ -27,6 +30,39 @@ def run_main(module: object, *arguments: str) -> int:
     with mock.patch.object(sys, "argv", [str(SCRIPT), *arguments]):
         with contextlib.redirect_stdout(io.StringIO()):
             return module.main()
+
+
+def expect_rejected(module: object, *arguments: str) -> None:
+    alarm_supported = hasattr(signal, "SIGALRM") and hasattr(signal, "setitimer")
+    previous_handler = None
+    if alarm_supported:
+        def timeout_handler(_signal: int, _frame: object) -> None:
+            raise TimeoutError("unsafe review-status path check timed out")
+
+        previous_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.setitimer(signal.ITIMER_REAL, 2.0)
+    try:
+        try:
+            result = run_main(module, *arguments)
+        except TimeoutError as error:
+            raise AssertionError(str(error)) from error
+        except (OSError, ValueError) as error:
+            message = str(error).lower()
+            expected_messages = (
+                "must be a regular file",
+                "unable to open regular",
+                "review-status directory must",
+                "unable to open managed review-status directory",
+            )
+            assert any(expected in message for expected in expected_messages), (
+                f"unexpected rejection: {error}")
+            return
+        raise AssertionError(
+            f"unsafe review-status file returned {result} instead of a path rejection for {arguments}")
+    finally:
+        if alarm_supported:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, previous_handler)
 
 
 def main() -> int:
@@ -97,6 +133,192 @@ def main() -> int:
 
         assert run_main(module) == 0
         assert run_main(module, "--release") == 1
+
+        with tempfile.TemporaryDirectory() as external_temporary:
+            external_root = Path(external_temporary)
+            outside_ledger = external_root / "outside-ledger.json"
+            write_json(outside_ledger, {**ledger, "probeMarker": "preserve"})
+            outside_before = outside_ledger.read_bytes()
+            try:
+                ledger_path.unlink()
+                ledger_path.symlink_to(outside_ledger)
+            except OSError:
+                write_json(ledger_path, ledger)
+            else:
+                expect_rejected(module)
+                expect_rejected(module, "--write")
+                assert outside_ledger.read_bytes() == outside_before
+                ledger_path.unlink()
+                write_json(ledger_path, ledger)
+
+            outside_evidence = external_root / "outside-evidence.json"
+            write_json(outside_evidence, evidence)
+            outside_evidence_before = outside_evidence.read_bytes()
+            try:
+                evidence_path.unlink()
+                evidence_path.symlink_to(outside_evidence)
+            except OSError:
+                write_json(evidence_path, evidence)
+            else:
+                expect_rejected(module)
+                expect_rejected(module, "--write")
+                assert outside_evidence.read_bytes() == outside_evidence_before
+                evidence_path.unlink()
+                write_json(evidence_path, evidence)
+
+            if hasattr(os, "mkfifo"):
+                ledger_path.unlink()
+                os.mkfifo(ledger_path)
+                expect_rejected(module)
+                expect_rejected(module, "--write")
+                ledger_path.unlink()
+
+                fifo_target = external_root / "outside-ledger.fifo"
+                os.mkfifo(fifo_target)
+                try:
+                    ledger_path.symlink_to(fifo_target)
+                except OSError:
+                    write_json(ledger_path, ledger)
+                else:
+                    expect_rejected(module)
+                    expect_rejected(module, "--write")
+                    ledger_path.unlink()
+                    write_json(ledger_path, ledger)
+
+                evidence_path.unlink()
+                os.mkfifo(evidence_path)
+                expect_rejected(module)
+                expect_rejected(module, "--write")
+                evidence_path.unlink()
+                write_json(evidence_path, evidence)
+
+            original_directory_fd_support = module.HAS_DIRECTORY_FDS
+            module.HAS_DIRECTORY_FDS = False
+            try:
+                ledger_path.unlink()
+                try:
+                    ledger_path.symlink_to(outside_ledger)
+                except OSError:
+                    write_json(ledger_path, ledger)
+                else:
+                    expect_rejected(module)
+                    expect_rejected(module, "--write")
+                    assert outside_ledger.read_bytes() == outside_before
+                    ledger_path.unlink()
+                    write_json(ledger_path, ledger)
+
+                evidence_path.unlink()
+                try:
+                    evidence_path.symlink_to(outside_evidence)
+                except OSError:
+                    write_json(evidence_path, evidence)
+                else:
+                    expect_rejected(module)
+                    expect_rejected(module, "--write")
+                    assert outside_evidence.read_bytes() == outside_evidence_before
+                    evidence_path.unlink()
+                    write_json(evidence_path, evidence)
+
+                if hasattr(os, "mkfifo"):
+                    ledger_path.unlink()
+                    os.mkfifo(ledger_path)
+                    expect_rejected(module)
+                    expect_rejected(module, "--write")
+                    ledger_path.unlink()
+                    write_json(ledger_path, ledger)
+
+                    evidence_path.unlink()
+                    os.mkfifo(evidence_path)
+                    expect_rejected(module)
+                    expect_rejected(module, "--write")
+                    evidence_path.unlink()
+                    write_json(evidence_path, evidence)
+
+                assert run_main(module) == 0
+                assert run_main(module, "--write") == 0
+                assert b"\r\n" not in ledger_path.read_bytes()
+
+                real_open = os.open
+                real_replace = os.replace
+                tracked_temporary = {}
+
+                def track_temporary_open(path: object, flags: int, mode: int = 0o777,
+                                         *, dir_fd: object = None) -> int:
+                    if dir_fd is None:
+                        descriptor = real_open(path, flags, mode)
+                    else:
+                        descriptor = real_open(path, flags, mode, dir_fd=dir_fd)
+                    if ".tmp" in Path(path).name:
+                        tracked_temporary["descriptor"] = descriptor
+                    return descriptor
+
+                def require_closed_before_replace(source: object, destination: object,
+                                                   **keywords: object) -> None:
+                    descriptor = tracked_temporary.get("descriptor")
+                    assert descriptor is not None
+                    try:
+                        os.fstat(descriptor)
+                    except OSError as error:
+                        assert error.errno == errno.EBADF
+                    else:
+                        raise AssertionError("temporary ledger was still open during replacement")
+                    real_replace(source, destination, **keywords)
+
+                with mock.patch.object(module.os, "open", track_temporary_open), \
+                        mock.patch.object(module.os, "replace", require_closed_before_replace):
+                    module.write_ledger(ledger_path, ledger)
+            finally:
+                module.HAS_DIRECTORY_FDS = original_directory_fd_support
+
+            relocated_status = root / "docs" / "localization-reviews-real"
+            write_json(external_root / "test-locale.json", ledger)
+            write_json(external_root / "evidence.json", evidence)
+            outside_directory_ledger = (external_root / "test-locale.json").read_bytes()
+            module.STATUS_ROOT.rename(relocated_status)
+            try:
+                module.STATUS_ROOT.symlink_to(external_root, target_is_directory=True)
+            except OSError:
+                relocated_status.rename(module.STATUS_ROOT)
+            else:
+                expect_rejected(module)
+                expect_rejected(module, "--write")
+                module.HAS_DIRECTORY_FDS = False
+                try:
+                    expect_rejected(module)
+                    expect_rejected(module, "--write")
+                finally:
+                    module.HAS_DIRECTORY_FDS = original_directory_fd_support
+                assert (external_root / "test-locale.json").read_bytes() == outside_directory_ledger
+                module.STATUS_ROOT.unlink()
+                relocated_status.rename(module.STATUS_ROOT)
+
+            if original_directory_fd_support:
+                real_open_status_root = module.open_status_root
+
+                def open_then_rebind() -> int:
+                    descriptor = real_open_status_root()
+                    module.STATUS_ROOT.rename(relocated_status)
+                    module.STATUS_ROOT.symlink_to(external_root, target_is_directory=True)
+                    return descriptor
+
+                with mock.patch.object(module, "open_status_root", open_then_rebind):
+                    anchored = module.load_status_object(ledger_path, "Review ledger")
+                module.STATUS_ROOT.unlink()
+                relocated_status.rename(module.STATUS_ROOT)
+                assert anchored["locale"] == "test-locale"
+
+                outside_directory_ledger = (external_root / "test-locale.json").read_bytes()
+                with mock.patch.object(module, "open_status_root", open_then_rebind):
+                    module.write_ledger(ledger_path, ledger)
+                module.STATUS_ROOT.unlink()
+                relocated_status.rename(module.STATUS_ROOT)
+                assert (external_root / "test-locale.json").read_bytes() == outside_directory_ledger
+
+        ledger_mode = ledger_path.stat().st_mode & 0o777
+        assert run_main(module, "--write") == 0
+        assert ledger_path.stat().st_mode & 0o777 == ledger_mode
+        assert b"\r\n" not in ledger_path.read_bytes()
+        assert run_main(module) == 0
 
         translated["Pending"] = "Translated pending"
         write_json(root / "resources/locales/test-locale/strings.json", translated)

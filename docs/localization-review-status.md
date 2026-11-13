@@ -4,6 +4,18 @@ The `es-419` and `pt-BR` catalogs have complete key presence (3,146 entries each
 but remain unreviewed language packs. `docs/localization-reviews/<locale>.json`
 records, for every key, the SHA-256 of the en-US source and current translation,
 source status, translation status, and independent review status/provenance. Hashes detect stale source or translation text; metadata in a repository file does not authenticate that a model session occurred.
+Ledgers and referenced evidence must be direct regular files in the managed
+`docs/localization-reviews` directory resolving inside the selected project.
+The checker rejects symbolic links, FIFOs, and other nonregular files before
+reading them.
+`--write` replaces only a validated managed ledger entry and does not follow a
+linked destination outside the project; the checked-in managed directory must
+already exist. On hosts with POSIX directory-descriptor operations, every
+managed directory component is opened without following
+links, and reads and replacements remain anchored to that directory if a
+concurrent checkout mutation changes its path. Other hosts receive static
+link/nonregular checks; this contract does not claim Windows reparse-point race
+protection.
 `scripts/check_locale_review_status.py` validates those snapshots in normal
 CTest. Its explicit `--release` mode fails while unchanged values are untriaged or any
 entry, including a justified invariant, lacks independent review; it is currently expected to fail. The normal CTest uses the `review-status` label and is not a production-readiness verdict. A source or
