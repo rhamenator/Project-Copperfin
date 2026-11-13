@@ -17,6 +17,8 @@ EVIDENCE_SCHEMA = ROOT / "docs" / "contracts" / "locale-entry-evidence-v1.schema
 
 
 def schema_accepts(value, schema):
+    if "not" in schema and schema_accepts(value, schema["not"]):
+        return False
     type_checks = {
         "object": lambda item: isinstance(item, dict),
         "array": lambda item: isinstance(item, list),
@@ -170,6 +172,12 @@ class RegistryTests(unittest.TestCase):
         self.assertTrue(any("fallback policy changed" in e for e in errors))
         self.assertTrue(any("schema pointer is invalid" in e for e in errors))
 
+    def test_schema_version_rejects_boolean_and_float_aliases(self):
+        for invalid in (True, 1.0):
+            data = copy.deepcopy(self.registry)
+            data["schemaVersion"] = invalid
+            self.assertTrue(any("version/purpose" in e for e in validate(data)))
+
     def test_duplicate_json_keys_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "registry.json"
@@ -200,6 +208,9 @@ class RegistryTests(unittest.TestCase):
             }},
         }
         self.assertTrue(schema_accepts(base, schema))
+        missing_with_hash = copy.deepcopy(base)
+        missing_with_hash["entries"]["Example"]["translationSha256"] = "4" * 64
+        self.assertFalse(schema_accepts(missing_with_hash, schema))
         human = copy.deepcopy(base)
         human["entries"]["Example"]["reviewStatus"] = "human-linguistic"
         self.assertFalse(schema_accepts(human, schema))

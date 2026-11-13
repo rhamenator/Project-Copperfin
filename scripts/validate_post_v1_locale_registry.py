@@ -76,7 +76,7 @@ def validate(data):
     extra = set(data) - TOP_LEVEL_KEYS
     if extra:
         errors.append(f"unknown registry fields: {', '.join(sorted(extra))}")
-    if data.get("schemaVersion") != 1 or data.get("purpose") != "planning-only":
+    if type(data.get("schemaVersion")) is not int or data.get("schemaVersion") != 1 or data.get("purpose") != "planning-only":
         errors.append("registry version/purpose must be planning-only v1")
     if data.get("authority") != AUTHORITY:
         errors.append("registry authority changed")
