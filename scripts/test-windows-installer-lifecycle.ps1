@@ -533,6 +533,7 @@ try {
         -FilePath 'cmake' `
         -Arguments @(
             "-DINSTALL_ROOT=$resolvedInstallRoot",
+            "-DSOURCE_DIR=$(Join-Path $PSScriptRoot '..')",
             '-P', (Join-Path $PSScriptRoot '..\tests\run_locale_catalog_install_contract_check.cmake')
         ) `
         -Name 'installed locale catalog verification' | Out-Null

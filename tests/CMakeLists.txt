@@ -53,6 +53,8 @@ copperfin_add_test(test_prg_engine_numeric_constant_division cf_xbase_runtime te
 copperfin_add_test(test_prg_engine_numeric_nonwhole_division cf_xbase_runtime test_prg_engine_numeric_nonwhole_division.cpp)
 copperfin_add_test(test_prg_numeric_constant_division_intrinsic_helper "" test_prg_numeric_constant_division_intrinsic_helper.cpp)
 target_include_directories(test_prg_numeric_constant_division_intrinsic_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+copperfin_add_test(test_prg_numeric_constant_arithmetic_metadata_helper "" test_prg_numeric_constant_arithmetic_metadata_helper.cpp)
+target_include_directories(test_prg_numeric_constant_arithmetic_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 copperfin_add_test(test_prg_numeric_nonwhole_division_helper "" test_prg_numeric_nonwhole_division_helper.cpp)
 target_include_directories(test_prg_numeric_nonwhole_division_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
@@ -4658,6 +4660,19 @@ copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
 
+# RQ-CF-VFP-DBC-CATALOG-REGULAR-FILE-001: DBC catalog readers bind
+# regular-file admission to the opened object and never block on POSIX FIFOs.
+copperfin_add_test(test_dbc_catalog_regular_file_admission cf_vfp_assets
+    test_dbc_catalog_regular_file_admission.cpp
+)
+
+# RQ-CF-VFP-DBF-PRIMARY-REGULAR-FILE-001: primary DBF readers bind
+# regular-file admission to the opened object and never block on POSIX FIFOs.
+copperfin_add_test(test_dbf_primary_regular_file_admission cf_xbase_runtime
+    test_dbf_primary_regular_file_admission.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_vfp_sidecar_path cf_design_model
     test_vfp_sidecar_path.cpp
 )
@@ -6136,6 +6151,23 @@ foreach(addlistitem_column_mode IN ITEMS COPPERFIN VFP9)
     foreach(addlistitem_column_session IN ITEMS 1 2)
         add_test(NAME test_prg_engine_addlistitem_column_numeric_${addlistitem_column_mode_lower}_session${addlistitem_column_session}
             COMMAND $<TARGET_FILE:test_prg_engine_addlistitem_column_numeric> ${addlistitem_column_mode} ${addlistitem_column_session})
+    endforeach()
+endforeach()
+# RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR-5611-LISTITEM-COLUMN-NUMERIC-001.
+# Direct checked conversion plus public coverage for the bounded wired caller.
+copperfin_add_test(test_prg_engine_listitem_column_numeric cf_xbase_runtime
+    test_prg_engine_listitem_column_numeric.cpp
+    prg_engine_test_support.cpp
+)
+copperfin_add_test(test_prg_engine_listitem_column_numeric_public cf_xbase_runtime
+    test_prg_engine_listitem_column_numeric_public.cpp
+    prg_engine_test_support.cpp
+)
+foreach(listitem_column_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${listitem_column_mode}" listitem_column_mode_lower)
+    foreach(listitem_column_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_listitem_column_numeric_public_${listitem_column_mode_lower}_session${listitem_column_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_listitem_column_numeric_public> ${listitem_column_mode} ${listitem_column_session})
     endforeach()
 endforeach()
 # RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/002.

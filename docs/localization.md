@@ -18,6 +18,19 @@ share/copperfin/locales/
 
 Each `strings.json` file is a UTF-8 JSON object with stable semantic keys and localized string values. Use keys such as `Command.Build`, `Diagnostic.ExpectedTokenBeforeToken`, or `Inspect.Usage`; do not use English prose as lookup keys.
 
+`resources/locales/inventory.txt` is the versioned list of every packaged
+catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`.
+The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
+catalog whose wording has not passed qualified human review), and `pseudo`
+(only test-only `qps-ploc`). Adding a locale requires a complete catalog and
+an inventory entry in the same change. The catalog generator, native parity
+test, and installer contract reject undeclared directories or unexpected
+per-locale artifacts. The generator additionally rejects invalid UTF-8; the
+generator and native parity test reject missing keys, blank values, and changed
+placeholders; and the installer contract rejects missing or changed installed
+artifacts. `unreviewed` reports review status, not
+content completeness; equal key counts do not establish translation quality.
+
 The source-of-truth locale is `en-US`. Placeholder catalogs currently exist for `es-419`, `pt-BR`, and `qps-ploc`. The Spanish and Portuguese catalogs are not production-ready language packs until a separate reviewed language-pack issue says so.
 
 ## Locale Selection
@@ -46,11 +59,25 @@ Fallback is deterministic:
 ```text
 es-MX -> es-MX -> es-419 -> es -> en-US
 es-AR -> es-AR -> es-419 -> es -> en-US
+es-US -> es-US -> es-419 -> es -> en-US
+es-Latn-419 -> es-Latn-419 -> es-Latn -> es-419 -> es -> en-US
+es-ES -> es-ES -> es -> en-US
+es-Latn-ES -> es-Latn-ES -> es-Latn -> es -> en-US
 pt-BR -> pt-BR -> pt -> en-US
 pt-PT -> pt-PT -> pt -> en-US
 fr-CA -> fr-CA -> fr -> en-US
 unknown -> unknown -> en-US
 ```
+
+An explicit Spanish region uses `es-419` when it is in the
+[CLDR `es_419` parent-locale set](https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml):
+AR, BO, BR, BZ, CL, CO, CR, CU, DO, EC, GT, HN, JP, MX, NI, PA, PE, PR,
+PY, SV, US, UY, and VE. The numeric region `419` also uses that catalog.
+A script subtag before the region does not change that decision.
+`es-ES`, regionless Spanish, and Spanish with other regional subtags use their
+exact/script/language catalogs and then `en-US`; they do not inherit the Latin
+American pack. This is a fallback policy, not an assertion that `es-419` is
+linguistically unsuitable for every speaker outside the listed regions.
 
 Missing keys fall back through the locale chain. If no catalog provides a key, the lookup returns the stable key rather than blank text.
 

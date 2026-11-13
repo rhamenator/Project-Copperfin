@@ -5,10 +5,11 @@
 #include "copperfin/vfp/dbf_header.h"
 #include "copperfin/platform/path.h"
 
+#include "dbf_regular_file_reader.h"
+
 #include "copperfin/localization/localization.h"
 
 #include <filesystem>
-#include <fstream>
 #include <locale>
 #include <mutex>
 #include <optional>
@@ -291,19 +292,15 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
 }
 
 DbfParseResult parse_dbf_header_from_file(const std::string& path) {
-    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
-    if (!input) {
+    const detail::RegularFileReadResult input = detail::read_regular_file(
+        copperfin::platform::path_from_utf8_string(path), 32U);
+    if (!input.ok) {
         return {.ok = false, .error = dbf_header_text("Vfp.DbfHeader.Error.OpenFileFailed")};
     }
-
-    std::vector<std::uint8_t> bytes(32U, 0U);
-    input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-
-    if (input.gcount() < static_cast<std::streamsize>(bytes.size())) {
+    if (input.bytes.size() < 32U) {
         return {.ok = false, .error = dbf_header_text("Vfp.DbfHeader.Error.ReadHeaderFailed")};
     }
-
-    return parse_dbf_header(bytes);
+    return parse_dbf_header(input.bytes);
 }
 
 std::optional<int> dbf_code_page_from_mark(std::uint8_t mark) {
