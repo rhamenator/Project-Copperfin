@@ -5,10 +5,15 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import errno
 import hashlib
 import json
+import os
 import re
+import stat
+import uuid
 from pathlib import Path
+from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -16,6 +21,8 @@ LOCALES = ("es-419", "pt-BR")
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
 ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 INVENTORY_ENTRY = re.compile(r"[a-z][A-Za-z0-9-]* (source|unreviewed|pseudo)\Z")
+HAS_DIRECTORY_FDS = all(
+    operation in os.supports_dir_fd for operation in (os.open, os.stat, os.unlink, os.rename))
 
 
 def digest(value: str) -> str:
@@ -53,6 +60,89 @@ def load_object(path: Path, label: str) -> dict:
     return data
 
 
+def status_member_name(path: Path) -> str:
+    """Return a direct STATUS_ROOT member name after containment checks."""
+    if path.parent != STATUS_ROOT or path.name in ("", ".", ".."):
+        raise ValueError(f"Review-status path is not a direct managed file: {path}")
+    validate_status_root()
+    return path.name
+
+
+def validate_status_root() -> os.stat_result:
+    """Validate containment and return the directory identity checked by path."""
+    try:
+        details = os.stat(STATUS_ROOT, follow_symlinks=False)
+        if not stat.S_ISDIR(details.st_mode):
+            raise ValueError
+        project_root = ROOT.resolve(strict=True)
+        status_root = STATUS_ROOT.resolve(strict=True)
+        status_root.relative_to(project_root)
+    except (OSError, ValueError):
+        raise ValueError(
+            f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}") from None
+    return details
+
+
+def open_status_root() -> Optional[int]:
+    """Walk from the selected project root without following directory links."""
+    if not HAS_DIRECTORY_FDS:
+        return None
+    if STATUS_ROOT != ROOT / "docs" / "localization-reviews":
+        raise ValueError(f"Unexpected managed review-status directory: {STATUS_ROOT}")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    flags |= getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    root_descriptor = None
+    docs_descriptor = None
+    try:
+        root_descriptor = os.open(ROOT, flags)
+        docs_descriptor = os.open("docs", flags, dir_fd=root_descriptor)
+        return os.open("localization-reviews", flags, dir_fd=docs_descriptor)
+    except OSError as error:
+        raise ValueError(f"Unable to open managed review-status directory: {STATUS_ROOT}") from error
+    finally:
+        if docs_descriptor is not None:
+            os.close(docs_descriptor)
+        if root_descriptor is not None:
+            os.close(root_descriptor)
+
+
+def ensure_regular_status_fd(file_descriptor: int, path: Path) -> None:
+    details = os.fstat(file_descriptor)
+    if not stat.S_ISREG(details.st_mode):
+        raise ValueError(f"Review-status file must be a regular file: {path}")
+
+
+def load_status_object(path: Path, label: str) -> dict:
+    """Load a direct managed JSON file without following links or blocking on FIFOs."""
+    name = status_member_name(path)
+    directory = open_status_root()
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    try:
+        try:
+            if directory is None:
+                details = os.stat(path, follow_symlinks=False)
+                if not stat.S_ISREG(details.st_mode):
+                    raise ValueError(f"Review-status file must be a regular file: {path}")
+                descriptor = os.open(path, flags)
+            else:
+                descriptor = os.open(name, flags, dir_fd=directory)
+        except OSError as error:
+            raise ValueError(f"Unable to open regular {label.lower()}: {path}") from error
+        try:
+            ensure_regular_status_fd(descriptor, path)
+            with os.fdopen(descriptor, "r", encoding="utf-8", closefd=False) as stream:
+                data = json.load(stream, object_pairs_hook=reject_duplicate_keys)
+        finally:
+            os.close(descriptor)
+    finally:
+        if directory is not None:
+            os.close(directory)
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a JSON object: {path}")
+    return data
+
+
 def exceptions() -> dict[str, str]:
     data = load_object(ROOT / "docs" / "localization-invariant-exceptions.json", "Invariant exceptions")
     if data.get("version") != 1:
@@ -67,7 +157,7 @@ def exceptions() -> dict[str, str]:
 
 
 def write_ledger(path: Path, ledger: dict) -> None:
-    """Keep one reviewable JSON line per semantic key."""
+    """Atomically replace one direct, regular managed ledger without following links."""
     entries = list(ledger["entries"].items())
     lines = ["{", '  "version": 1,',
              f'  "locale": {json.dumps(ledger["locale"], ensure_ascii=False)},',
@@ -77,8 +167,76 @@ def write_ledger(path: Path, ledger: dict) -> None:
         lines.append(f"    {json.dumps(key, ensure_ascii=False)}: "
                      f"{json.dumps(record, ensure_ascii=False, separators=(',', ':'))}{separator}")
     lines.extend(["  }", "}"])
-    with path.open("w", encoding="utf-8", newline="\n") as stream:
-        stream.write("\n".join(lines) + "\n")
+    payload = ("\n".join(lines) + "\n").encode("utf-8")
+    name = status_member_name(path)
+    directory = open_status_root()
+    temporary_name = f".{name}.{uuid.uuid4().hex}.tmp"
+    create_flags = (os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                    getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_BINARY", 0))
+    create_flags |= getattr(os, "O_NOFOLLOW", 0)
+    temporary_descriptor = None
+    temporary_path = STATUS_ROOT / temporary_name
+    try:
+        try:
+            current = (os.stat(path, follow_symlinks=False) if directory is None else
+                       os.stat(name, dir_fd=directory, follow_symlinks=False))
+        except FileNotFoundError:
+            current = None
+        except OSError as error:
+            raise ValueError(f"Unable to inspect review ledger: {path}") from error
+        if current is not None and not stat.S_ISREG(current.st_mode):
+            raise ValueError(f"Review ledger must be a regular file: {path}")
+        destination_mode = stat.S_IMODE(current.st_mode) if current is not None else 0o666
+        try:
+            if directory is None:
+                temporary_descriptor = os.open(temporary_path, create_flags, destination_mode)
+            else:
+                temporary_descriptor = os.open(
+                    temporary_name, create_flags, destination_mode, dir_fd=directory)
+            ensure_regular_status_fd(temporary_descriptor, path)
+            if current is not None and hasattr(os, "fchmod"):
+                os.fchmod(temporary_descriptor, destination_mode)
+            with os.fdopen(temporary_descriptor, "wb", closefd=False) as stream:
+                stream.write(payload)
+                stream.flush()
+                os.fsync(temporary_descriptor)
+            # Windows does not grant delete sharing to this os.open handle, so
+            # release it before os.replace attempts to rename the temporary file.
+            os.close(temporary_descriptor)
+            temporary_descriptor = None
+            # Reject a static link/nonregular destination. If it is replaced after
+            # this check, rename replaces that directory entry rather than following it.
+            try:
+                destination = (os.stat(path, follow_symlinks=False) if directory is None else
+                               os.stat(name, dir_fd=directory, follow_symlinks=False))
+            except FileNotFoundError:
+                destination = None
+            if destination is not None and not stat.S_ISREG(destination.st_mode):
+                raise ValueError(f"Review ledger must be a regular file: {path}")
+            if directory is None:
+                os.replace(temporary_path, path)
+            else:
+                os.replace(temporary_name, name, src_dir_fd=directory, dst_dir_fd=directory)
+                try:
+                    os.fsync(directory)
+                except OSError as error:
+                    if error.errno not in (errno.EINVAL, errno.ENOTSUP, errno.ENOSYS):
+                        raise
+            temporary_name = ""
+        finally:
+            if temporary_descriptor is not None:
+                os.close(temporary_descriptor)
+            if temporary_name:
+                try:
+                    if directory is None:
+                        temporary_path.unlink()
+                    else:
+                        os.unlink(temporary_name, dir_fd=directory)
+                except FileNotFoundError:
+                    pass
+    finally:
+        if directory is not None:
+            os.close(directory)
 
 
 def review_locales() -> tuple[str, ...]:
@@ -117,8 +275,7 @@ def main() -> int:
             raise ValueError(f"Catalog key mismatch: {locale}")
         path = STATUS_ROOT / f"{locale}.json"
         if args.write:
-            STATUS_ROOT.mkdir(parents=True, exist_ok=True)
-            previous = load_object(path, "Review ledger") if path.exists() else {}
+            previous = load_status_object(path, "Review ledger") if os.path.lexists(path) else {}
             previous_entries = previous.get("entries", {})
             if not isinstance(previous_entries, dict):
                 raise ValueError(f"Malformed review ledger entries: {path}")
@@ -144,7 +301,7 @@ def main() -> int:
                     record["reviewProvenance"] = old["reviewProvenance"]
                 records[key] = record
             write_ledger(path, {"version": 1, "locale": locale, "entries": records})
-        ledger = load_object(path, "Review ledger")
+        ledger = load_status_object(path, "Review ledger")
         entries = ledger.get("entries")
         if (ledger.get("version") != 1 or ledger.get("locale") != locale or
                 not isinstance(entries, dict) or entries.keys() != source.keys()):
@@ -182,7 +339,7 @@ def main() -> int:
                     failures.append(f"{locale}/{key}: invalid review provenance path")
                 else:
                     if evidence_name not in evidence_cache:
-                        evidence_cache[evidence_name] = load_object(
+                        evidence_cache[evidence_name] = load_status_object(
                             STATUS_ROOT / evidence_name, "Review evidence")
                     evidence = evidence_cache[evidence_name]
                     evidence_entries = evidence.get("entries")
