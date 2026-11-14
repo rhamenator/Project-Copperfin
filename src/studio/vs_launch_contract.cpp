@@ -18,6 +18,26 @@
 
 namespace copperfin::studio {
 
+namespace {
+
+bool ends_with(std::string_view value, std::string_view suffix) {
+    return value.size() >= suffix.size() &&
+        value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool is_object_target_selector_option(std::string_view argument) {
+    return ends_with(argument, "-target-object-name") ||
+        ends_with(argument, "-target-unique-id");
+}
+
+bool is_blank_selector(std::string_view value) {
+    return std::all_of(value.begin(), value.end(), [](const char character) {
+        return std::isspace(static_cast<unsigned char>(character)) != 0;
+    });
+}
+
+}  // namespace
+
 LaunchParseResult parse_launch_arguments(
     const std::vector<std::string>& args,
     const localization::LocalizedCatalog& catalog) {
@@ -26,6 +46,17 @@ LaunchParseResult parse_launch_arguments(
     for (std::size_t index = 0; index < args.size(); ++index) {
         const std::string& argument = args[index];
         std::string parsed_argument_error;
+
+        // Object-target options are shared by every Studio setter family. Reject
+        // empty selectors before a per-command parser can turn them into the
+        // default record-index selector and silently address record zero.
+        if (is_object_target_selector_option(argument) &&
+            ((index + 1U) >= args.size() || is_blank_selector(args[index + 1U]))) {
+            return LaunchParseResult{
+                .ok = false,
+                .error = localized_missing_value_after_option(catalog, argument)
+            };
+        }
 
         {
             const auto outcome = try_parse_diagnostics_and_session(argument, catalog, args, index, result, parsed_argument_error);

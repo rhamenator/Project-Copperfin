@@ -568,6 +568,24 @@ void test_parse_launch_arguments_rejects_tab_orientation_object_invalid_inputs()
     expect(!missing_targets_result.ok,
         "#1139: launch contract should reject tab-orientation-object requests without target selectors");
 
+    const auto empty_unique_id_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--tab-orientation", "9",
+        "--tab-orientation-target-unique-id", ""
+    });
+    expect(!empty_unique_id_result.ok,
+        "#7335: launch contract should reject empty tab-orientation unique-ID selectors");
+
+    const auto whitespace_object_name_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--tab-orientation", "9",
+        "--tab-orientation-target-object-name", " \t "
+    });
+    expect(!whitespace_object_name_result.ok,
+        "#7335: launch contract should reject blank tab-orientation object-name selectors");
+
     const auto non_integer_result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
         "--tab-orientation-object",
