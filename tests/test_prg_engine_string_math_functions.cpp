@@ -1716,7 +1716,7 @@ namespace
         const fs::path cancel_path = cancel_root / "like_session_cancel.prg";
         write_text(
             cancel_path,
-            "cExpr=\"LIKE('*'+REPLICATE('a',100000)+'b',REPLICATE('a',200000)+'c')\"\n"
+            "cExpr=\"LIKE('*'+REPLICATE('a',100000)+'b',REPLICATE('a',200000)+'*c')\"\n"
             "hit=&cExpr\n"
             "RETURN\n");
         auto cancel_session = copperfin::runtime::PrgRuntimeSession::create(
@@ -1737,10 +1737,25 @@ namespace
         expect(!cancel_state.completed &&
                    cancel_state.message == "Async task cancelled." &&
                    emitted_cancel_event,
-               "#7339: session cancellation during LIKE should use the runtime cancellation path; completed=" +
+               "#7339: session cancellation during literal-star-compatible LIKE should use the runtime cancellation path; completed=" +
                    std::string(cancel_state.completed ? "true" : "false") +
                    " message=" + cancel_state.message +
                    " cancel_event=" + (emitted_cancel_event ? "true" : "false"));
+
+        const fs::path watch_path = cancel_root / "like_watch_cancel.prg";
+        write_text(watch_path, "x=1\ny=2\nRETURN\n");
+        auto watch_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(watch_path.string(), cancel_root.string()));
+        watch_session.add_breakpoint({.file_path = watch_path.string(), .line = 2});
+        const auto watch_pause =
+            watch_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(watch_pause.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "#7339: watch cancellation control should pause on the requested frame");
+        watch_session.request_cancel();
+        const auto cancelled_watch = watch_session.evaluate_watch_expression(
+            "LIKE('*'+REPLICATE('a',1000)+'b',REPLICATE('a',2000)+'c')");
+        expect(!cancelled_watch.ok && cancelled_watch.message == "Async task cancelled.",
+               "#7339: watch evaluation should preserve the standard cancellation message");
         fs::remove_all(cancel_root, cancel_ignored);
     }
 

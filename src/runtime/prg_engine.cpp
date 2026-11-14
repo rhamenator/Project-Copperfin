@@ -8864,6 +8864,10 @@ namespace copperfin::runtime
             result.value = evaluate_expression(result.expression, stack.back(), resolve_cursor_target({}));
             result.ok = true;
         }
+        catch (const PrgStringFunctionCancellation &)
+        {
+            result.message = runtime_text("Runtime.Prg.Core.Error.AsyncTaskCancelled");
+        }
         catch (const std::bad_alloc &)
         {
             result.message = runtime_text("Runtime.Prg.Watch.Error.OutOfMemory");
