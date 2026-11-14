@@ -6546,6 +6546,10 @@
                                     operand = make_string_value(unquote_string(candidate));
                                 }
                             }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
+                            }
                             catch (...)
                             {
                                 // Preserve the previous expression-evaluation fallback;
@@ -6634,6 +6638,10 @@
                                     operand = make_string_value(unquote_string(candidate));
                                 }
                             }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
+                            }
                             catch (...)
                             {
                                 // Preserve the previous expression-evaluation fallback;
@@ -6675,6 +6683,10 @@
                                 {
                                     operand = make_string_value(unquote_string(candidate));
                                 }
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -6759,6 +6771,10 @@
                                 {
                                     operand = make_string_value(unquote_string(candidate));
                                 }
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -14641,6 +14657,11 @@
                 return {};
             }
         }
+        }
+        catch (const PrgStringFunctionCancellation &)
+        {
+            abandon_resumed_expression();
+            throw;
         }
         catch (const PrgCompatibilityError &error)
         {

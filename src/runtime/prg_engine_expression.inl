@@ -164,7 +164,8 @@
         const std::vector<PrgValue>& arguments,
         bool exact_string_compare,
         std::size_t memo_width,
-        const std::function<std::string(const std::string&)>& set_callback);
+        const std::function<std::string(const std::string&)>& set_callback,
+        const std::function<bool()>& cancellation_requested);
     std::optional<PrgValue> evaluate_type_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -332,6 +333,7 @@
                 std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
                 std::function<std::size_t()> memowidth_callback,
+                std::function<bool()> cancellation_requested,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback,
@@ -418,6 +420,7 @@
                   unbindevents_callback_(std::move(unbindevents_callback)),
                   aevents_callback_(std::move(aevents_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
+                  cancellation_requested_(std::move(cancellation_requested)),
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
@@ -2529,7 +2532,13 @@
                     }
                     return make_number_value(static_cast<double>(sql_set_prop_callback_(*handle, value_as_string(arguments[1]), arguments[2])));
                 }
-                if (const auto string_result = evaluate_string_function(function, arguments, exact_string_compare_, memowidth_callback_(), set_callback_))
+                if (const auto string_result = evaluate_string_function(
+                        function,
+                        arguments,
+                        exact_string_compare_,
+                        memowidth_callback_(),
+                        set_callback_,
+                        cancellation_requested_))
                 {
                     return *string_result;
                 }
@@ -2562,6 +2571,10 @@
                                     left_delim = delimiters.substr(0U, left_length);
                                     right_delim = delimiters.substr(left_length);
                                 }
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -2597,6 +2610,10 @@
                             try
                             {
                                 result += value_as_string(eval_expression_callback_(expr));
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -2661,6 +2678,10 @@
                         try
                         {
                             return eval_expression_callback_(return_expr);
+                        }
+                        catch (const PrgStringFunctionCancellation &)
+                        {
+                            throw;
                         }
                         catch (...) {}
                     }
@@ -2763,6 +2784,10 @@
                             pre = eval_expression_callback_(return_expr_text);
                         }
                     }
+                    catch (const PrgStringFunctionCancellation &)
+                    {
+                        throw;
+                    }
                     catch (...)
                     {
                     }
@@ -2771,6 +2796,10 @@
                         try
                         {
                             return eval_expression_callback_(return_expr_text);
+                        }
+                        catch (const PrgStringFunctionCancellation &)
+                        {
+                            throw;
                         }
                         catch (...)
                         {
@@ -4225,6 +4254,10 @@
                                 return expanded_value;
                             }
                         }
+                        catch (const PrgStringFunctionCancellation &)
+                        {
+                            throw;
+                        }
                         catch (...)
                         {
                         }
@@ -4741,6 +4774,7 @@
             std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
+            std::function<bool()> cancellation_requested_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;

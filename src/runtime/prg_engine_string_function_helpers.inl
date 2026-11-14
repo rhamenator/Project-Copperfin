@@ -3,31 +3,206 @@
 // Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 // Included inside copperfin::runtime's private helper namespace.
-bool wildcard_match_case_sensitive_local(const std::string& pattern, const std::string& text) {
-    const std::string& p = pattern;
-    const std::string& t = text;
-    std::size_t pattern_index = 0U;
-    std::size_t text_index = 0U;
-    std::size_t star_index = std::string::npos;
-    std::size_t star_text_index = 0U;
-    while (text_index < t.size()) {
-        if (pattern_index < p.size() && (p[pattern_index] == '?' || p[pattern_index] == t[text_index])) {
-            ++pattern_index;
-            ++text_index;
-        } else if (pattern_index < p.size() && p[pattern_index] == '*') {
-            star_index = pattern_index++;
-            star_text_index = text_index;
-        } else if (star_index != std::string::npos) {
-            pattern_index = star_index + 1U;
-            text_index = ++star_text_index;
-        } else {
-            return false;
+template <typename Sequence, typename Symbol>
+bool wildcard_match_sequence_case_sensitive_local(
+    const Sequence& pattern,
+    const Sequence& text,
+    const Symbol& star,
+    const Symbol& question,
+    const std::function<bool()>& cancellation_requested) {
+    const auto check_cancellation = [&]() {
+        if (cancellation_requested && cancellation_requested()) {
+            throw PrgStringFunctionCancellation{};
+        }
+    };
+    check_cancellation();
+    // A star-free pattern has no backtracking or active-state fan-out. Keep
+    // this common case strictly linear even when the pattern is longer than
+    // one packed word; only '?' needs wildcard treatment.
+    bool pattern_contains_star = false;
+    std::size_t pattern_scan_index = 0U;
+    for (const Symbol& symbol : pattern) {
+        if ((pattern_scan_index++ & 1023U) == 0U) {
+            check_cancellation();
+        }
+        if (symbol == star) {
+            pattern_contains_star = true;
+            break;
         }
     }
-    while (pattern_index < p.size() && p[pattern_index] == '*') {
-        ++pattern_index;
+    if (!pattern_contains_star) {
+        if (pattern.size() != text.size()) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < pattern.size(); ++index) {
+            if ((index & 1023U) == 0U) {
+                check_cancellation();
+            }
+            if (pattern[index] != question && pattern[index] != text[index]) {
+                return false;
+            }
+        }
+        return true;
     }
-    return pattern_index == p.size();
+    // Preserve the established greedy matcher byte-for-byte for short
+    // patterns. Its worst case is linear in text length when the pattern
+    // length is fixed, and this avoids packed-state allocation on the hot
+    // ordinary-call path (including the historical literal-'*' precedence
+    // when the input itself contains '*').
+    bool text_contains_star = false;
+    std::size_t star_scan_index = 0U;
+    for (const Symbol& symbol : text) {
+        if ((star_scan_index++ & 1023U) == 0U) {
+            check_cancellation();
+        }
+        if (symbol == star) {
+            text_contains_star = true;
+            break;
+        }
+    }
+    if (pattern.size() <= 64U || text_contains_star) {
+        std::size_t pattern_index = 0U;
+        std::size_t text_index = 0U;
+        const std::size_t no_star = std::numeric_limits<std::size_t>::max();
+        std::size_t star_index = no_star;
+        std::size_t star_text_index = 0U;
+        while (text_index < text.size()) {
+            if ((text_index & 1023U) == 0U) {
+                check_cancellation();
+            }
+            if (pattern_index < pattern.size() &&
+                (pattern[pattern_index] == question || pattern[pattern_index] == text[text_index])) {
+                ++pattern_index;
+                ++text_index;
+            } else if (pattern_index < pattern.size() && pattern[pattern_index] == star) {
+                star_index = pattern_index++;
+                star_text_index = text_index;
+            } else if (star_index != no_star) {
+                pattern_index = star_index + 1U;
+                text_index = ++star_text_index;
+            } else {
+                return false;
+            }
+        }
+        while (pattern_index < pattern.size() && pattern[pattern_index] == star) {
+            ++pattern_index;
+        }
+        return pattern_index == pattern.size();
+    }
+    // #7339: the usual saved-star retry loop can rescan a long literal suffix
+    // once for every text position. Simulate all wildcard-NFA states in packed
+    // words instead. Consecutive stars are equivalent to one star, so one
+    // epsilon-propagation step is sufficient after every consumed symbol.
+    std::vector<Symbol> normalized_pattern;
+    normalized_pattern.reserve(pattern.size());
+    std::size_t source_pattern_index = 0U;
+    for (const Symbol& symbol : pattern) {
+        if ((source_pattern_index++ & 1023U) == 0U) {
+            check_cancellation();
+        }
+        if (symbol == star && !normalized_pattern.empty() && normalized_pattern.back() == star) {
+            continue;
+        }
+        normalized_pattern.push_back(symbol);
+    }
+
+    constexpr std::size_t bits_per_word = 64U;
+    const std::size_t state_count = normalized_pattern.size() + 1U;
+    const std::size_t word_count = (state_count + bits_per_word - 1U) / bits_per_word;
+    using BitWords = std::vector<std::uint64_t>;
+    BitWords star_states(word_count, 0U);
+    BitWords question_states(word_count, 0U);
+    std::unordered_map<Symbol, std::vector<std::size_t>> literal_positions;
+    std::unordered_map<Symbol, BitWords> frequent_literal_states;
+    const auto set_bit = [](BitWords& words, std::size_t bit) {
+        words[bit / bits_per_word] |= std::uint64_t{1U} << (bit % bits_per_word);
+    };
+    const auto bit_is_set = [](const BitWords& words, std::size_t bit) {
+        return (words[bit / bits_per_word] &
+                (std::uint64_t{1U} << (bit % bits_per_word))) != 0U;
+    };
+    for (std::size_t index = 0U; index < normalized_pattern.size(); ++index) {
+        if ((index & 1023U) == 0U) {
+            check_cancellation();
+        }
+        const Symbol& symbol = normalized_pattern[index];
+        if (symbol == star) {
+            set_bit(star_states, index);
+        } else if (symbol == question) {
+            set_bit(question_states, index);
+        } else {
+            literal_positions[symbol].push_back(index);
+        }
+    }
+    // A mask is faster than visiting every literal occurrence, but one mask
+    // per distinct scalar can itself grow quadratically. Materialize masks
+    // only for frequent literals; there can be fewer than 16 of them at this
+    // threshold, so auxiliary packed storage stays linear in pattern size.
+    const std::size_t frequent_literal_threshold = word_count * 4U;
+    for (const auto& [symbol, positions] : literal_positions) {
+        check_cancellation();
+        if (positions.size() > frequent_literal_threshold) {
+            BitWords& states = frequent_literal_states[symbol];
+            states.assign(word_count, 0U);
+            for (const std::size_t position : positions) {
+                set_bit(states, position);
+            }
+        }
+    }
+
+    const auto add_star_epsilon_closure = [&](BitWords& states) {
+        std::uint64_t carry = 0U;
+        for (std::size_t word = 0U; word < word_count; ++word) {
+            const std::uint64_t active_stars = states[word] & star_states[word];
+            const std::uint64_t next_carry = active_stars >> 63U;
+            states[word] |= (active_stars << 1U) | carry;
+            carry = next_carry;
+        }
+    };
+    BitWords active(word_count, 0U);
+    BitWords next(word_count, 0U);
+    set_bit(active, 0U);
+    add_star_epsilon_closure(active);
+    std::size_t text_index = 0U;
+    for (const Symbol& symbol : text) {
+        if ((text_index++ & 1023U) == 0U) {
+            check_cancellation();
+        }
+        const auto frequent_literal = frequent_literal_states.find(symbol);
+        std::uint64_t carry = 0U;
+        for (std::size_t word = 0U; word < word_count; ++word) {
+            const std::uint64_t matching = question_states[word] |
+                (frequent_literal == frequent_literal_states.end()
+                    ? 0U : frequent_literal->second[word]);
+            const std::uint64_t consuming = active[word] & matching;
+            const std::uint64_t next_carry = consuming >> 63U;
+            next[word] = (consuming << 1U) | carry |
+                (active[word] & star_states[word]);
+            carry = next_carry;
+        }
+        if (frequent_literal == frequent_literal_states.end()) {
+            const auto positions = literal_positions.find(symbol);
+            if (positions != literal_positions.end()) {
+                for (const std::size_t position : positions->second) {
+                    if (bit_is_set(active, position)) {
+                        set_bit(next, position + 1U);
+                    }
+                }
+            }
+        }
+        add_star_epsilon_closure(next);
+        active.swap(next);
+    }
+    check_cancellation();
+    return bit_is_set(active, normalized_pattern.size());
+}
+
+bool wildcard_match_case_sensitive_local(
+    const std::string& pattern,
+    const std::string& text,
+    const std::function<bool()>& cancellation_requested) {
+    return wildcard_match_sequence_case_sensitive_local(
+        pattern, text, '*', '?', cancellation_requested);
 }
 
 std::size_t utf8_scalar_width_local(const std::string& text, std::size_t offset) {
@@ -68,23 +243,36 @@ std::size_t utf8_scalar_width_local(const std::string& text, std::size_t offset)
     return width;
 }
 
-std::vector<std::size_t> utf8_scalar_offsets_local(const std::string& text) {
+std::vector<std::size_t> utf8_scalar_offsets_local(
+    const std::string& text,
+    const std::function<bool()>& cancellation_requested = {}) {
     std::vector<std::size_t> offsets;
     offsets.reserve(text.size() + 1U);
     offsets.push_back(0U);
     std::size_t offset = 0U;
+    std::size_t scalar_index = 0U;
     while (offset < text.size()) {
+        if ((scalar_index++ & 1023U) == 0U &&
+            cancellation_requested && cancellation_requested()) {
+            throw PrgStringFunctionCancellation{};
+        }
         offset += utf8_scalar_width_local(text, offset);
         offsets.push_back(offset);
     }
     return offsets;
 }
 
-std::vector<std::string> utf8_scalars_local(const std::string& text) {
-    const std::vector<std::size_t> offsets = utf8_scalar_offsets_local(text);
+std::vector<std::string> utf8_scalars_local(
+    const std::string& text,
+    const std::function<bool()>& cancellation_requested = {}) {
+    const std::vector<std::size_t> offsets =
+        utf8_scalar_offsets_local(text, cancellation_requested);
     std::vector<std::string> scalars;
     scalars.reserve(offsets.size() - 1U);
     for (std::size_t index = 1U; index < offsets.size(); ++index) {
+        if ((index & 1023U) == 0U && cancellation_requested && cancellation_requested()) {
+            throw PrgStringFunctionCancellation{};
+        }
         scalars.push_back(text.substr(offsets[index - 1U], offsets[index] - offsets[index - 1U]));
     }
     return scalars;
@@ -92,33 +280,18 @@ std::vector<std::string> utf8_scalars_local(const std::string& text) {
 
 bool wildcard_match_utf8_scalar_case_sensitive_local(
     const std::string& pattern,
-    const std::string& text) {
-    const std::vector<std::string> pattern_scalars = utf8_scalars_local(pattern);
-    const std::vector<std::string> text_scalars = utf8_scalars_local(text);
-    std::size_t pattern_index = 0U;
-    std::size_t text_index = 0U;
-    std::size_t star_index = std::string::npos;
-    std::size_t star_text_index = 0U;
-    while (text_index < text_scalars.size()) {
-        if (pattern_index < pattern_scalars.size() &&
-            (pattern_scalars[pattern_index] == "?" ||
-             pattern_scalars[pattern_index] == text_scalars[text_index])) {
-            ++pattern_index;
-            ++text_index;
-        } else if (pattern_index < pattern_scalars.size() && pattern_scalars[pattern_index] == "*") {
-            star_index = pattern_index++;
-            star_text_index = text_index;
-        } else if (star_index != std::string::npos) {
-            pattern_index = star_index + 1U;
-            text_index = ++star_text_index;
-        } else {
-            return false;
-        }
-    }
-    while (pattern_index < pattern_scalars.size() && pattern_scalars[pattern_index] == "*") {
-        ++pattern_index;
-    }
-    return pattern_index == pattern_scalars.size();
+    const std::string& text,
+    const std::function<bool()>& cancellation_requested) {
+    const std::vector<std::string> pattern_scalars =
+        utf8_scalars_local(pattern, cancellation_requested);
+    const std::vector<std::string> text_scalars =
+        utf8_scalars_local(text, cancellation_requested);
+    return wildcard_match_sequence_case_sensitive_local(
+        pattern_scalars,
+        text_scalars,
+        std::string{"*"},
+        std::string{"?"},
+        cancellation_requested);
 }
 
 std::string fold_ascii_case_preserving_utf8_local(const std::string& text) {

@@ -1222,6 +1222,10 @@
                                     }
                                 }
                             }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
+                            }
                             catch (...)
                             {
                             }
