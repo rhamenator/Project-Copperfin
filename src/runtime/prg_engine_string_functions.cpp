@@ -10,6 +10,7 @@
 #include "prg_numeric_value_display.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <cmath>
 #include <cctype>
 #include <functional>
@@ -20,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace copperfin::runtime {
@@ -268,7 +270,8 @@ std::optional<PrgValue> evaluate_string_function(
     const std::vector<PrgValue>& arguments,
     bool exact_string_compare,
     std::size_t memo_width,
-    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::function<std::string(const std::string&)>& set_callback,
+    const std::function<bool()>& cancellation_requested) {
     if (function == "len" && !arguments.empty()) {
         return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
     }
@@ -751,12 +754,14 @@ std::optional<PrgValue> evaluate_string_function(
     if (function == "likec" && arguments.size() >= 2U) {
         return make_boolean_value(wildcard_match_utf8_scalar_case_sensitive_local(
             value_as_string(arguments[0]),
-            value_as_string(arguments[1])));
+            value_as_string(arguments[1]),
+            cancellation_requested));
     }
     if (function == "like" && arguments.size() >= 2U) {
         return make_boolean_value(wildcard_match_case_sensitive_local(
             value_as_string(arguments[0]),
-            value_as_string(arguments[1])));
+            value_as_string(arguments[1]),
+            cancellation_requested));
     }
     if (function == "inlist" && arguments.size() >= 2U) {
         // Three-valued, as installed VFP9 (retained probe ~/temp/vfp9-probes/null-semantics-c24, #5979):
