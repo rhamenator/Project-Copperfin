@@ -1721,35 +1721,9 @@ namespace
         std::error_code cancel_ignored;
         fs::remove_all(cancel_root, cancel_ignored);
         fs::create_directories(cancel_root);
-        const fs::path cancel_path = cancel_root / "like_session_cancel.prg";
-        write_text(
-            cancel_path,
-            "cExpr=\"LIKE('*'+REPLICATE('a',100000)+'b',REPLICATE('a',200000)+'*c')\"\n"
-            "hit=&cExpr\n"
-            "RETURN\n");
-        auto cancel_session = copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(cancel_path.string(), cancel_root.string()));
-        copperfin::runtime::RuntimePauseState cancel_state;
-        std::thread runner([&]() {
-            cancel_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        });
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        cancel_session.request_cancel();
-        runner.join();
-        const bool emitted_cancel_event = std::any_of(
-            cancel_state.events.begin(),
-            cancel_state.events.end(),
-            [](const copperfin::runtime::RuntimeEvent& event) {
-                return event.category == "runtime.task.cancelled";
-            });
-        expect(!cancel_state.completed &&
-                   cancel_state.message == "Async task cancelled." &&
-                   emitted_cancel_event,
-               "#7339: session cancellation during literal-star-compatible LIKE should use the runtime cancellation path; completed=" +
-                   std::string(cancel_state.completed ? "true" : "false") +
-                   " message=" + cancel_state.message +
-                   " cancel_event=" + (emitted_cancel_event ? "true" : "false"));
-
+        // The callback-counted assertion above deterministically exercises
+        // in-flight matcher cancellation. Verify the public session surface
+        // separately without racing a fixed sleep against matcher speed.
         const fs::path watch_path = cancel_root / "like_watch_cancel.prg";
         write_text(watch_path, "x=1\ny=2\nRETURN\n");
         auto watch_session = copperfin::runtime::PrgRuntimeSession::create(
