@@ -132,6 +132,7 @@
   "Runtime.Package.Error.PackageRollbackFailed": "Unable to restore the previous package after materialization failed: {path}",
   "Runtime.Package.Error.PackageTransactionStartFailed": "Unable to start transactional package replacement: {path}",
   "Runtime.Package.Error.PlanInvalid": "Package plan is not valid.",
+  "Runtime.Package.Error.OutputRootPathRejected": "[!! Þåçķåģë øüţþüţ ŕøøţ çøñţåïñš åñ ëmbëddëd ÑÜĽ bÿţë. !!]",
   "Runtime.Package.Error.LauncherArtifactAmbiguous": "[!! Müľţïþľë ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţš måţçh ţhë ŕëqüïŕëd þåçķåģë ïdëñţïţÿ: {path} !!]",
   "Runtime.Package.Error.LauncherArtifactMissing": "[!! Ŕëqüïŕëd ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţ ïš mïššïñģ: {path} !!]",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "[!! Ģëñëŕåţëd-ľåüñçhëŕ åŕţïƒåçţ ïš ñøţ å dïŕëçţ ŕëģüľåŕ ƒïľë: {path} !!]",

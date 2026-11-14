@@ -739,6 +739,10 @@ bool validate_runtime_host_source_path(
         error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathEmpty");
         return false;
     }
+    if (runtime_host_source_path.find('\0') != std::string::npos) {
+        error = runtime_text("Runtime.Package.Error.OutputRootPathRejected");
+        return false;
+    }
 
     std::filesystem::path source =
         copperfin::platform::path_from_utf8_string(runtime_host_source_path);

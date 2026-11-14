@@ -129,6 +129,141 @@ void remove_fixture(const ManifestPairFixture& fixture) {
 
 }  // namespace
 
+void test_package_output_root_rejects_embedded_nul() {
+    auto fixture = prepare_manifest_pair_fixture("embedded_nul_root");
+    if (!fixture.ready) {
+        remove_fixture(fixture);
+        return;
+    }
+
+    const fs::path prefix = fixture.root / "nul-prefix";
+    fs::create_directories(prefix);
+    const fs::path prefix_manifest = prefix / "app.cfmanifest";
+    const fs::path prefix_debug = prefix / "app.cfdebug";
+    write_text(prefix_manifest, "prefix-runtime-sentinel");
+    write_text(prefix_debug, "prefix-debug-sentinel");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (fixture.root / "project" / "nul_root.pjx").string();
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "AuditProject";
+    workspace.home_directory = (fixture.root / "project").string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path =
+        (fixture.root / "output" / "Copperfin.GeneratedLauncher.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U,
+         .name = "main.prg",
+         .relative_path = "main.prg",
+         .type_title = "Program"}
+    };
+
+    std::string nul_output_root = prefix.string();
+    nul_output_root.push_back('\0');
+    nul_output_root += ".suffix";
+    const auto rejected_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        nul_output_root,
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+    expect(!rejected_plan.ok && rejected_plan.planning_warnings_captured &&
+               rejected_plan.planning_warning_count == rejected_plan.warnings.size() &&
+               std::any_of(
+                   rejected_plan.warnings.begin(),
+                   rejected_plan.warnings.end(),
+                   [](const std::string& warning) {
+                       return warning.find("NUL") != std::string::npos;
+                   }),
+           "#7316: planner should reject an embedded-NUL package output root clearly");
+
+    auto aliased_plan = fixture.plan;
+    aliased_plan.package_root = nul_output_root + "/AuditProject";
+    aliased_plan.manifest_path = aliased_plan.package_root + "/app.cfmanifest";
+    aliased_plan.debug_manifest_path = aliased_plan.package_root + "/app.cfdebug";
+    std::string writer_error;
+    const bool writer_ok =
+        copperfin::runtime::runtime_pipeline_detail::write_runtime_manifest_pair_atomically(
+            aliased_plan,
+            "unexpected-runtime",
+            "unexpected-debug",
+            writer_error);
+    expect(!writer_ok && writer_error.find("NUL") != std::string::npos,
+           "#7316: manifest-pair writer should reject an embedded-NUL package root");
+
+    const auto materialized = copperfin::runtime::materialize_runtime_package(
+        aliased_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        fixture.runtime_host.string());
+    expect(!materialized.ok && materialized.error.find("NUL") != std::string::npos,
+           "#7316: package materialization should reject a mutated embedded-NUL root");
+    const auto finalized = finalize_manifest_pair(aliased_plan);
+    expect(!finalized.ok && finalized.error.find("NUL") != std::string::npos,
+           "#7316: package finalization should reject a mutated embedded-NUL root");
+    const auto aborted = copperfin::runtime::abort_runtime_package_transaction(aliased_plan);
+    expect(!aborted.ok && aborted.error.find("NUL") != std::string::npos,
+           "#7316: package rollback should reject a mutated embedded-NUL root");
+
+    auto mutated_artifact_plan = fixture.plan;
+    mutated_artifact_plan.native_wrapper_cmake_path = nul_output_root + "/CMakeLists.txt";
+    const auto built = copperfin::runtime::build_runtime_package_primary_output(
+        mutated_artifact_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile());
+    expect(!built.ok && built.error.find("NUL") != std::string::npos,
+           "#7316: primary-output build should reject any mutated embedded-NUL plan path");
+
+    mutated_artifact_plan = fixture.plan;
+    mutated_artifact_plan.content_root = nul_output_root + "/content";
+    const auto mutated_materialized = copperfin::runtime::materialize_runtime_package(
+        mutated_artifact_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        fixture.runtime_host.string());
+    expect(!mutated_materialized.ok &&
+               mutated_materialized.error.find("NUL") != std::string::npos,
+           "#7316: materialization should reject an embedded-NUL derived destination");
+
+    std::string aliased_runtime_host = fixture.runtime_host.string();
+    aliased_runtime_host.push_back('\0');
+    aliased_runtime_host += ".suffix";
+    const auto runtime_host_materialized = copperfin::runtime::materialize_runtime_package(
+        fixture.plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        aliased_runtime_host);
+    expect(!runtime_host_materialized.ok &&
+               runtime_host_materialized.error.find("NUL") != std::string::npos,
+           "#7316: materialization should reject an embedded-NUL runtime-host source");
+
+    expect(read_text(prefix_manifest) == "prefix-runtime-sentinel" &&
+               read_text(prefix_debug) == "prefix-debug-sentinel" &&
+               !fs::exists(prefix / "AuditProject"),
+           "#7316: every embedded-NUL rejection path must preserve the physical prefix");
+
+    std::string control_error;
+    const bool control_ok =
+        copperfin::runtime::runtime_pipeline_detail::write_runtime_manifest_pair_atomically(
+            fixture.plan,
+            "valid-runtime-control",
+            "valid-debug-control",
+            control_error);
+    expect(control_ok && read_text(fixture.plan.manifest_path) == "valid-runtime-control" &&
+               read_text(fixture.plan.debug_manifest_path) == "valid-debug-control",
+           "#7316: valid package roots should preserve atomic manifest-pair publication");
+
+    remove_fixture(fixture);
+}
+
 void test_manifest_pair_finalization_rejects_redirected_destinations() {
     auto fixture = prepare_manifest_pair_fixture("redirected");
     if (!fixture.ready) {

@@ -1007,6 +1007,7 @@
   "Runtime.Package.Error.PackageRollbackFailed": "Unable to restore the previous package after materialization failed: {path}",
   "Runtime.Package.Error.PackageTransactionStartFailed": "Unable to start transactional package replacement: {path}",
   "Runtime.Package.Error.PlanInvalid": "Package plan is not valid.",
+  "Runtime.Package.Error.OutputRootPathRejected": "Package output root contains an embedded NUL byte.",
   "Runtime.Package.Error.LauncherArtifactAmbiguous": "Multiple generated-launcher artifacts match the required package identity: {path}",
   "Runtime.Package.Error.LauncherArtifactMissing": "Required generated-launcher artifact is missing: {path}",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "Generated-launcher artifact is not a direct regular file: {path}",

@@ -132,6 +132,7 @@
   "Runtime.Package.Error.PackageRollbackFailed": "No se pudo restaurar el paquete anterior despues de que fallo la materializacion: {path}",
   "Runtime.Package.Error.PackageTransactionStartFailed": "No se pudo iniciar el reemplazo transaccional del paquete: {path}",
   "Runtime.Package.Error.PlanInvalid": "El plan del paquete no es valido.",
+  "Runtime.Package.Error.OutputRootPathRejected": "La raiz de salida del paquete contiene un byte NUL incrustado.",
   "Runtime.Package.Error.LauncherArtifactAmbiguous": "Varios artefactos del launcher generado coinciden con la identidad requerida del paquete: {path}",
   "Runtime.Package.Error.LauncherArtifactMissing": "Falta un artefacto requerido del launcher generado: {path}",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "El artefacto del launcher generado no es un archivo regular directo: {path}",
