@@ -1746,9 +1746,11 @@ namespace
             make_runtime_session_options(cancel_path.string(), cancel_root.string()));
         wildcard_match_poll_entered.store(false, std::memory_order_relaxed);
         release_wildcard_match_poll.store(false, std::memory_order_relaxed);
+        // Poll 320 is after the initial pattern/text star scans and the
+        // one-star classification scan, inside the long suffix comparison.
         copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(
             pause_at_wildcard_match_poll,
-            20U);
+            320U);
         copperfin::runtime::RuntimePauseState cancel_state;
         std::mutex runner_mutex;
         std::condition_variable runner_condition;
