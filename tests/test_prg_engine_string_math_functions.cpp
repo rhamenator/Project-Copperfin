@@ -1616,10 +1616,15 @@ namespace
             "byteHit=LIKE('*'+suffix+'b',hit)\n"
             "byteShort=LIKE('*b',miss)\n"
             "byteLinear=LIKE(linear,linear)\n"
+            "literalN=96000\n"
+            "literalSuffix=REPLICATE('a',literalN/2)\n"
+            "literalText=REPLICATE('a',literalN)+'*c'\n"
+            "byteLiteralMiss=LIKE('*'+literalSuffix+'b',literalText)\n"
             "scalarMiss=LIKEC('*'+suffix+'b',miss)\n"
             "scalarHit=LIKEC('*'+suffix+'b',hit)\n"
             "scalarShort=LIKEC('*b',miss)\n"
             "scalarLinear=LIKEC(linear,linear)\n"
+            "scalarLiteralMiss=LIKEC('*'+literalSuffix+'b',literalText)\n"
             "RETURN\n");
 
         const pid_t child = ::fork();
@@ -1639,19 +1644,21 @@ namespace
             };
             const bool passed = state.completed &&
                 is("bytemiss", false) && is("bytehit", true) && is("byteshort", false) &&
-                is("bytelinear", true) &&
+                is("bytelinear", true) && is("byteliteralmiss", false) &&
                 is("scalarmiss", false) && is("scalarhit", true) && is("scalarshort", false) &&
-                is("scalarlinear", true);
+                is("scalarlinear", true) && is("scalarliteralmiss", false);
             _exit(passed ? 0 : 3);
         }
 
         bool completed = false;
+        int child_status = -1;
         if (child > 0) {
             const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(8);
             int status = 0;
             while (std::chrono::steady_clock::now() < deadline) {
                 const pid_t result = ::waitpid(child, &status, WNOHANG);
                 if (result == child) {
+                    child_status = status;
                     completed = WIFEXITED(status) && WEXITSTATUS(status) == 0;
                     break;
                 }
@@ -1666,7 +1673,8 @@ namespace
             }
         }
         expect(completed,
-               "#7339: LIKE/LIKEC pathological miss and matching/short controls should finish under the 8-second watchdog");
+               "#7339: LIKE/LIKEC ordinary and literal-star pathological misses plus matching/short controls should finish under the 8-second watchdog; status=" +
+                   std::to_string(child_status));
         fs::remove_all(temp_root, ignored);
 #endif
 
@@ -1762,30 +1770,32 @@ namespace
     void test_like_packed_nfa_preserves_wildcard_semantics()
     {
         const auto reference_match = [](const std::string& pattern, const std::string& text) {
-            std::vector<std::vector<signed char>> memo(
-                pattern.size() + 1U,
-                std::vector<signed char>(text.size() + 1U, -1));
-            std::function<bool(std::size_t, std::size_t)> visit =
-                [&](std::size_t pattern_index, std::size_t text_index) {
-                    signed char& cached = memo[pattern_index][text_index];
-                    if (cached >= 0) {
-                        return cached != 0;
-                    }
-                    bool matched = false;
-                    if (pattern_index == pattern.size()) {
-                        matched = text_index == text.size();
-                    } else if (pattern[pattern_index] == '*') {
-                        matched = visit(pattern_index + 1U, text_index) ||
-                            (text_index < text.size() && visit(pattern_index, text_index + 1U));
-                    } else {
-                        matched = text_index < text.size() &&
-                            (pattern[pattern_index] == '?' || pattern[pattern_index] == text[text_index]) &&
-                            visit(pattern_index + 1U, text_index + 1U);
-                    }
-                    cached = matched ? 1 : 0;
-                    return matched;
-                };
-            return visit(0U, 0U);
+            std::size_t pattern_index = 0U;
+            std::size_t text_index = 0U;
+            const std::size_t no_star = std::numeric_limits<std::size_t>::max();
+            std::size_t saved_star = no_star;
+            std::size_t saved_text = 0U;
+            while (text_index < text.size()) {
+                if (pattern_index < pattern.size() &&
+                    (pattern[pattern_index] == '?' ||
+                     pattern[pattern_index] == text[text_index])) {
+                    ++pattern_index;
+                    ++text_index;
+                } else if (pattern_index < pattern.size() &&
+                           pattern[pattern_index] == '*') {
+                    saved_star = pattern_index++;
+                    saved_text = text_index;
+                } else if (saved_star != no_star) {
+                    pattern_index = saved_star + 1U;
+                    text_index = ++saved_text;
+                } else {
+                    return false;
+                }
+            }
+            while (pattern_index < pattern.size() && pattern[pattern_index] == '*') {
+                ++pattern_index;
+            }
+            return pattern_index == pattern.size();
         };
         const auto actual_match = [](const std::string& function,
                                      const std::string& pattern,
@@ -1853,6 +1863,66 @@ namespace
         expect(!actual_match("like", std::string(65U, 'a') + "*b",
                              std::string(65U, 'a') + "*c"),
                "#7339: literal-star input should preserve prior precedence across the packed threshold");
+        const std::vector<std::pair<std::string, std::string>> literal_star_cases{
+            {"*", "a*a"},
+            {"a*", "a*c"},
+            {"**", "**"},
+            {"**", "***"},
+            {"*a*", "x*a?"},
+            {"*?b", "aa*xb"},
+            {"***a", "**a"},
+            {"*a*b", "xx*aayb"},
+        };
+        for (const auto& [suffix_pattern, suffix_text] : literal_star_cases) {
+            const std::string pattern = std::string(65U, 'z') + suffix_pattern;
+            const std::string text = std::string(65U, 'z') + suffix_text;
+            expect(actual_match("like", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed literal-star LIKE precedence differs for suffix pattern=" +
+                       suffix_pattern + " text=" + suffix_text);
+            expect(actual_match("likec", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed literal-star LIKEC precedence differs for suffix pattern=" +
+                       suffix_pattern + " text=" + suffix_text);
+        }
+        std::vector<std::string> literal_suffix_patterns{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 3U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab?*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            literal_suffix_patterns.insert(
+                literal_suffix_patterns.end(), generation.begin(), generation.end());
+        }
+        std::vector<std::string> literal_suffix_texts{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 4U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            literal_suffix_texts.insert(
+                literal_suffix_texts.end(), generation.begin(), generation.end());
+        }
+        for (const std::string& suffix_pattern : literal_suffix_patterns) {
+            const std::string pattern = std::string(65U, 'z') + suffix_pattern;
+            for (const std::string& suffix_text : literal_suffix_texts) {
+                if (suffix_text.find('*') == std::string::npos) {
+                    continue;
+                }
+                const std::string text = std::string(65U, 'z') + suffix_text;
+                const bool expected = reference_match(pattern, text);
+                expect(actual_match("like", pattern, text) == expected,
+                       "#7339: exhaustive packed literal-star LIKE precedence differs");
+                expect(actual_match("likec", pattern, text) == expected,
+                       "#7339: exhaustive packed literal-star LIKEC precedence differs");
+            }
+        }
         expect(actual_match("like", std::string(100000U, 'a') + "?",
                             std::string(100001U, 'a')),
                "#7339: long star-free question patterns should remain linear and preserve wildcard semantics");
