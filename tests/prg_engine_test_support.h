@@ -5,8 +5,10 @@
 #pragma once
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/file_time.h"
 #include "copperfin/runtime/prg_engine.h"
 
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -44,6 +46,7 @@ void write_dbf_last_update_bytes(
     std::uint8_t years_since_1900,
     std::uint8_t month,
     std::uint8_t day);
+
 void write_synthetic_ndx(
     const std::filesystem::path& path,
     const std::string& expression,

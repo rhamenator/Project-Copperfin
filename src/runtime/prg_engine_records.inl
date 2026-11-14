@@ -2991,27 +2991,25 @@
                     return make_date_value(std::string{});
                 }
 
-                const auto header_result = parse_cursor_table_header(*cursor);
-                if (!header_result.ok)
+                if (cursor->source_path.empty())
                 {
                     return make_date_value(std::string{});
                 }
-                const vfp::DbfHeader &header = header_result.header;
-                if (header.last_update_year == 0U && header.last_update_month == 0U &&
-                    header.last_update_day == 0U)
+                std::error_code timestamp_error;
+                const auto file_time = std::filesystem::last_write_time(
+                    copperfin::platform::path_from_utf8_string(cursor->source_path), timestamp_error);
+                if (timestamp_error)
                 {
                     return make_date_value(std::string{});
                 }
-                // #5527: header.last_update_year is a genuine two-digit
-                // calendar year on real dBASE-family files, not years-
-                // since-1900 -- must go through the shared
-                // last_update_year_full() disambiguation (see its own
-                // comment, dbf_header.cpp) rather than 1900 + byte
-                // directly, or LUPDATE() would silently disagree with
-                // last_update_iso8601() for the same file.
-                const int year = static_cast<int>(header.last_update_year_full());
-                const int month = static_cast<int>(header.last_update_month);
-                const int day = static_cast<int>(header.last_update_day);
+                // Installed VFP9 derives LUPDATE() from the table file's local
+                // last-write date, not from DBF header bytes 1..3. Besides matching
+                // that behavior, using filesystem metadata prevents malformed header
+                // dates from creating contradictory scalar and formatted Date values.
+                const std::tm local = local_time_from_file_time(file_time);
+                const int year = local.tm_year + 1900;
+                const int month = local.tm_mon + 1;
+                const int day = local.tm_mday;
                 const auto &set_state = current_set_state();
                 const auto session_set_callback = [&set_state](const std::string &option_name) -> std::string
                 {
