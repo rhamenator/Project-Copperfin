@@ -16,6 +16,34 @@ bool wildcard_match_sequence_case_sensitive_local(
         }
     };
     check_cancellation();
+    // A star-free pattern has no backtracking or active-state fan-out. Keep
+    // this common case strictly linear even when the pattern is longer than
+    // one packed word; only '?' needs wildcard treatment.
+    bool pattern_contains_star = false;
+    std::size_t pattern_scan_index = 0U;
+    for (const Symbol& symbol : pattern) {
+        if ((pattern_scan_index++ & 1023U) == 0U) {
+            check_cancellation();
+        }
+        if (symbol == star) {
+            pattern_contains_star = true;
+            break;
+        }
+    }
+    if (!pattern_contains_star) {
+        if (pattern.size() != text.size()) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < pattern.size(); ++index) {
+            if ((index & 1023U) == 0U) {
+                check_cancellation();
+            }
+            if (pattern[index] != question && pattern[index] != text[index]) {
+                return false;
+            }
+        }
+        return true;
+    }
     // Preserve the established greedy matcher byte-for-byte for short
     // patterns. Its worst case is linear in text length when the pattern
     // length is fixed, and this avoids packed-state allocation on the hot

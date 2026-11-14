@@ -1611,12 +1611,15 @@ namespace
             "suffix=REPLICATE('a',n/2)\n"
             "miss=REPLICATE('a',n)+'c'\n"
             "hit=REPLICATE('a',n)+'b'\n"
+            "linear=REPLICATE('a',1000000)\n"
             "byteMiss=LIKE('*'+suffix+'b',miss)\n"
             "byteHit=LIKE('*'+suffix+'b',hit)\n"
             "byteShort=LIKE('*b',miss)\n"
+            "byteLinear=LIKE(linear,linear)\n"
             "scalarMiss=LIKEC('*'+suffix+'b',miss)\n"
             "scalarHit=LIKEC('*'+suffix+'b',hit)\n"
             "scalarShort=LIKEC('*b',miss)\n"
+            "scalarLinear=LIKEC(linear,linear)\n"
             "RETURN\n");
 
         const pid_t child = ::fork();
@@ -1636,7 +1639,9 @@ namespace
             };
             const bool passed = state.completed &&
                 is("bytemiss", false) && is("bytehit", true) && is("byteshort", false) &&
-                is("scalarmiss", false) && is("scalarhit", true) && is("scalarshort", false);
+                is("bytelinear", true) &&
+                is("scalarmiss", false) && is("scalarhit", true) && is("scalarshort", false) &&
+                is("scalarlinear", true);
             _exit(passed ? 0 : 3);
         }
 
@@ -1833,6 +1838,9 @@ namespace
         expect(!actual_match("like", std::string(65U, 'a') + "*b",
                              std::string(65U, 'a') + "*c"),
                "#7339: literal-star input should preserve prior precedence across the packed threshold");
+        expect(actual_match("like", std::string(100000U, 'a') + "?",
+                            std::string(100001U, 'a')),
+               "#7339: long star-free question patterns should remain linear and preserve wildcard semantics");
     }
 
     // #5946: real VFP9 SP2 rejects SPACE(300000000) with error 1903,
