@@ -66,11 +66,25 @@ std::string trim_with_parse_characters(
     const std::vector<PrgValue>& arguments) {
     const bool case_insensitive = arguments.size() >= 2U &&
         rounded_numeric_to_int64(value_as_number(arguments[1])) == 1;
-    std::vector<std::string> parse_tokens;
+    // #7342: evaluated Character arguments already own their text. Keep
+    // non-owning views of those values instead of copying every parse token a
+    // second time; a legal call can otherwise duplicate hundreds of MiB after
+    // argument evaluation. Non-Character coercions still need owned storage.
+    const std::size_t parse_token_count = arguments.size() > 2U ? arguments.size() - 2U : 0U;
+    std::vector<std::string> converted_tokens;
+    converted_tokens.reserve(parse_token_count);
+    std::vector<std::string_view> parse_tokens;
+    parse_tokens.reserve(parse_token_count);
     for (std::size_t index = 2U; index < arguments.size(); ++index) {
-        std::string token = value_as_string(arguments[index]);
+        std::string_view token;
+        if (arguments[index].kind == PrgValueKind::string) {
+            token = arguments[index].string_value;
+        } else {
+            converted_tokens.push_back(value_as_string(arguments[index]));
+            token = converted_tokens.back();
+        }
         if (!token.empty()) {
-            parse_tokens.push_back(std::move(token));
+            parse_tokens.push_back(token);
         }
     }
     const auto tokens_equal = [&](std::string_view a, std::string_view b) {

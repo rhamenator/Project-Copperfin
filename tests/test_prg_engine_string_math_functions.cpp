@@ -18,6 +18,21 @@
 #include <locale>
 #include <system_error>
 
+#if defined(__linux__)
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define COPPERFIN_TRIM_TEST_ASAN 1
+#endif
+#endif
+#if defined(__SANITIZE_ADDRESS__)
+#define COPPERFIN_TRIM_TEST_ASAN 1
+#endif
+
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
@@ -1488,6 +1503,7 @@ namespace
             "cPartialNoMatch = LTRIM('xHello', 0, 'xy')\n"
             "cWholeTokenMatch = LTRIM('xyxyHello', 0, 'xy')\n"
             "cWholeTokenRight = RTRIM('HelloAbAb', 0, 'Ab')\n"
+            "cConvertedToken = LTRIM('11Hello', 0, 11)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -1510,8 +1526,68 @@ namespace
         check("cpartialnomatch", "xHello");
         check("cwholetokenmatch", "Hello");
         check("cwholetokenright", "Hello");
+        check("cconvertedtoken", "Hello");
 
         fs::remove_all(temp_root, ignored);
+    }
+
+    void test_trim_parse_tokens_do_not_duplicate_evaluated_character_arguments()
+    {
+#if defined(__linux__) && !defined(COPPERFIN_TRIM_TEST_ASAN)
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_trim_token_amplification";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        std::string repeated_arguments;
+        for (std::size_t index = 0U; index < 200U; ++index) {
+            repeated_arguments += ",t";
+        }
+        const auto write_case = [&](const fs::path& path, bool trim) {
+            write_text(
+                path,
+                "s=REPLICATE('a',1000000)\n"
+                "t=REPLICATE('a',999999)+'b'\n"
+                "hit=" + std::string(trim ? "LEN(LTRIM(s,0" : "LEN(s") +
+                    repeated_arguments + std::string(trim ? "))" : ")") + "\n"
+                "RETURN\n");
+        };
+        const fs::path control_path = temp_root / "control.prg";
+        const fs::path trim_path = temp_root / "trim.prg";
+        write_case(control_path, false);
+        write_case(trim_path, true);
+
+        const auto run_capped = [&](const fs::path& path) {
+            const pid_t child = ::fork();
+            expect(child >= 0, "#7342: fork should create the capped public-PRG child");
+            if (child == 0) {
+                constexpr rlim_t address_cap = 512ULL * 1024ULL * 1024ULL;
+                const rlimit limit{address_cap, address_cap};
+                if (::setrlimit(RLIMIT_AS, &limit) != 0) {
+                    _exit(2);
+                }
+                auto session = copperfin::runtime::PrgRuntimeSession::create(
+                    make_runtime_session_options(path.string(), temp_root.string()));
+                const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+                const auto hit = state.globals.find("hit");
+                const bool passed = state.completed && hit != state.globals.end() &&
+                    copperfin::runtime::format_value(hit->second) == "1000000";
+                _exit(passed ? 0 : 3);
+            }
+            if (child < 0) {
+                return false;
+            }
+            int status = 0;
+            return ::waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        };
+
+        expect(run_capped(control_path),
+               "#7342: the same-argument LEN control should complete under the 512 MiB address cap");
+        expect(run_capped(trim_path),
+               "#7342: LTRIM should not duplicate 200 already-evaluated 1 MiB parse tokens under the cap");
+        fs::remove_all(temp_root, ignored);
+#endif
     }
 
     // #5946: real VFP9 SP2 rejects SPACE(300000000) with error 1903,
@@ -2518,6 +2594,7 @@ int main()
     test_str_rejects_oversized_width_instead_of_allocating();
     test_trim_family_supports_parse_characters_and_flags();
     test_trim_family_matches_whole_parse_string_tokens();
+    test_trim_parse_tokens_do_not_duplicate_evaluated_character_arguments();
     test_space_and_replicate_reject_oversized_requests();
     test_space_and_replicate_accept_values_truncating_to_the_ceiling();
     test_padl_padr_padc_truncate_to_leftmost_characters();
