@@ -15,6 +15,7 @@
 #include <atomic>
 #include <cmath>
 #include <chrono>
+#include <condition_variable>
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
@@ -22,6 +23,7 @@
 #include <limits>
 #include <locale>
 #include <functional>
+#include <mutex>
 #include <system_error>
 #include <thread>
 
@@ -1745,10 +1747,29 @@ namespace
         wildcard_match_poll_entered.store(false, std::memory_order_relaxed);
         release_wildcard_match_poll.store(false, std::memory_order_relaxed);
         copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(
-            pause_at_wildcard_match_poll);
+            pause_at_wildcard_match_poll,
+            20U);
         copperfin::runtime::RuntimePauseState cancel_state;
+        std::mutex runner_mutex;
+        std::condition_variable runner_condition;
+        bool runner_done = false;
         std::thread runner([&]() {
             cancel_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            {
+                std::lock_guard lock(runner_mutex);
+                runner_done = true;
+            }
+            runner_condition.notify_one();
+        });
+        std::thread runner_watchdog([&]() {
+            std::unique_lock lock(runner_mutex);
+            if (!runner_condition.wait_for(
+                    lock,
+                    std::chrono::seconds(8),
+                    [&]() { return runner_done; })) {
+                std::cerr << "FAIL: #7339: deterministic session cancellation runner exceeded the 8-second watchdog.\n";
+                std::abort();
+            }
         });
         const auto poll_deadline =
             std::chrono::steady_clock::now() + std::chrono::seconds(5);
@@ -1761,7 +1782,8 @@ namespace
         cancel_session.request_cancel();
         release_wildcard_match_poll.store(true, std::memory_order_release);
         runner.join();
-        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(nullptr);
+        runner_watchdog.join();
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(nullptr, 0U);
         const bool emitted_cancel_event = std::any_of(
             cancel_state.events.begin(),
             cancel_state.events.end(),

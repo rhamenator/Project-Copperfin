@@ -8,12 +8,16 @@
 #error "PRG string-function test hooks are available only in test builds."
 #endif
 
+#include <cstddef>
+
 namespace copperfin::runtime::test_hooks {
 
-// Installs a single-shot pause hook at the next wildcard matcher cancellation
-// poll. The hook runs synchronously on the evaluating thread and is compiled
-// only into test builds so session cancellation can be synchronized without a
-// wall-clock race.
-void set_wildcard_match_poll_test_hook(void (*hook)());
+// Installs a single-shot pause hook at the selected wildcard matcher
+// cancellation poll (1 means the next poll). The hook runs synchronously on
+// the evaluating thread and is compiled only into test builds so session
+// cancellation can be synchronized without a wall-clock race.
+void set_wildcard_match_poll_test_hook(
+    void (*hook)(),
+    std::size_t fire_on_poll);
 
 }  // namespace copperfin::runtime::test_hooks
