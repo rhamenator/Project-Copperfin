@@ -3586,6 +3586,11 @@ namespace copperfin::runtime
                 const auto found = memowidth_by_session.find(current_data_session);
                 return found != memowidth_by_session.end() ? found->second : 50U;
             },
+            [this]()
+            {
+                return task_cancel_requested != nullptr &&
+                    task_cancel_requested->load(std::memory_order_relaxed);
+            },
             [this, &frame](
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
@@ -10540,6 +10545,15 @@ namespace copperfin::runtime
                     break;
                 }
             }
+        }
+        catch (const PrgStringFunctionCancellation &)
+        {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            (void)handle_async_runtime_cancellation(
+                last_fault_location,
+                last_fault_statement,
+                runtime_text("Runtime.Prg.Core.Error.AsyncTaskCancelled"));
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const PrgCompatibilityError &error)
         {
