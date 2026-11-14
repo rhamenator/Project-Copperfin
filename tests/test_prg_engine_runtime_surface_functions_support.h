@@ -50,9 +50,10 @@ namespace copperfin::runtime_surface_tests
         local_target.tm_hour = 12;
         local_target.tm_isdst = -1;
         const std::time_t target_time = std::mktime(&local_target);
+        expect(target_time != static_cast<std::time_t>(-1),
+               "test fixture local timestamp should be representable");
         const auto target_system_time = std::chrono::system_clock::from_time_t(target_time);
-        const auto target_file_time = std::filesystem::file_time_type::clock::now() +
-            (target_system_time - std::chrono::system_clock::now());
+        const auto target_file_time = copperfin::platform::file_time_from_system_time(target_system_time);
         std::error_code error;
         std::filesystem::last_write_time(path, target_file_time, error);
         expect(!error, "test fixture last-write date should be set");

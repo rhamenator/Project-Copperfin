@@ -1102,12 +1102,16 @@ void test_lupdate_uses_file_timestamp_despite_malformed_header_date() {
     local_target.tm_year = 2020 - 1900;
     local_target.tm_mon = 1 - 1;
     local_target.tm_mday = 2;
-    local_target.tm_hour = 12;
+    // Midnight is deliberate: conversion must not sample two different clock
+    // epochs and shift a boundary timestamp into the preceding local day.
+    local_target.tm_hour = 0;
     local_target.tm_isdst = -1;
     const std::time_t target_time = std::mktime(&local_target);
+    expect(target_time != static_cast<std::time_t>(-1),
+           "LUPDATE() file-date test local timestamp should be representable");
     const auto target_system_time = std::chrono::system_clock::from_time_t(target_time);
-    const auto target_file_time = fs::file_time_type::clock::now() +
-        (target_system_time - std::chrono::system_clock::now());
+    const auto target_file_time =
+        copperfin::platform::file_time_from_system_time(target_system_time);
 
     const std::vector<std::array<unsigned char, 3U>> header_dates{
         {26U, 2U, 3U},   // valid, deliberately different from the file date
@@ -1174,6 +1178,33 @@ void test_lupdate_uses_file_timestamp_despite_malformed_header_date() {
     }
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_file_time_conversion_preserves_day_boundaries() {
+    const auto verify_round_trip = [](std::time_t raw_time, const std::string &label) {
+        const auto system_time = std::chrono::system_clock::from_time_t(raw_time);
+        const auto file_time = copperfin::platform::file_time_from_system_time(system_time);
+        const auto recovered = copperfin::platform::system_time_from_file_time(file_time);
+        expect(std::chrono::system_clock::to_time_t(recovered) == raw_time,
+               "file-time conversion should preserve " + label);
+    };
+
+    verify_round_trip(static_cast<std::time_t>(0), "the known Unix epoch");
+
+    std::tm local_end_of_day{};
+    local_end_of_day.tm_year = 2020 - 1900;
+    local_end_of_day.tm_mon = 1 - 1;
+    local_end_of_day.tm_mday = 2;
+    local_end_of_day.tm_hour = 23;
+    local_end_of_day.tm_min = 59;
+    local_end_of_day.tm_sec = 59;
+    local_end_of_day.tm_isdst = -1;
+    const std::time_t end_of_day = std::mktime(&local_end_of_day);
+    expect(end_of_day != static_cast<std::time_t>(-1),
+           "file-time end-of-day test timestamp should be representable");
+    if (end_of_day != static_cast<std::time_t>(-1)) {
+        verify_round_trip(end_of_day, "the local end-of-day boundary");
+    }
 }
 
 void test_eval_macro_and_runtime_state_semantics() {
@@ -2099,6 +2130,7 @@ int main() {
     test_do_command_macro_target();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();
+    test_file_time_conversion_preserves_day_boundaries();
     test_lupdate_uses_file_timestamp_despite_malformed_header_date();
     test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();

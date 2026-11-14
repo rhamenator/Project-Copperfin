@@ -704,8 +704,7 @@
 
         std::tm local_time_from_file_time(const std::filesystem::file_time_type &file_time)
         {
-            const auto system_time = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
-                file_time - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+            const auto system_time = copperfin::platform::system_time_from_file_time(file_time);
             const std::time_t raw_time = std::chrono::system_clock::to_time_t(system_time);
             return local_time_from_time_t(raw_time);
         }

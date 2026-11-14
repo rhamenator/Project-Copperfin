@@ -235,9 +235,9 @@ unsigned int DbfHeader::last_update_year_full() const {
     // -- every caller that needs `last_update_year` as a real calendar
     // year (not just `last_update_iso8601()`) must call this rather than
     // computing `1900 + last_update_year` directly, or it will silently
-    // reintroduce this exact bug for its own callers (found in review:
-    // the LUPDATE() runtime function had its own independent, unfixed
-    // copy of the old computation).
+    // reintroduce this exact bug for its own callers. LUPDATE() previously
+    // had an independent copy of the old computation, but now uses the
+    // table file's operating-system timestamp instead of this header date.
     constexpr unsigned int century_rollover_threshold = 80U;
     return (last_update_year < century_rollover_threshold)
         ? (2000U + static_cast<unsigned int>(last_update_year))
