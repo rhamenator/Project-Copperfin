@@ -116,6 +116,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_deferred_package_transaction_rolls_back_failed_second_build();
     test_package_output_names_reject_reserved_artifacts();
     test_manifest_pair_finalization_rejects_redirected_destinations();
+    test_package_output_root_rejects_embedded_nul();
     test_manifest_pair_directory_stays_pinned_and_never_overwrites();
     test_manifest_pair_finalization_rolls_back_failed_promotions();
     test_manifest_pair_finalization_recovers_stale_transactions();

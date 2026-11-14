@@ -84,6 +84,9 @@ bool inventory_generated_launcher_artifacts(
 bool validate_public_output_artifact_name(
     const RuntimePackagePlan& plan,
     std::string& error);
+bool validate_runtime_package_plan_path_text(
+    const RuntimePackagePlan& plan,
+    std::string& error);
 bool is_launcher_owned_digest(
     const RuntimeArtifactDigest& digest,
     const RuntimePackagePlan& plan);
