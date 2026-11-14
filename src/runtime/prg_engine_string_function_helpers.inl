@@ -11,6 +11,9 @@ bool wildcard_match_sequence_case_sensitive_local(
     const Symbol& question,
     const std::function<bool()>& cancellation_requested) {
     const auto check_cancellation = [&]() {
+#if defined(COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS)
+        fire_wildcard_match_poll_test_hook();
+#endif
         if (cancellation_requested && cancellation_requested()) {
             throw PrgStringFunctionCancellation{};
         }

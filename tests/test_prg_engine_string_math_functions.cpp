@@ -8,9 +8,11 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "../src/runtime/prg_compatibility_error.h"
 #include "../src/runtime/prg_engine_string_functions.h"
+#include "../src/runtime/prg_engine_string_function_test_hooks.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <chrono>
 #include <csignal>
@@ -46,6 +48,17 @@ namespace
 {
 
     using namespace copperfin::test_support;
+
+    std::atomic<bool> wildcard_match_poll_entered{false};
+    std::atomic<bool> release_wildcard_match_poll{false};
+
+    void pause_at_wildcard_match_poll()
+    {
+        wildcard_match_poll_entered.store(true, std::memory_order_release);
+        while (!release_wildcard_match_poll.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+    }
 
     class comma_decimal_numpunct final : public std::numpunct<char>
     {
@@ -1721,9 +1734,49 @@ namespace
         std::error_code cancel_ignored;
         fs::remove_all(cancel_root, cancel_ignored);
         fs::create_directories(cancel_root);
-        // The callback-counted assertion above deterministically exercises
-        // in-flight matcher cancellation. Verify the public session surface
-        // separately without racing a fixed sleep against matcher speed.
+        const fs::path cancel_path = cancel_root / "like_session_cancel.prg";
+        write_text(
+            cancel_path,
+            "cExpr=\"LIKE('*'+REPLICATE('a',100000)+'b',REPLICATE('a',200000)+'*c')\"\n"
+            "hit=&cExpr\n"
+            "RETURN\n");
+        auto cancel_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(cancel_path.string(), cancel_root.string()));
+        wildcard_match_poll_entered.store(false, std::memory_order_relaxed);
+        release_wildcard_match_poll.store(false, std::memory_order_relaxed);
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(
+            pause_at_wildcard_match_poll);
+        copperfin::runtime::RuntimePauseState cancel_state;
+        std::thread runner([&]() {
+            cancel_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        });
+        const auto poll_deadline =
+            std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (!wildcard_match_poll_entered.load(std::memory_order_acquire) &&
+               std::chrono::steady_clock::now() < poll_deadline) {
+            std::this_thread::yield();
+        }
+        const bool reached_matcher =
+            wildcard_match_poll_entered.load(std::memory_order_acquire);
+        cancel_session.request_cancel();
+        release_wildcard_match_poll.store(true, std::memory_order_release);
+        runner.join();
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(nullptr);
+        const bool emitted_cancel_event = std::any_of(
+            cancel_state.events.begin(),
+            cancel_state.events.end(),
+            [](const copperfin::runtime::RuntimeEvent& event) {
+                return event.category == "runtime.task.cancelled";
+            });
+        expect(reached_matcher && !cancel_state.completed &&
+                   cancel_state.message == "Async task cancelled." &&
+                   emitted_cancel_event,
+               "#7339: deterministic in-flight session cancellation during literal-star-compatible LIKE should use the runtime cancellation path; reached_matcher=" +
+                   std::string(reached_matcher ? "true" : "false") +
+                   " completed=" + std::string(cancel_state.completed ? "true" : "false") +
+                   " message=" + cancel_state.message +
+                   " cancel_event=" + (emitted_cancel_event ? "true" : "false"));
+
         const fs::path watch_path = cancel_root / "like_watch_cancel.prg";
         write_text(watch_path, "x=1\ny=2\nRETURN\n");
         auto watch_session = copperfin::runtime::PrgRuntimeSession::create(
