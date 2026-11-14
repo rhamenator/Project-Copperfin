@@ -28,8 +28,16 @@ test, and installer contract reject undeclared directories or unexpected
 per-locale artifacts. The generator additionally rejects invalid UTF-8; the
 generator and native parity test reject missing keys, blank values, and changed
 placeholders; and the installer contract rejects missing or changed installed
-artifacts. `unreviewed` reports review status, not
-content completeness; equal key counts do not establish translation quality.
+artifacts. The generator admits the inventory, managed catalog source, and each
+`strings.json` only as regular files: links, FIFOs, directories, and other
+nonregular inputs fail in both check and synchronization modes. Catalog updates
+use a same-directory temporary file and replace the admitted catalog entry
+without following a linked final target. These checks fail closed for links
+already present in the selected checkout; callers must retain exclusive control
+of the checkout during generation because concurrent catalog edits or
+parent-directory rebinding are outside this host tool's contract. `unreviewed`
+reports review status, not content completeness; equal key counts do not
+establish translation quality.
 
 The source-of-truth locale is `en-US`. Placeholder catalogs currently exist for `es-419`, `pt-BR`, and `qps-ploc`. The Spanish and Portuguese catalogs are not production-ready language packs until a separate reviewed language-pack issue says so.
 

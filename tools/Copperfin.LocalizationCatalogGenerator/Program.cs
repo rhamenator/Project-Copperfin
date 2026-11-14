@@ -1,7 +1,10 @@
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Copperfin.VisualStudio;
+using Microsoft.Win32.SafeHandles;
 
 if (args.Length != 1 && args.Length != 2)
 {
@@ -13,14 +16,174 @@ var repositoryRoot = Path.GetFullPath(args[0]);
 var checkOnly = args.Length == 2 && string.Equals(args[1], "--check", StringComparison.Ordinal);
 var localeRoot = Path.Combine(repositoryRoot, "resources", "locales");
 var strictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-string ReadStrictUtf8(string path)
+const int maximumManagedInputBytes = 64 * 1024 * 1024;
+
+void EnsureNoLinkedAncestors(string path, string description)
 {
-    var bytes = File.ReadAllBytes(path);
+    var relative = Path.GetRelativePath(repositoryRoot, Path.GetFullPath(path));
+    if (Path.IsPathRooted(relative) || relative == ".." ||
+        relative.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+        relative.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal))
+    {
+        throw new InvalidDataException($"{description} must remain inside the repository root: {path}");
+    }
+
+    var rootAttributes = File.GetAttributes(repositoryRoot);
+    if ((rootAttributes & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != FileAttributes.Directory)
+    {
+        throw new InvalidDataException($"Repository root must be a regular directory, not a link: {repositoryRoot}");
+    }
+
+    var parent = Path.GetDirectoryName(relative);
+    if (string.IsNullOrEmpty(parent))
+    {
+        return;
+    }
+
+    var current = repositoryRoot;
+    foreach (var component in parent.Split(
+                 [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                 StringSplitOptions.RemoveEmptyEntries))
+    {
+        current = Path.Combine(current, component);
+        var attributes = File.GetAttributes(current);
+        if ((attributes & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != FileAttributes.Directory)
+        {
+            throw new InvalidDataException(
+                $"{description} ancestor must be a regular directory, not a link: {current}");
+        }
+    }
+}
+
+FileStream OpenRegularFileForRead(string path, string description)
+{
+    EnsureNoLinkedAncestors(path, description);
+    var attributes = File.GetAttributes(path);
+    if ((attributes & (FileAttributes.Directory | FileAttributes.ReparsePoint | FileAttributes.Device)) != 0)
+    {
+        throw new InvalidDataException($"{description} must be a regular file, not a link: {path}");
+    }
+
+    if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+    {
+        var linuxNoFollow = RuntimeInformation.ProcessArchitecture is
+            Architecture.Arm or Architecture.Arm64 or Architecture.Armv6 or Architecture.Ppc64le
+            ? NativeMethods.LinuxArmOpenNoFollow
+            : NativeMethods.LinuxOpenNoFollow;
+        var flags = OperatingSystem.IsMacOS()
+            ? NativeMethods.MacOpenNonBlocking | NativeMethods.MacOpenNoFollow | NativeMethods.MacOpenCloseOnExec
+            : NativeMethods.LinuxOpenNonBlocking | linuxNoFollow | NativeMethods.LinuxOpenCloseOnExec;
+        var descriptor = NativeMethods.Open(path, flags, 0);
+        if (descriptor < 0)
+        {
+            var error = Marshal.GetLastPInvokeError();
+            throw new InvalidDataException(
+                $"{description} must be an existing regular file, not a link: {path}",
+                new Win32Exception(error));
+        }
+
+        var handle = new SafeFileHandle((IntPtr)descriptor, ownsHandle: true);
+        var regular = OperatingSystem.IsLinux()
+            ? NativeMethods.IsLinuxRegularFile(descriptor)
+            : NativeMethods.IsMacRegularFile(descriptor);
+        if (!regular)
+        {
+            handle.Dispose();
+            throw new InvalidDataException($"{description} must be a regular file: {path}");
+        }
+
+        return new FileStream(handle, FileAccess.Read);
+    }
+
+    return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+}
+
+string ReadStrictUtf8(string path, string description)
+{
+    using var stream = OpenRegularFileForRead(path, description);
+    using var buffer = new MemoryStream();
+    var block = new byte[81920];
+    while (true)
+    {
+        var count = stream.Read(block, 0, block.Length);
+        if (count == 0)
+        {
+            break;
+        }
+        if (buffer.Length + count > maximumManagedInputBytes)
+        {
+            throw new InvalidDataException(
+                $"{description} exceeds the {maximumManagedInputBytes}-byte input limit: {path}");
+        }
+        buffer.Write(block, 0, count);
+    }
+    var bytes = buffer.ToArray();
     var offset = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
     return strictUtf8.GetString(bytes, offset, bytes.Length - offset);
 }
+
+void WriteCatalogAtomically(string path, string content)
+{
+    using (OpenRegularFileForRead(path, "Locale catalog"))
+    {
+    }
+
+    var directory = Path.GetDirectoryName(path)
+        ?? throw new InvalidDataException($"Catalog has no parent directory: {path}");
+    var temporaryPath = Path.Combine(directory, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+    UnixFileMode? unixMode = null;
+    if (!OperatingSystem.IsWindows())
+    {
+        unixMode = File.GetUnixFileMode(path);
+        const UnixFileMode writable = UnixFileMode.UserWrite | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite;
+        if ((unixMode & writable) == 0)
+        {
+            throw new UnauthorizedAccessException($"Locale catalog is read-only: {path}");
+        }
+    }
+    else if ((File.GetAttributes(path) & FileAttributes.ReadOnly) != 0)
+    {
+        throw new UnauthorizedAccessException($"Locale catalog is read-only: {path}");
+    }
+
+    try
+    {
+        var bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(content);
+        using (var stream = new FileStream(
+                   temporaryPath,
+                   FileMode.CreateNew,
+                   FileAccess.Write,
+                   FileShare.None,
+                   bufferSize: 4096,
+                   FileOptions.WriteThrough))
+        {
+            stream.Write(bytes);
+            stream.Flush(flushToDisk: true);
+        }
+        if (!OperatingSystem.IsWindows() && unixMode is { } mode)
+        {
+            File.SetUnixFileMode(temporaryPath, mode);
+        }
+
+        // Re-admit the destination immediately before replacement. File.Move
+        // replaces a raced link entry rather than opening its outside target.
+        using (OpenRegularFileForRead(path, "Locale catalog"))
+        {
+        }
+        File.Move(temporaryPath, path, overwrite: true);
+        temporaryPath = string.Empty;
+    }
+    finally
+    {
+        if (temporaryPath.Length > 0)
+        {
+            File.Delete(temporaryPath);
+        }
+    }
+}
 var inventoryLines = new List<string>();
-using (var inventoryReader = new StringReader(ReadStrictUtf8(Path.Combine(localeRoot, "inventory.txt"))))
+using (var inventoryReader = new StringReader(ReadStrictUtf8(
+           Path.Combine(localeRoot, "inventory.txt"), "Locale inventory")))
 {
     while (inventoryReader.ReadLine() is { } line)
     {
@@ -86,7 +249,7 @@ foreach (var locale in locales.Keys)
     }
 }
 var sourceEntries = JsonSerializer.Deserialize<Dictionary<string, string>>(
-    ReadStrictUtf8(Path.Combine(localeRoot, "en-US", "strings.json")))
+    ReadStrictUtf8(Path.Combine(localeRoot, "en-US", "strings.json"), "Locale catalog"))
     ?? throw new InvalidDataException("Source catalog is missing or malformed.");
 var placeholderPattern = new Regex("\\{(?<name>[^{}]+)\\}");
 string[] Placeholders(string value) => placeholderPattern.Matches(value)
@@ -106,7 +269,9 @@ var managedCatalogKeys = new Dictionary<string, HashSet<string>>(StringComparer.
     [CopperfinLocalization.PortugueseBrazilLocale] = new HashSet<string>(StringComparer.Ordinal)
 };
 var managedKeyPattern = new Regex("^\\s*\\[\\\"(?<key>[^\\\"]+)\\\"\\]\\s*=", RegexOptions.Compiled);
-foreach (var line in File.ReadLines(managedCatalogSourcePath))
+using var managedCatalogReader = new StringReader(
+    ReadStrictUtf8(managedCatalogSourcePath, "Managed catalog source"));
+while (managedCatalogReader.ReadLine() is { } line)
 {
     if (line.Contains("[DefaultLocale] = new Dictionary", StringComparison.Ordinal))
     {
@@ -135,7 +300,7 @@ foreach (var locale in locales)
 {
     var isPseudoLocale = string.Equals(locale.Key, "qps-ploc", StringComparison.Ordinal);
     var catalogPath = Path.Combine(repositoryRoot, "resources", "locales", locale.Key, "strings.json");
-    var catalogText = ReadStrictUtf8(catalogPath);
+    var catalogText = ReadStrictUtf8(catalogPath, "Locale catalog");
     var existingValues = new Dictionary<string, string>(StringComparer.Ordinal);
     var seenKeys = new HashSet<string>(StringComparer.Ordinal);
     using (var document = JsonDocument.Parse(catalogText))
@@ -215,10 +380,9 @@ foreach (var locale in locales)
             ",\n",
             missingEntries.Select(entry =>
                 $"  {JsonSerializer.Serialize(entry.Key, options)}: {JsonSerializer.Serialize(entry.Value, options)}"));
-        File.WriteAllText(
+        WriteCatalogAtomically(
             catalogPath,
-            prefix + separator + additions + "\n}\n",
-            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            prefix + separator + additions + "\n}\n");
     }
 
     if (checkOnly)
@@ -253,3 +417,59 @@ Console.WriteLine(checkOnly
     ? "Managed localization catalog parity passed."
     : "Managed localization entries synchronized into shared catalogs.");
 return 0;
+
+internal static class NativeMethods
+{
+    internal const int LinuxOpenNonBlocking = 0x00000800;
+    internal const int LinuxOpenNoFollow = 0x00020000;
+    internal const int LinuxArmOpenNoFollow = 0x00008000;
+    internal const int LinuxOpenCloseOnExec = 0x00080000;
+    internal const int MacOpenNonBlocking = 0x00000004;
+    internal const int MacOpenNoFollow = 0x00000100;
+    internal const int MacOpenCloseOnExec = 0x01000000;
+    private const int AtEmptyPath = 0x00001000;
+    private const uint StatxType = 0x00000001;
+    private const ushort FileTypeMask = 0xF000;
+    private const ushort RegularFileType = 0x8000;
+
+    [DllImport("libc", EntryPoint = "open", SetLastError = true)]
+    internal static extern int Open(string path, int flags, int mode);
+
+    [DllImport("libc", EntryPoint = "statx", SetLastError = true)]
+    private static extern int Statx(
+        int directoryDescriptor,
+        string path,
+        int flags,
+        uint mask,
+        out LinuxStatx result);
+
+    [DllImport("libc", EntryPoint = "fstat", SetLastError = true)]
+    private static extern int MacFstat(int descriptor, IntPtr result);
+
+    internal static bool IsLinuxRegularFile(int descriptor)
+    {
+        return Statx(descriptor, string.Empty, AtEmptyPath, StatxType, out var result) == 0 &&
+            (result.Mode & FileTypeMask) == RegularFileType;
+    }
+
+    internal static bool IsMacRegularFile(int descriptor)
+    {
+        var result = Marshal.AllocHGlobal(256);
+        try
+        {
+            return MacFstat(descriptor, result) == 0 &&
+                ((ushort)Marshal.ReadInt16(result, 4) & FileTypeMask) == RegularFileType;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(result);
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 256)]
+    private struct LinuxStatx
+    {
+        [FieldOffset(28)]
+        internal ushort Mode;
+    }
+}
