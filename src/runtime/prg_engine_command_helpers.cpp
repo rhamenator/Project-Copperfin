@@ -407,7 +407,12 @@ std::string format_total_numeric_value(double value, std::uint8_t decimal_count)
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
     if (decimal_count == 0U) {
-        stream << static_cast<long long>(std::llround(value));
+        const double rounded = std::round(value);
+        if (rounded == 0.0) {
+            stream << '0';
+        } else {
+            stream << std::fixed << std::setprecision(0) << rounded;
+        }
     } else {
         stream << std::fixed << std::setprecision(decimal_count) << value;
     }

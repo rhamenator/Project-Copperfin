@@ -124,6 +124,7 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while();
 void test_command_level_aggregate_scope_and_while_semantics();
 void test_aggregate_helpers_tolerate_non_numeric_field_text();
 void test_total_command_for_local_tables();
+void test_total_command_preserves_large_positive_numeric_sum();
 void test_total_numeric_formatting_ignores_global_locale();
 void test_total_command_tolerates_non_numeric_field_text();
 void test_total_command_errors_use_default_locale_messages();
