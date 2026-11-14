@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <chrono>
+#include <ctime>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -37,6 +39,24 @@
 namespace copperfin::runtime_surface_tests
 {
     using namespace copperfin::test_support;
+
+    inline void set_file_last_write_local_date(
+        const std::filesystem::path &path, int year, int month, int day)
+    {
+        std::tm local_target{};
+        local_target.tm_year = year - 1900;
+        local_target.tm_mon = month - 1;
+        local_target.tm_mday = day;
+        local_target.tm_hour = 12;
+        local_target.tm_isdst = -1;
+        const std::time_t target_time = std::mktime(&local_target);
+        const auto target_system_time = std::chrono::system_clock::from_time_t(target_time);
+        const auto target_file_time = std::filesystem::file_time_type::clock::now() +
+            (target_system_time - std::chrono::system_clock::now());
+        std::error_code error;
+        std::filesystem::last_write_time(path, target_file_time, error);
+        expect(!error, "test fixture last-write date should be set");
+    }
 
     inline int expected_host_code_page()
     {

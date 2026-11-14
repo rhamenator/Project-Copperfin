@@ -6,10 +6,13 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
+#include <array>
+#include <chrono>
 #include <cerrno>
 #include <cctype>
 #include <cstdlib>
 #include <cstdint>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -1082,21 +1085,12 @@ void test_work_area_and_data_session_compatibility() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_lupdate_reports_full_calendar_year_matching_last_update_iso8601() {
-    // #5527 review (Codex, Copilot -- duplicate P1 finding): LUPDATE()
-    // had its own independent copy of the "1900 + last_update_year"
-    // computation, so it kept returning the pre-#5527 (wrong) year for
-    // any real post-1999 two-digit-year byte even after
-    // DbfHeader::last_update_iso8601() was fixed -- the two would
-    // silently disagree about the same file's last-update year. Fixed by
-    // routing LUPDATE() through the same shared
-    // DbfHeader::last_update_year_full() helper; this proves the runtime
-    // function itself, not just the underlying header accessor, now
-    // agrees with last_update_iso8601() for a table genuinely stamped by
-    // create_dbf_table_file() (which writes the real two-digit-year
-    // convention as of #5527).
+void test_lupdate_uses_file_timestamp_despite_malformed_header_date() {
+    // #7265: installed VFP9 derives LUPDATE() from the table file's local
+    // last-write date. DBF header bytes 1..3 do not affect the result, even
+    // when they are all zero or do not form a calendar date.
     namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lupdate_century";
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lupdate_file_date";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
@@ -1104,34 +1098,79 @@ void test_lupdate_reports_full_calendar_year_matching_last_update_iso8601() {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "ID", .type = 'N', .length = 5U, .decimal_count = 0U},
     };
-    const auto create_result = copperfin::vfp::create_dbf_table_file(
-        (temp_root / "stamped.dbf").string(), fields, {{"1"}});
-    expect(create_result.ok, "LUPDATE() century test fixture should be created");
+    std::tm local_target{};
+    local_target.tm_year = 2020 - 1900;
+    local_target.tm_mon = 1 - 1;
+    local_target.tm_mday = 2;
+    local_target.tm_hour = 12;
+    local_target.tm_isdst = -1;
+    const std::time_t target_time = std::mktime(&local_target);
+    const auto target_system_time = std::chrono::system_clock::from_time_t(target_time);
+    const auto target_file_time = fs::file_time_type::clock::now() +
+        (target_system_time - std::chrono::system_clock::now());
 
-    const auto header_result = copperfin::vfp::parse_dbf_header_from_file((temp_root / "stamped.dbf").string());
-    expect(header_result.ok, "LUPDATE() century test fixture header should be readable");
-    const std::string expected_year =
-        header_result.ok ? header_result.header.last_update_iso8601().substr(0U, 4U) : std::string{};
+    const std::vector<std::array<unsigned char, 3U>> header_dates{
+        {26U, 2U, 3U},   // valid, deliberately different from the file date
+        {0U, 0U, 0U},    // blank header date
+        {26U, 13U, 1U},  // impossible month
+        {26U, 1U, 32U},  // impossible day
+        {23U, 2U, 29U},  // invalid leap day
+        {26U, 0U, 3U},   // partially zero
+    };
+    const fs::path main_path = temp_root / "lupdate_file_date.prg";
+    for (std::size_t index = 0U; index < header_dates.size(); ++index) {
+        const fs::path table_path = temp_root / ("case_" + std::to_string(index) + ".dbf");
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(), fields, {{"1"}});
+        expect(create_result.ok, "LUPDATE() file-date test fixture should be created");
+        {
+            std::fstream table(table_path, std::ios::in | std::ios::out | std::ios::binary);
+            expect(table.good(), "LUPDATE() file-date test fixture should be writable");
+            table.seekp(1, std::ios::beg);
+            const auto &bytes = header_dates[index];
+            table.write(reinterpret_cast<const char *>(bytes.data()),
+                        static_cast<std::streamsize>(bytes.size()));
+            expect(table.good(), "LUPDATE() file-date test header bytes should be patched");
+        }
+        std::error_code timestamp_error;
+        fs::last_write_time(table_path, target_file_time, timestamp_error);
+        expect(!timestamp_error, "LUPDATE() file-date test timestamp should be set");
 
-    const fs::path main_path = temp_root / "lupdate_century.prg";
-    write_text(
-        main_path,
-        "PUBLIC nYear\n"
-        "USE '" + (temp_root / "stamped.dbf").string() + "'\n"
-        "nYear = YEAR(LUPDATE())\n"
-        "RETURN\n");
+        write_text(
+            main_path,
+            "PUBLIC cType, lEmpty, nYear, nMonth, nDay, cDisplay\n"
+            "SET DATE AMERICAN\n"
+            "SET CENTURY ON\n"
+            "SET MARK TO '/'\n"
+            "USE '" + table_path.string() + "'\n"
+            "dObserved = LUPDATE()\n"
+            "cType = VARTYPE(dObserved)\n"
+            "lEmpty = EMPTY(dObserved)\n"
+            "nYear = YEAR(dObserved)\n"
+            "nMonth = MONTH(dObserved)\n"
+            "nDay = DAY(dObserved)\n"
+            "cDisplay = DTOC(dObserved)\n"
+            "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-        make_runtime_session_options(main_path.string(), temp_root.string()));
-    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "LUPDATE() century script should complete: " + state.message);
-
-    const auto year_global = state.globals.find("nyear");
-    expect(year_global != state.globals.end(), "YEAR(LUPDATE()) result should be available to PRG code");
-    if (year_global != state.globals.end() && header_result.ok) {
-        expect(copperfin::runtime::format_value(year_global->second) == expected_year,
-               "LUPDATE() should report the same full calendar year as last_update_iso8601() for the same file, "
-               "not the pre-#5527 1900 + raw-byte computation");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "LUPDATE() file-date script should complete: " + state.message);
+        const auto require_global = [&](const std::string &name, const std::string &expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), "LUPDATE() should publish " + name);
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       "LUPDATE() " + name + " should come from the file timestamp for header case " +
+                           std::to_string(index));
+            }
+        };
+        require_global("ctype", "D");
+        require_global("lempty", "false");
+        require_global("nyear", "2020");
+        require_global("nmonth", "1");
+        require_global("nday", "2");
+        require_global("cdisplay", "01/02/2020");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -2060,7 +2099,7 @@ int main() {
     test_do_command_macro_target();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();
-    test_lupdate_reports_full_calendar_year_matching_last_update_iso8601();
+    test_lupdate_uses_file_timestamp_despite_malformed_header_date();
     test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();
     test_sql_pass_through_rows_affected_and_provider_hint();

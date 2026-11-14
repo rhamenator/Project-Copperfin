@@ -79,7 +79,7 @@
         fs::remove_all(temp_root, ignored);
     }
 
-    void test_lupdate_reads_table_header_date_and_designator_variants()
+    void test_lupdate_reads_file_date_and_designator_variants()
     {
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_lupdate";
@@ -95,19 +95,15 @@
             {{.name = "NAME", .type = 'C', .length = 24U}},
             {{"Alpha"}});
         expect(create_result.ok, "LUPDATE dated fixture should be writable");
-        // Force a specific, deterministic date rather than relying on
-        // create_dbf_table_file()'s now-stamped creation-time date (today).
-        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+        set_file_last_write_local_date(table_path, 2024, 3, 15);
 
         const auto create_blank_result = copperfin::vfp::create_dbf_table_file(
             blank_table_path.string(),
             {{.name = "NAME", .type = 'C', .length = 24U}},
             {{"Beta"}});
         expect(create_blank_result.ok, "LUPDATE blank fixture should be writable");
-        // create_dbf_table_file() now stamps today's date on creation
-        // (RQ-CF-PRG-012); force a genuinely undated header to keep
-        // exercising LUPDATE()'s blank-date fallback path.
         write_dbf_last_update_bytes(blank_table_path, 0U, 0U, 0U);
+        set_file_last_write_local_date(blank_table_path, 2021, 4, 5);
 
         write_text(
             program_path,
@@ -149,11 +145,11 @@
         };
 
         expect(value_for("dselected") == "03/15/2024",
-               "LUPDATE() with no arguments should return the selected work area's table header date");
-        expect(value_for("dbyalias").empty(),
-               "LUPDATE('fresh') should return a blank date for a table whose header was never dated");
+               "LUPDATE() with no arguments should return the selected table's filesystem last-write date");
+        expect(value_for("dbyalias") == "04/05/2021",
+               "LUPDATE('fresh') should ignore an all-zero DBF header date and return the file date");
         expect(value_for("dbyworkarea") == "03/15/2024",
-               "LUPDATE(nWorkArea) should return the given work area's table header date");
+               "LUPDATE(nWorkArea) should return the given work area's file date");
         expect(value_for("demptyworkarea").empty(),
                "LUPDATE(nWorkArea) should return a blank date when no table is open in that valid work area");
         expect(value_for("nerrorcount") == "2",
@@ -182,7 +178,7 @@
             {{.name = "NAME", .type = 'C', .length = 24U}},
             {{"Alpha"}});
         expect(create_result.ok, "LUPDATE SET DATE fixture should be writable");
-        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+        set_file_last_write_local_date(table_path, 2024, 3, 15);
 
         write_text(
             program_path,
@@ -231,7 +227,7 @@
              {.name = "AREACUR", .type = 'Y', .length = 8U}},
             {{"Alpha", "1.0000"}});
         expect(create_result.ok, "LUPDATE designator-edge-case fixture should be writable");
-        write_dbf_last_update_bytes(table_path, 124U, 3U, 15U); // 1900 + 124 = 2024-03-15
+        set_file_last_write_local_date(table_path, 2024, 3, 15);
 
         // AREACUR holds the Currency value 1: value_as_string() would render it as
         // "1.0000", which a naive integer-text parse rejects even though it names the
