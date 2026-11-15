@@ -48,6 +48,8 @@ std::string normalize_export_symbol(std::string value);
 std::string json_escape(std::string_view value);
 std::string extract_declared_parameter_name(const std::string& raw_name);
 std::string sanitize_cpp_identifier(const std::string& value, const std::size_t fallback_index);
+std::vector<std::string> build_cpp_parameter_identifiers(
+    const std::vector<std::string>& parameter_names);
 std::string sanitize_csharp_identifier(std::string value, const std::string& fallback);
 std::string sanitize_csharp_routine_identifier(std::string value, const std::string& fallback);
 std::string unquote_literal(std::string value);
