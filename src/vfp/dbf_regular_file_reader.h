@@ -26,12 +26,19 @@ namespace copperfin::vfp::detail {
 struct RegularFileReadResult {
     bool ok = false;
     std::vector<std::uint8_t> bytes;
+    enum class Failure {
+        none,
+        open_failed,
+        not_regular,
+        read_failed,
+    } failure = Failure::open_failed;
 };
 
 // Opens without waiting for a FIFO writer, admits the opened object only when
 // it is a regular file, and reads from that same descriptor/handle. Symlinks
 // retain their existing follow-to-target behavior; their resolved target must
-// be regular. max_bytes permits header-only callers to keep their bounded read.
+// be regular. Failure distinguishes open failure from failures after acquiring
+// a handle. max_bytes permits header-only callers to keep their bounded read.
 inline RegularFileReadResult read_regular_file(
     const std::filesystem::path& path,
     std::size_t max_bytes = std::numeric_limits<std::size_t>::max()) {
@@ -43,12 +50,20 @@ inline RegularFileReadResult read_regular_file(
         path.c_str(), GENERIC_READ,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-    if (!handle.valid() || ::GetFileType(handle.get()) != FILE_TYPE_DISK) {
+    if (!handle.valid()) {
+        return result;
+    }
+    if (::GetFileType(handle.get()) != FILE_TYPE_DISK) {
+        result.failure = RegularFileReadResult::Failure::not_regular;
         return result;
     }
     BY_HANDLE_FILE_INFORMATION information{};
-    if (::GetFileInformationByHandle(handle.get(), &information) == 0 ||
-        (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+    if (::GetFileInformationByHandle(handle.get(), &information) == 0) {
+        result.failure = RegularFileReadResult::Failure::read_failed;
+        return result;
+    }
+    if ((information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        result.failure = RegularFileReadResult::Failure::not_regular;
         return result;
     }
     const std::uint64_t file_size =
@@ -64,7 +79,8 @@ inline RegularFileReadResult read_regular_file(
         if (::ReadFile(
                 handle.get(), buffer.data(), static_cast<DWORD>(requested),
                 &bytes_read, nullptr) == 0) {
-            return {};
+            result.failure = RegularFileReadResult::Failure::read_failed;
+            return result;
         }
         if (bytes_read == 0U) {
             break;
@@ -79,12 +95,18 @@ inline RegularFileReadResult read_regular_file(
         return result;
     }
     struct stat status {};
-    if (::fstat(descriptor.get(), &status) != 0 || !S_ISREG(status.st_mode)) {
+    if (::fstat(descriptor.get(), &status) != 0) {
+        result.failure = RegularFileReadResult::Failure::read_failed;
+        return result;
+    }
+    if (!S_ISREG(status.st_mode)) {
+        result.failure = RegularFileReadResult::Failure::not_regular;
         return result;
     }
     const int descriptor_flags = ::fcntl(descriptor.get(), F_GETFL);
     if (descriptor_flags < 0 ||
         ::fcntl(descriptor.get(), F_SETFL, descriptor_flags & ~O_NONBLOCK) != 0) {
+        result.failure = RegularFileReadResult::Failure::read_failed;
         return result;
     }
     if (status.st_size > 0 &&
@@ -109,11 +131,13 @@ inline RegularFileReadResult read_regular_file(
         if (errno == EINTR) {
             continue;
         }
-        return {};
+        result.failure = RegularFileReadResult::Failure::read_failed;
+        return result;
     }
 #endif
 
     result.ok = true;
+    result.failure = RegularFileReadResult::Failure::none;
     return result;
 }
 
