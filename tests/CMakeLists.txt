@@ -4681,6 +4681,13 @@ copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
 
+# RQ-CF-VFP-ACCESS-DESIGN-REGULAR-FILE-001: Access SaveAsText design-file
+# parsing binds regular-file admission to the opened object and never blocks on
+# POSIX FIFOs.
+copperfin_add_test(test_access_saveastext_design_regular_file_admission cf_vfp_assets
+    test_access_saveastext_design_regular_file_admission.cpp
+)
+
 # RQ-CF-VFP-DBC-CATALOG-REGULAR-FILE-001: DBC catalog readers bind
 # regular-file admission to the opened object and never block on POSIX FIFOs.
 copperfin_add_test(test_dbc_catalog_regular_file_admission cf_vfp_assets

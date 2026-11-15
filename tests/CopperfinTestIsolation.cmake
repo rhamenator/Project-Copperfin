@@ -2536,6 +2536,19 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_access_saveastext_design_regular_file_admission
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        CLOCK monotonic-deadline
+        RANDOMNESS test-owned-unique
+        GLOBAL_STATE none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_dbc_catalog_regular_file_admission
         PARALLEL_SAFE
         FILESYSTEM test-owned-unique
