@@ -11,6 +11,9 @@ bool wildcard_match_sequence_case_sensitive_local(
     const Symbol& question,
     const std::function<bool()>& cancellation_requested) {
     const auto check_cancellation = [&]() {
+#if defined(COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS)
+        fire_wildcard_match_poll_test_hook();
+#endif
         if (cancellation_requested && cancellation_requested()) {
             throw PrgStringFunctionCancellation{};
         }
@@ -47,8 +50,7 @@ bool wildcard_match_sequence_case_sensitive_local(
     // Preserve the established greedy matcher byte-for-byte for short
     // patterns. Its worst case is linear in text length when the pattern
     // length is fixed, and this avoids packed-state allocation on the hot
-    // ordinary-call path (including the historical literal-'*' precedence
-    // when the input itself contains '*').
+    // ordinary-call path.
     bool text_contains_star = false;
     std::size_t star_scan_index = 0U;
     for (const Symbol& symbol : text) {
@@ -60,7 +62,7 @@ bool wildcard_match_sequence_case_sensitive_local(
             break;
         }
     }
-    if (pattern.size() <= 64U || text_contains_star) {
+    if (pattern.size() <= 64U) {
         std::size_t pattern_index = 0U;
         std::size_t text_index = 0U;
         const std::size_t no_star = std::numeric_limits<std::size_t>::max();
@@ -88,6 +90,226 @@ bool wildcard_match_sequence_case_sensitive_local(
             ++pattern_index;
         }
         return pattern_index == pattern.size();
+    }
+    if (text_contains_star) {
+        std::size_t star_count = 0U;
+        std::size_t single_star_index = 0U;
+        for (std::size_t index = 0U; index < pattern.size(); ++index) {
+            if ((index & 1023U) == 0U) {
+                check_cancellation();
+            }
+            if (pattern[index] == star) {
+                ++star_count;
+                single_star_index = index;
+            }
+        }
+        if (star_count == 1U) {
+            // With one wildcard the greedy retry can only align the suffix at
+            // the end of the text. Handle that directly in linear time. If
+            // the unactivated star is already aligned with a literal star,
+            // legacy precedence consumes exactly that symbol and never saves
+            // a retry position.
+            for (std::size_t index = 0U; index < single_star_index; ++index) {
+                if ((index & 1023U) == 0U) {
+                    check_cancellation();
+                }
+                if (index >= text.size() ||
+                    (pattern[index] != question && pattern[index] != text[index])) {
+                    return false;
+                }
+            }
+            std::size_t text_suffix_index = single_star_index;
+            if (text_suffix_index < text.size() &&
+                text[text_suffix_index] == star) {
+                ++text_suffix_index;
+            } else {
+                const std::size_t suffix_size = pattern.size() - single_star_index - 1U;
+                if (suffix_size > text.size() - text_suffix_index) {
+                    return false;
+                }
+                text_suffix_index = text.size() - suffix_size;
+                if (text_suffix_index < single_star_index) {
+                    return false;
+                }
+            }
+            const std::size_t suffix_size = pattern.size() - single_star_index - 1U;
+            if (text.size() - text_suffix_index != suffix_size) {
+                return false;
+            }
+            for (std::size_t offset = 0U; offset < suffix_size; ++offset) {
+                if ((offset & 1023U) == 0U) {
+                    check_cancellation();
+                }
+                const Symbol& pattern_symbol = pattern[single_star_index + 1U + offset];
+                if (pattern_symbol != question &&
+                    pattern_symbol != text[text_suffix_index + offset]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // The legacy matcher gives an aligned '*' in pattern and text literal
+        // precedence before it records that pattern position as a wildcard.
+        // Retain that observable result without returning to suffix rescans:
+        // `active` tracks pattern positions not yet activated as wildcards,
+        // while `activated_stars` tracks saved-star retry positions. For a
+        // literal '*' only the former consume it literally; saved stars may
+        // still consume it as wildcard text. For every other symbol, the
+        // epsilon closure activates and crosses star runs before matching.
+        constexpr std::size_t bits_per_word = 64U;
+        const std::size_t state_count = pattern.size() + 1U;
+        const std::size_t word_count =
+            (state_count + bits_per_word - 1U) / bits_per_word;
+        using BitWords = std::vector<std::uint64_t>;
+        BitWords star_states(word_count, 0U);
+        BitWords question_states(word_count, 0U);
+        bool has_consecutive_stars = false;
+        std::unordered_map<Symbol, std::vector<std::size_t>> literal_positions;
+        std::unordered_map<Symbol, BitWords> frequent_literal_states;
+        const auto set_bit = [](BitWords& words, std::size_t bit) {
+            words[bit / bits_per_word] |=
+                std::uint64_t{1U} << (bit % bits_per_word);
+        };
+        const auto bit_is_set = [](const BitWords& words, std::size_t bit) {
+            return (words[bit / bits_per_word] &
+                    (std::uint64_t{1U} << (bit % bits_per_word))) != 0U;
+        };
+        for (std::size_t index = 0U; index < pattern.size(); ++index) {
+            if ((index & 1023U) == 0U) {
+                check_cancellation();
+            }
+            const Symbol& symbol = pattern[index];
+            if (symbol == star) {
+                has_consecutive_stars =
+                    has_consecutive_stars ||
+                    (index > 0U && pattern[index - 1U] == star);
+                set_bit(star_states, index);
+            } else if (symbol == question) {
+                set_bit(question_states, index);
+            } else {
+                literal_positions[symbol].push_back(index);
+            }
+        }
+        const std::size_t frequent_literal_threshold = word_count * 4U;
+        for (const auto& [symbol, positions] : literal_positions) {
+            check_cancellation();
+            if (positions.size() > frequent_literal_threshold) {
+                BitWords& states = frequent_literal_states[symbol];
+                states.assign(word_count, 0U);
+                for (const std::size_t position : positions) {
+                    set_bit(states, position);
+                }
+            }
+        }
+        const auto shift_one = [&](const BitWords& source, BitWords& destination) {
+            std::uint64_t carry = 0U;
+            for (std::size_t word = 0U; word < word_count; ++word) {
+                const std::uint64_t next_carry = source[word] >> 63U;
+                destination[word] = (source[word] << 1U) | carry;
+                carry = next_carry;
+            }
+        };
+        // Close `i -> i + 1` while pattern[i] is a star. The gated parallel
+        // prefix handles a complete 64-bit word in six steps; the carry then
+        // continues a star run across the next word boundary.
+        const auto add_star_epsilon_closure = [&](BitWords& states) {
+            std::uint64_t carry = 0U;
+            for (std::size_t word = 0U; word < word_count; ++word) {
+                std::uint64_t closed = states[word] | carry;
+                std::uint64_t chain = star_states[word];
+                for (std::size_t shift = 1U; shift < bits_per_word; shift <<= 1U) {
+                    closed |= (closed & chain) << shift;
+                    chain &= chain >> shift;
+                }
+                states[word] = closed;
+                carry = ((closed >> 63U) & (star_states[word] >> 63U));
+            }
+        };
+        BitWords active(word_count, 0U);
+        BitWords activated_stars(word_count, 0U);
+        BitWords entry(word_count, 0U);
+        BitWords shifted(word_count, 0U);
+        BitWords next(word_count, 0U);
+        set_bit(active, 0U);
+        std::size_t text_index = 0U;
+        for (const Symbol& symbol : text) {
+            if ((text_index++ & 1023U) == 0U) {
+                check_cancellation();
+            }
+            if (symbol == star) {
+                std::uint64_t activated_carry = 0U;
+                std::uint64_t consuming_carry = 0U;
+                for (std::size_t word = 0U; word < word_count; ++word) {
+                    const std::uint64_t old_activated = activated_stars[word];
+                    const std::uint64_t next_activated_carry = old_activated >> 63U;
+                    const std::uint64_t current_entry =
+                        active[word] | (old_activated << 1U) | activated_carry;
+                    const std::uint64_t consuming =
+                        current_entry & (question_states[word] | star_states[word]);
+                    const std::uint64_t next_carry = consuming >> 63U;
+                    next[word] = (consuming << 1U) | consuming_carry;
+                    activated_carry = next_activated_carry;
+                    consuming_carry = next_carry;
+                }
+            } else {
+                const auto frequent_literal = frequent_literal_states.find(symbol);
+                std::uint64_t activated_carry = 0U;
+                std::uint64_t epsilon_carry = 0U;
+                std::uint64_t consuming_carry = 0U;
+                for (std::size_t word = 0U; word < word_count; ++word) {
+                    const std::uint64_t old_activated = activated_stars[word];
+                    const std::uint64_t next_activated_carry = old_activated >> 63U;
+                    std::uint64_t closed =
+                        active[word] | (old_activated << 1U) |
+                        activated_carry | epsilon_carry;
+                    if (has_consecutive_stars) {
+                        std::uint64_t chain = star_states[word];
+                        for (std::size_t shift = 1U;
+                             shift < bits_per_word;
+                             shift <<= 1U) {
+                            closed |= (closed & chain) << shift;
+                            chain &= chain >> shift;
+                        }
+                        epsilon_carry =
+                            ((closed >> 63U) & (star_states[word] >> 63U));
+                    } else {
+                        const std::uint64_t active_stars = closed & star_states[word];
+                        const std::uint64_t next_epsilon_carry = active_stars >> 63U;
+                        closed |= active_stars << 1U;
+                        epsilon_carry = next_epsilon_carry;
+                    }
+                    entry[word] = closed;
+                    activated_stars[word] =
+                        old_activated | (closed & star_states[word]);
+                    const std::uint64_t matching = question_states[word] |
+                        (frequent_literal == frequent_literal_states.end()
+                            ? 0U : frequent_literal->second[word]);
+                    const std::uint64_t consuming = closed & matching;
+                    const std::uint64_t next_carry = consuming >> 63U;
+                    next[word] = (consuming << 1U) | consuming_carry;
+                    activated_carry = next_activated_carry;
+                    consuming_carry = next_carry;
+                }
+                if (frequent_literal == frequent_literal_states.end()) {
+                    const auto positions = literal_positions.find(symbol);
+                    if (positions != literal_positions.end()) {
+                        for (const std::size_t position : positions->second) {
+                            if (bit_is_set(entry, position)) {
+                                set_bit(next, position + 1U);
+                            }
+                        }
+                    }
+                }
+            }
+            active.swap(next);
+        }
+        check_cancellation();
+        shift_one(activated_stars, shifted);
+        for (std::size_t word = 0U; word < word_count; ++word) {
+            active[word] |= shifted[word];
+        }
+        add_star_epsilon_closure(active);
+        return bit_is_set(active, pattern.size());
     }
     // #7339: the usual saved-star retry loop can rescan a long literal suffix
     // once for every text position. Simulate all wildcard-NFA states in packed

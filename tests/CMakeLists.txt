@@ -7028,6 +7028,9 @@ copperfin_add_test(test_prg_engine_string_math_functions cf_xbase_runtime
     test_prg_engine_string_math_functions.cpp
     prg_engine_test_support.cpp
 )
+target_compile_definitions(test_prg_engine_string_math_functions PRIVATE
+    COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS=1
+)
 
 copperfin_add_test(test_prg_engine_string_minus cf_xbase_runtime
     test_prg_engine_string_minus.cpp

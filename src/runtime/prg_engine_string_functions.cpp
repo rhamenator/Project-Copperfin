@@ -4,12 +4,17 @@
 
 #include "prg_engine_string_functions.h"
 
+#if defined(COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS)
+#include "prg_engine_string_function_test_hooks.h"
+#endif
+
 #include "prg_engine_helpers.h"
 #include "localized_text.h"
 #include "prg_compatibility_error.h"
 #include "prg_numeric_value_display.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <cmath>
 #include <cctype>
@@ -27,6 +32,26 @@
 namespace copperfin::runtime {
 
 namespace {
+
+#if defined(COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS)
+std::atomic<void (*)()> wildcard_match_poll_test_hook{nullptr};
+std::atomic<std::size_t> wildcard_match_poll_test_countdown{0U};
+
+void fire_wildcard_match_poll_test_hook() {
+    if (wildcard_match_poll_test_hook.load(std::memory_order_relaxed) == nullptr) {
+        return;
+    }
+    const std::size_t remaining =
+        wildcard_match_poll_test_countdown.fetch_sub(1U, std::memory_order_relaxed);
+    if (remaining <= 1U) {
+        if (const auto hook = wildcard_match_poll_test_hook.exchange(
+                nullptr, std::memory_order_relaxed);
+            hook != nullptr) {
+            hook();
+        }
+    }
+}
+#endif
 
 #include "prg_engine_string_function_helpers.inl"
 
@@ -178,6 +203,19 @@ std::int64_t require_valid_strtran_occurrence_argument(
 }
 
 }  // namespace
+
+#if defined(COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS)
+namespace test_hooks {
+
+void set_wildcard_match_poll_test_hook(
+    void (*hook)(),
+    std::size_t fire_on_poll) {
+    wildcard_match_poll_test_countdown.store(fire_on_poll, std::memory_order_relaxed);
+    wildcard_match_poll_test_hook.store(hook, std::memory_order_relaxed);
+}
+
+}  // namespace test_hooks
+#endif
 
 std::string format_value_for_display(
     const PrgValue& value,

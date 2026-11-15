@@ -8,11 +8,14 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "../src/runtime/prg_compatibility_error.h"
 #include "../src/runtime/prg_engine_string_functions.h"
+#include "../src/runtime/prg_engine_string_function_test_hooks.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <chrono>
+#include <condition_variable>
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
@@ -20,6 +23,7 @@
 #include <limits>
 #include <locale>
 #include <functional>
+#include <mutex>
 #include <system_error>
 #include <thread>
 
@@ -46,6 +50,17 @@ namespace
 {
 
     using namespace copperfin::test_support;
+
+    std::atomic<bool> wildcard_match_poll_entered{false};
+    std::atomic<bool> release_wildcard_match_poll{false};
+
+    void pause_at_wildcard_match_poll()
+    {
+        wildcard_match_poll_entered.store(true, std::memory_order_release);
+        while (!release_wildcard_match_poll.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+    }
 
     class comma_decimal_numpunct final : public std::numpunct<char>
     {
@@ -1616,10 +1631,15 @@ namespace
             "byteHit=LIKE('*'+suffix+'b',hit)\n"
             "byteShort=LIKE('*b',miss)\n"
             "byteLinear=LIKE(linear,linear)\n"
+            "literalN=96000\n"
+            "literalSuffix=REPLICATE('a',literalN/2)\n"
+            "literalText=REPLICATE('a',literalN)+'*c'\n"
+            "byteLiteralMiss=LIKE('*'+literalSuffix+'b',literalText)\n"
             "scalarMiss=LIKEC('*'+suffix+'b',miss)\n"
             "scalarHit=LIKEC('*'+suffix+'b',hit)\n"
             "scalarShort=LIKEC('*b',miss)\n"
             "scalarLinear=LIKEC(linear,linear)\n"
+            "scalarLiteralMiss=LIKEC('*'+literalSuffix+'b',literalText)\n"
             "RETURN\n");
 
         const pid_t child = ::fork();
@@ -1639,19 +1659,21 @@ namespace
             };
             const bool passed = state.completed &&
                 is("bytemiss", false) && is("bytehit", true) && is("byteshort", false) &&
-                is("bytelinear", true) &&
+                is("bytelinear", true) && is("byteliteralmiss", false) &&
                 is("scalarmiss", false) && is("scalarhit", true) && is("scalarshort", false) &&
-                is("scalarlinear", true);
+                is("scalarlinear", true) && is("scalarliteralmiss", false);
             _exit(passed ? 0 : 3);
         }
 
         bool completed = false;
+        int child_status = -1;
         if (child > 0) {
             const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(8);
             int status = 0;
             while (std::chrono::steady_clock::now() < deadline) {
                 const pid_t result = ::waitpid(child, &status, WNOHANG);
                 if (result == child) {
+                    child_status = status;
                     completed = WIFEXITED(status) && WEXITSTATUS(status) == 0;
                     break;
                 }
@@ -1666,7 +1688,8 @@ namespace
             }
         }
         expect(completed,
-               "#7339: LIKE/LIKEC pathological miss and matching/short controls should finish under the 8-second watchdog");
+               "#7339: LIKE/LIKEC ordinary and literal-star pathological misses plus matching/short controls should finish under the 8-second watchdog; status=" +
+                   std::to_string(child_status));
         fs::remove_all(temp_root, ignored);
 #endif
 
@@ -1721,24 +1744,60 @@ namespace
             "RETURN\n");
         auto cancel_session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(cancel_path.string(), cancel_root.string()));
+        wildcard_match_poll_entered.store(false, std::memory_order_relaxed);
+        release_wildcard_match_poll.store(false, std::memory_order_relaxed);
+        // Poll 320 is after the initial pattern/text star scans and the
+        // one-star classification scan, inside the long suffix comparison.
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(
+            pause_at_wildcard_match_poll,
+            320U);
         copperfin::runtime::RuntimePauseState cancel_state;
+        std::mutex runner_mutex;
+        std::condition_variable runner_condition;
+        bool runner_done = false;
         std::thread runner([&]() {
             cancel_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            {
+                std::lock_guard lock(runner_mutex);
+                runner_done = true;
+            }
+            runner_condition.notify_one();
         });
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::thread runner_watchdog([&]() {
+            std::unique_lock lock(runner_mutex);
+            if (!runner_condition.wait_for(
+                    lock,
+                    std::chrono::seconds(8),
+                    [&]() { return runner_done; })) {
+                std::cerr << "FAIL: #7339: deterministic session cancellation runner exceeded the 8-second watchdog.\n";
+                std::abort();
+            }
+        });
+        const auto poll_deadline =
+            std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (!wildcard_match_poll_entered.load(std::memory_order_acquire) &&
+               std::chrono::steady_clock::now() < poll_deadline) {
+            std::this_thread::yield();
+        }
+        const bool reached_matcher =
+            wildcard_match_poll_entered.load(std::memory_order_acquire);
         cancel_session.request_cancel();
+        release_wildcard_match_poll.store(true, std::memory_order_release);
         runner.join();
+        runner_watchdog.join();
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(nullptr, 0U);
         const bool emitted_cancel_event = std::any_of(
             cancel_state.events.begin(),
             cancel_state.events.end(),
             [](const copperfin::runtime::RuntimeEvent& event) {
                 return event.category == "runtime.task.cancelled";
             });
-        expect(!cancel_state.completed &&
+        expect(reached_matcher && !cancel_state.completed &&
                    cancel_state.message == "Async task cancelled." &&
                    emitted_cancel_event,
-               "#7339: session cancellation during literal-star-compatible LIKE should use the runtime cancellation path; completed=" +
-                   std::string(cancel_state.completed ? "true" : "false") +
+               "#7339: deterministic in-flight session cancellation during literal-star-compatible LIKE should use the runtime cancellation path; reached_matcher=" +
+                   std::string(reached_matcher ? "true" : "false") +
+                   " completed=" + std::string(cancel_state.completed ? "true" : "false") +
                    " message=" + cancel_state.message +
                    " cancel_event=" + (emitted_cancel_event ? "true" : "false"));
 
@@ -1762,30 +1821,32 @@ namespace
     void test_like_packed_nfa_preserves_wildcard_semantics()
     {
         const auto reference_match = [](const std::string& pattern, const std::string& text) {
-            std::vector<std::vector<signed char>> memo(
-                pattern.size() + 1U,
-                std::vector<signed char>(text.size() + 1U, -1));
-            std::function<bool(std::size_t, std::size_t)> visit =
-                [&](std::size_t pattern_index, std::size_t text_index) {
-                    signed char& cached = memo[pattern_index][text_index];
-                    if (cached >= 0) {
-                        return cached != 0;
-                    }
-                    bool matched = false;
-                    if (pattern_index == pattern.size()) {
-                        matched = text_index == text.size();
-                    } else if (pattern[pattern_index] == '*') {
-                        matched = visit(pattern_index + 1U, text_index) ||
-                            (text_index < text.size() && visit(pattern_index, text_index + 1U));
-                    } else {
-                        matched = text_index < text.size() &&
-                            (pattern[pattern_index] == '?' || pattern[pattern_index] == text[text_index]) &&
-                            visit(pattern_index + 1U, text_index + 1U);
-                    }
-                    cached = matched ? 1 : 0;
-                    return matched;
-                };
-            return visit(0U, 0U);
+            std::size_t pattern_index = 0U;
+            std::size_t text_index = 0U;
+            const std::size_t no_star = std::numeric_limits<std::size_t>::max();
+            std::size_t saved_star = no_star;
+            std::size_t saved_text = 0U;
+            while (text_index < text.size()) {
+                if (pattern_index < pattern.size() &&
+                    (pattern[pattern_index] == '?' ||
+                     pattern[pattern_index] == text[text_index])) {
+                    ++pattern_index;
+                    ++text_index;
+                } else if (pattern_index < pattern.size() &&
+                           pattern[pattern_index] == '*') {
+                    saved_star = pattern_index++;
+                    saved_text = text_index;
+                } else if (saved_star != no_star) {
+                    pattern_index = saved_star + 1U;
+                    text_index = ++saved_text;
+                } else {
+                    return false;
+                }
+            }
+            while (pattern_index < pattern.size() && pattern[pattern_index] == '*') {
+                ++pattern_index;
+            }
+            return pattern_index == pattern.size();
         };
         const auto actual_match = [](const std::string& function,
                                      const std::string& pattern,
@@ -1853,6 +1914,66 @@ namespace
         expect(!actual_match("like", std::string(65U, 'a') + "*b",
                              std::string(65U, 'a') + "*c"),
                "#7339: literal-star input should preserve prior precedence across the packed threshold");
+        const std::vector<std::pair<std::string, std::string>> literal_star_cases{
+            {"*", "a*a"},
+            {"a*", "a*c"},
+            {"**", "**"},
+            {"**", "***"},
+            {"*a*", "x*a?"},
+            {"*?b", "aa*xb"},
+            {"***a", "**a"},
+            {"*a*b", "xx*aayb"},
+        };
+        for (const auto& [suffix_pattern, suffix_text] : literal_star_cases) {
+            const std::string pattern = std::string(65U, 'z') + suffix_pattern;
+            const std::string text = std::string(65U, 'z') + suffix_text;
+            expect(actual_match("like", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed literal-star LIKE precedence differs for suffix pattern=" +
+                       suffix_pattern + " text=" + suffix_text);
+            expect(actual_match("likec", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed literal-star LIKEC precedence differs for suffix pattern=" +
+                       suffix_pattern + " text=" + suffix_text);
+        }
+        std::vector<std::string> literal_suffix_patterns{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 3U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab?*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            literal_suffix_patterns.insert(
+                literal_suffix_patterns.end(), generation.begin(), generation.end());
+        }
+        std::vector<std::string> literal_suffix_texts{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 4U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            literal_suffix_texts.insert(
+                literal_suffix_texts.end(), generation.begin(), generation.end());
+        }
+        for (const std::string& suffix_pattern : literal_suffix_patterns) {
+            const std::string pattern = std::string(65U, 'z') + suffix_pattern;
+            for (const std::string& suffix_text : literal_suffix_texts) {
+                if (suffix_text.find('*') == std::string::npos) {
+                    continue;
+                }
+                const std::string text = std::string(65U, 'z') + suffix_text;
+                const bool expected = reference_match(pattern, text);
+                expect(actual_match("like", pattern, text) == expected,
+                       "#7339: exhaustive packed literal-star LIKE precedence differs");
+                expect(actual_match("likec", pattern, text) == expected,
+                       "#7339: exhaustive packed literal-star LIKEC precedence differs");
+            }
+        }
         expect(actual_match("like", std::string(100000U, 'a') + "?",
                             std::string(100001U, 'a')),
                "#7339: long star-free question patterns should remain linear and preserve wildcard semantics");
