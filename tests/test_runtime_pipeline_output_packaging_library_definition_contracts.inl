@@ -11,7 +11,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
     write_text(project_dir / "librarymain.prg",
                "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
     write_text(project_dir / "helper.prg",
-               "FUNCTION AddNumbers\nPARAMETERS namespace, @value, value\nRETURN 1\nENDFUNC\n");
+               "FUNCTION AddNumbers\nPARAMETERS namespace, @value, value\nRETURN 1\nENDFUNC\n"
+               "FUNCTION copperfin_parameter_namespace\nLPARAMETERS namespace\nRETURN 1\nENDFUNC\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -69,7 +70,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
            "library-output plan should derive a native-wrapper PowerShell build script filename");
     expect(fs::path(plan.library_api_manifest_path).filename() == "LibraryDemo.dll.api",
            "library-output plan should derive a matching DLL API-manifest filename");
-    expect(plan.exported_symbols.size() == 2U,
+    expect(plan.exported_symbols.size() == 3U,
            "library-output plan should discover routine exports from PRG assets");
 
     const auto result = copperfin::runtime::materialize_runtime_package(
@@ -745,7 +746,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should consume DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for InitLibrary");
-        expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&InitLibrary), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&::InitLibrary), stub_emission_wrapper);") != std::string::npos,
                "library-output wrapper source should preserve InitLibrary bridge metadata");
         expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(\n        descriptor);") != std::string::npos,
                "library-output wrapper source should build a bridge invocation from the descriptor");
@@ -1194,8 +1195,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should consume multiple DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for AddNumbers");
-        expect(wrapper_source.find("\"parameters\", \"namespace\\|value\\|value\", 3U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"parameters\", \"namespace\\|value\\|value\", 3U, reinterpret_cast<void*>(&::AddNumbers), stub_emission_wrapper);") != std::string::npos,
                "library-output wrapper source should preserve original AddNumbers bridge metadata");
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL copperfin_parameter_namespace(int copperfin_parameter_namespace)") != std::string::npos,
+               "library-output wrapper source should cover a parameter identifier that shadows its export symbol");
+        expect(wrapper_source.find("\"lparameters\", \"namespace\", 1U, reinterpret_cast<void*>(&::copperfin_parameter_namespace), stub_emission_wrapper);") != std::string::npos,
+               "library-output wrapper source should globally qualify shadowed export-symbol addresses");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "library-output wrapper CMake should declare a shared library target");

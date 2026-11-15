@@ -71,7 +71,7 @@ void append_native_wrapper_library_entrypoint_source(std::ostringstream& stream,
                    << "\", \"" << quote_manifest_value(location.file_path) << "\", " << location.line
                    << "U, \"" << quote_manifest_value(parameter_declaration_kind) << "\", \""
                    << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
-                   << "U, reinterpret_cast<void*>(&" << symbol << "), stub_emission_wrapper);\n";
+                   << "U, reinterpret_cast<void*>(&::" << symbol << "), stub_emission_wrapper);\n";
             stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(\n";
             stream << "        descriptor);\n";
             stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
@@ -311,7 +311,7 @@ void append_native_wrapper_library_entrypoint_source(std::ostringstream& stream,
                    << "\", \"" << quote_manifest_value(location.file_path) << "\", " << location.line
                    << "U, \"" << quote_manifest_value(parameter_declaration_kind) << "\", \""
                    << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
-                   << "U, reinterpret_cast<void*>(&" << symbol << "), stub_emission_wrapper);\n";
+                   << "U, reinterpret_cast<void*>(&::" << symbol << "), stub_emission_wrapper);\n";
             stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(\n";
             stream << "        descriptor);\n";
             stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
