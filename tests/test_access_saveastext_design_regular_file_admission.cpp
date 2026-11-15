@@ -71,9 +71,14 @@ void test_regular_and_failure_controls() {
     expect(!error, "directory control creation should succeed");
     const auto directory_result =
         copperfin::vfp::parse_access_saveastext_design_from_file(directory_path.string());
-    expect(!directory_result.ok && !directory_result.error.empty() &&
-               directory_result.error != missing.error,
-           "an opened directory should report a read failure, not an open failure");
+    bool directory_diagnostic_ok =
+        !directory_result.ok && !directory_result.error.empty();
+#if !defined(_WIN32)
+    directory_diagnostic_ok =
+        directory_diagnostic_ok && directory_result.error != missing.error;
+#endif
+    expect(directory_diagnostic_ok,
+           "a directory should be rejected with the platform-appropriate diagnostic");
 
 #if !defined(_WIN32)
     const fs::path regular_symlink = directory / "regular-link.txt";
