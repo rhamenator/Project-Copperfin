@@ -133,9 +133,7 @@ std::map<std::string, std::vector<std::string>> collect_library_export_parameter
 
                 names.reserve(statement.names.size());
                 for (std::size_t index = 0; index < statement.names.size(); ++index) {
-                    names.push_back(sanitize_cpp_identifier(
-                        extract_declared_parameter_name(statement.names[index]),
-                        index));
+                    names.push_back(extract_declared_parameter_name(statement.names[index]));
                 }
                 break;
             }
@@ -265,12 +263,14 @@ std::map<std::string, SourceLocation> collect_library_export_routine_locations(c
 }
 
 std::string build_placeholder_int_parameter_list(const std::vector<std::string>& parameter_names) {
+    const std::vector<std::string> cpp_identifiers =
+        build_cpp_parameter_identifiers(parameter_names);
     std::ostringstream stream;
-    for (std::size_t index = 0; index < parameter_names.size(); ++index) {
+    for (std::size_t index = 0; index < cpp_identifiers.size(); ++index) {
         if (index > 0U) {
             stream << ", ";
         }
-        stream << "int " << sanitize_cpp_identifier(parameter_names[index], index);
+        stream << "int " << cpp_identifiers[index];
     }
     return stream.str();
 }

@@ -289,6 +289,8 @@ void append_native_wrapper_library_entrypoint_source(std::ostringstream& stream,
                 names_found == parameter_names.end()
                     ? std::vector<std::string>(parameter_count, std::string{})
                     : names_found->second;
+            const std::vector<std::string> cpp_parameter_identifiers =
+                build_cpp_parameter_identifiers(effective_names);
             const std::string routine_kind =
                 kind_found == routine_kinds.end() ? std::string("function") : kind_found->second;
             const SourceLocation location =
@@ -320,8 +322,8 @@ void append_native_wrapper_library_entrypoint_source(std::ostringstream& stream,
                     stream << ", ";
                 }
                 const std::string parameter_name = effective_names[index];
-                const std::string sanitized_name = sanitize_cpp_identifier(effective_names[index], index);
-                stream << "{\"" << quote_manifest_value(parameter_name) << "\", std::to_string(" << sanitized_name
+                stream << "{\"" << quote_manifest_value(parameter_name) << "\", std::to_string("
+                       << cpp_parameter_identifiers[index]
                        << "), \"int\"}";
             }
             stream << "});\n";
