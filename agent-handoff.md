@@ -10,9 +10,10 @@ committed real VFP9 fixture `tests/fixtures/vfp9-descending-observation-output/`
 (CDX SHA-256 `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`,
 DBF SHA-256 `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`),
 the current parser exposed three bogus names rather than the two VFP9 tags.
-The bounded fix rejects only a multi-entry root directory with invalid or
-duplicate page associations, localizes the diagnostic, and keeps DBF reading
-available while omitting the untrusted index descriptor. It does not decode
+The bounded fix rejects a multi-entry root directory with invalid or duplicate
+page associations or a declared pointer array that cannot fit on its page,
+localizes the diagnostic, and keeps DBF reading available while omitting the
+untrusted index descriptor. It does not decode
 the tag directory or resolve ordered scans/SEEK. Production, focused test,
 locale, documentation, traceability and changelog edits are complete. GNU
 15.2 Debug `test_vfp_assets` passes, including the retained real-fixture
@@ -32,7 +33,19 @@ depend on its fixture in this slice. The signed+DCO implementation commit is
 `b569a70d1957fc9a326039d74feed9ee0aca0a97`. Its original PR head was
 `f38bea136fd39f2080a9f6e2ce9bc051c126dedc`; the verified `@claude review`
 trigger was posted as comment `7227057469`, but no actual Claude review
-response is recorded yet. Hosted checks were queued/running at checkpoint.
+response is recorded. Hosted checks pass at current head
+`78c76aad1ef4f768c7ce165fd4c65f4e0d29ada3`. GitHub lists no review requests or
+reviews; owner authorized local Claude review when available and Codex
+adversarial review as fallback. Exact-head Codex review found the overfull-root
+count bypass; code, regression, traceability, and changelog are updated locally
+and need focused verification before a signed+DCO fix commit. PR #7353's
+failing Windows test is under separate diagnosis:
+`test_access_saveastext_export` failed three assertions around its
+missing-database subprocess; the inventory-coverage failure is downstream of
+that shard missing its after-inventory artifact. The same test passed on PR
+#7354 at 31.64 seconds, so the cause remains unresolved. Finish #7354 review
+and merge before splitting off a bounded #7353 failure investigation; owner
+also queued PRs #7247 and #7248 after #7353–#7354 merge.
 Local build/test evidence is in this worktree's `build/` and
 `build/Testing/Temporary/LastTest.log`; fixture hashes are retained above.
 This work stage took approximately 25 minutes. NEXT: update this checkpoint,

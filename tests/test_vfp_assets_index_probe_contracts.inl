@@ -64,6 +64,20 @@ void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() 
            "the table inspection must visibly qualify its unparsed compound CDX companion");
 }
 
+void test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed() {
+    auto bytes = make_synthetic_cdx_family_bytes(true, false);
+    // A 512-byte CDX page has only 508 bytes after its four-byte header;
+    // 128 four-byte pointers cannot fit before its tag-name tail.
+    write_le_u16(bytes, 1026U, 128U);
+
+    const auto result = copperfin::vfp::parse_index_probe(
+        bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!result.ok,
+           "a compound root directory whose declared pointers cannot fit in its page must fail closed");
+    expect(result.probe.tags.empty(),
+           "an overfull compound root directory must not fall through to whole-file tag heuristics");
+}
+
 void test_parse_cdx_header_root_offset_beyond_16_bits() {
     std::vector<std::uint8_t> bytes(16U, 0U);
     write_le_u32(bytes, 0U, 128U * 512U);
