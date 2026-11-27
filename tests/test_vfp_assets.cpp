@@ -9003,6 +9003,7 @@ int main() {
     test_export_database_as_json_inaccessible_path_returns_structured_failure();
 #endif
     test_parse_index_probe_for_cdx();
+    test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed();
     test_parse_cdx_header_root_offset_beyond_16_bits();
     test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();

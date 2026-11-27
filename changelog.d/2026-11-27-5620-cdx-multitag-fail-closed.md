@@ -1,0 +1,1 @@
+- 2026-11-27: Reject compound CDX metadata when multiple root-directory tags cannot be bound to distinct header pages, and report the incomplete companion index without publishing guessed tags.

@@ -9,6 +9,7 @@ Current coverage:
   - Treated as multi-tag index containers.
   - First-pass directory leaf-page parsing now surfaces stored tag names plus conservative per-tag page hints from plausible node pages, and page-local key/`FOR` expression hints now prefer the hinted tag-page neighborhood before falling back to whole-file heuristics.
   - When a stored tag name is descriptive rather than expression-shaped, single local tag-page expressions can now still bind through the grounded page hint instead of being dropped back to derived fallback names.
+  - A compound root directory with multiple entries whose per-tag page associations are invalid or duplicated is now rejected as incomplete metadata; companion DBF inspection reports the parse warning and does not publish guessed tag descriptors. This is a fail-closed guard for the observed VFP9 fixture, not a complete decoder for variable-length compound tag directories.
   - First-pass expression-derived normalization/collation hints are now surfaced for tag expressions such as `UPPER(...)`/`LOWER(...)`, with the current implementation explicitly treated as heuristic metadata rather than true binary collation fidelity.
   - Per-tag page marker hints (`flags` and entry counts) are now surfaced from grounded tag-page headers when page offsets are available.
   - Focused regression coverage now exercises direct `.cdx`/`.dcx` probing, adversarial decoy-expression cases, and `DBC` companion discovery.

@@ -20,6 +20,26 @@ and `docs/32-recovered-requirements-traceability.md`'s allowed-evidence rules.
 - `descending.dbf`, `descending.CDX`, `descending.idx` -- the exact generated
   table and index files the observations were captured against.
 
+## Compound CDX parser status (issue #5620)
+
+The retained real VFP9 CDX is also a regression input for compound-tag
+metadata. Its SHA-256 is `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`
+and the paired DBF SHA-256 is
+`fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`. Before
+the fail-closed guard, `copperfin_inspect` exposed three heuristic tag names
+(`CTAGASCTAG`, `CHARLIE`, and `BRAVOALPHA`) instead of VFP9's `AscTag` and
+`DescTag`. The root directory has two entries with invalid page-association
+sentinels, so the current parser now rejects its tag metadata and companion
+table inspection emits `index.companion_parse_failed` without publishing those
+guesses.
+
+This contains the known false metadata but does not decode compound tag names,
+expressions, direction, or tag-page associations. Ordered `SET ORDER`, scans,
+and `SEEK` behavior remain a separate follow-up once structural tag binding is
+recovered. The parser test uses this already-committed fixture; the additional
+three-record fixture captured in PR #7353 is evidence only until that PR is
+merged.
+
 ## What was captured vs. not
 
 8 of the fixture's 9 planned observation cases completed and were recorded.

@@ -1,5 +1,37 @@
 # Agent Handoff
 
+## Active slice — compound CDX metadata containment (2026-11-27)
+
+Continue in `/home/rich/.codex/worktrees/cdx-compound-fail-closed-5620/Project-Copperfin`
+on `fix/cdx-compound-fail-closed-5620`, based on origin/main
+`b569a70d1957fc9a326039d74feed9ee0aca0a97`. Owner-prioritized issue #5620 is
+the first step before order/SEEK #6334 and print-expression #6413. Against the
+committed real VFP9 fixture `tests/fixtures/vfp9-descending-observation-output/`
+(CDX SHA-256 `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`,
+DBF SHA-256 `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`),
+the current parser exposed three bogus names rather than the two VFP9 tags.
+The bounded fix rejects only a multi-entry root directory with invalid or
+duplicate page associations, localizes the diagnostic, and keeps DBF reading
+available while omitting the untrusted index descriptor. It does not decode
+the tag directory or resolve ordered scans/SEEK. Production, focused test,
+locale, documentation, traceability and changelog edits are complete. GNU
+15.2 Debug `test_vfp_assets` passes, including the retained real-fixture
+rejection and companion-warning assertions. `test_localization`, locale
+catalog install/review/registry checks, contributor signoff, changelog
+assembler/fragment validation, and native test-isolation contracts pass 9/9;
+the changelog validator reports 278 valid fragments and `git diff --check` is
+clean. `test_agent_issue_intake` and the safety-traceability workflow contract
+cannot start because configured `/snap/bin/pwsh` fails in `snap-confine`
+(`cap_dac_override` unavailable; `Argument list too long`); these are
+environment-blocked, not passing. PR #7353 is a separate unmerged
+fixture-evidence PR at `d5bb564e9e877b774da0e021b5a4caec58689d05`; its Windows
+MSVC shard failed `test_access_saveastext_export`, its inventory artifact is
+missing, and no actual clean Claude review is recorded. Do not merge it or
+depend on its fixture in this slice. NEXT: finish diff review, signed+DCO
+commit, push and open a PR with verified
+Claude-first review; merge only with clean exact-head review, green required
+checks and resolved conversations. Preserve the PR #7353 checkout.
+
 ## Active slice — explicit empty WHERE mutation admission (2026-11-13)
 
 Continue in

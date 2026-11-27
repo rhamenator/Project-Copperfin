@@ -4680,6 +4680,9 @@ add_test(
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
+target_compile_definitions(test_vfp_assets PRIVATE
+    COPPERFIN_TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+)
 
 # RQ-CF-VFP-ACCESS-DESIGN-REGULAR-FILE-001: Access SaveAsText design-file
 # parsing binds regular-file admission to the opened object and never blocks on

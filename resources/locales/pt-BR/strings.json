@@ -1897,6 +1897,7 @@
   "Vfp.AssetInspector.Validation.UnsafeNumericValue": "A tabela {table}, linha {row}, coluna {column} contem um valor numerico nao vazio que nao pode ser representado com seguranca no SQL exportado.",
   "Vfp.AssetInspector.Warning.DatabaseImportStagingCleanupIncomplete": "IMPORT DATABASE: o banco de dados de destino foi confirmado com sucesso, mas o diretorio temporario de preparacao {path} nao pode ser totalmente removido e ainda pode conter aliases de hard link para os dados importados",
   "Vfp.CdxHeader.Error.InvalidValues": "Os valores do cabecalho nao parecem pertencer a um arquivo de indice da familia CDX.",
+  "Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata": "Os metadados das tags do CDX composto estao incompletos porque nao foi possivel associar uma ou mais tags a paginas de cabecalho distintas.",
   "Vfp.CdxHeader.Error.OpenFileFailed": "Nao foi possivel abrir o arquivo.",
   "Vfp.CdxHeader.Error.ReadProbeFailed": "Nao foi possivel ler uma sonda completa de 16 bytes do cabecalho CDX.",
   "Vfp.CdxHeader.Error.ShortProbe": "O arquivo e menor que o tamanho minimo da sonda do cabecalho CDX (16 bytes).",

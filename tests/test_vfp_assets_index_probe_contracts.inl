@@ -33,6 +33,37 @@ void test_parse_index_probe_for_cdx() {
     }
 }
 
+void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() {
+    namespace fs = std::filesystem;
+    const fs::path fixture_root = fs::path(COPPERFIN_TEST_SOURCE_DIR) /
+        "tests/fixtures/vfp9-descending-observation-output";
+    const fs::path cdx_path = fixture_root / "descending.CDX";
+    const fs::path dbf_path = fixture_root / "descending.dbf";
+
+    const auto direct_result = copperfin::vfp::parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(cdx_path));
+    expect(!direct_result.ok,
+           "a real VFP9 compound CDX with unbound directory entries must not report successful tag metadata");
+    expect(direct_result.probe.tags.empty(),
+           "a rejected compound CDX must not expose heuristic tag names or expressions");
+    expect(direct_result.error.find("Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata") == std::string::npos,
+           "a rejected compound CDX should expose localized error text, not a resource key");
+
+    const auto table_result = copperfin::vfp::inspect_asset(
+        copperfin::platform::path_to_utf8_string(dbf_path));
+    expect(table_result.ok, "the DBF table remains inspectable when its CDX metadata is incomplete");
+    const bool exposed_cdx = std::any_of(
+        table_result.indexes.begin(),
+        table_result.indexes.end(),
+        [](const copperfin::vfp::AssetInspectionResult::IndexAsset& index) {
+            return index.probe.kind == copperfin::vfp::IndexKind::cdx;
+        });
+    expect(!exposed_cdx,
+           "the table inspection must not expose heuristic tags from an unbound compound CDX");
+    expect(has_validation_issue(table_result, "index.companion_parse_failed"),
+           "the table inspection must visibly qualify its unparsed compound CDX companion");
+}
+
 void test_parse_cdx_header_root_offset_beyond_16_bits() {
     std::vector<std::uint8_t> bytes(16U, 0U);
     write_le_u32(bytes, 0U, 128U * 512U);
