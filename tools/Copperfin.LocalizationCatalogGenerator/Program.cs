@@ -166,8 +166,10 @@ foreach (var locale in locales)
     };
     if (managedLocale is null && !checkOnly && locale.Value.Role != "overlay")
     {
-        throw new InvalidDataException(
-            $"Generating an unmanaged locale catalog is unsupported: {locale.Key}; use --check to validate it");
+        // External catalogs are validated by --check but are not synchronized
+        // from the managed VSIX catalog. Continue so later managed catalogs
+        // still receive their generated entries.
+        continue;
     }
     var managedEntries = managedLocale is null
         ? new Dictionary<string, string>(StringComparer.Ordinal)

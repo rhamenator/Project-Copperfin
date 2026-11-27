@@ -1,0 +1,1 @@
+- 2026-11-27: Keep external-only locale catalogs intact during managed write-mode synchronization, require reasons for intentional source-text review evidence, and embed the en-GB catalog in the Visual Studio VSIX so installed extensions can resolve British English.

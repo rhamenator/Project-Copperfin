@@ -61,6 +61,13 @@ def main() -> None:
         write_json(root / "docs/localization-reviews/fixture.json", evidence)
         passed = run(root, "--release")
         assert passed.returncode == 0, passed.stdout + passed.stderr
+        evidence["entries"][1].pop("reason")
+        write_json(root / "docs/localization-reviews/fixture.json", evidence)
+        missing_reason = run(root, "--release")
+        assert (missing_reason.returncode != 0 and
+                "intentional source text requires a nonblank evidence reason" in missing_reason.stdout)
+        evidence["entries"][1]["reason"] = "Synthetic fixture"
+        write_json(root / "docs/localization-reviews/fixture.json", evidence)
         for invalid_syntax in (
                 "Nutze <Verzeichnis> und --output mit COPPERFIN_LOCALE",
                 "Nutze <directory> und --ausgabe mit COPPERFIN_LOCALE",
