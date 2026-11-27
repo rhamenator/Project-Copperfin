@@ -1,0 +1,8 @@
+created=20261127123715
+descending_order=DESCTAG
+scan=CHARLIE
+scan=BRAVO
+scan=ALPHA
+seek_charlie=CHARLIE
+ascending_order=ASCTAG
+ascending_first=ALPHA
