@@ -49,7 +49,46 @@ def reviewed_locales() -> dict[str, tuple[str, str | None]]:
     if not locales or sum(role == "source" for role in roles.values()) != 1 or \
             sum(role == "pseudo" for role in roles.values()) != 1:
         raise ValueError("Locale inventory requires reviewed locales, en-US source, and qps-ploc pseudo")
+    for locale, (role, parent) in locales.items():
+        if role != "overlay":
+            continue
+        nearest = next((candidate for candidate in runtime_fallback_candidates(locale)
+                        if candidate != locale and candidate in roles), None)
+        if nearest != parent or roles.get(nearest) == "overlay":
+            raise ValueError(
+                f"Invalid locale inventory entry: {locale} overlay parent is not the nearest "
+                f"packaged fallback catalog (expected {nearest})")
     return locales
+
+
+def runtime_fallback_candidates(locale: str) -> list[str]:
+    """Mirror the managed locale fallback ordering used to locate packaged catalogs."""
+    chain = []
+
+    def add(candidate: str) -> None:
+        if candidate and candidate not in chain:
+            chain.append(candidate)
+
+    add(locale)
+    if locale == "es":
+        add("es-419")
+    latin_american_spanish = is_latin_american_spanish(locale)
+    parent = locale
+    while "-" in parent:
+        parent = parent.rsplit("-", 1)[0]
+        last_separator = parent.rfind("-")
+        if len(parent) - last_separator - 1 == 1:
+            parent = parent[:last_separator] if last_separator >= 0 else ""
+        if not parent:
+            break
+        if latin_american_spanish and parent == "es":
+            add("es-419")
+        add(parent)
+    add("en-US")
+    if locale == "pt":
+        chain.insert(chain.index("en-US"), "pt-BR")
+    add("en")
+    return chain
 
 
 def is_latin_american_spanish(locale: str) -> bool:

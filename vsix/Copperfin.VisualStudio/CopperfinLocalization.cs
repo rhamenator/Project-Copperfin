@@ -2852,6 +2852,10 @@ internal sealed class CopperfinLocalization
             }
         }
         Add(locale);
+        if (locale == "es")
+        {
+            Add(SpanishLatinAmericaLocale);
+        }
         var parts = locale.Split('-');
         var regionIndex = parts.Length > 1 && parts[1].Length == 4 && IsAsciiLetters(parts[1])
             ? 2 : 1;
