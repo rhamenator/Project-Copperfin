@@ -36,6 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\..\resources\locales\en-GB\strings.json">
+      <LogicalName>Copperfin.VisualStudio.Locales.en-GB.strings.json</LogicalName>
+    </EmbeddedResource>
     <Reference Include="PresentationCore" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Design" />

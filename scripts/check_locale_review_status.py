@@ -194,6 +194,11 @@ def main() -> int:
                             matching[0].get("sourceSha256") != record["sourceSha256"] or
                             matching[0].get("translationSha256") != record["translationSha256"]):
                         failures.append(f"{locale}/{key}: review evidence does not match the entry")
+                    if (status == "intentional-source-text" and len(matching) == 1 and
+                            (not isinstance(matching[0].get("reason"), str) or
+                             not matching[0]["reason"].strip())):
+                        failures.append(
+                            f"{locale}/{key}: intentional source text requires a nonblank evidence reason")
             counts[status] += 1
             if review in ("ai-reviewed", "human-reviewed"):
                 counts[review] += 1

@@ -24,8 +24,12 @@ consumer evidence are retained in
 An automated audit confirmed every key, named placeholder, CLI switch,
 `*Color` VFP property token, and `PRG`/`VFP`/`COM`/`Copperfin` token in changed
 values remained unchanged. Managed catalog lookup rendered British licence,
-colour, and analyse strings from the shared catalog; the managed language
-service suite and generator parity check passed locally. The normal hosted
+colour, and analyse strings from the shared catalog. The Visual Studio
+extension embeds the same en-GB JSON catalog so installed VSIX lookups do not
+depend on a repository checkout or the standalone Studio catalog directory;
+the managed language-service suite now exercises that embedded-resource path.
+The generator also leaves external-only catalogs untouched in write mode while
+continuing to synchronize later managed catalogs. The normal hosted
 native/managed/installer gates and release UI captures are still pending.
 
 The [UK Government Digital Service licensing guide](https://gds-way.digital.cabinet-office.gov.uk/manuals/licensing.html)

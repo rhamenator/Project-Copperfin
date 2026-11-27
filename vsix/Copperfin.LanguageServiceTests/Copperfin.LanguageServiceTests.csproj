@@ -10,6 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\..\resources\locales\en-GB\strings.json">
+      <LogicalName>Copperfin.VisualStudio.Locales.en-GB.strings.json</LogicalName>
+    </EmbeddedResource>
     <Compile Include="Program.cs" />
     <Compile Include="Program.LocalizationCatalogs.01.cs" />
     <Compile Include="CopperfinDocumentPathIdentityTests.cs" />
