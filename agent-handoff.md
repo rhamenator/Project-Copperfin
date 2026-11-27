@@ -27,10 +27,22 @@ environment-blocked, not passing. PR #7353 is a separate unmerged
 fixture-evidence PR at `d5bb564e9e877b774da0e021b5a4caec58689d05`; its Windows
 MSVC shard failed `test_access_saveastext_export`, its inventory artifact is
 missing, and no actual clean Claude review is recorded. Do not merge it or
-depend on its fixture in this slice. NEXT: finish diff review, signed+DCO
-commit, push and open a PR with verified
-Claude-first review; merge only with clean exact-head review, green required
-checks and resolved conversations. Preserve the PR #7353 checkout.
+depend on its fixture in this slice. The signed+DCO implementation commit is
+`f38bea136fd39f2080a9f6e2ce9bc051c126dedc`, pushed to PR #7354 based on
+`b569a70d1957fc9a326039d74feed9ee0aca0a97`. Its original PR head was
+`f38bea136fd39f2080a9f6e2ce9bc051c126dedc`; the verified `@claude review`
+trigger was posted as comment `7227057469`, but no actual Claude review
+response is recorded yet. Hosted checks were queued/running at checkpoint.
+Local build/test evidence is in this worktree's `build/` and
+`build/Testing/Temporary/LastTest.log`; fixture hashes are retained above.
+This work stage took approximately 25 minutes. NEXT: update this checkpoint,
+push the new exact head and re-request Claude review; monitor hosted
+checks/review, resolve actionable feedback, and merge only after clean
+exact-head authorized review, all required checks green, and all conversations
+resolved. Keep issue #5620 open and prioritize structural compound-tag
+decoding before claiming a promo-video baseline; #6334 ordered
+`SET ORDER`/scan/SEEK and #6413 print-expression remain queued. Preserve the
+PR #7353 checkout.
 
 ## Active slice — explicit empty WHERE mutation admission (2026-11-13)
 
