@@ -8966,6 +8966,7 @@ int main() {
 #endif
     test_parse_index_probe_for_cdx();
     test_parse_synthetic_vfp9_compound_cdx_preserves_tag_tuples();
+    test_parse_vfp9_cdx_directory_name_width_is_independent_of_key_length();
     test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings();
     test_parse_real_vfp9_compound_cdx_recovers_directory_metadata();
     test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed();

@@ -20,18 +20,24 @@ independent `indexed_demo.cdx` SHA-256
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 Release build dir is `/tmp/copperfin-cdx-5620-release`. The focused
 Implementation commit `c4ab47c95b7032a1f7dd668954a18c0e0a329403` is signed
-with a verified GPG signature and DCO trailer. `test_vfp_assets` and
-`test_localization` pass 2/2 after the synthetic CDX
-builders were converted to structural entries, ambiguous bindings fail closed,
-and writer compatibility was restored. `python3 scripts/assemble_changelog.py
+with a verified GPG signature and DCO trailer. A final adversarial pass found
+and corrected an over-restriction that coupled the directory’s fixed 10-byte
+tag-name width to the header key-length hint. VFP9 documentation allows CDX
+keys up to 240 characters; a regression now sets the hint to 240 and verifies
+that the 10-byte tag name and its expression still decode independently. The
+structural-entry builders, ambiguous-binding failures, and writer compatibility
+are covered by the focused suite. `test_vfp_assets` and `test_localization` pass
+2/2 on the corrected tree. `python3 scripts/assemble_changelog.py
 --check` validates 281 fragments and `git diff --check` is clean. Direct
 `copperfin_inspect` outputs show both real captures as `status: ok` with
 `ASCTAG`/`DESCTAG`, expression `name`, and persisted ascending/descending
 direction (also asserted directly by the test). Companion DBF inspection
 reports `has_structural_cdx: true` and the CDX at `index[1]`. Durable docs and
 changelog are updated in this same slice. Exact commands, outputs, frozen-input
-hashes, and evidence-file SHA-256 `0e580e68ee6472f4d72e5569500ee2452bcfd7650c6333bba28ee078e9980c43`
-are retained in `evidence.txt` at
+hashes, and evidence-file SHA-256 to be refreshed after the correction is committed;
+previous evidence hash `0e580e68ee6472f4d72e5569500ee2452bcfd7650c6333bba28ee078e9980c43`
+remains valid for the earlier checkpoint only. The new regression and exact
+commands are appended to `evidence.txt`. Prior evidence and fixture hashes are retained in `evidence.txt` at
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/`.
 
 This is metadata recovery only: no ordered runtime scan or `SEEK` claim yet.

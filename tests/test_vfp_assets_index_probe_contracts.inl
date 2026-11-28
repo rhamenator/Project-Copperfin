@@ -63,6 +63,25 @@ void test_parse_synthetic_vfp9_compound_cdx_preserves_tag_tuples() {
     }
 }
 
+void test_parse_vfp9_cdx_directory_name_width_is_independent_of_key_length() {
+    auto bytes = make_synthetic_structural_cdx({
+        {.name = "WIDE_TAG", .key_expression = "UPPER(customer_name)",
+         .for_expression = "", .root_page = 9U}
+    });
+    // VFP9 allows compound CDX key lengths through 240 characters; the
+    // directory still stores a tag name in its fixed 10-character slot.
+    write_le_u16(bytes, 12U, 240U);
+    const auto result = copperfin::vfp::parse_index_probe(
+        bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
+    expect(result.ok && result.probe.tags.size() == 1U,
+           "a long CDX key-length hint must not change the fixed tag-name directory width");
+    if (result.probe.tags.size() == 1U) {
+        expect(result.probe.tags.front().name_hint == "WIDE_TAG" &&
+                   result.probe.tags.front().key_expression_hint == "UPPER(customer_name)",
+               "the fixed-width directory name and the longer key expression must remain independently decoded");
+    }
+}
+
 void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
     const auto duplicate_names = make_synthetic_structural_cdx({
         {.name = "SHARED", .key_expression = "first_key", .for_expression = "", .root_page = 9U},

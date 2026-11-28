@@ -1099,7 +1099,7 @@ bool parse_structural_tag_directory(
     std::uint64_t file_size,
     const CdxHeader& header,
     std::vector<CdxTagDescriptor>& tags) {
-    if (header.key_length_hint != 10U ||
+    if (header.page_size != 512U ||
         static_cast<std::uint64_t>(header.root_node_offset) + header.page_size > file_size) {
         return false;
     }
@@ -1110,7 +1110,7 @@ bool parse_structural_tag_directory(
             bytes,
             directory_offset,
             header.page_size,
-            header.key_length_hint,
+            10U,
             true,
             directory_entries) &&
         !decode_copperfin_single_tag_directory(bytes, directory_offset, directory_entries)) {
