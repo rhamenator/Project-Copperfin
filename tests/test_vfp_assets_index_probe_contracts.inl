@@ -35,6 +35,9 @@ void test_parse_index_probe_for_cdx() {
 
 void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() {
     namespace fs = std::filesystem;
+    const copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    const auto english_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(), "en-US");
     const fs::path fixture_root = fs::path(COPPERFIN_TEST_SOURCE_DIR) /
         "tests/fixtures/vfp9-descending-observation-output";
     const fs::path cdx_path = fixture_root / "descending.CDX";
@@ -46,8 +49,9 @@ void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() 
            "a real VFP9 compound CDX with unbound directory entries must not report successful tag metadata");
     expect(direct_result.probe.tags.empty(),
            "a rejected compound CDX must not expose heuristic tag names or expressions");
-    expect(direct_result.error.find("Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata") == std::string::npos,
-           "a rejected compound CDX should expose localized error text, not a resource key");
+    expect(direct_result.error == english_catalog.translate(
+               "Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata"),
+           "a rejected compound CDX should expose the specific localized incomplete-metadata error");
 
     const auto table_result = copperfin::vfp::inspect_asset(
         copperfin::platform::path_to_utf8_string(dbf_path));
@@ -66,14 +70,19 @@ void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() 
 
 void test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed() {
     auto bytes = make_synthetic_cdx_family_bytes(true, false);
+    const std::size_t root_page_offset = static_cast<std::size_t>(
+        static_cast<std::uint32_t>(bytes[0]) |
+        (static_cast<std::uint32_t>(bytes[1]) << 8U) |
+        (static_cast<std::uint32_t>(bytes[2]) << 16U) |
+        (static_cast<std::uint32_t>(bytes[3]) << 24U));
     // A 512-byte CDX page has only 508 bytes after its four-byte header;
-    // 128 four-byte pointers cannot fit before its tag-name tail.
-    write_le_u16(bytes, 1026U, 128U);
+    // 128 four-byte pointers exceed the page boundary.
+    write_le_u16(bytes, root_page_offset + 2U, 128U);
 
     const auto result = copperfin::vfp::parse_index_probe(
         bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
     expect(!result.ok,
-           "a compound root directory whose declared pointers cannot fit in its page must fail closed");
+           "a compound root directory whose declared pointers exceed its page must fail closed");
     expect(result.probe.tags.empty(),
            "an overfull compound root directory must not fall through to whole-file tag heuristics");
 }

@@ -17,40 +17,42 @@ untrusted index descriptor. It does not decode
 the tag directory or resolve ordered scans/SEEK. Production, focused test,
 locale, documentation, traceability and changelog edits are complete. GNU
 15.2 Debug `test_vfp_assets` passes, including the retained real-fixture
-rejection and companion-warning assertions. `test_localization`, locale
-catalog install/review/registry checks, contributor signoff, changelog
-assembler/fragment validation, and native test-isolation contracts pass 9/9;
-the changelog validator reports 278 valid fragments and `git diff --check` is
-clean. `test_agent_issue_intake` and the safety-traceability workflow contract
-cannot start because configured `/snap/bin/pwsh` fails in `snap-confine`
-(`cap_dac_override` unavailable; `Argument list too long`); these are
-environment-blocked, not passing. PR #7353 is a separate unmerged
-fixture-evidence PR at `d5bb564e9e877b774da0e021b5a4caec58689d05`; its Windows
-MSVC shard failed `test_access_saveastext_export`, its inventory artifact is
-missing, and no actual clean Claude review is recorded. Do not merge it or
-depend on its fixture in this slice. The signed+DCO implementation commit is
-`f38bea136fd39f2080a9f6e2ce9bc051c126dedc`, pushed to PR #7354 based on
-`b569a70d1957fc9a326039d74feed9ee0aca0a97`. Its original PR head was
-`f38bea136fd39f2080a9f6e2ce9bc051c126dedc`; the verified `@claude review`
-trigger was posted as comment `7227057469`, but no actual Claude review
-response is recorded. Hosted checks pass at current head
-`78c76aad1ef4f768c7ce165fd4c65f4e0d29ada3`. GitHub lists no review requests or
-reviews; owner authorized local Claude review when available and Codex
-adversarial review as fallback. Exact-head Codex review found the overfull-root
-count bypass; code, regression, traceability, and changelog are updated locally
-and need focused verification before a signed+DCO fix commit. PR #7353's
-failing Windows test is under separate diagnosis:
+rejection and companion-warning assertions. The PR branch includes the focused
+overfull-root regression and the required traceability/changelog updates. PR
+#7353 is a separate unmerged fixture-evidence PR at
+`d5bb564e9e877b774da0e021b5a4caec58689d05`; its Windows MSVC shard failed
+`test_access_saveastext_export`, its inventory artifact was missing at the last
+diagnosis, and it remains separate from this slice. The signed+DCO
+implementation commit is `f38bea136fd39f2080a9f6e2ce9bc051c126dedc`; the
+signed+DCO overfull-root fix is `1601897c4bff90e3af373ff52d5ff690179fd244`,
+both pushed to PR #7354 based on
+`b569a70d1957fc9a326039d74feed9ee0aca0a97`. The owner requested and posted a
+local Claude Code review note on #7354. Its possible over-rejection remains an
+unverified lead: this bounded PR intentionally qualifies unsupported or
+unbound metadata as incomplete rather than guessing tag descriptors, while
+the existing synthetic two-tag test proves the positively bound layout still
+parses. The page-fit check now describes only its proven page-boundary limit;
+the unknown tag-name tail layout is not inferred. This review repair also
+strengthens the fixture test to assert the exact localized error, derives the
+root offset from the CDX file header, and restores alphabetical catalog-key
+order. After these local edits, constrained GNU 15.2 Debug build and focused
+`test_vfp_assets` pass 1/1 (3.33s); all four locale JSON files parse and
+`git diff --check` is clean. The hosted inventory-coverage job is still
+running on the prior PR head, so it is not final evidence for this new head.
+PR #7353's failing Windows test is under separate diagnosis:
 `test_access_saveastext_export` failed three assertions around its
 missing-database subprocess; the inventory-coverage failure is downstream of
 that shard missing its after-inventory artifact. The same test passed on PR
-#7354 at 31.64 seconds, so the cause remains unresolved. Finish #7354 review
+#7354 at 31.64 seconds, so the cause remains unresolved. Finish #7354's
+exact-head adversarial review and hosted checks, resolve actual review threads,
 and merge before splitting off a bounded #7353 failure investigation; owner
 also queued PRs #7247 and #7248 after #7353–#7354 merge.
 Local build/test evidence is in this worktree's `build/` and
 `build/Testing/Temporary/LastTest.log`; fixture hashes are retained above.
-This work stage took approximately 25 minutes. NEXT: update this checkpoint,
-push the new exact head and re-request Claude review; monitor hosted
-checks/review, resolve actionable feedback, and merge only after clean
+This work stage took approximately 25 minutes. NEXT: commit the verified local
+review corrections with signature and DCO, push them to #7354, request the
+owner-authorized Codex exact-head review, then monitor its result and fresh
+hosted checks. Resolve all actual review threads and merge only after a clean
 exact-head authorized review, all required checks green, and all conversations
 resolved. Keep issue #5620 open and prioritize structural compound-tag
 decoding before claiming a promo-video baseline; #6334 ordered

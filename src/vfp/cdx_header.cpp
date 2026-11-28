@@ -419,10 +419,10 @@ bool has_unbound_compound_root_directory_tags(
 
     const std::size_t entry_bytes = static_cast<std::size_t>(entry_count) * 4U;
     if (entry_bytes > (page_size - 4U)) {
-        // The declared root-directory entries cannot fit between this
-        // page's four-byte header and its tag-name tail. Do not let the
-        // later whole-file heuristics reinterpret the malformed compound
-        // page as authoritative tag metadata.
+        // The declared root-directory pointer array cannot fit within this
+        // page after its four-byte header. Do not let the later whole-file
+        // heuristics reinterpret the malformed compound page as authoritative
+        // tag metadata.
         return true;
     }
 
