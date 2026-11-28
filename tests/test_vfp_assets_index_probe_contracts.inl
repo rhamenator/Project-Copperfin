@@ -150,6 +150,16 @@ void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
         unused_page_as_root, unused_page_as_root.size(), copperfin::vfp::IndexKind::cdx);
     expect(!unused_page_as_root_result.ok && unused_page_as_root_result.probe.tags.empty(),
            "an unused in-range page without CDX root attributes must not be published as a tag root");
+
+    auto directory_page_as_root = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    constexpr std::size_t directory_page_offset = 2U * 512U;
+    write_le_u32(directory_page_as_root, tag_header_offset, directory_page_offset);
+    const auto directory_page_as_root_result = copperfin::vfp::parse_index_probe(
+        directory_page_as_root, directory_page_as_root.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!directory_page_as_root_result.ok && directory_page_as_root_result.probe.tags.empty(),
+           "a tag root pointing to the compound directory page must not publish a tag descriptor");
 }
 
 void test_parse_real_vfp9_compound_cdx_recovers_directory_metadata() {

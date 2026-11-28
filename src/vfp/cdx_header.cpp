@@ -1185,7 +1185,8 @@ bool parse_structural_tag_directory(
             continue;
         }
 
-        if (!looks_like_tag_page_offset(tag_root_offset, header.page_size, bytes.size()) ||
+        if (tag_root_offset == directory_offset ||
+            !looks_like_tag_page_offset(tag_root_offset, header.page_size, bytes.size()) ||
             static_cast<std::uint64_t>(tag_root_offset) + header.page_size > file_size ||
             static_cast<std::uint64_t>(tag_root_offset) + header.page_size > bytes.size()) {
             return false;
