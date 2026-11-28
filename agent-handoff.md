@@ -19,7 +19,9 @@ Real fixture inputs remain frozen: `descending.CDX` SHA-256
 independent `indexed_demo.cdx` SHA-256
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 Release build dir is `/tmp/copperfin-cdx-5620-release`. The focused
-`test_vfp_assets` and `test_localization` pass 2/2 after the synthetic CDX
+Implementation commit `c4ab47c95b7032a1f7dd668954a18c0e0a329403` is signed
+with a verified GPG signature and DCO trailer. `test_vfp_assets` and
+`test_localization` pass 2/2 after the synthetic CDX
 builders were converted to structural entries, ambiguous bindings fail closed,
 and writer compatibility was restored. `python3 scripts/assemble_changelog.py
 --check` validates 281 fragments and `git diff --check` is clean. Direct
@@ -27,8 +29,9 @@ and writer compatibility was restored. `python3 scripts/assemble_changelog.py
 `ASCTAG`/`DESCTAG`, expression `name`, and persisted ascending/descending
 direction (also asserted directly by the test). Companion DBF inspection
 reports `has_structural_cdx: true` and the CDX at `index[1]`. Durable docs and
-changelog are updated in this same slice. Exact commands, outputs, and frozen-
-input hashes are retained at
+changelog are updated in this same slice. Exact commands, outputs, frozen-input
+hashes, and evidence-file SHA-256 `0e580e68ee6472f4d72e5569500ee2452bcfd7650c6333bba28ee078e9980c43`
+are retained in `evidence.txt` at
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/`.
 
 This is metadata recovery only: no ordered runtime scan or `SEEK` claim yet.
@@ -37,11 +40,11 @@ VFP9-tested dataset: enough distinct and duplicate values to exercise prefix
 compression, equal-key tie behavior, ascending/descending order, exact/missing
 SEEK, and boundary keys; preserve the native VFP9 observations and hashes.
 Then #6413 print-expression aggregation. Do not call the promo video a current
-baseline until runtime behavior is verified on public main. NEXT: finish
-final diff review, commit with the configured signed commit and DCO sign-off,
-push and open a PR. Request Claude review first; if unavailable, owner-
-authorized local Codex review is allowed. Require exact-head clean review,
-green required checks, and resolved conversations before merging.
+baseline until runtime behavior is verified on public main. NEXT: perform the
+final commit/diff audit, push the implementation commit, and open a PR. Request
+Claude review first; if unavailable, owner-authorized local Codex review is
+allowed. Require exact-head clean review, green required checks, and resolved
+conversations before merging.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 
