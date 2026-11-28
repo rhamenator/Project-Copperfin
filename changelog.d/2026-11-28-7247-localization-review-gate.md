@@ -1,0 +1,1 @@
+- 2026-11-28: Apply localization review-status checks to every declared locale, preserve protected VFP and CLI syntax, initialize review ledgers without following linked directories, and honor installed English catalogs ahead of embedded fallback text.

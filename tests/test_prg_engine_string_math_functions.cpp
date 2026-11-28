@@ -8,15 +8,39 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "../src/runtime/prg_compatibility_error.h"
 #include "../src/runtime/prg_engine_string_functions.h"
+#include "../src/runtime/prg_engine_string_function_test_hooks.h"
 #include "prg_engine_test_support.h"
 
+#include <algorithm>
+#include <atomic>
 #include <cmath>
+#include <chrono>
+#include <condition_variable>
+#include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <limits>
 #include <locale>
+#include <functional>
+#include <mutex>
 #include <system_error>
+#include <thread>
+
+#if defined(__linux__)
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define COPPERFIN_TRIM_TEST_ASAN 1
+#endif
+#endif
+#if defined(__SANITIZE_ADDRESS__)
+#define COPPERFIN_TRIM_TEST_ASAN 1
+#endif
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -26,6 +50,17 @@ namespace
 {
 
     using namespace copperfin::test_support;
+
+    std::atomic<bool> wildcard_match_poll_entered{false};
+    std::atomic<bool> release_wildcard_match_poll{false};
+
+    void pause_at_wildcard_match_poll()
+    {
+        wildcard_match_poll_entered.store(true, std::memory_order_release);
+        while (!release_wildcard_match_poll.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+    }
 
     class comma_decimal_numpunct final : public std::numpunct<char>
     {
@@ -1488,6 +1523,7 @@ namespace
             "cPartialNoMatch = LTRIM('xHello', 0, 'xy')\n"
             "cWholeTokenMatch = LTRIM('xyxyHello', 0, 'xy')\n"
             "cWholeTokenRight = RTRIM('HelloAbAb', 0, 'Ab')\n"
+            "cConvertedToken = LTRIM('11Hello', 0, 11)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -1510,8 +1546,437 @@ namespace
         check("cpartialnomatch", "xHello");
         check("cwholetokenmatch", "Hello");
         check("cwholetokenright", "Hello");
+        check("cconvertedtoken", "Hello");
 
         fs::remove_all(temp_root, ignored);
+    }
+
+    void test_trim_parse_tokens_do_not_duplicate_evaluated_character_arguments()
+    {
+#if defined(__linux__) && !defined(COPPERFIN_TRIM_TEST_ASAN)
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_trim_token_amplification";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        std::string repeated_arguments;
+        for (std::size_t index = 0U; index < 200U; ++index) {
+            repeated_arguments += ",t";
+        }
+        const auto write_case = [&](const fs::path& path, bool trim) {
+            write_text(
+                path,
+                "s=REPLICATE('a',1000000)\n"
+                "t=REPLICATE('a',999999)+'b'\n"
+                "hit=" + std::string(trim ? "LEN(LTRIM(s,0" : "LEN(s") +
+                    repeated_arguments + std::string(trim ? "))" : ")") + "\n"
+                "RETURN\n");
+        };
+        const fs::path control_path = temp_root / "control.prg";
+        const fs::path trim_path = temp_root / "trim.prg";
+        write_case(control_path, false);
+        write_case(trim_path, true);
+
+        const auto run_capped = [&](const fs::path& path) {
+            const pid_t child = ::fork();
+            expect(child >= 0, "#7342: fork should create the capped public-PRG child");
+            if (child == 0) {
+                constexpr rlim_t address_cap = 512ULL * 1024ULL * 1024ULL;
+                const rlimit limit{address_cap, address_cap};
+                if (::setrlimit(RLIMIT_AS, &limit) != 0) {
+                    _exit(2);
+                }
+                auto session = copperfin::runtime::PrgRuntimeSession::create(
+                    make_runtime_session_options(path.string(), temp_root.string()));
+                const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+                const auto hit = state.globals.find("hit");
+                const bool passed = state.completed && hit != state.globals.end() &&
+                    copperfin::runtime::format_value(hit->second) == "1000000";
+                _exit(passed ? 0 : 3);
+            }
+            if (child < 0) {
+                return false;
+            }
+            int status = 0;
+            return ::waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        };
+
+        expect(run_capped(control_path),
+               "#7342: the same-argument LEN control should complete under the 512 MiB address cap");
+        expect(run_capped(trim_path),
+               "#7342: LTRIM should not duplicate 200 already-evaluated 1 MiB parse tokens under the cap");
+        fs::remove_all(temp_root, ignored);
+#endif
+    }
+
+    void test_like_wildcard_suffix_matching_is_bounded_and_cancellable()
+    {
+#if defined(__linux__) && !defined(COPPERFIN_TRIM_TEST_ASAN)
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_like_bounded_work";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "like_bounded_work.prg";
+        write_text(
+            main_path,
+            "n=24000\n"
+            "suffix=REPLICATE('a',n/2)\n"
+            "miss=REPLICATE('a',n)+'c'\n"
+            "hit=REPLICATE('a',n)+'b'\n"
+            "linear=REPLICATE('a',1000000)\n"
+            "byteMiss=LIKE('*'+suffix+'b',miss)\n"
+            "byteHit=LIKE('*'+suffix+'b',hit)\n"
+            "byteShort=LIKE('*b',miss)\n"
+            "byteLinear=LIKE(linear,linear)\n"
+            "literalN=96000\n"
+            "literalSuffix=REPLICATE('a',literalN/2)\n"
+            "literalText=REPLICATE('a',literalN)+'*c'\n"
+            "byteLiteralMiss=LIKE('*'+literalSuffix+'b',literalText)\n"
+            "scalarMiss=LIKEC('*'+suffix+'b',miss)\n"
+            "scalarHit=LIKEC('*'+suffix+'b',hit)\n"
+            "scalarShort=LIKEC('*b',miss)\n"
+            "scalarLinear=LIKEC(linear,linear)\n"
+            "scalarLiteralMiss=LIKEC('*'+literalSuffix+'b',literalText)\n"
+            "RETURN\n");
+
+        const pid_t child = ::fork();
+        expect(child >= 0, "#7339: fork should create the capped public-PRG child");
+        if (child == 0) {
+            constexpr rlim_t address_cap = 512ULL * 1024ULL * 1024ULL;
+            const rlimit limit{address_cap, address_cap};
+            if (::setrlimit(RLIMIT_AS, &limit) != 0) {
+                _exit(2);
+            }
+            auto session = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+            const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            const auto is = [&](const std::string& name, bool expected) {
+                const auto found = state.globals.find(name);
+                return found != state.globals.end() && found->second.boolean_value == expected;
+            };
+            const bool passed = state.completed &&
+                is("bytemiss", false) && is("bytehit", true) && is("byteshort", false) &&
+                is("bytelinear", true) && is("byteliteralmiss", false) &&
+                is("scalarmiss", false) && is("scalarhit", true) && is("scalarshort", false) &&
+                is("scalarlinear", true) && is("scalarliteralmiss", false);
+            _exit(passed ? 0 : 3);
+        }
+
+        bool completed = false;
+        int child_status = -1;
+        if (child > 0) {
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(8);
+            int status = 0;
+            while (std::chrono::steady_clock::now() < deadline) {
+                const pid_t result = ::waitpid(child, &status, WNOHANG);
+                if (result == child) {
+                    child_status = status;
+                    completed = WIFEXITED(status) && WEXITSTATUS(status) == 0;
+                    break;
+                }
+                if (result < 0) {
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            if (!completed) {
+                (void)::kill(child, SIGKILL);
+                (void)::waitpid(child, &status, 0);
+            }
+        }
+        expect(completed,
+               "#7339: LIKE/LIKEC ordinary and literal-star pathological misses plus matching/short controls should finish under the 8-second watchdog; status=" +
+                   std::to_string(child_status));
+        fs::remove_all(temp_root, ignored);
+#endif
+
+        std::size_t cancellation_polls = 0U;
+        bool cancelled = false;
+        try {
+            (void)copperfin::runtime::evaluate_string_function(
+                "like",
+                {copperfin::runtime::make_string_value("*" + std::string(5000U, 'a') + "b"),
+                 copperfin::runtime::make_string_value(std::string(10000U, 'a') + "c")},
+                false,
+                80U,
+                [](const std::string&) { return std::string{}; },
+                [&]() {
+                    return ++cancellation_polls >= 15U;
+                });
+        } catch (const copperfin::runtime::PrgStringFunctionCancellation&) {
+            cancelled = true;
+        }
+        expect(cancellation_polls >= 15U && cancelled,
+               "#7339: LIKE should poll cancellation during packed text traversal");
+
+        cancellation_polls = 0U;
+        cancelled = false;
+        try {
+            (void)copperfin::runtime::evaluate_string_function(
+                "like",
+                {copperfin::runtime::make_string_value("*" + std::string(5000U, 'a') + "b"),
+                 copperfin::runtime::make_string_value(std::string(10000U, 'a') + "*c")},
+                false,
+                80U,
+                [](const std::string&) { return std::string{}; },
+                [&]() {
+                    return ++cancellation_polls >= 15U;
+                });
+        } catch (const copperfin::runtime::PrgStringFunctionCancellation&) {
+            cancelled = true;
+        }
+        expect(cancellation_polls >= 15U && cancelled,
+               "#7339: the literal-star compatibility path should remain cooperatively cancellable");
+
+        namespace fs = std::filesystem;
+        const fs::path cancel_root = fs::temp_directory_path() / "copperfin_like_session_cancel";
+        std::error_code cancel_ignored;
+        fs::remove_all(cancel_root, cancel_ignored);
+        fs::create_directories(cancel_root);
+        const fs::path cancel_path = cancel_root / "like_session_cancel.prg";
+        write_text(
+            cancel_path,
+            "cExpr=\"LIKE('*'+REPLICATE('a',100000)+'b',REPLICATE('a',200000)+'*c')\"\n"
+            "hit=&cExpr\n"
+            "RETURN\n");
+        auto cancel_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(cancel_path.string(), cancel_root.string()));
+        wildcard_match_poll_entered.store(false, std::memory_order_relaxed);
+        release_wildcard_match_poll.store(false, std::memory_order_relaxed);
+        // Poll 320 is after the initial pattern/text star scans and the
+        // one-star classification scan, inside the long suffix comparison.
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(
+            pause_at_wildcard_match_poll,
+            320U);
+        copperfin::runtime::RuntimePauseState cancel_state;
+        std::mutex runner_mutex;
+        std::condition_variable runner_condition;
+        bool runner_done = false;
+        std::thread runner([&]() {
+            cancel_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            {
+                std::lock_guard lock(runner_mutex);
+                runner_done = true;
+            }
+            runner_condition.notify_one();
+        });
+        std::thread runner_watchdog([&]() {
+            std::unique_lock lock(runner_mutex);
+            if (!runner_condition.wait_for(
+                    lock,
+                    std::chrono::seconds(8),
+                    [&]() { return runner_done; })) {
+                std::cerr << "FAIL: #7339: deterministic session cancellation runner exceeded the 8-second watchdog.\n";
+                std::abort();
+            }
+        });
+        const auto poll_deadline =
+            std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (!wildcard_match_poll_entered.load(std::memory_order_acquire) &&
+               std::chrono::steady_clock::now() < poll_deadline) {
+            std::this_thread::yield();
+        }
+        const bool reached_matcher =
+            wildcard_match_poll_entered.load(std::memory_order_acquire);
+        cancel_session.request_cancel();
+        release_wildcard_match_poll.store(true, std::memory_order_release);
+        runner.join();
+        runner_watchdog.join();
+        copperfin::runtime::test_hooks::set_wildcard_match_poll_test_hook(nullptr, 0U);
+        const bool emitted_cancel_event = std::any_of(
+            cancel_state.events.begin(),
+            cancel_state.events.end(),
+            [](const copperfin::runtime::RuntimeEvent& event) {
+                return event.category == "runtime.task.cancelled";
+            });
+        expect(reached_matcher && !cancel_state.completed &&
+                   cancel_state.message == "Async task cancelled." &&
+                   emitted_cancel_event,
+               "#7339: deterministic in-flight session cancellation during literal-star-compatible LIKE should use the runtime cancellation path; reached_matcher=" +
+                   std::string(reached_matcher ? "true" : "false") +
+                   " completed=" + std::string(cancel_state.completed ? "true" : "false") +
+                   " message=" + cancel_state.message +
+                   " cancel_event=" + (emitted_cancel_event ? "true" : "false"));
+
+        const fs::path watch_path = cancel_root / "like_watch_cancel.prg";
+        write_text(watch_path, "x=1\ny=2\nRETURN\n");
+        auto watch_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(watch_path.string(), cancel_root.string()));
+        watch_session.add_breakpoint({.file_path = watch_path.string(), .line = 2});
+        const auto watch_pause =
+            watch_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(watch_pause.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "#7339: watch cancellation control should pause on the requested frame");
+        watch_session.request_cancel();
+        const auto cancelled_watch = watch_session.evaluate_watch_expression(
+            "LIKE('*'+REPLICATE('a',1000)+'b',REPLICATE('a',2000)+'c')");
+        expect(!cancelled_watch.ok && cancelled_watch.message == "Async task cancelled.",
+               "#7339: watch evaluation should preserve the standard cancellation message");
+        fs::remove_all(cancel_root, cancel_ignored);
+    }
+
+    void test_like_packed_nfa_preserves_wildcard_semantics()
+    {
+        const auto reference_match = [](const std::string& pattern, const std::string& text) {
+            std::size_t pattern_index = 0U;
+            std::size_t text_index = 0U;
+            const std::size_t no_star = std::numeric_limits<std::size_t>::max();
+            std::size_t saved_star = no_star;
+            std::size_t saved_text = 0U;
+            while (text_index < text.size()) {
+                if (pattern_index < pattern.size() &&
+                    (pattern[pattern_index] == '?' ||
+                     pattern[pattern_index] == text[text_index])) {
+                    ++pattern_index;
+                    ++text_index;
+                } else if (pattern_index < pattern.size() &&
+                           pattern[pattern_index] == '*') {
+                    saved_star = pattern_index++;
+                    saved_text = text_index;
+                } else if (saved_star != no_star) {
+                    pattern_index = saved_star + 1U;
+                    text_index = ++saved_text;
+                } else {
+                    return false;
+                }
+            }
+            while (pattern_index < pattern.size() && pattern[pattern_index] == '*') {
+                ++pattern_index;
+            }
+            return pattern_index == pattern.size();
+        };
+        const auto actual_match = [](const std::string& function,
+                                     const std::string& pattern,
+                                     const std::string& text) {
+            const auto result = copperfin::runtime::evaluate_string_function(
+                function,
+                {copperfin::runtime::make_string_value(pattern),
+                 copperfin::runtime::make_string_value(text)},
+                false,
+                80U,
+                [](const std::string&) { return std::string{}; });
+            return result.has_value() && result->boolean_value;
+        };
+
+        std::vector<std::string> patterns{std::string{}};
+        std::vector<std::string> generation{std::string{}};
+        for (std::size_t length = 1U; length <= 4U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab?*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            patterns.insert(patterns.end(), generation.begin(), generation.end());
+        }
+        std::vector<std::string> texts{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 5U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                next.push_back(prefix + 'a');
+                next.push_back(prefix + 'b');
+            }
+            generation = next;
+            texts.insert(texts.end(), generation.begin(), generation.end());
+        }
+        for (const std::string& pattern : patterns) {
+            for (const std::string& text : texts) {
+                const bool expected = reference_match(pattern, text);
+                expect(actual_match("like", pattern, text) == expected,
+                       "#7339: packed LIKE semantics differ for pattern=" + pattern + " text=" + text);
+            }
+        }
+
+        for (const std::size_t literal_count : {61U, 62U, 63U, 64U, 65U, 126U, 127U}) {
+            const std::string pattern = "*" + std::string(literal_count, 'a') + "?b";
+            const std::string text = std::string(literal_count + 7U, 'a') + "xb";
+            expect(actual_match("like", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed LIKE carry boundary differs at literal count " +
+                       std::to_string(literal_count));
+        }
+        const std::string frequent_and_rare_pattern =
+            "*" + std::string(1024U, 'a') + "b?c";
+        const std::string frequent_and_rare_text =
+            std::string(1024U, 'a') + "bxc";
+        expect(actual_match("like", frequent_and_rare_pattern, frequent_and_rare_text),
+               "#7339: frequent literal masks should compose with rare literals and question states");
+        expect(actual_match("likec", "**猫?é*", "前猫xé後"),
+               "#7339: LIKEC should collapse adjacent stars and consume one UTF-8 scalar for question");
+        expect(!actual_match("likec", "猫??", "猫é"),
+               "#7339: LIKEC question marks should count scalars rather than UTF-8 bytes");
+        expect(!actual_match("like", "a*", "a*c"),
+               "#7339: the short-pattern fast path should preserve prior literal-star precedence");
+        expect(!actual_match("like", std::string(65U, 'a') + "*b",
+                             std::string(65U, 'a') + "*c"),
+               "#7339: literal-star input should preserve prior precedence across the packed threshold");
+        const std::vector<std::pair<std::string, std::string>> literal_star_cases{
+            {"*", "a*a"},
+            {"a*", "a*c"},
+            {"**", "**"},
+            {"**", "***"},
+            {"*a*", "x*a?"},
+            {"*?b", "aa*xb"},
+            {"***a", "**a"},
+            {"*a*b", "xx*aayb"},
+        };
+        for (const auto& [suffix_pattern, suffix_text] : literal_star_cases) {
+            const std::string pattern = std::string(65U, 'z') + suffix_pattern;
+            const std::string text = std::string(65U, 'z') + suffix_text;
+            expect(actual_match("like", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed literal-star LIKE precedence differs for suffix pattern=" +
+                       suffix_pattern + " text=" + suffix_text);
+            expect(actual_match("likec", pattern, text) == reference_match(pattern, text),
+                   "#7339: packed literal-star LIKEC precedence differs for suffix pattern=" +
+                       suffix_pattern + " text=" + suffix_text);
+        }
+        std::vector<std::string> literal_suffix_patterns{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 3U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab?*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            literal_suffix_patterns.insert(
+                literal_suffix_patterns.end(), generation.begin(), generation.end());
+        }
+        std::vector<std::string> literal_suffix_texts{std::string{}};
+        generation = {std::string{}};
+        for (std::size_t length = 1U; length <= 4U; ++length) {
+            std::vector<std::string> next;
+            for (const std::string& prefix : generation) {
+                for (const char symbol : std::string{"ab*"}) {
+                    next.push_back(prefix + symbol);
+                }
+            }
+            generation = next;
+            literal_suffix_texts.insert(
+                literal_suffix_texts.end(), generation.begin(), generation.end());
+        }
+        for (const std::string& suffix_pattern : literal_suffix_patterns) {
+            const std::string pattern = std::string(65U, 'z') + suffix_pattern;
+            for (const std::string& suffix_text : literal_suffix_texts) {
+                if (suffix_text.find('*') == std::string::npos) {
+                    continue;
+                }
+                const std::string text = std::string(65U, 'z') + suffix_text;
+                const bool expected = reference_match(pattern, text);
+                expect(actual_match("like", pattern, text) == expected,
+                       "#7339: exhaustive packed literal-star LIKE precedence differs");
+                expect(actual_match("likec", pattern, text) == expected,
+                       "#7339: exhaustive packed literal-star LIKEC precedence differs");
+            }
+        }
+        expect(actual_match("like", std::string(100000U, 'a') + "?",
+                            std::string(100001U, 'a')),
+               "#7339: long star-free question patterns should remain linear and preserve wildcard semantics");
     }
 
     // #5946: real VFP9 SP2 rejects SPACE(300000000) with error 1903,
@@ -2518,6 +2983,9 @@ int main()
     test_str_rejects_oversized_width_instead_of_allocating();
     test_trim_family_supports_parse_characters_and_flags();
     test_trim_family_matches_whole_parse_string_tokens();
+    test_trim_parse_tokens_do_not_duplicate_evaluated_character_arguments();
+    test_like_wildcard_suffix_matching_is_bounded_and_cancellable();
+    test_like_packed_nfa_preserves_wildcard_semantics();
     test_space_and_replicate_reject_oversized_requests();
     test_space_and_replicate_accept_values_truncating_to_the_ceiling();
     test_padl_padr_padc_truncate_to_leftmost_characters();

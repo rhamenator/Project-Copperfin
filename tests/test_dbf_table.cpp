@@ -1659,7 +1659,7 @@ void test_create_dbf_table_file_round_trips() {
                parse_result.table.header.last_update_month <= 12U &&
                parse_result.table.header.last_update_day >= 1U &&
                parse_result.table.header.last_update_day <= 31U,
-           "created DBF tables should stamp a valid last-update header date for LUPDATE()");
+           "created DBF tables should stamp a valid last-update header date");
     expect(parse_result.table.fields.size() == 3U, "created DBF tables should persist field descriptors");
     expect(parse_result.table.records.size() == 2U, "created DBF tables should persist record rows");
     if (parse_result.table.records.size() == 2U) {

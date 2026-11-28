@@ -735,7 +735,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should scaffold ParamBlk function entrypoints");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for InitLibrary");
-        expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&InitLibrary), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&::InitLibrary), stub_emission_wrapper);") != std::string::npos,
                "fll-output wrapper source should preserve InitLibrary bridge metadata");
         expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(\n        descriptor);") != std::string::npos,
                "fll-output wrapper source should build a bridge invocation from the descriptor");
@@ -1176,7 +1176,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record the typed native success integer value.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for AddNumbers");
-        expect(wrapper_source.find("\"parameters\", \"tnLeft\\|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"parameters\", \"tnLeft\\|tnRight\", 2U, reinterpret_cast<void*>(&::AddNumbers), stub_emission_wrapper);") != std::string::npos,
                "fll-output wrapper source should preserve AddNumbers bridge metadata");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding)") != std::string::npos,
                "fll-output wrapper source should route stub returns through the shared placeholder return-statement helper");

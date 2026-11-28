@@ -164,7 +164,8 @@
         const std::vector<PrgValue>& arguments,
         bool exact_string_compare,
         std::size_t memo_width,
-        const std::function<std::string(const std::string&)>& set_callback);
+        const std::function<std::string(const std::string&)>& set_callback,
+        const std::function<bool()>& cancellation_requested);
     std::optional<PrgValue> evaluate_type_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -312,7 +313,9 @@
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback,
-                std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const PrgValue *)> read_native_member_callback,
+                std::function<std::optional<PrgValue>(
+                    const PrgValue &, const std::string &, const PrgValue *, const PrgValue *)>
+                    read_native_member_callback,
                 std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> invoke_native_member_callback,
                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
                 std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback,
@@ -330,6 +333,7 @@
                 std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
                 std::function<std::size_t()> memowidth_callback,
+                std::function<bool()> cancellation_requested,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback,
@@ -416,6 +420,7 @@
                   unbindevents_callback_(std::move(unbindevents_callback)),
                   aevents_callback_(std::move(aevents_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
+                  cancellation_requested_(std::move(cancellation_requested)),
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
@@ -884,6 +889,10 @@
 
             PrgValue parse_additive()
             {
+                // Each invocation argument is an independent arithmetic tree.
+                // A runtime primary in an earlier argument must not reclassify
+                // this literal-only additive subtree as runtime-derived.
+                ScopedNumericExpressionContext additive_context(numeric_runtime_primary_);
                 PrgValue left = parse_multiplicative();
                 while (true)
                 {
@@ -891,6 +900,7 @@
                     if (match("+"))
                     {
                         PrgValue right = parse_multiplicative();
+                        constant_materialized_metadata_.reset();
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -931,12 +941,25 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) + value_as_number(right));
+                            PrgValue result = make_number_value(value_as_number(left) + value_as_number(right));
+                            if (!numeric_runtime_primary_)
+                            {
+                                const auto attributes = constant_numeric_arithmetic_metadata(
+                                    ConstantNumericArithmeticOperation::addition, left, right,
+                                    result.number_value, set_callback_("DECIMALS"), true);
+                                if (attributes)
+                                {
+                                    result.numeric_metadata = attributes->intrinsic;
+                                    constant_materialized_metadata_ = attributes->materialized;
+                                }
+                            }
+                            left = std::move(result);
                         }
                     }
                     else if (match("-"))
                     {
                         PrgValue right = parse_multiplicative();
+                        constant_materialized_metadata_.reset();
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -986,7 +1009,19 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) - value_as_number(right));
+                            PrgValue result = make_number_value(value_as_number(left) - value_as_number(right));
+                            if (!numeric_runtime_primary_)
+                            {
+                                const auto attributes = constant_numeric_arithmetic_metadata(
+                                    ConstantNumericArithmeticOperation::subtraction, left, right,
+                                    result.number_value, set_callback_("DECIMALS"), true);
+                                if (attributes)
+                                {
+                                    result.numeric_metadata = attributes->intrinsic;
+                                    constant_materialized_metadata_ = attributes->materialized;
+                                }
+                            }
+                            left = std::move(result);
                         }
                     }
                     else
@@ -1010,6 +1045,7 @@
                     if (match("*"))
                     {
                         PrgValue right = parse_unary();
+                        constant_materialized_metadata_.reset();
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
@@ -1029,9 +1065,20 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) * value_as_number(right));
+                            PrgValue result = make_number_value(value_as_number(left) * value_as_number(right));
+                            if (!numeric_runtime_primary_)
+                            {
+                                const auto attributes = constant_numeric_arithmetic_metadata(
+                                    ConstantNumericArithmeticOperation::multiplication, left, right,
+                                    result.number_value, set_callback_("DECIMALS"), true);
+                                if (attributes)
+                                {
+                                    result.numeric_metadata = attributes->intrinsic;
+                                    constant_materialized_metadata_ = attributes->materialized;
+                                }
+                            }
+                            left = std::move(result);
                         }
-                        constant_materialized_metadata_.reset();
                     }
                     else if (match("/"))
                     {
@@ -1253,7 +1300,19 @@
                         return make_null_value();
                     }
                     require_compatible_operands(OperatorTypeRule::power, left, right);
-                    return make_number_value(std::pow(value_as_number(left), value_as_number(right)));
+                    PrgValue result = make_number_value(std::pow(value_as_number(left), value_as_number(right)));
+                    if (!numeric_runtime_primary_)
+                    {
+                        const auto attributes = constant_numeric_arithmetic_metadata(
+                            ConstantNumericArithmeticOperation::power, left, right,
+                            result.number_value, set_callback_("DECIMALS"), true);
+                        if (attributes)
+                        {
+                            result.numeric_metadata = attributes->intrinsic;
+                            constant_materialized_metadata_ = attributes->materialized;
+                        }
+                    }
+                    return result;
                 }
                 return left;
             }
@@ -1625,8 +1684,13 @@
                         }
                         selector_member_name.push_back(')');
                         if (const auto selector_value =
-                                read_native_member_callback_(current, selector_member_name,
-                                    arguments.size() == 1U ? &arguments.front() : nullptr);
+                                read_native_member_callback_(
+                                    current,
+                                    selector_member_name,
+                                    arguments.size() == 1U || arguments.size() == 2U
+                                        ? &arguments.front()
+                                        : nullptr,
+                                    arguments.size() == 2U ? &arguments[1] : nullptr);
                             selector_value.has_value())
                         {
                             return *selector_value;
@@ -2468,7 +2532,13 @@
                     }
                     return make_number_value(static_cast<double>(sql_set_prop_callback_(*handle, value_as_string(arguments[1]), arguments[2])));
                 }
-                if (const auto string_result = evaluate_string_function(function, arguments, exact_string_compare_, memowidth_callback_(), set_callback_))
+                if (const auto string_result = evaluate_string_function(
+                        function,
+                        arguments,
+                        exact_string_compare_,
+                        memowidth_callback_(),
+                        set_callback_,
+                        cancellation_requested_))
                 {
                     return *string_result;
                 }
@@ -2501,6 +2571,10 @@
                                     left_delim = delimiters.substr(0U, left_length);
                                     right_delim = delimiters.substr(left_length);
                                 }
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -2536,6 +2610,10 @@
                             try
                             {
                                 result += value_as_string(eval_expression_callback_(expr));
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -2600,6 +2678,10 @@
                         try
                         {
                             return eval_expression_callback_(return_expr);
+                        }
+                        catch (const PrgStringFunctionCancellation &)
+                        {
+                            throw;
                         }
                         catch (...) {}
                     }
@@ -2702,6 +2784,10 @@
                             pre = eval_expression_callback_(return_expr_text);
                         }
                     }
+                    catch (const PrgStringFunctionCancellation &)
+                    {
+                        throw;
+                    }
                     catch (...)
                     {
                     }
@@ -2710,6 +2796,10 @@
                         try
                         {
                             return eval_expression_callback_(return_expr_text);
+                        }
+                        catch (const PrgStringFunctionCancellation &)
+                        {
+                            throw;
                         }
                         catch (...)
                         {
@@ -2843,7 +2933,8 @@
                                                           resolve_object_callback_,
                                                           [this](const PrgValue& value, const std::string& member_name)
                                                           {
-                                                              return read_native_member_callback_(value, member_name, nullptr);
+                                                              return read_native_member_callback_(
+                                                                  value, member_name, nullptr, nullptr);
                                                           },
                                                           write_native_member_callback_,
                                                           whandle_from_hwnd_callback_,
@@ -2981,8 +3072,11 @@
                         }
                         selector_member_name.push_back(']');
                         if (const auto selector_value =
-                                read_native_member_callback_(current, selector_member_name,
-                                    secondary_selector.has_value() ? nullptr : &selector);
+                                read_native_member_callback_(
+                                    current,
+                                    selector_member_name,
+                                    &selector,
+                                    secondary_selector.has_value() ? &*secondary_selector : nullptr);
                             selector_value.has_value())
                         {
                             return *selector_value;
@@ -3062,8 +3156,11 @@
                         selector_member_name.push_back(']');
 
                         const auto selector_value =
-                            read_native_member_callback_(current, selector_member_name,
-                                secondary_selector.has_value() ? nullptr : &selector);
+                            read_native_member_callback_(
+                                current,
+                                selector_member_name,
+                                &selector,
+                                secondary_selector.has_value() ? &*secondary_selector : nullptr);
                         if (selector_value.has_value())
                         {
                             current = *selector_value;
@@ -3071,7 +3168,7 @@
                         }
 
                         const auto member_value =
-                            read_native_member_callback_(current, member_name, nullptr);
+                            read_native_member_callback_(current, member_name, nullptr, nullptr);
                         if (member_value.has_value())
                         {
                             RuntimeOleObjectState *member_object =
@@ -3113,7 +3210,8 @@
 
                     if (peek() == '(')
                     {
-                        const auto member_value = read_native_member_callback_(current, member_name, nullptr);
+                        const auto member_value = read_native_member_callback_(
+                            current, member_name, nullptr, nullptr);
                         if (member_value.has_value())
                         {
                             RuntimeOleObjectState *member_object = resolve_object_callback_(*member_value);
@@ -3143,7 +3241,8 @@
                         continue;
                     }
 
-                    const auto member_value = read_native_member_callback_(current, member_name, nullptr);
+                    const auto member_value = read_native_member_callback_(
+                        current, member_name, nullptr, nullptr);
                     if (!member_value.has_value())
                     {
                         return {};
@@ -4155,6 +4254,10 @@
                                 return expanded_value;
                             }
                         }
+                        catch (const PrgStringFunctionCancellation &)
+                        {
+                            throw;
+                        }
                         catch (...)
                         {
                         }
@@ -4647,9 +4750,13 @@
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback_;
-            // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: retain the original value
-            // through selector text formatting; borrowed only for this call.
-            std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const PrgValue *)> read_native_member_callback_;
+            // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001 and
+            // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: retain raw selector
+            // values through display-only selector text formatting; borrowed
+            // only for this call.
+            std::function<std::optional<PrgValue>(
+                const PrgValue &, const std::string &, const PrgValue *, const PrgValue *)>
+                read_native_member_callback_;
             std::function<std::optional<PrgValue>(const PrgValue &, const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> invoke_native_member_callback_;
             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
             std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback_;
@@ -4667,6 +4774,7 @@
             std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
+            std::function<bool()> cancellation_requested_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;

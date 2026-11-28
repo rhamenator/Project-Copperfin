@@ -47,7 +47,8 @@ int direct_count=0, public_count=0;
 void direct_cases() {
  const auto check=[](const PrgValue& value,NumericBehavior mode,std::optional<std::int64_t> result,const char* tag) {
   ++direct_count;
-  const auto operand=checked_bitand_argument(value,mode);
+  const auto operand=checked_bit_pattern_argument(
+      value,mode,BitPatternNonfinitePolicy::vfp9_infinity_zero);
   const bool match=result ? operand&&static_cast<std::int64_t>(*operand)==*result : !operand;
   expect(match,std::string("BITAND direct ")+tag);
  };

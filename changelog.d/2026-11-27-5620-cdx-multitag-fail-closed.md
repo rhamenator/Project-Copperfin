@@ -1,0 +1,1 @@
+- 2026-11-27: Reject compound CDX metadata when root-directory entries are unbound, duplicated, or cannot fit on the page, and report the incomplete companion index without publishing guessed tags.

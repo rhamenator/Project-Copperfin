@@ -1,0 +1,1 @@
+- 2026-11-02: Restrict Latin American Spanish catalog fallback to explicit regional tags, so Spanish for Spain and regionless Spanish no longer inherit es-419 text (#7074).

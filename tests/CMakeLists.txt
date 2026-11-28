@@ -53,6 +53,8 @@ copperfin_add_test(test_prg_engine_numeric_constant_division cf_xbase_runtime te
 copperfin_add_test(test_prg_engine_numeric_nonwhole_division cf_xbase_runtime test_prg_engine_numeric_nonwhole_division.cpp)
 copperfin_add_test(test_prg_numeric_constant_division_intrinsic_helper "" test_prg_numeric_constant_division_intrinsic_helper.cpp)
 target_include_directories(test_prg_numeric_constant_division_intrinsic_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
+copperfin_add_test(test_prg_numeric_constant_arithmetic_metadata_helper "" test_prg_numeric_constant_arithmetic_metadata_helper.cpp)
+target_include_directories(test_prg_numeric_constant_arithmetic_metadata_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 copperfin_add_test(test_prg_numeric_nonwhole_division_helper "" test_prg_numeric_nonwhole_division_helper.cpp)
 target_include_directories(test_prg_numeric_nonwhole_division_helper PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
@@ -411,21 +413,42 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_installer_artifact_policy_contract_check.cmake
 )
 
-find_package(Python3 COMPONENTS Interpreter QUIET)
-set(COPPERFIN_PYTHON3_EXECUTABLE "${Python3_EXECUTABLE}")
+set(COPPERFIN_PYTHON3_EXECUTABLE "" CACHE FILEPATH "Python 3 interpreter used by Copperfin tests")
+if(NOT COPPERFIN_PYTHON3_EXECUTABLE)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_EXECUTABLE)
+        set(COPPERFIN_PYTHON3_EXECUTABLE "${Python3_EXECUTABLE}" CACHE FILEPATH
+            "Python 3 interpreter used by Copperfin tests" FORCE)
+    endif()
+endif()
 if(COPPERFIN_PYTHON3_EXECUTABLE)
     add_test(
         NAME test_locale_review_status
         COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/scripts/check_locale_review_status.py"
     )
+    add_test(
+        NAME test_locale_review_status_negative
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_locale_review_status.py"
+    )
     set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;review-status")
+    set_tests_properties(test_locale_review_status_negative PROPERTIES LABELS "localization;review-status")
     add_test(
         NAME test_locale_review_gate_fixture
         COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/test_locale_review_gate.py"
     )
     set_tests_properties(test_locale_review_gate_fixture PROPERTIES LABELS "localization;review-status")
+    add_test(
+        NAME test_post_v1_locale_registry
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}" -B
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_post_v1_locale_registry.py"
+    )
+    set_tests_properties(test_post_v1_locale_registry PROPERTIES
+        LABELS "localization;review-status")
+else()
+    message(WARNING "Python 3 was not found; Python-backed Copperfin tests are unavailable")
 endif()
 find_program(COPPERFIN_RSCRIPT_EXECUTABLE NAMES Rscript Rscript.exe)
 find_program(COPPERFIN_POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
@@ -4663,6 +4686,29 @@ add_test(
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
+target_compile_definitions(test_vfp_assets PRIVATE
+    COPPERFIN_TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+)
+
+# RQ-CF-VFP-ACCESS-DESIGN-REGULAR-FILE-001: Access SaveAsText design-file
+# parsing binds regular-file admission to the opened object and never blocks on
+# POSIX FIFOs.
+copperfin_add_test(test_access_saveastext_design_regular_file_admission cf_vfp_assets
+    test_access_saveastext_design_regular_file_admission.cpp
+)
+
+# RQ-CF-VFP-DBC-CATALOG-REGULAR-FILE-001: DBC catalog readers bind
+# regular-file admission to the opened object and never block on POSIX FIFOs.
+copperfin_add_test(test_dbc_catalog_regular_file_admission cf_vfp_assets
+    test_dbc_catalog_regular_file_admission.cpp
+)
+
+# RQ-CF-VFP-DBF-PRIMARY-REGULAR-FILE-001: primary DBF readers bind
+# regular-file admission to the opened object and never block on POSIX FIFOs.
+copperfin_add_test(test_dbf_primary_regular_file_admission cf_xbase_runtime
+    test_dbf_primary_regular_file_admission.cpp
+    prg_engine_test_support.cpp
+)
 
 copperfin_add_test(test_vfp_sidecar_path cf_design_model
     test_vfp_sidecar_path.cpp
@@ -6144,6 +6190,23 @@ foreach(addlistitem_column_mode IN ITEMS COPPERFIN VFP9)
             COMMAND $<TARGET_FILE:test_prg_engine_addlistitem_column_numeric> ${addlistitem_column_mode} ${addlistitem_column_session})
     endforeach()
 endforeach()
+# RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001 / VR-5611-LISTITEM-COLUMN-NUMERIC-001.
+# Direct checked conversion plus public coverage for the bounded wired caller.
+copperfin_add_test(test_prg_engine_listitem_column_numeric cf_xbase_runtime
+    test_prg_engine_listitem_column_numeric.cpp
+    prg_engine_test_support.cpp
+)
+copperfin_add_test(test_prg_engine_listitem_column_numeric_public cf_xbase_runtime
+    test_prg_engine_listitem_column_numeric_public.cpp
+    prg_engine_test_support.cpp
+)
+foreach(listitem_column_mode IN ITEMS COPPERFIN VFP9)
+    string(TOLOWER "${listitem_column_mode}" listitem_column_mode_lower)
+    foreach(listitem_column_session IN ITEMS 1 2)
+        add_test(NAME test_prg_engine_listitem_column_numeric_public_${listitem_column_mode_lower}_session${listitem_column_session}
+            COMMAND $<TARGET_FILE:test_prg_engine_listitem_column_numeric_public> ${listitem_column_mode} ${listitem_column_session})
+    endforeach()
+endforeach()
 # RQ-CF-PRG-ADDLISTITEM-NEW-COLUMN-NUMERIC-001 / VR-5611-ADDLISTITEM-NEW-COLUMN-NUMERIC-001/002.
 # Missing-ID THIRD column only. Safe-original public shards; PRE-WIRE-authored
 # hostile vectors are fixed-only, NEVER old-caller execution qualification.
@@ -6980,6 +7043,9 @@ copperfin_add_test(test_prg_engine_aggregate_array_functions cf_xbase_runtime
 copperfin_add_test(test_prg_engine_string_math_functions cf_xbase_runtime
     test_prg_engine_string_math_functions.cpp
     prg_engine_test_support.cpp
+)
+target_compile_definitions(test_prg_engine_string_math_functions PRIVATE
+    COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS=1
 )
 
 copperfin_add_test(test_prg_engine_string_minus cf_xbase_runtime

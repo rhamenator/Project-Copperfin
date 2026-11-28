@@ -170,6 +170,7 @@ struct Statement {
     std::string tertiary_expression;
     std::string quaternary_expression;
     std::vector<std::string> names;
+    bool where_clause_present = false;
 };
 
 enum class RoutineKind {

@@ -532,8 +532,8 @@ internal static class CopperfinStudioHostBridge
             return;
         }
 
-        startInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"] = localization.Locale;
-        startInfo.EnvironmentVariables["COPPERFIN_LOCALE"] = localization.Locale;
+        startInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"] = localization.NativeHostLocale;
+        startInfo.EnvironmentVariables["COPPERFIN_LOCALE"] = localization.NativeHostLocale;
 
         var catalogRoot = ResolveCatalogRootForHost(hostPath);
         if (!string.IsNullOrWhiteSpace(catalogRoot))

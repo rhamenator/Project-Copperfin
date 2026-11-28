@@ -4,6 +4,8 @@
 
 #include "runtime_pipeline_support.h"
 
+#include <array>
+
 namespace copperfin::runtime {
 
 namespace {
@@ -12,6 +14,83 @@ constexpr int kRuntimeManifestVersion = 3;
 constexpr int kDebugManifestVersion = 3;
 
 }  // namespace
+
+namespace runtime_pipeline_detail {
+
+bool validate_runtime_package_plan_path_text(
+    const RuntimePackagePlan& plan,
+    std::string& error) {
+    const std::array<const std::string*, 29> direct_paths{
+        &plan.project_path,
+        &plan.package_root,
+        &plan.content_root,
+        &plan.manifest_path,
+        &plan.debug_manifest_path,
+        &plan.ast_manifest_path,
+        &plan.ir_manifest_path,
+        &plan.transpiled_csharp_path,
+        &plan.launcher_project_path,
+        &plan.launcher_source_path,
+        &plan.launcher_output_path,
+        &plan.module_definition_path,
+        &plan.native_wrapper_source_path,
+        &plan.native_wrapper_cmake_path,
+        &plan.native_wrapper_build_script_path,
+        &plan.native_wrapper_build_powershell_path,
+        &plan.library_api_manifest_path,
+        &plan.fll_api_manifest_path,
+        &plan.fxp_token_manifest_path,
+        &plan.app_archive_manifest_path,
+        &plan.runtime_host_destination_path,
+        &plan.startup_item,
+        &plan.startup_source_path,
+        &plan.working_directory,
+        &plan.audit_log_path,
+        &plan.license_source_path,
+        &plan.debug_plan.manifest_path,
+        &plan.debug_plan.startup_item,
+        &plan.debug_plan.startup_source_path};
+    const auto rejected = [](const std::string& value) {
+        return value.find('\0') != std::string::npos;
+    };
+    const auto digest_path_rejected = [&](const std::vector<RuntimeArtifactDigest>& digests) {
+        return std::any_of(
+            digests.begin(),
+            digests.end(),
+            [&](const RuntimeArtifactDigest& digest) { return rejected(digest.path); });
+    };
+    if (std::any_of(
+            direct_paths.begin(),
+            direct_paths.end(),
+            [&](const std::string* path) { return rejected(*path); }) ||
+        rejected(plan.debug_plan.working_directory) ||
+        std::any_of(
+            plan.debug_plan.source_roots.begin(),
+            plan.debug_plan.source_roots.end(),
+            rejected) ||
+        std::any_of(
+            plan.assets.begin(),
+            plan.assets.end(),
+            [&](const RuntimePackageAsset& asset) {
+                return rejected(asset.source_path) || rejected(asset.staged_path) ||
+                    rejected(asset.relative_path);
+            }) ||
+        std::any_of(
+            plan.launcher_artifacts.begin(),
+            plan.launcher_artifacts.end(),
+            [&](const RuntimeLauncherArtifact& artifact) {
+                return rejected(artifact.package_relative_path);
+            }) ||
+        digest_path_rejected(plan.compiler_contract_digests) ||
+        digest_path_rejected(plan.extension_payload_digests) ||
+        digest_path_rejected(plan.writable_data_payload_digests)) {
+        error = runtime_text("Runtime.Package.Error.OutputRootPathRejected");
+        return false;
+    }
+    return true;
+}
+
+}  // namespace runtime_pipeline_detail
 
 RuntimePackagePlan create_runtime_package_plan(
     const studio::StudioDocumentModel& document,
@@ -80,6 +159,13 @@ RuntimePackagePlan create_runtime_package_plan(
 
     if (!workspace.available) {
         plan.warnings.push_back(runtime_text("Runtime.Package.Warning.ProjectWorkspaceUnavailable"));
+        return plan;
+    }
+
+    if (output_root.find('\0') != std::string::npos) {
+        plan.warnings.push_back(runtime_text("Runtime.Package.Error.OutputRootPathRejected"));
+        plan.planning_warning_count = plan.warnings.size();
+        plan.planning_warnings_captured = true;
         return plan;
     }
 

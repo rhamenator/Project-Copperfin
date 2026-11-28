@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/rhamenator/Project-Copperfin/blob/main/docs/contracts/locale-entry-evidence-v1.schema.json",
+  "title": "Copperfin post-v1 locale entry evidence, planning contract v1",
+  "description": "One record per unique source key and locale, per exact source/artifact revision. A populated string is never a human review claim. This planning vocabulary is not the live v1 ledger vocabulary and requires an explicit migration mapping before operational use.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["locale", "sourceRevision", "catalogRevision", "entries"],
+  "properties": {
+    "locale": {"type": "string", "pattern": "^(?:qps-ploc|[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?)$"},
+    "sourceRevision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "catalogRevision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "entries": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"type": "string", "minLength": 1},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceSha256", "translationStatus", "reviewStatus"],
+        "properties": {
+          "sourceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "translationSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "translationStatus": {"enum": ["missing", "inherited-unverified", "draft-ai-advisory", "draft-human", "complete-unreviewed", "reviewed"]},
+          "reviewStatus": {"enum": ["none", "ai-advisory", "human-linguistic", "human-cultural-and-terminology"]},
+          "translatorEvidence": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:\\S+$"},
+          "reviewerEvidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reviewerId", "qualification", "reviewedAt", "evidenceLink"],
+            "properties": {
+              "reviewerId": {"type": "string", "minLength": 1},
+              "qualification": {"type": "string", "minLength": 1},
+              "reviewedAt": {"type": "string", "format": "date", "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$", "description": "Consumers must enable JSON Schema format assertion and reject impossible calendar dates."},
+              "evidenceLink": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:\\S+$"}
+            }
+          },
+          "regionalNotes": {"type": "string"},
+          "unresolvedRisk": {"type": "string", "minLength": 1}
+        },
+        "allOf": [
+          {"if": {"required": ["translationStatus"], "properties": {"translationStatus": {"const": "missing"}}}, "then": {"not": {"required": ["translationSha256"]}, "properties": {"reviewStatus": {"const": "none"}}}},
+          {"if": {"required": ["translationStatus"], "properties": {"translationStatus": {"enum": ["inherited-unverified", "draft-ai-advisory", "draft-human", "complete-unreviewed", "reviewed"]}}}, "then": {"required": ["translationSha256", "translatorEvidence"]}},
+          {"if": {"required": ["reviewStatus"], "properties": {"reviewStatus": {"enum": ["ai-advisory", "human-linguistic", "human-cultural-and-terminology"]}}}, "then": {"required": ["translationSha256"], "properties": {"translationStatus": {"enum": ["inherited-unverified", "draft-ai-advisory", "draft-human", "complete-unreviewed", "reviewed"]}}}},
+          {"if": {"properties": {"translationStatus": {"const": "reviewed"}}}, "then": {"required": ["translationSha256", "reviewerEvidence"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}},
+          {"if": {"required": ["reviewStatus"], "properties": {"reviewStatus": {"enum": ["human-linguistic", "human-cultural-and-terminology"]}}}, "then": {"required": ["reviewerEvidence", "unresolvedRisk"]}}
+        ]
+      }
+    }
+  }
+}

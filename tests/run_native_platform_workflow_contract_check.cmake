@@ -484,8 +484,8 @@ forbid_text(".github/workflows/build-installers.yml"
     "generic CPack version-file variable")
 require_text_count(".github/workflows/build-installers.yml"
     "tests/run_locale_catalog_install_contract_check.cmake"
-    3
-    "locale catalog install contract checks")
+    5
+    "locale catalog install contract checks and RPM source mount endpoints")
 require_text("scripts/test-windows-installer-lifecycle.ps1"
     "-DSOURCE_DIR=$(Join-Path $PSScriptRoot '..')"
     "Windows installer lifecycle locale inventory source")
@@ -494,7 +494,7 @@ require_text_count(".github/workflows/build-installers.yml"
     2
     "POSIX installer install-tree materialization")
 require_text(".github/workflows/build-installers.yml"
-    "-DINSTALL_ROOT=build/standalone-studio-install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake"
+    "cmake \"-DINSTALL_ROOT=build/standalone-studio-install\" \"-DSOURCE_DIR=.\" -P tests/run_locale_catalog_install_contract_check.cmake"
     "Windows installer locale install contract invocation")
 require_text_count(".github/workflows/build-installers.yml"
     "-DINSTALL_ROOT=build/install -DSOURCE_DIR=. -P tests/run_locale_catalog_install_contract_check.cmake"

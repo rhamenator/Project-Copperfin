@@ -62,6 +62,25 @@ void test_studio_host_json_assigns_form_set_class_by_stable_selectors(const std:
     expect(visual_object_property(missing_selector_path, "one-guid", "FORMSETCLASS") == "SaveFormSet",
         "#1136: form-set-class-object without target selectors should not mutate the asset");
 
+    const fs::path blank_selector_path = temp_root / "blank_selector.scx";
+    write_synthetic_form_table_for_object_form_set_class(blank_selector_path);
+    const auto blank_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", blank_selector_path.string(),
+            "--form-set-class-object",
+            "--form-set-class", "BaseFormSet",
+            "--form-set-class-target-object-name", "\t  ",
+            "--json"
+        },
+        temp_root);
+    expect(blank_selector_process.exit_code == 2,
+        "#7335: form-set-class-object with a blank selector should fail during launch parsing");
+    expect(visual_object_property(blank_selector_path, "one-guid", "FORMSETCLASS") == "SaveFormSet" &&
+            visual_object_property(blank_selector_path, "two-guid", "FORMSETCLASS") == "CancelFormSet" &&
+            visual_object_property(blank_selector_path, "three-guid", "FORMSETCLASS") == "StatusFormSet",
+        "#7335: a blank form-set-class selector should not mutate any object");
+
     const fs::path missing_value_path = temp_root / "missing_value.scx";
     write_synthetic_form_table_for_object_form_set_class(missing_value_path);
     const auto missing_value_process = run_process_capture(

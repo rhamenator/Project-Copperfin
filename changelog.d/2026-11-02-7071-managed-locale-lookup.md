@@ -1,0 +1,1 @@
+- 2026-11-02: Preserve requested locale identity in managed UI lookup so additional regional catalogs load and per-key fallback follows exact, parent, and source catalogs (#7071).

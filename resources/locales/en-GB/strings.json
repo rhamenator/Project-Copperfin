@@ -3144,5 +3144,7 @@
   "Studio.WorkspaceAgent.Warning": "Required unrestricted-mode warning",
   "Studio.WorkspaceAgent.Close": "Close",
   "Runtime.Prg.FileIo.Error.FileDoesNotExist": "File does not exist.",
-  "Runtime.Prg.FileIo.Error.FileAccessDenied": "File access is denied"
+  "Runtime.Prg.FileIo.Error.FileAccessDenied": "File access is denied",
+  "Runtime.Package.Error.OutputRootPathRejected": "Package output root contains an embedded NUL byte.",
+  "Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata": "Compound CDX tag metadata is incomplete because one or more tags could not be bound to a distinct header page."
 }

@@ -485,6 +485,91 @@ void test_update_command_sets_scoped_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_explicit_empty_where_rejects_before_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_empty_where_mutation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 1}, {"BRAVO", 2}});
+
+    const fs::path main_path = temp_root / "empty_where_mutation.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lDeleteCaught = .F.\n"
+        "nDeleteError = 0\n"
+        "TRY\n"
+        "    DELETE FROM People WHERE\n"
+        "CATCH TO oDeleteError\n"
+        "    lDeleteCaught = .T.\n"
+        "    nDeleteError = oDeleteError.ErrorNo\n"
+        "ENDTRY\n"
+        "GO 1\n"
+        "lDeletePreserved = !DELETED()\n"
+        "lUpdateCaught = .F.\n"
+        "nUpdateError = 0\n"
+        "TRY\n"
+        "    UPDATE People SET AGE = 99 WHERE\n"
+        "CATCH TO oUpdateError\n"
+        "    lUpdateCaught = .T.\n"
+        "    nUpdateError = oUpdateError.ErrorNo\n"
+        "ENDTRY\n"
+        "GO 1\n"
+        "nUpdatePreserved = AGE\n"
+        "UPDATE People SET AGE = AGE + 10 WHERE NAME = 'BRAVO'\n"
+        "DELETE FROM People WHERE NAME = 'ALPHA'\n"
+        "GO 1\n"
+        "lFilteredDelete = DELETED()\n"
+        "GO 2\n"
+        "nFilteredUpdate = AGE\n"
+        "RECALL ALL\n"
+        "UPDATE People SET AGE = 9\n"
+        "DELETE FROM People\n"
+        "GO 1\n"
+        "lBareDeleteFirst = DELETED()\n"
+        "nBareUpdateFirst = AGE\n"
+        "GO 2\n"
+        "lBareDeleteSecond = DELETED()\n"
+        "nBareUpdateSecond = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "empty-WHERE mutation script should catch both syntax errors: " + state.message);
+
+    const auto expect_global = [&](const std::string& name, const std::string& expected, const std::string& message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " (missing global)");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+    expect_global("ldeletecaught", "true", "DELETE FROM with explicit empty WHERE should be catchable");
+    expect_global("ndeleteerror", "10", "DELETE FROM with explicit empty WHERE should report VFP syntax error 10");
+    expect_global("ldeletepreserved", "true", "DELETE FROM with explicit empty WHERE should preserve row state");
+    expect_global("lupdatecaught", "true", "UPDATE with explicit empty WHERE should be catchable");
+    expect_global("nupdateerror", "10", "UPDATE with explicit empty WHERE should report VFP syntax error 10");
+    expect_global("nupdatepreserved", "1", "UPDATE with explicit empty WHERE should preserve field values");
+    expect_global("lfiltereddelete", "true", "populated DELETE FROM WHERE should still filter rows");
+    expect_global("nfilteredupdate", "12", "populated UPDATE WHERE should still filter rows");
+    expect_global("lbaredeletefirst", "true", "bare DELETE FROM should retain all-row behavior for row one");
+    expect_global("lbaredeletesecond", "true", "bare DELETE FROM should retain all-row behavior for row two");
+    expect_global("nbareupdatefirst", "9", "bare UPDATE should retain all-row behavior for row one");
+    expect_global("nbareupdatesecond", "9", "bare UPDATE should retain all-row behavior for row two");
+
+    const auto mutation_event_count = std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.update" || event.category == "runtime.delete_from";
+    });
+    expect(mutation_event_count == 4U,
+           "rejected empty-WHERE commands should emit no mutation event while populated and bare controls do");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_update_and_delete_accept_in_subquery_predicates() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_mutation_subquery";

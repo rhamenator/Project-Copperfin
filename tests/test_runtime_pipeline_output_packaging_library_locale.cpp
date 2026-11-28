@@ -168,8 +168,8 @@ void test_library_native_wrapper_numeric_literals_ignore_grouping_locale() {
     expect(dll_wrapper.find(", 1234U") != std::string::npos &&
                fll_wrapper.find(", 1234U") != std::string::npos,
            "#4869: DLL/OCX and FLL wrapper source lines should remain invariant C++ literals");
-    expect(dll_wrapper.find(", 12U, reinterpret_cast<void*>(&WideCall)") != std::string::npos &&
-               fll_wrapper.find(", 12U, reinterpret_cast<void*>(&WideCall)") != std::string::npos,
+    expect(dll_wrapper.find(", 12U, reinterpret_cast<void*>(&::WideCall)") != std::string::npos &&
+               fll_wrapper.find(", 12U, reinterpret_cast<void*>(&::WideCall)") != std::string::npos,
            "#4869: DLL/OCX and FLL wrapper parameter counts should remain invariant C++ literals");
     expect(dll_wrapper.find(parameter_names) != std::string::npos &&
                fll_wrapper.find(parameter_names) != std::string::npos,

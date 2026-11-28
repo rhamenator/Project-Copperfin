@@ -79,6 +79,12 @@ bool valid_configured_leaf(const std::filesystem::path& leaf) {
 #endif
 }
 
+bool contains_embedded_nul(const std::filesystem::path& path) {
+    const auto& native = path.native();
+    return native.find(std::filesystem::path::value_type{}) !=
+        std::filesystem::path::string_type::npos;
+}
+
 std::optional<std::string> text_hash(const std::string& value) {
     const auto digest = security::sha256_hex_for_text(value);
     return digest.ok
@@ -237,6 +243,14 @@ public:
 
 private:
     bool validate_paths(std::string& error) {
+        if (contains_embedded_nul(configured_root_) ||
+            std::any_of(
+                configured_destinations_.begin(),
+                configured_destinations_.end(),
+                contains_embedded_nul)) {
+            error = runtime_text("Runtime.Package.Error.OutputRootPathRejected");
+            return false;
+        }
         std::error_code filesystem_error;
         root_ = std::filesystem::absolute(configured_root_, filesystem_error).lexically_normal();
         if (filesystem_error) {

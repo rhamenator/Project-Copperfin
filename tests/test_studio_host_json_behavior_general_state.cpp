@@ -1048,6 +1048,25 @@ void test_studio_host_json_assigns_tab_orientation_by_stable_selectors(const std
     expect(visual_object_property(missing_selector_path, "one-guid", "TABORIENTATION") == "0",
         "#1139: tab-orientation-object without target selectors should not mutate the asset");
 
+    const fs::path blank_selector_path = temp_root / "blank_selector.scx";
+    write_synthetic_form_table_for_object_tab_orientation(blank_selector_path);
+    const auto blank_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", blank_selector_path.string(),
+            "--tab-orientation-object",
+            "--tab-orientation", "9",
+            "--tab-orientation-target-unique-id", "   ",
+            "--json"
+        },
+        temp_root);
+    expect(blank_selector_process.exit_code == 2,
+        "#7335: tab-orientation-object with a blank selector should fail during launch parsing");
+    expect(visual_object_property(blank_selector_path, "one-guid", "TABORIENTATION") == "0" &&
+            visual_object_property(blank_selector_path, "two-guid", "TABORIENTATION") == "1" &&
+            visual_object_property(blank_selector_path, "three-guid", "TABORIENTATION") == "2",
+        "#7335: a blank tab-orientation selector should not mutate any object");
+
     const fs::path missing_value_path = temp_root / "missing_value.scx";
     write_synthetic_form_table_for_object_tab_orientation(missing_value_path);
     const auto missing_value_process = run_process_capture(
