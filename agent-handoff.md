@@ -19,8 +19,8 @@ Real fixture inputs remain frozen: `descending.CDX` SHA-256
 independent `indexed_demo.cdx` SHA-256
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 Release build dir is `/tmp/copperfin-cdx-5620-release`. The focused
-Implementation commit `c4ab47c95b7032a1f7dd668954a18c0e0a329403` is signed
-with a verified GPG signature and DCO trailer. A final adversarial pass found
+Implementation commits `c4ab47c95b7032a1f7dd668954a18c0e0a329403` and
+`49c4f4d5f` are signed with verified GPG signatures and DCO trailers. A final adversarial pass found
 and corrected an over-restriction that coupled the directory’s fixed 10-byte
 tag-name width to the header key-length hint. VFP9 documentation allows CDX
 keys up to 240 characters; a regression now sets the hint to 240 and verifies
@@ -34,10 +34,7 @@ are covered by the focused suite. `test_vfp_assets` and `test_localization` pass
 direction (also asserted directly by the test). Companion DBF inspection
 reports `has_structural_cdx: true` and the CDX at `index[1]`. Durable docs and
 changelog are updated in this same slice. Exact commands, outputs, frozen-input
-hashes, and evidence-file SHA-256 to be refreshed after the correction is committed;
-previous evidence hash `0e580e68ee6472f4d72e5569500ee2452bcfd7650c6333bba28ee078e9980c43`
-remains valid for the earlier checkpoint only. The new regression and exact
-commands are appended to `evidence.txt`. Prior evidence and fixture hashes are retained in `evidence.txt` at
+hashes, and evidence-file SHA-256 `54ed3b8d4dd8415905ab96cc95da0b164038a3cba90aa3cb67533674e9bdf0b6` are retained in `evidence.txt` at
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/`.
 
 This is metadata recovery only: no ordered runtime scan or `SEEK` claim yet.
