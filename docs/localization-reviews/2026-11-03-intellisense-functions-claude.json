@@ -1,0 +1,367 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "claude-sonnet-5-5",
+  "mode": "Claude Code CLI print mode with tools disabled",
+  "sessions": [
+    "665dd73e-2e30-4166-bdf7-580a4c529f06",
+    "477219ed-a63b-49ba-98ad-c0cae3420ee9"
+  ],
+  "scope": "All 22 previously source-identical IntelliSense function descriptions in each of es-419 and pt-BR (44 total), proposed by Codex and independently reviewed by Claude. One es-419 File() entry was refined after a code review and independently re-reviewed in the second session.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Alias",
+      "sourceSha256": "8f791e9698d81326af9bc9bb06e9388d3278026273cdf311db99aa186cd00d1f",
+      "translationSha256": "47ae36c7b178a9f1ba7c3b13d7992932f2857682c27d60f192ebd75097223f65",
+      "verdict": "accept",
+      "reason": "Accurate; 'alias' and 'área de trabajo' are standard VFP Spanish terms. 'específica' fits 'named'."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.AllTrim",
+      "sourceSha256": "22bc57d682c59a516e68266c23a5788599f791c28f6f1046327b1adec044c8a7",
+      "translationSha256": "a385ec3d2a15585f3ec0d7c62c1541ec80fa58814bde6964d6330f2e71c05438",
+      "verdict": "accept",
+      "reason": "Correct and natural; 'iniciales y finales' matches leading/trailing."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Bof",
+      "sourceSha256": "76bc69d22e432872813d99b02db516cf9b118d92e2bdf826a9cf21e03f5304ab",
+      "translationSha256": "fffe28c00cea91d87291801ec53c5d826e4bb9eff680d1e4edc2e2f8e7e46b0f",
+      "verdict": "accept",
+      "reason": "Preserves .T.; meaning and grammar correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.CMonth",
+      "sourceSha256": "cc21afde4298343c89807100868e7383d81b30036b9f899c2127380e5d13a1ac",
+      "translationSha256": "72914297c7fa3cd42bc904f641a551ccce30e7f8e1a9dacd2f1550cc7b22d60c",
+      "verdict": "accept",
+      "reason": "Correct; 'nombre del mes' conveys the character result."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.CreateObject",
+      "sourceSha256": "7b114bf4e530266d15c826c1bea21977c8f028c74225f22650c87a682e982981",
+      "translationSha256": "cce83c83d16fd2eb3feb98c32c98a8c2fd8a25c792b50a62397e655bb5984552",
+      "verdict": "accept",
+      "reason": "COM and Copperfin preserved; reads naturally."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.CursorGetProp",
+      "sourceSha256": "a915c35484eb4300abba0a0137561843eb3b5070322a63a7542fc66519cdcb7f",
+      "translationSha256": "ed83e52983000052d5a138adac2ad45f274c4fa502dc337c9428d9d1d6e25d8c",
+      "verdict": "accept",
+      "reason": "'cursor' is the standard VFP term; 'metadatos' is fine. Minor ambiguity: 'remoto' could attach only to 'adaptador de cursor', which matches the source."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Date",
+      "sourceSha256": "5ff3720ed4993143e524223423f3232f0e865cea53568d58bd768c5aac78ff0e",
+      "translationSha256": "59308c79c8226a3c8177f645100a66bde1873722e285a84bef585bde0d6fe010",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Day",
+      "sourceSha256": "8d075bee747f5aa60c9dd244323184f310b21ee767c1f4974a4554e71e79ef23",
+      "translationSha256": "d0d68f0f98edf0d4e568f89802c6404ad0f01f70afcca30ae5cd3a9eeaae8e7d",
+      "verdict": "accept",
+      "reason": "Correct; 'el día' is clear as the day of the month in context."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Eof",
+      "sourceSha256": "c1fb164d1359ee0cafc6029c147ed13f36078da1af884b9597e695f11267ede6",
+      "translationSha256": "2c06f19af4544c8b9e0f28143ab05374b68e73bb7c2a0bb642a73b56f52463f8",
+      "verdict": "accept",
+      "reason": "Preserves .T.; meaning correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.File",
+      "sourceSha256": "3e3532a6eb7d2c2e3d60c53a188849eded9a8fafad4bf498d12ef103856ec02a",
+      "translationSha256": "82a110ce4231ecbeab6b0e673006137d40faaff2825800d30d7d8b5e10001816",
+      "verdict": "accept",
+      "reason": "Second read-only review: faithful and natural; 'Verifica' is standard Latin American technical wording, and 'archivo' is the appropriate term. Low stylistic uncertainty."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.GetObject",
+      "sourceSha256": "96683a64dfca9bf893d30608602a2debbd164f5cfce9984664334310360ea27e",
+      "translationSha256": "9f99df282c1ed67e46dcd70b2340bbdf9d8700ea8b62a7e1e1dc23607a939025",
+      "verdict": "accept",
+      "reason": "'moniker' preserved as required; 'se vincula' is acceptable for 'binds'."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Iif",
+      "sourceSha256": "cf1de21b6324b683c3bd78d965de2f3e4541ee0d923ee9986c2952b35593d9fd",
+      "translationSha256": "b0e3b3c129c84d69c1f22a81b11c5276ddf575214b2fd9a8b30277436bd62f1d",
+      "verdict": "accept",
+      "reason": "Correct and concise."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.JustPath",
+      "sourceSha256": "4a6c486b3b0a59278323ef393b13b606733daffde87bc9945dce56bb8d02123a",
+      "translationSha256": "3e63114ef3b74024490fa1dc92caf0f0cc694e4aec80e8ac744a6691f9c055a2",
+      "verdict": "accept",
+      "reason": "'directorio' and 'ruta' are appropriate technical terms."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Message",
+      "sourceSha256": "4ef3ce3f22245e6f39d13aad5120b06176636834e358c52c1086f8977899d8ab",
+      "translationSha256": "98cfc680ad36aba4b3f293c4cb42d204fc831f484753ea3ccd4068a10789dcd3",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.MessageBox",
+      "sourceSha256": "d4a09a9451d11b1021e60112e3f93948c7616768b6cceb9544e306e7fc56b018",
+      "translationSha256": "efcc9a2691bf3e70bd0661df29bcf25957f984a969f94fd534480562d05c852b",
+      "verdict": "accept",
+      "reason": "'cuadro de diálogo' is the standard term; 'el botón elegido' is correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Month",
+      "sourceSha256": "0dee4c51f5a0faeca1762916fa619eb0eadbb81d0b8a31aa006d3586249fb246",
+      "translationSha256": "599baca8e3647680b0026c30a7e99ba5a9a43cb2f7f1ed2d5e5949f72457769e",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.RecCount",
+      "sourceSha256": "cd3b244b0bbf1ecee36b52ab1b3bceb1f0b223b557b74fa0c701fa607f62328c",
+      "translationSha256": "776dd50b1214a693ccd5d2dd5b6fb154fe53546dc13ab38b5a54849f2b63e672",
+      "verdict": "accept",
+      "reason": "Correct; 'la indicada' refers clearly to the area."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.RecNo",
+      "sourceSha256": "31c56753fcdffb50ea76add9af7c96f04e21d25ae741eacafc1a70cf812a1cf9",
+      "translationSha256": "ad60f853499e98a600069e2ed1fd4d3c8ec88fbb5238fca35fe2bde960bd5bb3",
+      "verdict": "accept",
+      "reason": "Correct; the repeated 'actual' is faithful to the source."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Select",
+      "sourceSha256": "2fc3a52af636885ee6e36bc0df35036d21f2b70311e9e4421a9fc930bfba5292",
+      "translationSha256": "f96141aaac8caca4a459ba7fa8ab721ba958a338978c8a9d90b3df0629f74f79",
+      "verdict": "accept",
+      "reason": "'identifica o selecciona' reasonably renders 'resolves/selects'. Slightly terse, but unambiguous enough."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Str",
+      "sourceSha256": "5bf08eafd0c0a6d18bfa5e6e07deb0b3e1a9b58acdd9f6ad02adcefea411ba7e",
+      "translationSha256": "8d0e3c44a51dbf0b455c614971f37d1df9aebe9ea73a7a89a1a2d59cebca9c5b",
+      "verdict": "accept",
+      "reason": "'cadena' is the standard term for string in Latin American technical Spanish."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Sys",
+      "sourceSha256": "5948a90671376ca46bda0279b3bfbbcb7c305666d0dd178b6cfc1c698a12d2b0",
+      "translationSha256": "c7f0d15b784532503f7e2da8800ae3ab589f1fe2a53d3e2d064bb314ae34ab17",
+      "verdict": "accept",
+      "reason": "VFP preserved; meaning correct."
+    },
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Function.Year",
+      "sourceSha256": "37d6442ad9570236eb8a2a73692299f33157818bc385e3a93c63f0c1453c4e9f",
+      "translationSha256": "221dcd4fc720b2764cf268cf718d6fdb438d80b826761686824c7bdc3edba7b7",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Alias",
+      "sourceSha256": "8f791e9698d81326af9bc9bb06e9388d3278026273cdf311db99aa186cd00d1f",
+      "translationSha256": "9ed105b73f529be0128e754a3d4dd89bcd72562c9d9dc71951093a4158fe7be3",
+      "verdict": "accept",
+      "reason": "Accurate; 'alias' and 'área de trabalho' are standard. 'indicada' fits 'named'."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.AllTrim",
+      "sourceSha256": "22bc57d682c59a516e68266c23a5788599f791c28f6f1046327b1adec044c8a7",
+      "translationSha256": "201db31b3e36c8c2dc060baca2ebcd2699ca5e21acf0f47d53379329807ad59f",
+      "verdict": "accept",
+      "reason": "Correct and natural."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Bof",
+      "sourceSha256": "76bc69d22e432872813d99b02db516cf9b118d92e2bdf826a9cf21e03f5304ab",
+      "translationSha256": "fe5dfe68f9254aad9dcb4f72bb304e82ba11bcb341f3d11ba8ee3338437a331f",
+      "verdict": "accept",
+      "reason": "Preserves .T.; correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.CMonth",
+      "sourceSha256": "cc21afde4298343c89807100868e7383d81b30036b9f899c2127380e5d13a1ac",
+      "translationSha256": "f8592c3d7ed658f30a98a032e01668ac3eb51a4fcceb391a72a139dff25d5488",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.CreateObject",
+      "sourceSha256": "7b114bf4e530266d15c826c1bea21977c8f028c74225f22650c87a682e982981",
+      "translationSha256": "1ebbed67b27d396ff264eee3b270da8d38e3cb6a970d427c4e4da98a0cd32d91",
+      "verdict": "accept",
+      "reason": "COM and Copperfin preserved; 'automação' is the standard term."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.CursorGetProp",
+      "sourceSha256": "a915c35484eb4300abba0a0137561843eb3b5070322a63a7542fc66519cdcb7f",
+      "translationSha256": "ce041edbf9b6f0ed8a8a3de8354837d9b8ddb1b21b8f5f736e79da97ade9dac1",
+      "verdict": "accept",
+      "reason": "'cursor' is the correct VFP term; the phrasing is clear."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Date",
+      "sourceSha256": "5ff3720ed4993143e524223423f3232f0e865cea53568d58bd768c5aac78ff0e",
+      "translationSha256": "f39c655fceba111dee3df715a246e9b59d7cad2d03cb893ed19b75fbc811f304",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Day",
+      "sourceSha256": "8d075bee747f5aa60c9dd244323184f310b21ee767c1f4974a4554e71e79ef23",
+      "translationSha256": "a0d022d888a121a05567b6a6795b018751c07bf9e6f6edb3afbb895470c568b6",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Eof",
+      "sourceSha256": "c1fb164d1359ee0cafc6029c147ed13f36078da1af884b9597e695f11267ede6",
+      "translationSha256": "08a92a022ed67af917cf613feade914d0b944a38d9219284877c58f8c4db7f00",
+      "verdict": "accept",
+      "reason": "Preserves .T.; correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.File",
+      "sourceSha256": "3e3532a6eb7d2c2e3d60c53a188849eded9a8fafad4bf498d12ef103856ec02a",
+      "translationSha256": "7c0121f91685dead4213c8fd5a543f9025006572011d85126685690c0f3eec2e",
+      "verdict": "accept",
+      "reason": "Correct; 'arquivo' is the Brazilian term."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.GetObject",
+      "sourceSha256": "96683a64dfca9bf893d30608602a2debbd164f5cfce9984664334310360ea27e",
+      "translationSha256": "0692dc1732efd73066a8cd76cb24931ffc06328e17c85f03ad8edb431693fd0e",
+      "verdict": "accept",
+      "reason": "'moniker' preserved; 'Vincula-se' is natural and correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Iif",
+      "sourceSha256": "cf1de21b6324b683c3bd78d965de2f3e4541ee0d923ee9986c2952b35593d9fd",
+      "translationSha256": "6f28f458ef7ec72531ea00134560e84ea81bda73b86b71c333dfaec51c97a152",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.JustPath",
+      "sourceSha256": "4a6c486b3b0a59278323ef393b13b606733daffde87bc9945dce56bb8d02123a",
+      "translationSha256": "f92765aa5bdf147acd0ae6bf5fe7d7bfe33615afad22df06d3d54cd8002429f5",
+      "verdict": "accept",
+      "reason": "Correct; 'caminho' is common in pt-BR. 'Diretório' is also fine."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Message",
+      "sourceSha256": "4ef3ce3f22245e6f39d13aad5120b06176636834e358c52c1086f8977899d8ab",
+      "translationSha256": "e95387a4f87ef549b3d9c9131dbd8a983f8e46c1453fa162620337961345ba56",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.MessageBox",
+      "sourceSha256": "d4a09a9451d11b1021e60112e3f93948c7616768b6cceb9544e306e7fc56b018",
+      "translationSha256": "5023c7c7f3ca55490885151cc36fcf7e17c43ca114538897229a92c1e8a22382",
+      "verdict": "accept",
+      "reason": "'caixa de diálogo' is the standard Brazilian term."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Month",
+      "sourceSha256": "0dee4c51f5a0faeca1762916fa619eb0eadbb81d0b8a31aa006d3586249fb246",
+      "translationSha256": "3b772256ea7f6d907ff14af9cca69d914a48aaff887b4ed873002255b9c42f5e",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.RecCount",
+      "sourceSha256": "cd3b244b0bbf1ecee36b52ab1b3bceb1f0b223b557b74fa0c701fa607f62328c",
+      "translationSha256": "99390a79efc954c1dcb361481fd52d14bf540f5f24afb052e48515e21a41c62e",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.RecNo",
+      "sourceSha256": "31c56753fcdffb50ea76add9af7c96f04e21d25ae741eacafc1a70cf812a1cf9",
+      "translationSha256": "7a587aa00ed34278f86a9d3315e46b605f660c979400144d104a122af16a3044",
+      "verdict": "accept",
+      "reason": "Correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Select",
+      "sourceSha256": "2fc3a52af636885ee6e36bc0df35036d21f2b70311e9e4421a9fc930bfba5292",
+      "translationSha256": "414e878d389c047b93801db62786c6b824e6153b738747b1b75bb70074693093",
+      "verdict": "accept",
+      "reason": "Faithful; 'identifica ou seleciona' is an adequate rendering of 'resolves/selects'."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Str",
+      "sourceSha256": "5bf08eafd0c0a6d18bfa5e6e07deb0b3e1a9b58acdd9f6ad02adcefea411ba7e",
+      "translationSha256": "827d928d4956024a16b402b67e2cbe3d69b0cadbfe77c1b6d5089820b3b28033",
+      "verdict": "accept",
+      "reason": "'cadeia de caracteres' is the formal pt-BR term for string; correct, though longer than 'string'."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Sys",
+      "sourceSha256": "5948a90671376ca46bda0279b3bfbbcb7c305666d0dd178b6cfc1c698a12d2b0",
+      "translationSha256": "fb42f1ad5384ff83b240017caaacf4084a392d4903fa45d45bdd0a21ff37948e",
+      "verdict": "accept",
+      "reason": "VFP preserved; correct."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "LanguageService.IntelliSense.Function.Year",
+      "sourceSha256": "37d6442ad9570236eb8a2a73692299f33157818bc385e3a93c63f0c1453c4e9f",
+      "translationSha256": "ecfe87a7dba7261373f3d2d8daca304a89eb1f4aa6ed771c30c99a763ddc05b8",
+      "verdict": "accept",
+      "reason": "Correct."
+    }
+  ],
+  "residualUncertainty": "All 44 entries accepted. Residual uncertainty is stylistic only: whether 'cadena'/'cadeia de caracteres' should instead be 'string' to match VFP documentation conventions; whether 'Day' should say 'día del mes' to disambiguate; and 'resolves' in Select is rendered as 'identifica', which may be slightly loose. I did not check these strings against the repo's existing glossary or the VFP help in either locale.",
+  "limits": "Automated review of strings in isolation; no human or native-speaker certification, rendered UI capture, or full-pack review."
+}

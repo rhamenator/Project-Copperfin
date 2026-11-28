@@ -43,7 +43,7 @@ void test_runtime_session_diagnostics_route_through_catalog() {
         spanish.translate("Runtime.Prg.CommandUndo.Error.BackupCreateFailed", {{"path", "fixtures/people.dbf"}});
     expect(
         spanish_command_undo ==
-            "No se pudo crear el respaldo de undo del comando para: fixtures/people.dbf",
+            "No se pudo crear el respaldo para deshacer comandos de: fixtures/people.dbf",
         "#2607: es-419 command UNDO backup error should localize the prose while preserving the path");
     expect(
         spanish_command_undo.find("fixtures/people.dbf") != std::string::npos &&
@@ -55,7 +55,7 @@ void test_runtime_session_diagnostics_route_through_catalog() {
         {{"operation", "WAIT"}, {"section", "orders"}});
     expect(
         spanish_critical_section ==
-            "La operacion bloqueante WAIT no esta permitida mientras se mantiene la seccion CRITICAL orders",
+            "La operación bloqueante WAIT no está permitida mientras se mantiene la sección CRITICAL orders",
         "#2607: es-419 critical-section blocking-operation error should localize the prose while preserving invariant tokens");
     expect(
         spanish_critical_section.find("WAIT") != std::string::npos &&
@@ -66,13 +66,13 @@ void test_runtime_session_diagnostics_route_through_catalog() {
     const std::string portuguese_command_undo =
         portuguese.translate("Runtime.Prg.CommandUndo.Error.NoCommand");
     expect(
-        portuguese_command_undo == "Nao ha comando para UNDO",
+        portuguese_command_undo == "Não há comando para UNDO",
         "#2607: pt-BR command UNDO empty-stack error should localize the prose");
 
     const std::string portuguese_transaction =
         portuguese.translate("Runtime.Prg.Transaction.Error.JournalReplayFailed");
     expect(
-        portuguese_transaction == "Falha ao reproduzir o diario da transacao",
+        portuguese_transaction == "Falha ao reexecutar o diário da transação",
         "#2607: pt-BR transaction replay error should localize the prose");
 
     const std::string pseudo_critical_section = pseudo.translate(
@@ -116,7 +116,7 @@ void test_runtime_cursor_diagnostics_route_through_catalog() {
     const std::string spanish_alias =
         spanish.translate("Runtime.Prg.Cursor.Error.AliasAlreadyOpen", {{"alias", "People"}});
     expect(
-        spanish_alias == "El alias ya esta abierto en esta sesion de datos: People",
+        spanish_alias == "El alias ya está abierto en esta sesión de datos: People",
         "#2608: es-419 cursor duplicate-alias error should localize the prose while preserving the alias");
     expect(
         spanish_alias.find("People") != std::string::npos &&
@@ -136,13 +136,13 @@ void test_runtime_cursor_diagnostics_route_through_catalog() {
     const std::string portuguese_use_target =
         portuguese.translate("Runtime.Prg.Cursor.Error.UseTargetResolveFailed", {{"path", "fixtures/missing.dbf"}});
     expect(
-        portuguese_use_target == "Nao foi possivel resolver o destino de USE: fixtures/missing.dbf",
+        portuguese_use_target == "Não foi possível resolver o destino de USE: fixtures/missing.dbf",
         "#2608: pt-BR cursor USE-target resolve error should localize the prose while preserving the path");
 
     const std::string portuguese_local_seek =
         portuguese.translate("Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor");
     expect(
-        portuguese_local_seek == "SEEK exige um cursor local com suporte de tabela",
+        portuguese_local_seek == "SEEK exige um cursor local baseado em tabela",
         "#2608: pt-BR cursor local-table requirement should localize the prose");
 
     const std::string pseudo_use_again = pseudo.translate(
@@ -184,7 +184,7 @@ void test_runtime_total_diagnostics_route_through_catalog() {
     const std::string spanish_target =
         spanish.translate("Runtime.Prg.Total.Error.RequiresSelectedWorkArea");
     expect(
-        spanish_target == "TOTAL requiere un area de trabajo seleccionada",
+        spanish_target == "TOTAL requiere un área de trabajo seleccionada",
         "#2609: es-419 TOTAL missing-work-area error should localize the prose");
     expect(
         spanish_target.find("TOTAL") != std::string::npos &&
@@ -194,7 +194,7 @@ void test_runtime_total_diagnostics_route_through_catalog() {
     const std::string spanish_field =
         spanish.translate("Runtime.Prg.Total.Error.FieldNotFound", {{"fieldName", "MISSING"}});
     expect(
-        spanish_field == "No se encontro el campo de TOTAL: MISSING",
+        spanish_field == "No se encontró el campo de TOTAL: MISSING",
         "#2609: es-419 TOTAL missing-field error should localize the prose while preserving the field name");
     expect(
         spanish_field.find("MISSING") != std::string::npos &&
@@ -204,7 +204,7 @@ void test_runtime_total_diagnostics_route_through_catalog() {
     const std::string portuguese_numeric =
         portuguese.translate("Runtime.Prg.Total.Error.RequiresNumericField");
     expect(
-        portuguese_numeric == "TOTAL exige pelo menos um campo numerico para totalizar",
+        portuguese_numeric == "TOTAL exige pelo menos um campo numérico para totalizar",
         "#2609: pt-BR TOTAL numeric-field requirement should localize the prose");
 
     const std::string portuguese_local_cursor =
@@ -256,7 +256,7 @@ void test_runtime_report_output_messages_route_through_catalog() {
     const std::string spanish_path_required =
         spanish.translate("Runtime.Prg.ReportOutput.Error.PathRequired");
     expect(
-        spanish_path_required == "La clausula TO de REPORT/LABEL requiere una ruta de salida escribible",
+        spanish_path_required == "La cláusula TO de REPORT/LABEL requiere una ruta de salida con permiso de escritura",
         "#2597: es-419 report output path-required error should localize the prose");
     expect(
         spanish_path_required.find("REPORT/LABEL") != std::string::npos &&
@@ -267,7 +267,7 @@ void test_runtime_report_output_messages_route_through_catalog() {
     const std::string portuguese_resolve =
         portuguese.translate("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", "reports/missing_invoice.frx"}});
     expect(
-        portuguese_resolve == "Nao foi possivel resolver o asset do relatorio: reports/missing_invoice.frx",
+        portuguese_resolve == "Não foi possível resolver o recurso do relatório: reports/missing_invoice.frx",
         "#2597: pt-BR report asset resolve error should localize the prose while preserving the path");
 
     const std::string pseudo_open =
@@ -326,7 +326,7 @@ void test_runtime_report_output_errors_localize_without_changing_runtime_behavio
             "REPORT FORM '" + report_path.string() + "' TO FILE\n");
         expect(state.reason == copperfin::runtime::DebugPauseReason::error,
                "#2597: es-419 report output missing-path script should pause with an error");
-        expect(state.message == "La clausula TO de REPORT/LABEL requiere una ruta de salida escribible",
+        expect(state.message == "La cláusula TO de REPORT/LABEL requiere una ruta de salida con permiso de escritura",
                "#2597: es-419 report output missing-path error should localize the prose (got '" + state.message + "')");
     }
 
@@ -340,7 +340,7 @@ void test_runtime_report_output_errors_localize_without_changing_runtime_behavio
             "REPORT FORM '" + report_path.string() + "' TO FILE '" + (blocking_parent / "invoice.txt").string() + "'\n");
         expect(state.reason == copperfin::runtime::DebugPauseReason::error,
                "#2597: pt-BR report output open-failed script should pause with an error");
-        expect(state.message == "Nao foi possivel abrir o caminho de saida do relatorio: " + (blocking_parent / "invoice.txt").string(),
+        expect(state.message == "Não foi possível abrir o caminho de saída do relatório: " + (blocking_parent / "invoice.txt").string(),
                "#2597: pt-BR report output open-failed error should localize the prose while preserving the path");
     }
 
@@ -452,7 +452,7 @@ void test_runtime_aggregate_errors_route_through_catalog() {
     const std::string spanish_assignments =
         spanish.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments");
     expect(
-        spanish_assignments == "CALCULATE requiere una o mas asignaciones agregadas TO/INTO",
+        spanish_assignments == "CALCULATE requiere una o más asignaciones agregadas TO/INTO",
         "#2595: es-419 aggregate missing-assignment error should localize the prose");
     expect(
         spanish_assignments.find("CALCULATE") != std::string::npos &&
@@ -463,7 +463,7 @@ void test_runtime_aggregate_errors_route_through_catalog() {
     const std::string portuguese_expression =
         portuguese.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression");
     expect(
-        portuguese_expression == "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
+        portuguese_expression == "CALCULATE exige expressões agregadas como COUNT() ou SUM(field)",
         "#2595: pt-BR aggregate malformed-expression error should localize the prose");
     expect(
         spanish.translate("Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea", function_placeholders)
@@ -509,7 +509,7 @@ void test_runtime_sql_errors_route_through_catalog() {
     const std::string spanish_handle =
         spanish.translate("Runtime.Prg.Sql.Error.HandleNotFound", {{"handle", "7"}});
     expect(
-        spanish_handle == "No se encontro el handle SQL: 7",
+        spanish_handle == "No se encontró el identificador SQL: 7",
         "#2596: es-419 SQL missing-handle error should localize the prose");
     expect(
         spanish_handle.find("7") != std::string::npos &&
@@ -520,7 +520,7 @@ void test_runtime_sql_errors_route_through_catalog() {
     const std::string portuguese_sqlexec =
         portuguese.translate("Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement");
     expect(
-        portuguese_sqlexec == "SQLEXEC exige um comando ou uma instrucao SQL preparada",
+        portuguese_sqlexec == "SQLEXEC exige um comando ou uma instrução SQL preparada",
         "#2596: pt-BR SQLEXEC missing-command error should localize the prose");
 
     const std::string pseudo_handle =
@@ -734,7 +734,7 @@ void test_runtime_host_quit_prompt_routes_through_catalog() {
 
     const std::string spanish_prompt = spanish.translate("RuntimeHost.Prompt.QuitConfirm", confirmation_tokens);
     expect(
-        spanish_prompt == "Desea salir de esta aplicacion? [y/N]: ",
+        spanish_prompt == "¿Desea salir de esta aplicación? [y/N]: ",
         "#2591: es-419 runtime-host quit prompt should localize the prose");
     expect(
         spanish_prompt.find("Do you want to quit this application?") == std::string::npos &&
@@ -774,7 +774,7 @@ void test_runtime_host_security_policy_denial_routes_through_catalog() {
     const std::string spanish_denial =
         spanish.translate("RuntimeHost.Error.SecurityPolicyDenied", denial_placeholders);
     expect(
-        spanish_denial == "La politica de seguridad denego runtime.admin para el rol 'developer'.",
+        spanish_denial == "La política de seguridad denegó runtime.admin para el rol 'developer'.",
         "#2592: es-419 runtime-host security denial should localize the prose");
     expect(
         spanish_denial.find("Security policy denied") == std::string::npos &&
@@ -785,7 +785,7 @@ void test_runtime_host_security_policy_denial_routes_through_catalog() {
     const std::string portuguese_denial =
         portuguese.translate("RuntimeHost.Error.SecurityPolicyDenied", denial_placeholders);
     expect(
-        portuguese_denial == "A politica de seguranca negou runtime.admin para a funcao 'developer'.",
+        portuguese_denial == "A política de segurança negou runtime.admin para a função 'developer'.",
         "#2592: pt-BR runtime-host security denial should localize the prose");
 
     const std::string pseudo_denial =
@@ -840,7 +840,7 @@ void test_platform_federation_ai_planner_fallback_routes_through_catalog() {
         spanish.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", spanish_placeholders);
     expect(
         spanish_message ==
-            "El planner aun no esta implementado para la politica de IA optional. La traduccion deterministica fallo: "
+            "El planificador aún no está implementado para la política de IA optional. La traducción determinista falló: "
             "Solo se admite la traduccion SQL deterministica de primera pasada de SELECT...FROM.",
         "#2594: es-419 federation AI planner fallback should localize both the wrapper and translator payload");
     expect(
@@ -854,8 +854,8 @@ void test_platform_federation_ai_planner_fallback_routes_through_catalog() {
         portuguese.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", portuguese_placeholders);
     expect(
         portuguese_message ==
-            "O planner ainda nao esta implementado para a politica de IA optional. A traducao deterministica falhou: "
-            "Somente a traducao SQL deterministica de primeira passagem de SELECT...FROM e suportada.",
+            "O planejador ainda não está implementado para a política de IA optional. A tradução determinística falhou: "
+            "Somente a tradução SQL de primeira passagem de SELECT...FROM é compatível.",
         "#2594: pt-BR federation AI planner fallback should localize both the wrapper and translator payload");
 
     const std::string pseudo_message =

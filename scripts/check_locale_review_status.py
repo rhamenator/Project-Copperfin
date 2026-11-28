@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import datetime
 import errno
 import hashlib
@@ -17,12 +18,16 @@ from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parent.parent
-LOCALES = ("es-419", "pt-BR")
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
+PROTECTED_SYNTAX = re.compile(r"<[A-Za-z][A-Za-z0-9_-]*>|(?<!\w)--[A-Za-z][A-Za-z0-9-]*|\bCOPPERFIN_[A-Z0-9_]+\b")
 ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 INVENTORY_ENTRY = re.compile(r"[a-z][A-Za-z0-9-]* (source|unreviewed|pseudo)\Z")
 HAS_DIRECTORY_FDS = all(
     operation in os.supports_dir_fd for operation in (os.open, os.stat, os.unlink, os.rename))
+
+
+def protected_syntax(value: str) -> Counter[str]:
+    return Counter(PROTECTED_SYNTAX.findall(value))
 
 
 def digest(value: str) -> str:
@@ -81,6 +86,59 @@ def validate_status_root() -> os.stat_result:
         raise ValueError(
             f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}") from None
     return details
+
+
+def ensure_status_root_for_write() -> None:
+    """Create the managed ledger directory without traversing a linked ancestor."""
+    expected = ROOT / "docs" / "localization-reviews"
+    if STATUS_ROOT != expected:
+        raise ValueError(f"Unexpected managed review-status directory: {STATUS_ROOT}")
+    if HAS_DIRECTORY_FDS and os.mkdir in os.supports_dir_fd:
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+        flags |= getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        root_descriptor = None
+        docs_descriptor = None
+        status_descriptor = None
+        try:
+            root_descriptor = os.open(ROOT, flags)
+            docs_descriptor = os.open("docs", flags, dir_fd=root_descriptor)
+            try:
+                os.mkdir("localization-reviews", 0o755, dir_fd=docs_descriptor)
+            except FileExistsError:
+                pass
+            try:
+                status_descriptor = os.open("localization-reviews", flags, dir_fd=docs_descriptor)
+            except OSError as error:
+                if error.errno in (errno.ELOOP, errno.ENOTDIR):
+                    raise ValueError(
+                        f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}") from None
+                raise
+            if not stat.S_ISDIR(os.fstat(status_descriptor).st_mode):
+                raise ValueError(
+                    f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}")
+        except OSError as error:
+            raise ValueError(
+                f"Unable to create or open managed review-status directory: {STATUS_ROOT}") from error
+        finally:
+            if status_descriptor is not None:
+                os.close(status_descriptor)
+            if docs_descriptor is not None:
+                os.close(docs_descriptor)
+            if root_descriptor is not None:
+                os.close(root_descriptor)
+    else:
+        try:
+            root = ROOT.resolve(strict=True)
+            docs = ROOT / "docs"
+            docs_details = os.stat(docs, follow_symlinks=False)
+            if not stat.S_ISDIR(docs_details.st_mode):
+                raise ValueError
+            docs.resolve(strict=True).relative_to(root)
+            STATUS_ROOT.mkdir(exist_ok=True)
+        except (OSError, ValueError):
+            raise ValueError(
+                f"Unable to create managed review-status directory: {STATUS_ROOT}") from None
+    validate_status_root()
 
 
 def open_status_root() -> Optional[int]:
@@ -251,9 +309,8 @@ def review_locales() -> tuple[str, ...]:
         locale, role = line.split(" ")
         if role == "unreviewed":
             entries.append(locale)
-    if tuple(entries) != LOCALES:
-        raise ValueError(
-            f"Review locale list does not match unreviewed inventory entries: {entries}")
+    if not entries or len(entries) != len(set(entries)):
+        raise ValueError("Review locale inventory has duplicate or no unreviewed locales")
     return tuple(entries)
 
 
@@ -269,8 +326,14 @@ def main() -> int:
             raise ValueError(f"Invariant exception source changed: {key}")
     failures = []
     evidence_cache = {}
-    for locale in review_locales():
+    locales = review_locales()
+    if args.write:
+        ensure_status_root_for_write()
+    for locale in locales:
         translated = load_catalog(locale)
+        for key in translated.keys() & source.keys():
+            if protected_syntax(translated[key]) != protected_syntax(source[key]):
+                failures.append(f"{locale}/{key}: protected syntax drift")
         if translated.keys() != source.keys():
             raise ValueError(f"Catalog key mismatch: {locale}")
         path = STATUS_ROOT / f"{locale}.json"
@@ -293,6 +356,11 @@ def main() -> int:
                     "reviewProvenance": None,
                 }
                 old = previous_entries.get(key)
+                if (status == "untriaged" and isinstance(old, dict) and
+                        old.get("sourceSha256") == record["sourceSha256"] and
+                        old.get("translationSha256") == record["translationSha256"] and
+                        old.get("translationStatus") == "intentional-source-text"):
+                    record["translationStatus"] = "intentional-source-text"
                 if (isinstance(old, dict) and old.get("sourceSha256") == record["sourceSha256"] and
                         old.get("translationSha256") == record["translationSha256"] and
                         old.get("reviewStatus") in ("ai-reviewed", "human-reviewed") and
@@ -306,7 +374,8 @@ def main() -> int:
         if (ledger.get("version") != 1 or ledger.get("locale") != locale or
                 not isinstance(entries, dict) or entries.keys() != source.keys()):
             raise ValueError(f"Malformed or incomplete review ledger: {locale}")
-        counts = {"candidate": 0, "untriaged": 0, "invariant": 0, "ai-reviewed": 0, "human-reviewed": 0}
+        counts = {"candidate": 0, "untriaged": 0, "invariant": 0,
+                  "intentional-source-text": 0, "ai-reviewed": 0, "human-reviewed": 0}
         for key, record in ledger["entries"].items():
             if not isinstance(record, dict):
                 failures.append(f"{locale}/{key}: review record must be an object")
@@ -318,7 +387,7 @@ def main() -> int:
                 continue
             status = record.get("translationStatus")
             review = record.get("reviewStatus")
-            if status not in ("candidate", "untriaged", "invariant") or review not in (
+            if status not in ("candidate", "untriaged", "invariant", "intentional-source-text") or review not in (
                     "unreviewed", "ai-reviewed", "human-reviewed"):
                 failures.append(f"{locale}/{key}: invalid status")
                 continue
@@ -326,6 +395,9 @@ def main() -> int:
                 failures.append(f"{locale}/{key}: invariant exception mismatch")
             if status == "untriaged" and translated[key] != source[key]:
                 failures.append(f"{locale}/{key}: changed value marked untriaged")
+            if status == "intentional-source-text" and (
+                    translated[key] != source[key] or review == "unreviewed"):
+                failures.append(f"{locale}/{key}: intentional source text requires unchanged value and review")
             if status == "candidate" and translated[key] == source[key]:
                 failures.append(f"{locale}/{key}: source-identical value marked translated candidate")
             if review != "unreviewed" and not isinstance(record.get("reviewProvenance"), str):
@@ -379,11 +451,18 @@ def main() -> int:
                             matching[0].get("sourceSha256") != record["sourceSha256"] or
                             matching[0].get("translationSha256") != record["translationSha256"]):
                         failures.append(f"{locale}/{key}: review evidence does not match the entry")
+                    if (status == "intentional-source-text" and len(matching) == 1 and
+                            (not isinstance(matching[0].get("reason"), str) or
+                             not matching[0]["reason"].strip())):
+                        failures.append(
+                            f"{locale}/{key}: intentional source text requires a nonblank evidence reason")
             counts[status] += 1
             if review in ("ai-reviewed", "human-reviewed"):
                 counts[review] += 1
         print(f"{locale}: {len(source)} populated; {counts['candidate']} translation candidates; "
-              f"{counts['untriaged']} unchanged/untriaged; {counts['invariant']} exact invariants; "
+              f"{counts['untriaged']} unchanged/untriaged; "
+              f"{counts['intentional-source-text']} intentional source text; "
+              f"{counts['invariant']} exact invariants; "
               f"{counts['ai-reviewed']} AI-reviewed; {counts['human-reviewed']} human-reviewed")
         if args.release and (counts["untriaged"] or counts["ai-reviewed"] + counts["human-reviewed"] != len(source)):
             failures.append(f"{locale}: translation triage or independent review incomplete")

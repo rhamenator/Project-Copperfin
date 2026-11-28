@@ -1,0 +1,789 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_es_revisions/codex-corrections-001",
+    "/root/review_pt_revisions/codex-corrections-001-independent-review"
+  ],
+  "scope": "97 exact-value es-419 corrections authored by a separate Codex instance and independently accepted by another Codex instance.",
+  "residualUncertainty": "Text-only review. No native speaker or rendered UI/runtime validation. Verdicts apply only to the exact hashed source, current translation, and proposal values.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+      "sourceSha256": "99a009971366d567dc4729f1d16ce64fca2131f168369d4da03ec3d824d29bad",
+      "translationSha256": "758e7a2c0c8094c363f02959501f93a21fc9cd04a73ce01abff7aa2a4b906bdc",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportNoTables",
+      "sourceSha256": "929b686a5b98b451bc56fe4e9a68975cae6cfd303c87780b3d7970744cefe38f",
+      "translationSha256": "b938113cf21b5bd142cdd2777b66da93f1da3c062f7e2d13dd01b9f9af3e26f1",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportStagingFailed",
+      "sourceSha256": "859d192224a1cb39a14726c1a6ec027de10691caefda8dff548e9aa7ab265656",
+      "translationSha256": "5ebd45da8f99c4840d7be7aa52d07e17ad3359d7c52a439cf964aa5d620d7708",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
+      "sourceSha256": "5c6eedcc6c9b61c4038eb246061ef2970d5f54d3e790a759c7e5971158750483",
+      "translationSha256": "d6960ea5f5d8eb584d5c674fe35dc5fea6d39219240dfe364d3e0355d66d28e8",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcPropertiesDecodeFailed",
+      "sourceSha256": "96a8932fed5ed921856d743e882310ed6ec3a721baa0f33f236f609c74eadb5f",
+      "translationSha256": "0402313cabd31cf41503bce09013c6951a4abb8d311df141471d8d93429cfa30",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated",
+      "sourceSha256": "5d97bcac6e0ce0882f9c7bc1ecb15e81d5caa57e8611cc300e14c0c5eec9afe8",
+      "translationSha256": "60809a77d9a859cecdb846867779f7135cbef429e5ac53f001c9232044c750a0",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcTableEscapesDirectory",
+      "sourceSha256": "0c0ecfa16703da736254ec0c13c95300943c9468fe3805044c6df5ef3900d98c",
+      "translationSha256": "a150d33624c48ab7ce6d76582af07f4e7f1f1ad01e60808365761a3ff4617679",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Error.DbcTableNameUnsafe",
+      "sourceSha256": "29ddc939e2bd42e1baa7f4b6a52ad2c2e8ee8693f2701aa5e34b76f46afda58a",
+      "translationSha256": "63707c924e711de7149e06cf57447808d5f52c441c886d51c4e8dd316766aa34",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbcCatalogEmpty",
+      "sourceSha256": "0ab9f05aad68fc5998febc7b24eae55382d5b695bab364daf6ecf8ca045c5bad",
+      "translationSha256": "7faae47252e8295b5983fc2fa612e98893b2a36cc6b13f46d82682714a8d15a2",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbcCatalogParseFailed",
+      "sourceSha256": "96c36ef238285c25a3030b4d1709d53878f1bc1d983cb3580a4fd2549ee7eca0",
+      "translationSha256": "156c69da6221ab4f27b3f056c9c77ea6e2161d86549423033bf8d9f46394a7e1",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned",
+      "sourceSha256": "2d35860572efa143f9ced2ceb334e472ede8259dca518af723bcd8a1788dff2a",
+      "translationSha256": "7a7faaf3f04615662022688b417dc23b6aa07b9e40de8da8a167ea6568d4b50f",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldLayoutOverflow",
+      "sourceSha256": "911ad96f9c8e5c67ea244b49b4eda78ffd0cf89dbe42d0dffbac6ad496d5d448",
+      "translationSha256": "03b69bd092d76e726bdd226bba86405dcd469072d18d35c4f559a361e424d509",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldNameInvalid",
+      "sourceSha256": "75bd8434279c70e0f500c2309b8288e3867072c8818fdbd956f044287f7c15b0",
+      "translationSha256": "3cda94afb83960d1392287c6b5129a190dc6e0a1ef1407ab109b4e4658a0174f",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldOffsetInvalid",
+      "sourceSha256": "89a2d2c584eb00bb845af940905b0dfac9944351d123cc30062a8d2c6018a5d8",
+      "translationSha256": "a6619e84caae287a70e5287dc3d4f66b20fdfba04f5701fa43a233863f2bb767",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfHeaderLengthDescriptorMismatch",
+      "sourceSha256": "32c3e96cffd7f01da34f63ae74560d29f2d2210b744bffd356d85b34dfb2c80b",
+      "translationSha256": "144a7f2bd40528addba08360e8fde5b4309005fd4ae71d04d2fe5cc36fa410cf",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfHeaderLengthExceedsFileSize",
+      "sourceSha256": "bb95f1edc6182c1819d646bbf30f1897c0cf6a7af6e65ae535a1fffd460aaa28",
+      "translationSha256": "2e295a0c0a88a34f7294606f177a87b281e2f193fcd017b6d7fcba601268df41",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfRecordLengthMismatch",
+      "sourceSha256": "90c012d0906f73ed9a68a5a06b29754c6eae7658b1a1800c778de77c70ec4df1",
+      "translationSha256": "2a1aed007018f8f0779ff8beca3e19d0fafaa021349a57dc35a43be32151710d",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfRecordStorageLengthMismatch",
+      "sourceSha256": "e87fe97521716389d09ce5698e96566b2aeffce53ba6507ee67ce40c2a496adc",
+      "translationSha256": "5932f16893cc5465526d3024f32934b472c20717f3f1bc71757a463177ab26c4",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.DbfRecordStorageTruncated",
+      "sourceSha256": "0ed45f885c58b852c20462d1056e7ce32fea846ebb84d253887b86a44444463c",
+      "translationSha256": "8d5235936affb610581b6feb3cd37413e5044e3af546b591e7f1ae1299bd18e4",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.IndexCompanionParseFailed",
+      "sourceSha256": "1530eaf4bec925673c1254dab7c2cfb6aba64852d0ac101f0b6ca53119e9c636",
+      "translationSha256": "7e3be84645a6889afb54bca82674502aa8480b24283f64e8bba75b5158df7c8f",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.MemoBlockSizeInvalid",
+      "sourceSha256": "b353c82385c7ea1e61c7a6358ae04a17269c64537b1d6fc43dd2a1911f15a213",
+      "translationSha256": "b21b948f485ef13a080ba1f8f3aa84115170007be8dbb71037c7e4c09491be84",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
+      "sourceSha256": "bbe9684a6c91ab51add23e304b6cef669739de2bc317e6af3397e24f78bd4340",
+      "translationSha256": "202a8dcb658c72f748e98de9347f05c7f544bf3e186ead6b0430ad3e312b7e6f",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+      "sourceSha256": "6eb26c44256c0f230a6b6481727e388ae990af44d4330d32e32ae58d546d6a73",
+      "translationSha256": "b95c79941d21697e7d973bc0f429be0cfc436f11ff987cbfc955e455596a25ed",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
+      "sourceSha256": "3fc189c0eacf10025f9a0b8a9ea0086772a46bbe8fd1bf246112ba52387d7dfd",
+      "translationSha256": "f1c5dcd941cdff56f18d9da323b9a37e0f7449db334d0c79b98fb29fe809bf99",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.SqliteNumericPrecisionLoss",
+      "sourceSha256": "02867fba3f1fde2a26a459cdf0a1fb21dd42563a893c67198f481e6c023b5ac2",
+      "translationSha256": "6e4f1262895b5944c958a899e15367d50c894a49b0f1b40f27cb2139fa58890a",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+      "sourceSha256": "6bccffcbfe2ccc6a2f5f680bef771e65b545bffb48def2617b3befedc873324e",
+      "translationSha256": "4dea2e1512e4f84498b219de73601c71c99f63c5f4bae5699f9ac203a827ec77",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.UnsafeJsonFieldTypeByte",
+      "sourceSha256": "93a97bca926a6de39d075ae8fcab6a99c3373324891f068863ae8c8c97d29b6b",
+      "translationSha256": "feffe01654f4140920c1eb706c6abfee466c87211ab55d668f40a07a87076b85",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.UnsafeJsonNumericValue",
+      "sourceSha256": "43b39a5be5c24995a5ec26431a177f2f1f62c64104c16bcc6f68a5e423aa3f78",
+      "translationSha256": "2599a0e0c8c549a7020b0f0a9b7b818da1eb76fac2c0b8880fd927bf9c9cce01",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+      "sourceSha256": "9936d3322339e07049b4cd8ea944dfe19b200276f7b06a1788c3c295bfcf65fd",
+      "translationSha256": "deaaf92cb781a9b1be173223854a79ee62a0c82924547526915d81abac0c94ec",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AssetInspector.Warning.DatabaseImportStagingCleanupIncomplete",
+      "sourceSha256": "adcd84c266c76aa57be58dffc3e66fc21809c9ba002e01b508c3c04603114468",
+      "translationSha256": "4816545e3ac14634b76f4f659ddbf31dabdace348bc07b7cf95eec5c17fcf039",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxHeader.Error.InvalidValues",
+      "sourceSha256": "a0491e998b3665bd31a9070609aa39b7dda845691dacebf17a7765e4d0919833",
+      "translationSha256": "d69d1826431d6e9b87f459fb4d831e6a3881e5e5ca567e6987a6ae38899350e9",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.InvalidKeyLength",
+      "sourceSha256": "bc33fc5cc6caa15daf16ccc4c106f65cbeb127e70e817b0e6555512e65288fc7",
+      "translationSha256": "f2a73634ecbc1a39ec7918773614b19fbe92b2b91c666497710f9ff41f2f44fa",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.KeyExceedsDeclaredLength",
+      "sourceSha256": "ce88ceab2d4580723384a433fd1c9f3d338a559c66c8b3835ec269ba8555de1a",
+      "translationSha256": "ac862fc6bbf25fa521d2e1868ba26e28944a8571c1c6e4465cdfae8cf9cfe826",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.KeyExpressionTooLong",
+      "sourceSha256": "57a3a58da25f539c8721170a1aa8306441d640bffb98d7f1f0f149a572efabab",
+      "translationSha256": "51af760fcee3f4ee0efdcce8d16a0ac293ad97267f9d74dae3b5d68182294a64",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.KeyLengthUnsupported",
+      "sourceSha256": "d3477e42314a40e49ff198765b34d0dfe27d2f9e6f121a4882263eb589e163b8",
+      "translationSha256": "468b80175627a45e3b2df892bc109406ef7a7325b0d32d73ee92ce86439486ea",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.LeafPageOverflow",
+      "sourceSha256": "73c5adeadb3d50ff0cfdad2d804a6f1a73d5b7988ebeb57f31cc079fef72335a",
+      "translationSha256": "77ca6831b1d5b9efb0e5742095d4c02bd6fb529a7e8554e5ade5dec9782f00cd",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.RecordNumberOutOfRange",
+      "sourceSha256": "e70672e9b1b0181cba2b68b27e39815ebd0a4a0d545b5806f45c89284434cb6e",
+      "translationSha256": "60d1bd25015e2dc181e63603856350512da3dadfac6f789d7d68967aa4de10d4",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.CdxWriter.Error.WriteFileFailed",
+      "sourceSha256": "23532fe9265f0d20cf48d374d49eaa26a4214fb7086e18f2f63db029e889a8e3",
+      "translationSha256": "05f728ac4c6be853090e982890d4969ff7a734d79201cee48631875248732f46",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfHeader.Error.ShortHeader",
+      "sourceSha256": "8556516d82fb84cf306ecf316c7c3f4ca05db3512dd1bf285d9463c2c47beb18",
+      "translationSha256": "f64b1671a73b2f0c2301f391c9e8ba81e09b9f7502f1756c6c64a628e8e6b306",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfImport.Error.DestinationExists",
+      "sourceSha256": "fe53177177df6a05bebfe4f2739e5e0015b97e90d28d6dca75796e8f30a7e1cf",
+      "translationSha256": "3eb4ffe26e90e94befa237c89f788650d79d59307dfd26a2e6b2f21e50035106",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfImport.Error.RecordValueWouldNotFit",
+      "sourceSha256": "4dc4784f330274f7168844f9639e6b92f5b7f44602c2dead26fca9c40779a12e",
+      "translationSha256": "2d079229f83e660239b431fdcbe6cf7fe5813a999d111da7145c1c91eed4d8d6",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfImport.Error.UnresolvedMemoPayload",
+      "sourceSha256": "d1174dacb4442add34dc98bddb25241309f500c878096b74a5605634075c27f8",
+      "translationSha256": "e53905ea043ccb76f3c4c85ed781735035beeee4f3b144b58b68520829401cc6",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.CreateUnsupportedFieldType",
+      "sourceSha256": "5c51968b9ba92d8a90152b7999767c54df13e5672450a34e770f7b01fa440471",
+      "translationSha256": "b1a951db2dd1df9250a03e9996b47958267d11749d318a83d1caff26d1f08656",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.DateValueInvalid",
+      "sourceSha256": "9316202aa22557bca6774b96fb397ce0931eb548b092ae0ab0a07fa64d18b687",
+      "translationSha256": "5bfd320389f45adcc5dd8b11f4194877904ac2fec688a00088ea70ef551207f8",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.DoubleValueInvalid",
+      "sourceSha256": "ac3711196031c71f457a65d846f06958db9f4b49000964984406073c245e656c",
+      "translationSha256": "2cf5133700d13dafa229d44fa8c0261a1b9f55e5bf2b2594730a37e2997b77c6",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.DropLastField",
+      "sourceSha256": "12a31be1a1f3fbd1589f14c73f23df192dda4ac0cbf54bb9451aeb5362302f7e",
+      "translationSha256": "99a01bbfd4efc3494a72e453a3af84b01f664f37643d6ac60f90932a6498706b",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.FieldNameRequired",
+      "sourceSha256": "d988cb9e2e7088cc2095dd6d8197d16cb636355ccdf82ccfc8c1bab9a4170cd5",
+      "translationSha256": "517b7ffda924d1a1c659c986b3cf12d3071b1c5d55b9017d9f6e13da159b284b",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.HeaderLengthExceedsFile",
+      "sourceSha256": "d696a59d321bbaaaa0655d484c712fa73fcf71944dfdc2e871916389abf41fd2",
+      "translationSha256": "e4546cfcde1de9482a1610cccc8c549258921166c38cd4d30c39ea1980a7416d",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.MemoAllocationExceedsLimit",
+      "sourceSha256": "92f23dc1f7387f8e454c77baf7c90b3e8304e813befc40c0322c19c5a5c4fbb7",
+      "translationSha256": "01071374db65f081fbf07dbbf8191af78e1e68ce03aa1de61024daf90a105142",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.NumericValueTooLarge",
+      "sourceSha256": "c344b7591e6bc9109af41e20db6bd1b6642a7de8285ece83ffd5a832e6b06ecb",
+      "translationSha256": "a51f6d4974965bf1f3fdd9a7b20dc678a2c618d281ae96ff495f050588046d07",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.ReadMemoPayloadFailed",
+      "sourceSha256": "7beb5e10de726ecba5275cc57bf7183417a20ce2cdfaf3456fb760b00596bcbd",
+      "translationSha256": "897ed4fb76dac9794a1fc6831539d6ac6c3db2df2c8e969a158730d29596341b",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RecordCountLimitReached",
+      "sourceSha256": "d350040cb320250af3c5342d2bbc33445d0df38e37de85e6178f8917b6a9577f",
+      "translationSha256": "5267efbcab7a446d76839feeb30265d8526f11cd75ae20457dad4f4582a09858",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RecordDataTruncated",
+      "sourceSha256": "fb465ad2d406dd619f19bbfc55061c94677d9c63ae7834313fb38abf517501fd",
+      "translationSha256": "ed42ae81e4f511327ee4ad7e760ced54305c71a71e995a430f530f46b7c20502",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RecordIndexOutOfRange",
+      "sourceSha256": "7e9cb9b847777a7e18f462c9ef428d6e90521a44032b08435a780526f39be479",
+      "translationSha256": "bb922faece026fb8a7d08a0106aeffd527878aa3f2efa9d15cbc4e8be1aad6bc",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RecordLayoutExceedsSize",
+      "sourceSha256": "df331d724b027161e3a9fb866306c4b7075c489b1fbf913777086489d1ecf174",
+      "translationSha256": "4724c6ee7e59e5e492b3fdcc284dbde84c82d2d3f29df4cc2380a2b5793f3406",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RecordWidthTooLarge",
+      "sourceSha256": "43689c37c447259cd88638c65a8f655b85cb12bafdafc97e0b423c3a6798ba74",
+      "translationSha256": "3981a3552326ce528f627ca15ac56d49b831cc7fb6c383021c75ce4ea55e85d6",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.RequestedRecordCountTooLarge",
+      "sourceSha256": "d180b59e4ab316834be579f7449d87e33289c43969e6be25b58228dac36d1664",
+      "translationSha256": "d676fc024b86ea955ffb5dbeca6cf2a7f1233d0ed87c1839dc6cabd79bd1a626",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TableDataTruncated",
+      "sourceSha256": "fe4928b21463ebd0a18c686c58f6e4a3fde6b01052925fe74ff84e8fea894082",
+      "translationSha256": "cee149086b6e5d4915902d63ef0a0fee1d93bda4b9f16f67c068edac1e23c088",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TableHeaderTruncated",
+      "sourceSha256": "f7ea9836150008b8777f2beaf848cb866aefa91e290b4ec100f66146424fc9a5",
+      "translationSha256": "0ffc0703feb2fa30b26b39c7c81e91aca0d68c043af86fe6154656c51cf07285",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TargetFieldNotFound",
+      "sourceSha256": "31e59959be09bb08cd874f4cc5ecbccc6cea57902467a2b4001932a4dfb49fe2",
+      "translationSha256": "0839b21ba02b668f10d9f31be85c050d1e560e5e28c5150e4a0bef3bba818b40",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TargetFieldNotFoundInTable",
+      "sourceSha256": "e55ec34490d7304a8d00fecfcbae0c17e4191583b8138e1c6ffdc80695cabca9",
+      "translationSha256": "52e084eab9eb440f082e0210bfff90a3171c5999d77c08d5204664ab905af2f5",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.DbfTable.Error.TextEncodingConversionFailed",
+      "sourceSha256": "a178ea4b6aa7a98c03089b93de4477e7fb3f26b6ed341230895353aee8c18e9f",
+      "translationSha256": "b90b77a0330a9e60bbbd9bc777fc617f5187a029c3a934cca6a0a080c17819f6",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall",
+      "sourceSha256": "cf32fedfc8f03d72fb184fc56aaf514d90a2b722137e5c88ac454ffa637718ab",
+      "translationSha256": "a71be4bcc4e7b4243617780a32e87a4b9cdd9b8e214f1eca4612caeb300a21c9",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.DbaseNdxHeaderTooSmall",
+      "sourceSha256": "746c5306be45adadd984263d83c1033c642da36ca9430988cddde1593fd91559",
+      "translationSha256": "ba2eb4ce48624e2cb1a56c2a5a22fec36483ee94bafac7fc868886cdbddf8d9f",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.PathExtensionUnknown",
+      "sourceSha256": "3ba24d88bee02edc25f5420b11e5ad5943e8d53604b0338c909f1079cb0db93e",
+      "translationSha256": "ddf3d4f8e451ba36f089351ad2dd48eeffa941ba364b2ef96650b2f6a481ec56",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.ReadHeaderFailed",
+      "sourceSha256": "80b6d8a919087bce324bcb75f5b58c5b8d9bf21f846d42c48005f56f46d300fd",
+      "translationSha256": "3e83e461c1cb2c618731bee47ecf49634815e8008a575af4b1f44e087db2658f",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.UnknownExtension",
+      "sourceSha256": "fd1eb447081e35d10b639b58b407184135dc8baa69d2ab24a16d3cbce7c7331a",
+      "translationSha256": "8a7d91ed3f25b7a8d56fa94a77ded585926e104d49cfbc5423ad46e8202e851d",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.UnsupportedType",
+      "sourceSha256": "33671eaff507c6289f9aa91f615ef4e536b03c068862e49fba5310e615380786",
+      "translationSha256": "aa204d73e3f589ee8fa3c24b0e91dc825788a4158ff523eaae1cd407b75fce84",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall",
+      "sourceSha256": "123c9c9d54da74499770f66934b304b0483a9b7aafc833139ca3e4c9e3597ae0",
+      "translationSha256": "c8bd22107702ffdf2c9ded822ba5430d76619b4b057ef141469a3f5c8c542473",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Field.NameRequired",
+      "sourceSha256": "d988cb9e2e7088cc2095dd6d8197d16cb636355ccdf82ccfc8c1bab9a4170cd5",
+      "translationSha256": "517b7ffda924d1a1c659c986b3cf12d3071b1c5d55b9017d9f6e13da159b284b",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Field.NotFound",
+      "sourceSha256": "689cbaf999ab10d2edb1d739d80202901621e6acbd961561088241b000036760",
+      "translationSha256": "77976b867596cc30c5655490ea4a59c9c986bf24c8668be8fe27ec238714faa6",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Field.TargetNotFound",
+      "sourceSha256": "6c3ea4cf534f42ddf6e82871c3b06ba5d53933039ec417a871646130cdf37032",
+      "translationSha256": "de5d02efc00acec2ad42fb7eb8315173ab85cd5e67254157712f0589a2ee8405",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.DistributionCoordinateNotNumeric",
+      "sourceSha256": "208ca3fcfb0730117cb7cbbe36eeadfe97a89ca94d8665914f7d40cd000a350e",
+      "translationSha256": "2710e3babb5b246fe27179418d26945b3a6f1e7fbeab668ad3e17be9b4096702",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.DistributionCoordinatesMissing",
+      "sourceSha256": "ad07b1493791e823cb007c7a583feb24dae285711989556c600d949b932650a5",
+      "translationSha256": "2d5e21cf23c070de94cab69e0cfd787ef49593eb7f30262356987bd2a53216b2",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.DistributionDistinctEndpointsRequired",
+      "sourceSha256": "a2b1b20c874995fe47a2e031f17d3a87fd61324c0d0281864e3d7dded5afcb06",
+      "translationSha256": "f9861b8d144fa712e0d6c6cdd3b1c3bf071238eb904cba39f24ccc969a3be4f4",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.DistributionTargetCountRequired",
+      "sourceSha256": "9d0956bcf2faa50a8731349130082457dd496f53a77b9cfcb326557b9abe1ce6",
+      "translationSha256": "d3e404babe82fd2cba276a1a27b0943405253fd06e146e5dbcc810865cd17f38",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Geometry.ObjectGeometryNotNumeric",
+      "sourceSha256": "b0e7e6639ce7b8de7c3666d9c35c654315249c1ba89af0f26fb1750838a89a89",
+      "translationSha256": "1fd7a645b350bbeab6437ac07605c3ee470a9c3cfe4b58781aa0a93108ecfd1a",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Column.Top",
+      "sourceSha256": "d5cdfcf7ff75338fa974145a13378ee35f7ea04cfabd74b8f5fb6df350cfbcca",
+      "translationSha256": "50e0166729465c215cac5b59fe2bb8139ed6694cd7e0bb19e2b215856225eec8",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.OutButton",
+      "sourceSha256": "9a3c5460432ba66a10b0e6bcd1f2338cec818ad3b8b3f96b079a14a5f1ca0d55",
+      "translationSha256": "1341bf0835d3bc14fa053b8100d64961e222eebf75f5cddf263b74921346c265",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Undo.EditExecuted",
+      "sourceSha256": "83353e9b0f41d6fadddc5c33aa6a8cc6a3b13328bea067cb3d7ac09e3be6ab7e",
+      "translationSha256": "065531457fad656696d3d5e785534a4b0e53ecfdc99bb33443c37d7ebd6a1897",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.GeneratedLauncherMissing",
+      "sourceSha256": "8bcf1c6015021cacc3896372aff7c8fe725479175f345670ae7ad0ad2ddb17af",
+      "translationSha256": "05afce1029af7e9a06cb3b4c242c1d2be71e7a9b639dbf0baf92d9db7ada41d2",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Help.LocaleOption",
+      "sourceSha256": "8f3d93adaf45b7387a4f50f7c8da048423e487442c3fd40251c8d7166a1b2824",
+      "translationSha256": "ffd6bdf1acb59d2fdb00ee3f20c7ce6676436747ad19a05350745933c04d62e1",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "sourceSha256": "f6781ca59c75dfbf71a74c9f6e057dcbcb3142e03faf24c5f5041beaa636dee0",
+      "translationSha256": "58f24aea4058038b7195f37176d1b9a676d8c440824219bc6d5be66dfc360af5",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed",
+      "sourceSha256": "14c6b8ab751adf43013e90f87724fec005c143d0b3299fd213ed2e0b57bd6a8b",
+      "translationSha256": "380e991d0749192c81eefed1bbc0458d2f007f5f6415dddc34cc69ec08f0eb86",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+      "sourceSha256": "18fae6c6835fce31f37ec26caa2acd56e94231480502fd9626dd3e07da60dd55",
+      "translationSha256": "eac470b2a515ce2ab92539920b218a5f77e44c724e24fa277e128d19f4dd0ee5",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
+      "sourceSha256": "32ac907508f228def4151c2b528aa5cf64d60d72af0a4d9e6e39812b66632c7d",
+      "translationSha256": "21170c7e2fa0762c96b4f3b115ee4ce34229cefcb002b0214d6bdcc91157bd4a",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+      "sourceSha256": "3b9cc924bbc7f34cd0468777539a7fae13134f7e2981a97d33cb189001265d31",
+      "translationSha256": "0ff1d4d514535fd7ace34cd6842c8c456f677ae3c8bbec68019f66a6f873921e",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+      "sourceSha256": "271ac9bd38bc8ab2a5d2ded01e21af0b1918dc7499917e438196f94f8772bf4c",
+      "translationSha256": "955fa277c7c71c4a01cdd133e41d971c3bbcbfc280c254eb55a11fe473d768d7",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.NativeWrapperCMakeMissing",
+      "sourceSha256": "08b8c013bf11d764214b998d36b3d6d7e15af0eef5c1a7d0a6a63ba7b5baa1c3",
+      "translationSha256": "5886e7b624586e71ade0651838be7b22c4db412bec83827ff5e3e71262382266",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
+      "sourceSha256": "d1a55ca136cf96cad969d74a0dbaad6fca367ec9d58953477be7f204922c20ee",
+      "translationSha256": "ed28485889545edf61ddd34d122940f2f7f3a10c61a659563077359b6555be4b",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
+      "sourceSha256": "3d7629353de7946c749c4f1876a135229c602704c16e84c7c92408cfac6605d2",
+      "translationSha256": "0fda82fa382a39bb94f8414942b327c04dc0dcf0c62d2a58ac6b768655813f58",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+      "sourceSha256": "1c5a006f5e2d43094d93dc8bb909c2bb491ca5b856f2081e5a0a63c816bdd9b8",
+      "translationSha256": "a79276c0521722da6153757c874d44d6d11bda2297f2c6316b814912a52963ee",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "sourceSha256": "c7e382f15ba33660823f33fc571099e8ad70fde94964b870981779d500bb7c28",
+      "translationSha256": "731e1a82ac42fd09d57a5428402a98043c0e9057913c35b2e894eef29750ebef",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Session.Message.StepOutCompleted",
+      "sourceSha256": "2dda1a58e6e9dc3b042ec7cb48aa80675617c3cb628dd514f471829a4f1f880d",
+      "translationSha256": "611e10ef723ff3179c8a4bddc4f960c192f3354b7ad65b6fca8efaa65934cce9",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Session.Message.StepOverCompleted",
+      "sourceSha256": "95102e653eeee9f6a8a6aacb2afd547d8254fcc91f0f88c5aba79920ff20626f",
+      "translationSha256": "ddae5bb844e56c5edfe551eb6645fc0e18d4674edb7e54142e2792131651e1b0",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Identity.SubtreeReplacementDataMissing",
+      "sourceSha256": "1755ead09bad65066ab5798dbef6dd2f6bd441f40f10b0ef6ddbf6b343db9fd4",
+      "translationSha256": "9153b26e327d639b5caca4a2fa0f04a7053051172c5c5085f2c7fae3d5cc581c",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.Identity.SubtreeReplacementMissingOrAmbiguous",
+      "sourceSha256": "dde24bea18b8f2eeef4356976c09dc4924531b2195f28c134aafb6d45a5ba787",
+      "translationSha256": "0f7015de86f86f9128e2d1372d64a33f7e66bae57549f0ae1d36fed95e92644c",
+      "verdict": "accept",
+      "reason": "Proposal improves Spanish spelling or wording without changing source meaning, placeholders, or technical identifiers."
+    }
+  ]
+}

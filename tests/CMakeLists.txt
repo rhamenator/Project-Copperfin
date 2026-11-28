@@ -435,6 +435,12 @@ if(COPPERFIN_PYTHON3_EXECUTABLE)
     set_tests_properties(test_locale_review_status PROPERTIES LABELS "localization;review-status")
     set_tests_properties(test_locale_review_status_negative PROPERTIES LABELS "localization;review-status")
     add_test(
+        NAME test_locale_review_gate_fixture
+        COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/test_locale_review_gate.py"
+    )
+    set_tests_properties(test_locale_review_gate_fixture PROPERTIES LABELS "localization;review-status")
+    add_test(
         NAME test_post_v1_locale_registry
         COMMAND "${COPPERFIN_PYTHON3_EXECUTABLE}" -B
             "${CMAKE_CURRENT_SOURCE_DIR}/test_post_v1_locale_registry.py"

@@ -1,0 +1,2245 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "Codex /root/review_es_revisions",
+    "Codex /root/review_en_gb_revisions"
+  ],
+  "scope": "279 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.InitialSummary",
+      "sourceSha256": "4599a4f9cad30c901f4ab47b4e5eaa688dc7c3c40f968767cc56076c287dd907",
+      "translationSha256": "013aff2fca3f7fa92510f770a6071b49469a83acf07c8c5c2c6c79616c3b2197",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Debugger.Tab.RuntimeEvents",
+      "sourceSha256": "2726492201593e1523728f88fcdef12d1cbad14d50b28f3753caeebd3af090a7",
+      "translationSha256": "82298338789d50ce11cc4f5e29ff26b2e018d5dcb72af028fa26b62185774828",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ObjectSnap.GridSettingsRequired",
+      "sourceSha256": "14e2d84f071b6bd529e083069f6138d348bfe2fc990e9d181f8f8efc3766aebf",
+      "translationSha256": "4199afad375849e62963be6c38a98ab1973d39b9696e440d1ae41ec8ff5bf0be",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ObjectSnap.Horizontal.Completed",
+      "sourceSha256": "6386a9aae41bf92550fcee7feb3579cfa03e66209cde24871c223b3fccc5bb51",
+      "translationSha256": "87431a09174d5ad1a974562eebbccaf3ff86f77c6d10e5ad567d8b67ca7b3bf1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.ObjectSnap.Vertical.Completed",
+      "sourceSha256": "5a1363dc49089f258394a6cf8eaf4a05336db304d01c2e21b113fc5a6e6f5709",
+      "translationSha256": "55645924e54e3fe075eb2252e3f0acce09c45d705dac6de57d3e597a68f398f7",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Placeholder.CodeReferences",
+      "sourceSha256": "1b9570ae8331bfdbcae5b71e6df6ab52ec34e1d73089bccc8a826570af6d2d81",
+      "translationSha256": "c5519b67b73e579563e295912903aec1d50bd9a8242bc5dbd972ea37c42fff98",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelDistinctRuntimeLocations",
+      "sourceSha256": "06de8ff5c905b3e3ec4815229db3d91afaeb48bf356aacac897c81783948f1ba",
+      "translationSha256": "af8fea24805af6be16d4fb776f468d051c59c53d2d41857c4da40fd4504e0f16",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.LabelRuntimeReferences",
+      "sourceSha256": "9ddca36700e06ecd866d1ef633b7e6591a6047cb0f9b341ddd85dc30681ecca5",
+      "translationSha256": "6e10f980396b4768e0441b39fc819ccdac01df2bd530d9ceecfe77de82b23ccb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.NoRuntimeLocations",
+      "sourceSha256": "722164659373975d7987b8aa82ce42908edd0fc9da7db8af8e5bddc0cca20259",
+      "translationSha256": "19f43248f9fdaa0cb3a730e6b497ff37b8bf064cebb5ac366f161c2170163ec0",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.NoRuntimeReferences",
+      "sourceSha256": "44337d826e1963134a0824ba51cb176f0c2a9022fd85d850765b8763ab53de9c",
+      "translationSha256": "64da575b123a0154b683849f82966339f15ed3f27e89c8c32b4c595c701b9989",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.RuntimeEvents",
+      "sourceSha256": "a169d1c4a760f604d4abd09804eef035d00ab970c8e746aa7d1e3b01baeacb77",
+      "translationSha256": "5334296394073b7c2d01611004239bdf5241e843948e118a75fcc6f5b8184300",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Summary.RuntimeReferences",
+      "sourceSha256": "d1baf9c9d4cf2616d7c25acf805420c3adaad0cdef1d329b29c7f7a598d05098",
+      "translationSha256": "0ac40db38006b5fd68385d1f2455e1b1593683ec8a00307d13eff80c5d287f44",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "sourceSha256": "bd7fc377d5dd860e0aa45479e0f6be5f425593da0b9b8d0ef389c7b442ff44b2",
+      "translationSha256": "34f39a12a571fa33d657136377c7152f1f0c2d374aaafb283c383401259ad63e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.Dbf.TranslationStory",
+      "sourceSha256": "53b20649598bb350322c286cf5e2bee5f309d688cc529c81a08c8e5fb18ea984",
+      "translationSha256": "69b15a2d79b31304cfeec8ac76a31643b5282106dec878b54e4cb53df2d7e430",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.JsonApi.TranslationStory",
+      "sourceSha256": "879b46001d291d27e28f4ac406248265db418202bb43783d1fbb5d05d81138fe",
+      "translationSha256": "83ed038427c33712299b33cc2a4f83c05a4fbd9fbddd3775cdf01ac5c13ed884",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.Oracle.TranslationStory",
+      "sourceSha256": "2363b8a449ca650ecf6587de2e876913dbc8845023c7df4b1a611edbcaa2b54e",
+      "translationSha256": "1385c0e71cace4f74dc501a5d8766018c3e29e7b20e18cac41be17af6c233982",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.Postgresql.TranslationStory",
+      "sourceSha256": "f3c0e34d1b23b01666f126adf17754b4837aca547de8968942fade01c7101c9d",
+      "translationSha256": "cfda2b35f6df08476cc4e1951e6a907a8931ff2544e7e6767090c900d5410cd8",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.SqlServer.TranslationStory",
+      "sourceSha256": "d37fd1089a7fef57edf37a48d42afa77bf28783e9795badf6224ef342bffa075",
+      "translationSha256": "574d0a45f43c8a9cede581933f3130c96ba6491c00374ef04efa329a5b80533d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Connector.Sqlite.TranslationStory",
+      "sourceSha256": "8fadc1660fa85d6f013ace407bdcf4a4cf3d2fcb15aad63d63c99f8bb1e325a7",
+      "translationSha256": "be3f38aacb154c0f29be3b1319f1d8818dde268f5744a507191f300c6bf3e8ae",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Guardrail.AiPlanningOptional",
+      "sourceSha256": "c408369a30988caf61f9593399cbf82bd2142928b0619905316c0070c989cbd2",
+      "translationSha256": "e9ac332d13de2b02096836f04593e25c971310741d9ace26e39d151f88e82158",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.Guardrail.ExplainableConnectorFailures",
+      "sourceSha256": "fd232817d87ae56c4119287fd83f670cb1d4bedb94ebef0a585e5c04a61417c0",
+      "translationSha256": "464db979c4493f0e4595aba7dcc62c8998575d45f73e21eea017109bf3091d8d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Strategy",
+      "sourceSha256": "8eab1688016b2979117926e8fdf7377bc4c5fcd16f8800f993af90d7732d1324",
+      "translationSha256": "2857ad52b78796ec30d33d126961f4ad8b759c9879d3bfee501179b46f880496",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Strategy",
+      "sourceSha256": "3a23bb4f14e7f807dba01614fe33db71aac513a98b2edad03ca55ea8563b50a3",
+      "translationSha256": "933fafe59158198bc0bc125b4bec720deb3b54f7397b31ecc9a496e10bdcb3c0",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Strategy",
+      "sourceSha256": "bb34d39e46b5560d90c5cd5b3628b94533f71dcf0ccd7edc159371fb4b574b01",
+      "translationSha256": "8485db7c15decdd29e08e89f8d82781a3700eed3d3eda22c868ce2777f8d5839",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Description",
+      "sourceSha256": "83b9088396de340fe141c48e638f5eceba07f47193e3ae8d004eddda6870e8f0",
+      "translationSha256": "cb29b3b240b776f9dc6825d7858359ddfebadc330f15ee8dde27089bc60d69d2",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Description",
+      "sourceSha256": "eb61b18ae9f8ea95a3103e0be35e9936af2e4d4020d11628c5be7f2762b63493",
+      "translationSha256": "c53c3065ac63742a26cbceffd08a9fba980741aa3f1c2a286a9903a140862536",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale",
+      "sourceSha256": "620e4fb48f56f4a4ccaea3b8308b04438f47fb30153e4a7b507564bbe0a95831",
+      "translationSha256": "78a348cc764b46b270f758de72e9dd89171a3080e25f0615b8be4ac0ff9f776d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Extensibility.Language.DotNet.OutputStory",
+      "sourceSha256": "8dc65fb512baad0418fc32442048b2f1688940163b7ae9c5f3496ac837cc47ec",
+      "translationSha256": "4047d7ffb6d783f1308cd9d382c66e28f0d8b264bf39ee07ed22b9c927263c65",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.Extensibility.Language.Rust.OutputStory",
+      "sourceSha256": "85c8e4088c51ebf921e82bd5dbfbc3c1c8cd85a2ec0b82003d6acf9c5eb6f16f",
+      "translationSha256": "5a320cd5f32d0643914110a0e3cf88774dee03cd6a4745cc88fc341010e0fb1d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+      "sourceSha256": "1c250ab7269e501cae212d1386320398df4d44a5c2627c69bcfafcdc8fa626c5",
+      "translationSha256": "e5e876a76d2d07646834446cb781bba69a6295e070f449bef5d11a83bc04af06",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression",
+      "sourceSha256": "856dab1420dc8f4bad8b485797af1e152bd804ab7e9423086be9c145d57d2452",
+      "translationSha256": "f1b8fbd73fd699ab31fb9cc4af3ce5cc4d18c3ad1fdcabd63093aa48ec710fec",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.CostRejected",
+      "sourceSha256": "995d62c357515147d123d895239bd0fb3ba9656bfb33ed5d0e725497d1ee1cef",
+      "translationSha256": "892c8cb1e895f9edb8944c119a065311779b7bb6f8be8c88fffa569246ed1b65",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+      "sourceSha256": "e8280bad48ef6f5a2301b03e32b2ac95d70ff216cd45de0ebdf7ba6afd749f40",
+      "translationSha256": "119198e044a34d5f4ca85257f663f255cd54da51ac4097c1d5b2b11e4e51b952",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
+      "sourceSha256": "d04591985cad4f2afad7718f31d0ed238fbc0ca4c1dfc3d4ad6ffdad04edbb41",
+      "translationSha256": "e683d131ce7e9ce0edb1ae8aee9f50e9a106333c7d4017c66eb87f1309d3e610",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex",
+      "sourceSha256": "dafc963d6338d1b1709f1c46cd15195720ffe38de969ff326437b76ba98f9bbf",
+      "translationSha256": "97f6c63bb8f548b639980e47c262112e011d130c02345c199978dd693f14e25a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.None",
+      "sourceSha256": "9e63a101f4139e1556c40073ae3f7d1df300300bdd3fea0ff011c64c3e7c26ee",
+      "translationSha256": "86428c125569ecbe01560dd8683988bcb79d67d030e1f9808956aaab30dcf731",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled",
+      "sourceSha256": "f5f6d1337f02a45d0bae34d67af2c8fb61e883b697a81c681911afa300478bcc",
+      "translationSha256": "4f09db1a7ceef45927362d50d5da1e923f683b49f5edf64bd7c245831c495213",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression",
+      "sourceSha256": "3dc07732cb7c36fe2ff64b0c80caf69d27d37d742085132afd343b26b3c0b2ce",
+      "translationSha256": "68bf545290b94e0cc558bfbb876deda52aab5db5a74ad38ada0ee14b3e8922cd",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan",
+      "sourceSha256": "568b1d4fd99ce3638550ed36cdb349e4d09bc9a3052e7f47ec25b1da2989f180",
+      "translationSha256": "5c90d0d5c2bd22b773fdbffed7b72eb5a5aee22261d30c48b3af5a7b402719eb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexSeek",
+      "sourceSha256": "4f532b5ca9b0239296332b8fe9123974a739664a794197b508f80f431d2ab1a3",
+      "translationSha256": "222a9485a4fd5b6be2a157b684b43c71e6daa9d6b610c79412f34615f8044d4b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.PlanKind.TableScan",
+      "sourceSha256": "e3a2ef3c5b0c4f8403d2b2820712de5bf0feb55760ed65f7cffd4e31cd8b85a7",
+      "translationSha256": "82c897aa1f90782a0d3173b06f601b2b22bcc64b45b7d0deec0da6581821e626",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Absent",
+      "sourceSha256": "540ce21f8b331a40eb6f0714ea928263fd66d2c467764823639f3c158f51cf63",
+      "translationSha256": "c4597a7ac715e1043d24e225d188d5e2d565ca2bf801e2762b9267dbb3767737",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Corrupted",
+      "sourceSha256": "1bd6247672af9889cfd33f95325d6e4550e05d223200bd0e6a47080326f9ad04",
+      "translationSha256": "ce6941458ca7794cccea723a15cd1377271c045f848f6a7499691ed173459ae8",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Fresh",
+      "sourceSha256": "28db10779dd33f428f8da9cb288168a76666fb665bfbbac71623a7fd1d5dcc78",
+      "translationSha256": "dd532b6ea98ab5da2fc12e9a90ae518fdf867e650c7484db8230ba58ebf2f59e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Stale",
+      "sourceSha256": "e6f61b4ecd233e274e612d9606d64c7e2d8fdf31a78e295c2224408896297998",
+      "translationSha256": "0169f85751eb0a3237a2cf9c4c96020bf0342eb4deae8d27f825ee9d1931d47e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+      "sourceSha256": "aa51bee5de893b99cda296700bcc1e4a2351fe65fd80f3f65eb6994ecd38ef57",
+      "translationSha256": "58b3e9a209ca879a8bca11fece142260e1a1fd2fa975a86423ea427e8e7e8063",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+      "sourceSha256": "5a93ab3ebd1c482673180281af0865cfd97e57a51ea2aeff7c950fb28a7db0ee",
+      "translationSha256": "8c17b185c4045b493c112545e05db826f0b0779edf057719c89d6792b7e64c12",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+      "sourceSha256": "5d69bd95b04a1f5bb7508fe7b950b1b9981342c32315b15d73fe11b9dcdc67ce",
+      "translationSha256": "0d60be798f0bc244148bbccd926025dd51845d2cda6027445dc0405f9c2ddc1d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "sourceSha256": "45a350b8b8d6ce38a78f7cf4141e7fcab230621622214fe28810e37192ae5004",
+      "translationSha256": "5e622913c3f848fc0eb684d1364b21b22901b432014741bf7fcd2d9502847d07",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+      "sourceSha256": "c8557f482d09e01c21f2b7cbfced361adea3c21bc416d411704e5b90b2f60b08",
+      "translationSha256": "aa8d232718dbd2d82b0f94ba4e07991bc5ea3eff19e896336e32a847be112c63",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+      "sourceSha256": "d782f3220ab46cc09c2eb908f7599a192f1ceee2dc35056bddd66cf5172e63aa",
+      "translationSha256": "0ef4219eb8df7f35e2640e85162e2ca0e650b4d9db22fdd71fa99f1676065f2c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "sourceSha256": "3ad5c53ef61b0449babb078fb99da39aa6911fb5f67e77a544262d3bae702ad8",
+      "translationSha256": "49efd351d8a289f39a099ea91304b33cce29de9280e38edf3071d4f98a0652f4",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelRejected",
+      "sourceSha256": "4ddf6bc124b2795a963216250846f191b6fb78647872fd3cfdce683d11fd69a8",
+      "translationSha256": "6f80033aa5aac9a8193ecbdf96c1f39676825e7fd5bc168658ac0ea6f936917c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelSelected",
+      "sourceSha256": "3aae14f5a3cc25d31bdedd4901aabba343a59d732c03d4ef29a89954a8236485",
+      "translationSha256": "ae445fb24c34d4e016838bf7b84c478c6f074129acfa661e0b9cd9c8768567cc",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
+      "sourceSha256": "46cc0310b859fff80b5341282379c244c1869640f3a8f8e88d15434f3fa4d44e",
+      "translationSha256": "827596cdef283f9349711a038e1fdede757fa0442b4413279532520fa9fd29ed",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+      "sourceSha256": "fc29d8663a74fb2978d5911965a5b9a7a5c1c42b343100738939cfd7e1f367f7",
+      "translationSha256": "45b41d6586631ee8ee15d30c5e93c847dc529c5f20f7e72f722f4961ab72ba18",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.None",
+      "sourceSha256": "619050cfd3dd7806e7e57e92a4d6372bd1c367eac1e349e792a6ff38431f2b31",
+      "translationSha256": "54f4f8e45adf9cf485798266b5b43095e2da7e537c4b04d6cc17deeaa7a6f783",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+      "sourceSha256": "2dc2b642a9164e744dedde61de79db94a7fc86207986a7d7091c33bb3080cd42",
+      "translationSha256": "e7ed4d6c7dced7d56bb49c8d57fc5c942e88abe76a2af9c602f044fcb37a8965",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+      "sourceSha256": "4ad3cc20d38b5d205e992fc36549c6452c99b801f2d5b001f1381a319480c051",
+      "translationSha256": "80dd30f2e7562fb70ab096f132e0c68bf880c5e1b23570a663b6fb12a33cb80c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.AmbiguousCompanionPath",
+      "sourceSha256": "232237bdeefacbd421dac6edf2a4e9bea5de5c85c0cdc7f3989bb36298acc8e9",
+      "translationSha256": "dd277af19881e5f2528ab44afcf6d3fd986facf91ba4f399431039c2a18e4b17",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.AmbiguousProjectAssetPath",
+      "sourceSha256": "f7eecbcbe616df1b5addfff95390c4906e6b503fffc7c4ebc27569210c31b487",
+      "translationSha256": "b907d9583fca1bd615d475d3ebb4414776980d13fcb62c69622e856f7f1eca95",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.CopyFileFailed",
+      "sourceSha256": "fbb3c6c977db29b3834082ca067b87faa9c21dea1ca6261d3cc71338e586d92e",
+      "translationSha256": "a7934fe2fc1657f4452f1ac36a3e4205f78dba0054617a58ea24ad18af33e703",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.CreateContentRootFailed",
+      "sourceSha256": "d32fa2739f50ffb4c9b86fa43d76563f48aee0d8f6c7183b3edc446ed3b19d3b",
+      "translationSha256": "b60e14fb1cbea98973aa427c7e991fb47b99322720db885bccd2adb4e56e1729",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.CreateLauncherDirectoryFailed",
+      "sourceSha256": "1b8f302ca9ece86e5bb162ca378f862671a57452028c643e85c9ff0295692750",
+      "translationSha256": "bdbdd3e4420e7e5d57db4e2808563b06fb29c5f34a1172281d0085029fc4d7f2",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.CreatePackageRootFailed",
+      "sourceSha256": "c5669fd0d0aae6e8dbe510ca9a419dc5b00e4265d48d168b4ad84c2b427a5111",
+      "translationSha256": "2bc1a2253db82368a87ead6aad902a6488453e5a111e30cede331c5a4dc320a8",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.LauncherArtifactAmbiguous",
+      "sourceSha256": "a5dc1d9b6b4ed255c17dec58a6d83d7e831ece61a5cf03398c94a56f38ba9e66",
+      "translationSha256": "c58de2e7b7ba56be82df92f689b5de5a75b316b2460d7a575e1e7aa224fb2b77",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.LauncherArtifactMissing",
+      "sourceSha256": "28e8f10aa0582767972124091670f207c845ee6fa0644b102044360d86f2f723",
+      "translationSha256": "148d0a0c5998cf0642fde15f0406e3ad2cd285d0cdc50398d89047fb836a14a1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+      "sourceSha256": "872e695098bceb99989642e4da981307bf5c9d5867dffb0875bc154c940591fb",
+      "translationSha256": "8b67948902fcba6b36881500cb45c5bb62cde29f52d70623634d6bf13c3e95c8",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.LauncherArtifactUnexpected",
+      "sourceSha256": "c1cb1ff261f1278553f6dd8914a7944098ecb698c9b7a4e2987a07c03bb00681",
+      "translationSha256": "1f8967fb3061345cd24e184b5c2405cfd58223df02038c5ca2b7f0b81d6556be",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.ManifestPairPublishFailed",
+      "sourceSha256": "f26e497b39328502dbbea6e707206dc76094b12c6f23b28e2061022713919e71",
+      "translationSha256": "c9fa761d1ab122bc59ba4b18095c5bd24973b5049899a90f09375d22469dd1d4",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.ManifestPairTransactionCollision",
+      "sourceSha256": "a337eda20f5b3b76df36a12aba665a7481578c98e3913b05e697fae467cc1de8",
+      "translationSha256": "038c91a55cff1593166332c5ed43f6e22330522f51b6d12ad6041a7611198028",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.PackageRollbackFailed",
+      "sourceSha256": "4d536cce98bedefda520e30d5c53973456b26fb58164dfe92efbb5c86ea5b335",
+      "translationSha256": "3344d20412dde6da6fff328472a61074f6afc2d7b7062c9de4f8da3400e1f947",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.PlanInvalid",
+      "sourceSha256": "2f189ce70fdbef0a80d9bc7e8b2721bbcbc6fe9e030abc4f37e87ca7d57b05e6",
+      "translationSha256": "ddac23a8f5f23d1c3633c0b4d2b271c4cbe87b6cf7f3eafbe17ec9df8e9f9bf9",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.PrimaryOutputMissing",
+      "sourceSha256": "85857eae662cd8159d72123f2af533e532d0ad5b4dc7a7866a234107ac706b35",
+      "translationSha256": "3645a5e21763aff35633f04aff5fdb86ccc7195c4a705996dee83b75e3f9056d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput",
+      "sourceSha256": "3fab6af12d4764f6bc6d02dcab161d81ac122ca8cba62424badd934604c6fd1a",
+      "translationSha256": "71206dd55b326db3d8ab9a47cb167e05a7b163a102d7b67bc5d979145689a578",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathEmpty",
+      "sourceSha256": "16984f62b933434f7104b924aa9193e148e4f1d07adfa866cde062f857c26c9d",
+      "translationSha256": "8c1c414fa950c3afa8415efa1f263d0367d5450c54aa8880265c62c7561e5edb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile",
+      "sourceSha256": "30b3e118e321ddbd2531f3eb23df56ac78e629ff7a6f38a668f703cb761070da",
+      "translationSha256": "485f870d44e39d8f563b470a473b5850bedaf02d4d0e12ac5e8c79e4ef1c674d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathResolveFailed",
+      "sourceSha256": "8f88ee2d9b0c92adab29973ee71d73bdd41859ff4d05d857204066972bee06d2",
+      "translationSha256": "6b6044229c14c9191a1f8acd513f4a1e15fa3e59cac685dadaf19214f841a538",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath",
+      "sourceSha256": "33060955a66b0c674da990b518258e3b35ba0636191e2a055276f41157553314",
+      "translationSha256": "498f570efcfd9ecaa2d07b7ff734ef9f9502e44f22717be5bc5c3063f3a8ac8f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Launcher.Error.ManifestMissing",
+      "sourceSha256": "4d009bbde02aeddd44e57cc799eccef1211f157aa9ec8665fce96e2c36565181",
+      "translationSha256": "4fa377313da6064eb00a2615f7c6e317e7bf1affea896399986a4d0a07260a4d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.ArtifactRejected",
+      "sourceSha256": "9b5d01eb1fce74606c1e3ae6b61b11f8daa7131aca815913647dcb3632069805",
+      "translationSha256": "f0be92871e436d11a1ae8c58718ceee6e7ef5c2733b889b3d308b938ed280def",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.DigestMismatch",
+      "sourceSha256": "550669022d5d15a19d39f4600c47603fc8afff7a99f85d88c0e25e23aa1e0da4",
+      "translationSha256": "8eb3dd4d211562f4331ff36295043d54c23fafef909587eea4d7b97d761e593c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryIncomplete",
+      "sourceSha256": "25c655634a98548f2c51dbf27c5cdce2a74982b6663134ec7a925f39882345f7",
+      "translationSha256": "bf33d28424a9d679feb54ade33cb80428aeae5b86bfa0312b9bf1c67654ffd55",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryInvalid",
+      "sourceSha256": "c3ca050c9fb93f0f79f28a89a77ad2913959027d42bd8486b6f6b63f5d93a9de",
+      "translationSha256": "67923ca05b51678f0f9c18c7806afd5e2160cf6f93e872d391a3f1c3ec8a8a53",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryMissing",
+      "sourceSha256": "882ea3b8867b6bd39056f682b19dee27bbb53fd345201f4c945f048f71b14e81",
+      "translationSha256": "faec90533516ca47823477c5603854e5657c0f54cdf0cc7d87d34e4143efff2a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.ManifestMissing",
+      "sourceSha256": "7d1e6d438fb9e46c330a6ede2c03bbce6bb8b7f3ceb11ee72e8e9bf1f6d59f5c",
+      "translationSha256": "a6e6307d674b41c7b1a1fa9f2a855a17b9c1009b43d4d987b6747ba65201519a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.PublicIdentityMismatch",
+      "sourceSha256": "d65b64689b362af130a8521fce3dd5020a4915ee1bf9ad66155ece47b25cc402",
+      "translationSha256": "08d93ee4fa1b1ab8a88da7b1fcc216e65427ac9a4912d279e44db41be7442175",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+      "sourceSha256": "751190d706e9461fcdfc13cf6f1f65279dee3d9c47942d9292f3ff8d4426fae1",
+      "translationSha256": "067411f43290fb6fd7da73645825fc84685c30b85064c9bcf2dae4f71b1ad549",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.LauncherGuard.Error.TrustInvalid",
+      "sourceSha256": "44b0f2f1551fd9a8b468c3a9571fffd8dc06c65d6ad1f6320a511b909198b21c",
+      "translationSha256": "a959a7b657647cbb697f9061fb1f4e9b1f1779ed2b251eb9075ae52d7c66972e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+      "sourceSha256": "db5cdb7135ce5acde24ccfc5785a4fd6bb5a63bc77503cfc9566e2916c8120ec",
+      "translationSha256": "23bffdd5dbb87f74e65f3b12940b86237bd099ae3d024dee89787f6df056d87d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+      "sourceSha256": "9a3e31f6165f0786bbde4c04f0240e99fecbfbaa487168bc235a557a44f3b8f0",
+      "translationSha256": "39c0e3be9fec86412d99943a652e727e051d2c45dad512cf08f9987c170056f7",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "sourceSha256": "40f1b61a38d2ce7a6a61a2a005247b8d8291e57f54c3f8399803639ed4542c20",
+      "translationSha256": "e4c038a3bf0eeef0684bab07b114e715b41a259acd9f58f12eb9384d97824fd1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "sourceSha256": "83b0b479c5582dcd1697d264ca5ac4be98ca5d87e0a6e92cdf299705e8a86ff5",
+      "translationSha256": "1f6f4e1e0a6afe5d9d4e731190ecd47a82cf5b250027aab21da343c5da61bceb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "sourceSha256": "b7587669692751b82c0238b6fbb8dd1a6db0131885eeaa3c21fe758411fd2e0c",
+      "translationSha256": "e34f14810f99e0d9fa98e60c16dd70969012477fb691bf3475b6f58004a47f80",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "sourceSha256": "fa93818644dffd2ce0621487cecf087974c3e301d202188e934d1449d8e248e2",
+      "translationSha256": "3add087564f62ca18b0ab4a34453d00cc298775c5880e7c47954abcfeffef587",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "sourceSha256": "f5b88f5c8b3750cc3a5127cc3a0ec97c75ef76d3f4eb422c1f97a26fefbb7d1a",
+      "translationSha256": "279bd0dc11900901391a84642dd29ab3de65fc9a4231074f5b974902e48d5dee",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "sourceSha256": "c183c8df926651b3a72f6013e1b83736a9e7f126603c7f7ff27b069c209ac69d",
+      "translationSha256": "f3fb47612495f3af7ae9d9744079474abc0f4b510e4c960df96ac8cff6ba08cb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "sourceSha256": "324c92c1e02faf4bc9fa5227a3ca4268222ff9cf45cd5b8c9deab341dd9914c0",
+      "translationSha256": "420ee27109006a535ed8e35f0660bdb87b58f4ab96c3fcfe568a6eb226a29db9",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments",
+      "sourceSha256": "9f1ae5ac9372fd48853d0f1f76d2e1fc273a79ef248b5829d633a0668304a45d",
+      "translationSha256": "391e3e1406df69ca5fe29a92ebe6acc1f3d38cfc9e5c7e0c210b117614c77a2d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.CountToSingleTarget",
+      "sourceSha256": "6e5e006376d8abdd5219d6b7d3eab9a284acb9cbc507d75e0bd17dd2ea900257",
+      "translationSha256": "52b5773706592c15229d542abc6c7a2ee18f121c30ebac7bc9ef2e05fa10b8ba",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.NotNumeric",
+      "sourceSha256": "5e50dd1ab3ffcc61e3c272d033db02971291aaaf46992b1e7dd709f4f60d114b",
+      "translationSha256": "957814860705a548b8c8ba935f2013d17fa9069bc4c9cb5cf3145f98c7db6bed",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.RequiresExpressions",
+      "sourceSha256": "07ccb675a76c5fa2af505c962598bee91dcbc0de01a3a8a7edfddc3f571db9ff",
+      "translationSha256": "baae7755ae9216309fdbfbee6f551772085057f2e81c59f65893c44a54b76d47",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea",
+      "sourceSha256": "d488f7b24bbc9da97eb3f4b4adc54d126de679379b45d484eb7ded5157e6eafe",
+      "translationSha256": "7d90044504dc8d542ac9d312e3fb3bd0703fa977393732ff84a1b4c8722a12cf",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.SqlNonNumeric",
+      "sourceSha256": "49b4d3e007b8a8d4db49d7c9ee635b0380a007698d5277eacbfbfc6f97d0dc8a",
+      "translationSha256": "25d31508cb4592d995b8217fe28c2bb57f8b84b01ba7f0674ffbb3623b2f262e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound",
+      "sourceSha256": "80590a927ea872d280c3a5deb6df2d5cf7b37b6ecb605549f59892bb2f6c7510",
+      "translationSha256": "0886e7ee1521559e83099b5b46dbc4036daf16331525ee2230c895884c6f071c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly",
+      "sourceSha256": "3b04c011b7968d25b62d15e5883d2c018edebda7a5b322ddccf572a934537b71",
+      "translationSha256": "4a589acd1b7b7b9e92e2aa1a1b4f08ae92e4ccd890798dd1b4909c636b343456",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+      "sourceSha256": "a9b03dc1f006a37135d1cc5e0b6b0051407c699514e4bf9ce0ab5899d21e2d41",
+      "translationSha256": "df66381b49c84deb9be955c3e915dc5261b992747fbf47a191b4f65a845473f6",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Array.Error.InvalidDimensions",
+      "sourceSha256": "fcc1935e16827f066caf19b9f62c2a80aa2b56bb77d233c809dd47c2ba2f0435",
+      "translationSha256": "5b7951a6b797970024a45510a54456438ff075034183750e2f9bb91a8be6c759",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CommandUndo.Error.BackupCreateFailed",
+      "sourceSha256": "efa82a8adcf0216f13b989109125211ea1397e199c571785bc87d0f6bc1eb47d",
+      "translationSha256": "774d8529980357de06b4fb6ffd9faa8dc7a5936cfe6419f727604afbf1f7b1ad",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CommandUndo.Error.JournalInitializeFailed",
+      "sourceSha256": "591f5586333813f1f6318871510538cdeab865489807f549525c5be28fe25f3c",
+      "translationSha256": "37d71ac782de33ac628bdfc482b06970e6f05985d032e908fc1ccf9189fbdd06",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CommandUndo.Error.JournalPersistFailed",
+      "sourceSha256": "05cc5d6aeef205a17a4fc809dc29d1d8132ef223f4206cb345495664a3cedb6a",
+      "translationSha256": "f30ce25cb8c6093d5a3bd6032cadbfca0c6224516329f76646b623789d154213",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CommandUndo.Error.NoCommand",
+      "sourceSha256": "ddc9faff8d4ab03a8283fe8752ce3aa76f19d34782c47cf96045377c4f8b92af",
+      "translationSha256": "9e13ec13c498367387053a0f3d3f8c018b4615fb43d203041ef10494f1dfab3f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Detail.GeneratedClassSourceWriteFailed",
+      "sourceSha256": "b60c3b9d18967869171c71cff272d0de14034276c11a53a020eb5ea27250106a",
+      "translationSha256": "5eb38c99ae9e96d515da0fe00fbf13e12f100f70c5d7571cf90f2373bd7d4e64",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.AsyncTaskCancelled",
+      "sourceSha256": "63fce069eff76810fe70316868a79c33e226fc0bd21bee6e8cc141373da215ec",
+      "translationSha256": "1ac599b186078818f216e6b86768433fc4d2212591e071eadf6dfa334a85aac8",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+      "sourceSha256": "f4a5d9accdaf544e2e59d8e6c71017cf5ea5158daa0a42848b090abe731dfe3b",
+      "translationSha256": "c28f5437ce065f52742fb7f9eaa828ba740da813d780bb8ed25f733ed45ccd36",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
+      "sourceSha256": "4cc246a6ebb072bd4b061b829b8340af5a08566fac9ee8e5a756c27b8643529f",
+      "translationSha256": "42862d2530ec4e06007dd9fddd33f7e714830d763611d360ce6dfeb3e1862745",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+      "sourceSha256": "86426b23b055de68f89eb931aeeef7b547d3e3dc474412651b0f2597c75da707",
+      "translationSha256": "b1a23e9c7c7b48fa70431a538099b72a817717fa0e229aa3f3fb02e8f98465ce",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+      "sourceSha256": "b54c44f8a38b5360eb617cc5253cbb08e8be1c17bb2fe3a0f00e3f217166b66f",
+      "translationSha256": "98dfbaa4f27d65e6c937dab45fb3178febe2df0c40659098f365287ac98d08c6",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+      "sourceSha256": "686dbf7fa9de5051fb23c2fc0806b6b0463e54140c0cf2a51c4fcd84835eda3b",
+      "translationSha256": "728ee4934e7f8d919eae017b5bc82852646db4aea8b4b099775fc761fc4b46fd",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+      "sourceSha256": "e5a1d043f5b8d1e10543de8a84cc1589e948ce707fbedd86d04e2005bfb4c4b7",
+      "translationSha256": "82f625ef94dab7f83b2ea70cd0d695341c8292505ccc040a3ebe84fdb4d567d3",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.VerifiedBytesUnavailable",
+      "sourceSha256": "dfc9becd8a428e102aff919055d2b2828d454a896034a81bfaf30791dcbaef5b",
+      "translationSha256": "1a99217cf639d53a2fb26ddf1c51aa683afeae13fa417c6e665cecaf9dc6c28b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CriticalSection.Error.BlockingOperation",
+      "sourceSha256": "2a4a063a6d60b3c0380c50836f2be43a66f504009ce7c97112fe6d75e3ba6167",
+      "translationSha256": "094dc8427153cff0f504ed888157c077a2a8d33538e5372614dd1e5badda2d36",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CriticalSection.Error.EnterAscendingOrder",
+      "sourceSha256": "4a33ffb8c78f8320935c98324748515f7698a5d40cac81b9a5f1fe4163cccc4a",
+      "translationSha256": "f4e8ac7b406d91048d4bb1926deb7d2c9742eda68f79d8d0132e86939adeee84",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CriticalSection.Error.ExitLifoOrder",
+      "sourceSha256": "93fa58ee6b78fee05e0b30982b17b8e208b0defb3becf51e2de0e78c1576a9d8",
+      "translationSha256": "044239074f19ca051fd1463ebfb8c7f2f5b62bbe902164b23e863dc0294bc2ee",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CriticalSection.Error.MutexNotFound",
+      "sourceSha256": "4e2cc0c8501df4a657aac5c5ecbb8d0b5b9a9b1eafd67fcf6228f9c238eb868c",
+      "translationSha256": "5234c93e60c44121ed858556d427a53fbb7a4c4bb95963d2cf7e2a8e5a35392a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.CriticalSection.Error.UnknownSection",
+      "sourceSha256": "85bc79c2ebf19817ebe37c5cb3409e7377c4ef4b86f8fcb78271977197974da7",
+      "translationSha256": "d195be9c3b49be8a5ce5933a0c74876c49cfd65c5139b3153a542b545a8b207d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Cursor.Error.AliasAlreadyOpen",
+      "sourceSha256": "0ef16c2085bbdd448489760cffa9eee61f703da38d9eb176850f6fd325785a5e",
+      "translationSha256": "5cad6bd4c03848fe66f633f2b8ea6e7e0a543571c9c7a9721bc8c71cc5b67149",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor",
+      "sourceSha256": "0f3e7648bfb570b8959e6e1a02ddfa29494fea0e8866b532e148dc0b7fb45915",
+      "translationSha256": "edd2ee5ca71d2b53bc91d0888b71a4642797f1c858d51783284d1bc6cdfa1621",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired",
+      "sourceSha256": "d03d81c90c2166f0994efdbbaba20d37ac1043af23aef6df9fb6f97d58733185",
+      "translationSha256": "fcbc3bae55a59e9b1a7e7c515cf62239b36cd5a7f61c680ac4861acf226f961e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+      "sourceSha256": "e0e76f3be199ae4fdb4122df0d16b1a481ebc465834d8aaa4e1c4bb875725e8c",
+      "translationSha256": "f37548d2e500dbe3ee21c399afdff1e6d71279f2e1771fb1beba845fd66b1960",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "sourceSha256": "488cb42bc114bc54a8ccca503650d707583ee3f019853dea3b7b7939384ac02b",
+      "translationSha256": "b03f9780d5ee83e89a7a1dbd26258796fcb868f89ec9d6ac7306816a5dedcc11",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "sourceSha256": "084206f6e3a1cf562129c611f30745950ffd6c60d264afb729a9081cab365bf7",
+      "translationSha256": "81ce7916fe02509c94edbf353c2947aedaaf985fc38afcf4e300f7cd992410ba",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "sourceSha256": "963b4242254182ed4fde007970ef247a26fe3e067eca5351c13a7578a3a1a340",
+      "translationSha256": "5ea71ce9d24e325d75129f55c04fa1cd11806714d7c4fa19b57ff5be2a2996c5",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "sourceSha256": "f469cecd777a85c1bf5326c5a458da29deb1a997aa39d67634d8f6df9c99f8ad",
+      "translationSha256": "48bcd25be501cc494218dae30c401b1c75875e63fbe1463ffba68cc1082f4225",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed",
+      "sourceSha256": "4c836af9c79b2a807eb8823ebf10e13daa71be2cd0fd56f02dcb87f637bb3e29",
+      "translationSha256": "d1179d92b039b89717085e40f06584492ca3b5315cd9d844c406304dec28ec03",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.ClrRuntimeNotFound",
+      "sourceSha256": "3d65e397d4fb39538be087c5d5059826b58f41a0114260b724d4999b58e348d3",
+      "translationSha256": "01b663518220c1fb8ff31ef970c641d12b36e95569b712a11120e60f16561925",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.ClrRuntimeStartFailed",
+      "sourceSha256": "01f09a2fe3e907345f7324c3a5a181094416502139c87f50f28a4297257c49b0",
+      "translationSha256": "ece4c90b19857e1e9ef85598f46aacd2776e758662d14605b6601262b41ea401",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed",
+      "sourceSha256": "914299f52e760af3a2ae3954d414b469446b37cdbba7197b7bfdbd42a4e6fb21",
+      "translationSha256": "837cdc7476ff0e8f0baae0108e5e2f0f5b233d9bb422e25ca42bc08378536902",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.DotNetMethodNotFound",
+      "sourceSha256": "02e082d7916dcefb2c1507909d73ee89efa9c39dd1e198db8e59b35d50dd2c9a",
+      "translationSha256": "db4aec84283191a44ec30d29b11311ed601827d84da07146d2b1fea2c8eac61b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded",
+      "sourceSha256": "685e1e861c4e6d7bc5ea1167acbf78c7a04ab7e1361e01f0d65353c6d38b7b53",
+      "translationSha256": "fd90d9854e619839eb50447c5d68b6e3063f2737fb9a46de150df18490d7b53d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.GetDefaultDomainFailed",
+      "sourceSha256": "6e9dfa46caab691d98446d7c636d9f1409dac1a6eecfee97116dc02db9d6ef40",
+      "translationSha256": "76cee11156a6ec63a7cebd84114efb8c233c043704d2676c1df20f3bda17af10",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
+      "sourceSha256": "ffe0fbb4def68b45b6b5c7e5ce87400a0a0f3fda653b26be6af5297770e0da97",
+      "translationSha256": "74483eac446d33f8965bf5802ac6b2e200457a2dad57d9e5f48baf46f4789868",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.NativeInvokeFailed",
+      "sourceSha256": "dfb3340e61dc98cb12d9f7d00ce76d2a79588394f794acd0d75c96ba1c8ee977",
+      "translationSha256": "98dc9a4772fdcee24dd7c7d8f1ec852dc9c1969b9bb49adf939d0dc6546dad2a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.NativeProcAddressMissing",
+      "sourceSha256": "dd1d5072b7509336984e116197e549b3467023cae41704cb6391a73e70e8e29f",
+      "translationSha256": "dead851d4135910161b212ad8794e2269ee9d128ba5393033449aa992161b1df",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+      "sourceSha256": "bf57c0f074df89b1c5cc24bc7a5562634fd7f420e47c24de6d9418597c1a0fc8",
+      "translationSha256": "163b08fc8eedad313842da835af40f8d58e586e43acca4eb01d4faa2f953cd18",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound",
+      "sourceSha256": "753b9ff85f60fb986be37cc7d939c7bfa4c7791fd7fe3dbc4330390dc5683b11",
+      "translationSha256": "bbafeb38461454a4cedb659cf19521b9bccdd9fe4e2bd95a43b4b85de28f0d4e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.CurrencyOutOfRange",
+      "sourceSha256": "a17330890a7439d246869bc89fe022825853f796bf9d328927bc2224c854a633",
+      "translationSha256": "fa0006d63e9e9f78c48ae9cd6ce543c23ad0eaf8c7c11d66c65ef29011f30524",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.DivisionByZero",
+      "sourceSha256": "5f537f4311522ec665d4480fa2cf4e4f41bff0aaefb9bb9b37819dc4acac6f5b",
+      "translationSha256": "eff1d6a4a0362aa87c57283b4cb4c0246a18b94489e04694c23730c488a3cb75",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.IntegerDivisionByZero",
+      "sourceSha256": "0256cbf1332fc1f133a7e53d8fa505f930bd5e897e2cf8744831684c760a2acd",
+      "translationSha256": "95f4a6ad31af6e6fa50fd528a505cdea0ca8f5a69ec5a5bab92548ab47107b9f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.InvalidArgument",
+      "sourceSha256": "5f59a1979c26da033943e42b268ea4274c4fc76d493361e0e618a20d2a0e2784",
+      "translationSha256": "40a571518cfb70334208deefe6daac012820b96286c3074118e6a1e66c467546",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.InvalidPathOrFileName",
+      "sourceSha256": "a2f09b3cb1625f54e996dfb553a59c07eccad9919aeb9bf1bd55f4cd51b9fc39",
+      "translationSha256": "ea7571642e5f911502c69f47f220d64d43d565928f4e551d2d914fc1ca79a5fe",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution",
+      "sourceSha256": "fad3d3ceabab1ac04b6498b902167ec4ba09ffa2b46426e139c4c9d61a61965d",
+      "translationSha256": "f11d33a2880d5c57f6e3c9919a51e980ca34ba104b28d121d7a82c60f1f6d9b6",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop",
+      "sourceSha256": "9cdd66cbfb2493637d651d603c91a159b2324631463854e4313392e0d8ad46bc",
+      "translationSha256": "ff59b08656181519c3d16e923794e7c7046191f7053baf66dfa0495569e0b64e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Numeric.Error.NonNegativeArgumentRequired",
+      "sourceSha256": "34c651b85c1ca9e41739e496d46270aa3bf5ffd31a64b6b3a3cddad0c966a445",
+      "translationSha256": "539e4d9d5994ffdbd38395642c01c96bd00f1f1255e080815456ebf2dbb35470",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Numeric.Error.PositiveArgumentRequired",
+      "sourceSha256": "e669c376c768775c28795ac90250f634a98bed760103281d6a73b5fcb4c7c001",
+      "translationSha256": "2310c3835507759564b44677f8d140ea06f59651217d6354b82ad4cf30cbebce",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired",
+      "sourceSha256": "f012f51618b489e38837390e8019459618329d92551b7b1313d3a7d9208530c8",
+      "translationSha256": "05a703f962a9a4235d2da26e18c3e74659f73edbea7d9bc894d1897ab937f12a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+      "sourceSha256": "328b901497ee5ab8e22548da3a2a2c9e9149a72b43be8e5215413371f2f74a20",
+      "translationSha256": "53d03b927f9474197e0d7206d1d0dd46fb04f51f9cabd1bd4bc7e7c9c3d54d7d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.DuplicateElse",
+      "sourceSha256": "32697eacb6b3ded740f3536445e2faec95a07d6110ac10628d2490e6ae8b6033",
+      "translationSha256": "a034e093b613f94f245f01f406b15fe662bb97800c5439bd0361a8eec6a0f874",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "sourceSha256": "70d82b245b4560e052516a530ee95c4a9b4a55c37887666ac916ae77923f14f2",
+      "translationSha256": "47cf9f9979b6a1f758ca79a44c28bf448fb637e0e8f9385877f73474480138cc",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "sourceSha256": "040bf8e633ef6d1354ecf03a253c85c95551c23142f9ad585e57aeeead32412b",
+      "translationSha256": "ecdc6d7badea91cc309cf283ea77e41d89bf3bc78eb02baab743b82319f56a60",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+      "sourceSha256": "d6ff5d0811fa57aacc707f4e1cb9ca82485672e80b75dcbf450bb7fbee80435d",
+      "translationSha256": "5bc6b12d6f1a7904f985fdd7b441714e8ca301d630530c2bf2fc6c69c9986582",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "sourceSha256": "9f0c1674dc0eafee81d64e94b18603fc86600ea6de27ee1200ab04309ae59696",
+      "translationSha256": "ceb60fbe7998250d40de83fb94d58bdc9d7718e38d8dad40eac550d76fea9fdd",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.SourceTooLarge",
+      "sourceSha256": "51abc825cdcc1f75b58ceea128b8ba57e91ab1bc94b4ab19404bcd47204cda81",
+      "translationSha256": "527c49a5f63acd3d1ac117ffd11e1bcc5a098bb8748410a0c65372c989b48e5a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+      "sourceSha256": "1f3ebdde58806603a18fcc10ca7758472740eda73d42a47c5bae67bb0c009bc8",
+      "translationSha256": "74ba286cfaac6dc4df37a53c84cd10a70566aba0fed56d3f291745813130db07",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.TooManySourceLines",
+      "sourceSha256": "fd4805bd80ef6f8620eceb6fd1c9e9501af241fcce2a9966d0e70b08e41ea9a1",
+      "translationSha256": "9da225614ae534bab9cf4cdfc33dd1de70a733038699618db61f22b1030409d7",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "sourceSha256": "a6a6284239cf042409fb6fb9abc78056bda3beda86c438bbc66d66ead93a4b93",
+      "translationSha256": "9f0cc6eb9676c84ae4b8c4818f4b654b79d3d73b4c130207d8f78e4c3ce43a5a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "sourceSha256": "59457083cef5d3449d8c010dfbc82c5684fce2e6e943f03051d7caa9eae9f9eb",
+      "translationSha256": "efed8bf2ee90445d5dcf6b1650d5c9af12c249adb38742245b919a0fc358ca20",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "sourceSha256": "d60f0fc10071425afec7a59a9b2918e8020970ca24ea71a00f415b45a121b643",
+      "translationSha256": "5a6ee986bb09df9011cc2f116caf93f8b171f6c2f441562a989487afaa423070",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.ConstraintFailedForField",
+      "sourceSha256": "75f274103dbf1e92be3578650afe9b73d26c0ac1f0a2626c4e2a89c70bd77a5c",
+      "translationSha256": "079405e98f4fc68ecfa18ed7e49fb8578150a094996ad2e6c901f2731b282fa6",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.CursorBufferingNotEnabled",
+      "sourceSha256": "6ffa3abb6c7c75ba8484e1c2ba70f93625774e24baddabc41b5121b01a7edb1c",
+      "translationSha256": "6ab0640bbfed8cc7fc754d3564531c94155df69550656085b7b5b417ab3de9c9",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.InsertTargetFieldsResolveFailed",
+      "sourceSha256": "eda60168507ce5936af8e5a2747d2a30af48e3bad41360fdb99227ba4530aa49",
+      "translationSha256": "7503c5f6016301c79a1f751e39abdb8cfab7dcef513e75192aa825890abff2d4",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.OptimisticBufferConflict",
+      "sourceSha256": "2391962a5b473b115cf13cf55a53048de6a3dfe2faff89a81e57f460d08c7643",
+      "translationSha256": "72eb69264029597c34182a90d9f3e2ecbeb296529c03b7bcf37c8568a883054e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound",
+      "sourceSha256": "6686a40fe9022c86815449ff0c12c059b8ebf2c6de8357e1ceb5a7183dd4a0e3",
+      "translationSha256": "a56417e45b298c3c13d964d162f4ed217c32668b8e4649e949c560d45c12af45",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported",
+      "sourceSha256": "33d05e5d9ab972ab5988ff69a9e4d6c2c91ba76c2699a2e108e9ce7849b02f9b",
+      "translationSha256": "fc15f2ee308938cd2c54ab5bc796dfcbe6c14a0774bd5baaa7fdf1f9e8dad96c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Records.Error.TableBufferingNotEnabled",
+      "sourceSha256": "b44851ab19647ad3855e9cf3181d0e0b1ffed78e4c7cbd3b4a853eda3f995ae8",
+      "translationSha256": "a26df077ef09d283d01bf10387b7da90f18c3a573429ef60e0ed9ea8248e55c9",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.ReportAsset.Error.ResolveFailed",
+      "sourceSha256": "284be5e8ecde6b0de192139354129e10f01a01a14dfe6c2c1f466a03aa32276c",
+      "translationSha256": "7f0357d7acddcd70b0419ddf98ea4a85ccd7bf83eca0fa3b75dd17e70c1b7afe",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.ReportOutput.Error.PathRequired",
+      "sourceSha256": "c2fbebb9c158e974bb11309970609458b7de98648ef489dc77a5667d2d32a834",
+      "translationSha256": "19fd50fc19fda6abb625dd95ece19fef2dee3ac34fe83190ccee152ab555e5b5",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange",
+      "sourceSha256": "6ccb3529effcb5fce0322752b21de7dc9160ee01ae4dee99fc328fede707f4bd",
+      "translationSha256": "68054e4eb476b63578168ca39047d8ba9e007d8ac7b3ed1a958ee4cc4e79276d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.RuntimeSurface.Error.CollectionKeyNotUnique",
+      "sourceSha256": "ddad9ad0148330dc3c11e0db34b795519498820b6f01cbc93238494cd12cceba",
+      "translationSha256": "a38e943a04978d30e59df3157b6c0803d1a7835bb37e83115f72ae74dda71931",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.RuntimeSurface.Error.CpDbfAliasNotFound",
+      "sourceSha256": "c4e0f8d8f8c0468d78fe03f84f0950d269bb1fbd4b672d601a6572dcf449dec6",
+      "translationSha256": "1129178e76917b61ba13cc7dfb3bde751cef360e03583f5811cb91052f879274",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable",
+      "sourceSha256": "58bf27de4064b5429c3a700ee558b70c744b9170237af7b040f2d8bd0b52d478",
+      "translationSha256": "6bd5f1c075e0caacb5921a7c69eef2823fed49290b45f9b7a87c4b6867843c0c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback",
+      "sourceSha256": "fdab9cb93c4329a81d618cb000491cce34c9794e1e630aaaa7281620a6887529",
+      "translationSha256": "eaacf091dcc86f38c9d86a14d74c7101344328bcae6c156cdb04013c0a00eb13",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable",
+      "sourceSha256": "74f1db62f5b8608eb7dfea90ac2d3d6681418ed5108fd9c2567c16fe629447de",
+      "translationSha256": "995dc594cdb0a5be909927815363be9a023e047d5b89eb6643bf021e37b0889f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset",
+      "sourceSha256": "5789e7fc2f0b861fe7acf39c65f04dafb018ecd2f6b6e196eebe988ba4e57eed",
+      "translationSha256": "49e9e46c09cd5688f8a871c375822e5ceaa792ce683bbe2bda3abbf56bd03a04",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Session.Message.BreakpointHit",
+      "sourceSha256": "cef92edd90f51a845b870e4d1625c545851b4e4ee5744c94b2f449b1086f1e4b",
+      "translationSha256": "a9cc60482f9b729d46ee673215b58e2601422661f62c1fbd5168b557db9e505e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Session.Message.ExecutionCompleted",
+      "sourceSha256": "34656981bda2e8061de2b9478cf571e1fb049354a899856bd56360a709702507",
+      "translationSha256": "fd577d00b4fff466271d159aacd6c67639b0f042252fe46744c1c7a153cb8d54",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Session.Message.StepCompleted",
+      "sourceSha256": "8c6f70a031d98109506a7feacf1ea9c50d36f74fbfe0d97aef1ea47bb6cb4539",
+      "translationSha256": "8d6e7349db77d968944133892b3a9a0e0051f70e2af875a39d88abdc62a2d20a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Sql.Error.HandleNotFound",
+      "sourceSha256": "494b2457abb21039d894ac583dcafee4ac7c41d67dd54df7b5f131cd5ea93a75",
+      "translationSha256": "cf8c8b0f3f0af3869781af0e0032c8b9a390bf073d51c1fc2451bcb8cba487d1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement",
+      "sourceSha256": "a3767b01e588474108a6cb5ccdae89e865a338ff07f9cd3683a22104c9bb7f4b",
+      "translationSha256": "b80c25998dc5ddc636a220352dfe72e0867824724ea5d0c9d58b0086fd2e58e6",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.String.Error.StringTooLong",
+      "sourceSha256": "213374cb105a739d51c169286950cc9ac1ce220140c9aaf4002b5fcda14e4c23",
+      "translationSha256": "74295eb2c6e05bb3ad4738362f79c035dfdef490df1636333e5745a2bd7c0a18",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Total.Error.FieldNotFound",
+      "sourceSha256": "9ca4b5395f81f2873995bfd6653f4126b5f8f3cdebe7eccbe440290fd2c38fa1",
+      "translationSha256": "16eb7ef082f6c3471cdb6521187895abd62384a9af6d648ee9181e58aea79485",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Total.Error.OnFieldNotFound",
+      "sourceSha256": "fa05e8b8ade4e3dd5ee4d08224506c77947d5e5bf9c2fc42a5ae049ea4802e4d",
+      "translationSha256": "ecb985d208d79ca1fdb749950748121c9785845ae41692656791eae18c392a21",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Total.Error.OnlyNumericFields",
+      "sourceSha256": "f89b445356b23055d8df7341f9ccebd75a7f58a7ce4f3256b198bb9a6c31ff6e",
+      "translationSha256": "46e8218795c972d76f39f828f744ae893dbee0e62409f1b1edc484f9466e252a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Total.Error.RequiresNumericField",
+      "sourceSha256": "b63ae5a6eb8895f29278495df6e4d86dcb8179a9f9d144f0e0ceafea2dabcb68",
+      "translationSha256": "ccb5b9da304c3313c4ffa0f164a001b7d3eb62d5da0e47d2231e6512e5f1729f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Total.Error.RequiresSelectedWorkArea",
+      "sourceSha256": "993a75e559ca74e3b181b3fac59f018f556c2e2bfc9579463eda7884a55defd5",
+      "translationSha256": "054a8cb4bf2ca7651cfd3386a0e0652414c1f45d22023f4a88b7f1da47766754",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Total.Error.TargetWorkAreaNotFound",
+      "sourceSha256": "71ee1ee7dbee0e0c2c3c8207024c364d0987f2db9eea9cfbc558f45a3f96511f",
+      "translationSha256": "366e9603102f6e19c579753bab59389ce0aa83aba3d63165add3baa6871dd80e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Transaction.Error.BackupCreateFailed",
+      "sourceSha256": "957103ba166d7198cc6d5918dbbeca5eb10076672d38047ce84965f9c7099bfa",
+      "translationSha256": "02a4917c1e54c03996c30e81a7b00eb4bae33c0d6fc150b6b16060a9554eab15",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Transaction.Error.BackupJournalPersistFailed",
+      "sourceSha256": "31e7ad7000ea2b427b6c86bcb8bc12bf0165a27daeb4dadfb059e4c91ca75fa3",
+      "translationSha256": "3729fe933c386d56365b17b38320305cfa685aef4ea543a46d1ccdec211024df",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Transaction.Error.BackupLockTimeout",
+      "sourceSha256": "47bff4b2475e7668a12bbc08125387f680db1f171d6bf78ca1c1b5b85240271a",
+      "translationSha256": "b704dc3817f02d4481c37849e3f097b80c7ac507eeb75e0be1290a77d60cb5bd",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Transaction.Error.JournalInitializeFailed",
+      "sourceSha256": "0986e7dd9b958631fbe3596a7e93d78448ef87e5115d68ca0cf840e2f21d054a",
+      "translationSha256": "d29ad5354a5e3037bc7bf84e2dc1fff8b53d8e3b10ec4e53751023d1390459be",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Transaction.Error.JournalStatePersistFailed",
+      "sourceSha256": "5a77c32baba72f45daffc26904d3e933f50552b59359beae399b76b1177e3af5",
+      "translationSha256": "aa19462e876b6b5ccf5c2541d0ad3f729422c2bc424bcf705b3cc320dcb16aee",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Transaction.Error.NoActiveTransaction",
+      "sourceSha256": "d246095b95b525c000120bc184b3bb510939ed60b89cb3026a9ca24dc67ae0b9",
+      "translationSha256": "5670c319c2efe77b498513b7584f208f09db09d54014c5ea89a1e31e7ef63991",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+      "sourceSha256": "85f4c52080d037c0f9d9a6c23234846c187be9f06f47dd16b0efadaa316ff7a8",
+      "translationSha256": "d4c7d2093766b4be87bb2bfcb69f97107b35a1a8bc9338959a061f8a98eb5cad",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message",
+      "sourceSha256": "598c476510052a9ec72428b042deb600a5330d4a2ec09d7768e5d492a583171a",
+      "translationSha256": "906b06c707079ce738fc935691f19b683a8c3cf56973962a05d38cd055cdc2c5",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.XAsset.Error.MenuPathMissingStem",
+      "sourceSha256": "cb429b00c5c49e37439967c8f0075553410b1ef58c4a7a93081586827795fe07",
+      "translationSha256": "c42bbc4e5610c5bca78e150b2927f40daf27fc96a4c6a2186c0dfe64ce4811be",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.XAsset.Error.MenuPopupNameInvalid",
+      "sourceSha256": "a0a8f00e23da2b1128e7b869cecf0d21be2c8728a5607edd2816a1f64e70390a",
+      "translationSha256": "a4a45aba6e41d2aa8d497c9883a21d8109eb4b866315298beadba647b831fb60",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.XAsset.Error.MenuSymbolUnavailable",
+      "sourceSha256": "099175896697bbbbc1bc7a0fdc792a4f61379b806e51d0b9dc74558b7773be8d",
+      "translationSha256": "fb2ee23a8b1927262b3f871a6cbfb0653318a3616978133cc643703314a4ce77",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.XAsset.Error.PathUnrepresentable",
+      "sourceSha256": "4488f62643464293b161408574a57e39e9bd683f38b4e81c957cb45f43aebf57",
+      "translationSha256": "6a453be2c017eca1afd7d6f1adeab07d40336a71afa14ceb161c19230499d41b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.XAsset.Error.TablePreviewMissing",
+      "sourceSha256": "78ffdeed1487c5165d249221b217c9a6e8f6e7d1b92aa02e134841a2d896e781",
+      "translationSha256": "34ca1b017304aa4c8c7e6c6184ec19370001404fe92826e5f635f0b563a95f5a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.XAsset.Error.UnsupportedExecutableFamily",
+      "sourceSha256": "9931aa49493cebf8ca1dab4323999f68f8649655684fbd92182e57f966cceaf7",
+      "translationSha256": "f9a27d8c2c61ab2469dd31a89764da317bb7061e71613c5e0f081856b2598a75",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+      "sourceSha256": "325133964523c59aa86753c109ef00dea56e876b35a9fa3dde98cb4f33f1f448",
+      "translationSha256": "4396cb0bc666f4eebecd55385040784e6c6a761408c5f87d6e5e5fa40126f6f3",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.InvalidCommand",
+      "sourceSha256": "b6eb236b64d8625c2294b395af87d43c5333c12a4e962f353bda0f0bbe6c3d7b",
+      "translationSha256": "d1275d521c749d90ecbbe38f351f4e331d1fff01b700fa6b2f6cd6b3a41eda90",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound",
+      "sourceSha256": "2d0fe24a72b30057b36a50d1201ad9383acf3f3109dcdb44b95d272fc4a2ea16",
+      "translationSha256": "b715ecf5cfe3d8be0c20cc7b0ff85b1f13f04543786ea02ca35e8c0e04d6330e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpoint",
+      "sourceSha256": "97ffe7ee4bf7ef06e7fc644d836fbed51423ab9313e1581c4af4a9f44b9c9061",
+      "translationSha256": "f82ebabdeacceb1adbffdedc4daa75c8153dc996b814cc42ea33db37da209c4c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+      "sourceSha256": "99a6eb06b3cfb52ba2c0096aeb49046b2469ef5adcff65d423e8b94b95402d5e",
+      "translationSha256": "5295f1fb11225b56af04856a60d9e314cf0acce61777a4431b28d4da70ddf1f2",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+      "sourceSha256": "519816696ccdeb697034c41326b583286bb0d16d1da46f51fe5d72559dba5486",
+      "translationSha256": "f01642a3d2e5d47c7aeee578d6a2a22e5325fe2b4870f103b3b8b80b0135ab4e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.UnknownXAssetAction",
+      "sourceSha256": "9bf3f648afe73e34c1e6c5a9c757b756a638f4ee097758e5b9fdf3f2f01365b0",
+      "translationSha256": "635b364c571bc9d45f052b80bb947caca02dee44c7e3481034aabb4afb5e2f18",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode",
+      "sourceSha256": "59cda05aa63a7b42782dc049181f9a4317f2b0b7d6d3afc453cc25c58856be68",
+      "translationSha256": "1b0864384d4d02e71d65b8d0d631d473fb0682cb4fcdb214c790546ed316657b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.AggregateSourceTooLarge",
+      "sourceSha256": "bdd1b85eec154179099f05afbb3a675796f6410cdec38c7672a331fd6b73a949",
+      "translationSha256": "d071ed1b521bb02282e417a506e14d5a0c653080e5390bd71996ecc5ef518050",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.AssetEntryMalformed",
+      "sourceSha256": "49350ab69ee38ab7f032b2cc559878499661c55d5a4894a0f7c9c7baf26bf2da",
+      "translationSha256": "f989e3ddc5ecd85bcd2aa8cf2564794f05da042eb18fcd956ab4b0c974432c35",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.DataAssetMalformed",
+      "sourceSha256": "83107fd465e344554052c2a1cfb29f0d754e4b6587752747a9773f39a39fafa6",
+      "translationSha256": "4581cec9cfe37bc2102781e0e047f6bc76c5e6bbe2515ad200c35708084c6830",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.DataPayloadMalformed",
+      "sourceSha256": "7ef1481db95ee6a5515c141431406f780b7f88e044dc4a1b5e03a71b26983ba4",
+      "translationSha256": "8e8eaf62259827f47f7efbff322f10223cf27fe676bf90f2e09c537ebdf37605",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.DataPolicyMalformed",
+      "sourceSha256": "26ab00838b3c0892b5b8a0b240bef033318e709988201faadf8753e547eafec7",
+      "translationSha256": "8f260897eec7be55627a0e5e594e5270a26de5bee530325a5fd366f667f51459",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.ExtensionPayloadMalformed",
+      "sourceSha256": "571406a5a81b2252c3f1cd2b83980354352661b2d070b5574edbfbe670ebb214",
+      "translationSha256": "0e93ae120a90811a33a1dc5d30561a09308d52d656956730b89e100d51257b32",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
+      "sourceSha256": "c34c683f840cd0b4d98220d4bc8ef6370d36be554309b58cea2f6d16847964ea",
+      "translationSha256": "4b152134042abb94b0e14dbc32db77848b19358549551a89794ad6a8dc4b340d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.ExtensionPayloadSha256Mismatch",
+      "sourceSha256": "4dd58c8ee959c0e7d3b72d3410b049a28f24c00e7f4f25cafebea3d3a4532aee",
+      "translationSha256": "4de15b76f394ad819add6f3c37c3585b05860a90a18f2bbc4f609e5cfeda5b5b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.FederationExecutionFailed",
+      "sourceSha256": "0b6f271fb0adbb205d231380d3eb9fce322ac4ffece5a2adddb18fd3d8f10b0f",
+      "translationSha256": "aa33d7e114b0c0dabdfac6ac24c7c68f919a9b6b98fdf16dfdb93bcb91254655",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.FederationExecutionTargetRequired",
+      "sourceSha256": "11e75cc186b78a9d6e48d9ff1c90bf0dcfe257ed4ab6c4d6eaf786cc948fa449",
+      "translationSha256": "cf1e66b5271ea570370b910cf0f39be3a8d017f6b6e75809b166828e15e559f1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.FederationRequiredOptions",
+      "sourceSha256": "9872db933c2ef22c782ca758d1758f6fda1819b3ceb8daf8730b63984fd64061",
+      "translationSha256": "b56071f8c153814f3401b86e10d5cf6099e3b6f536cad35fc06b632654a19f1a",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.ManifestEmptyOrInvalid",
+      "sourceSha256": "465cf1836e75ee80f74c205b0d5754b37e5ccc54b0833f771d31cd0f791d11de",
+      "translationSha256": "22b7c133b3832863589b7a2b8d66733cf82ad75b0d9c3f46294fc94446230058",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.ManifestNotFound",
+      "sourceSha256": "37ce6e6ac03207a1a0ee022c80746ddd4984f6383ef9fcf6979471d3c016aaaa",
+      "translationSha256": "72316a7232dd306ad961997d8fd24c1b2e9723d5357e56675d8d3680f18cdda6",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+      "sourceSha256": "b59ff7c9272ec44a17125742b582681203dcbb54aea662934fc5e2b3e30d87ff",
+      "translationSha256": "96a3ec74c425c60f884b3e93725be17b32964a22a50b699da2b949f0e468182c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.PackagedAssetDigestMissing",
+      "sourceSha256": "36081d7d430c09644dc6681a2f2c2ec89a577b62e12d40baabc63f82903942af",
+      "translationSha256": "8c38cd0454317e867c40bbf9a50d3a03fe9639cbd7479d492ab2cccd6ea3f4da",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.PackagedAssetMissing",
+      "sourceSha256": "271fa48119e897d1f154e0ea1dd3ee27bbe45acc4654f87e03b966d5e1f24894",
+      "translationSha256": "22afe2a9635a5f2440cd0e787c99604868d24c146006ab79645c2604cbbe27ec",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.PackagedAssetSha256Mismatch",
+      "sourceSha256": "61d7dd5dccaadfe910fe863c224620746f9fc1a550f8666d3ffbaf834a0baad1",
+      "translationSha256": "c665cce2237ab466a8e22a6272963e23755cd8e44bed4c1407bcc60e1f958844",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.RuntimeHostSha256Mismatch",
+      "sourceSha256": "b1a3e787f58e380e3cc6187cee53df25d4399d3c66d108bf7bcae7eb1569f834",
+      "translationSha256": "213162a7381d116b234eafcf08385b20dfb272d73f4f161fef802e3f1f5d4797",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "aed847047dcbd7c86ef1e20ddcace48065b7576ebdb6287856d6b91a94a6a9a7",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.UnhandledFault",
+      "sourceSha256": "452b06be5933c947872765b36c27416922d46112d475a418e081097511e9061c",
+      "translationSha256": "efa9b9d8ce9cebe39e7f2df20b5598f8b16edbf60f32f2e6867dd0a422cd4c52",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Error.VerifiedSourceUnavailable",
+      "sourceSha256": "1d86ac8b622a2c4ec0a5fb988b69cf152393dff692f3e9e87bdf25eb213c87fe",
+      "translationSha256": "8f6c50133e080f7090cd4737dc8405803bfb7076749c287d3dbc98349df65678",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Prompt.QuitConfirm",
+      "sourceSha256": "c7f7fc0798738df2ff0ae394786dfa8a9717afb43f5616b3f1b3f81c1c207b05",
+      "translationSha256": "f3826f8b26f09f50043e94b34fa92925d9b943043dbbfd50e94c72ed74628860",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.ExternalProcessPolicy.Error.ExecutableLockedDuringAuthorization",
+      "sourceSha256": "e6a3e3070c159c23498239b0c4087cd55011189ff7eabbd24745f66fbacf210e",
+      "translationSha256": "42c4b10c1c968ec93eaf3da78a0ff418ac19b720687f8252bb0ab7fea9f5aa77",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.ProcessHardening.Error.SetDllDirectoryFailed",
+      "sourceSha256": "802975c8732eae28f1e9c06ecec6a3ad210fd76d4e1d31a54d768d2f2bb37baa",
+      "translationSha256": "bfc3e74779b26a0bba4607be2492e09c4e0472ce1525a64b7759ce79aae87bcb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.Feature.Rbac.Description",
+      "sourceSha256": "69b2f762be1cf53c405cf1270ae6dc621f5c4d53aecb6c51ac80b46a70ff2069",
+      "translationSha256": "c2ebc86d477f2a089bb785396f43025a835db11317e93560f0de314e025c7b60",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.IdentityProvider.Windows.Description",
+      "sourceSha256": "291eebb66a7abb561d96a3bfe25622ad1fc6cb9246a2a55715b76fa0666a99cd",
+      "translationSha256": "f33baa7bd4446efa828c83a045ae5060135c413652ea2739282f485d448f83a8",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.Permission.AiWorkspaceAgent.Description",
+      "sourceSha256": "b6cbc4cb2979a887441bbbbc7ab3d9517d64bed936f07deb36be854f17061049",
+      "translationSha256": "0e0a505ca9ad424470738a4d1aac5d463ae9f4a83712f8535abfad3d1f5bec13",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.Permission.RuntimeAdmin.Title",
+      "sourceSha256": "1be015540f18320ecfeee56db38d1e918cd0b0872a5e09158420fda4b9244fde",
+      "translationSha256": "7fde883c2bc3106838b43990c2697464437718890bc2b22fa273340b11ee2d88",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.Role.RuntimeOperator.Title",
+      "sourceSha256": "400dca17018e2beeaf1a940a35d5ea22666177a6b0300c2d5b5b4efa78b5c58e",
+      "translationSha256": "786b4f8285a05b1d467d50050e91a611fd1246cddabf03729940858b18d051ac",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.Role.SecurityAdmin.Description",
+      "sourceSha256": "1ce98faa4573b56a6ac52bf67a64e37f480d7c77c1cf0cdd081eff50ccbfc7b8",
+      "translationSha256": "2442a22990ce1420038a70067fad993054fb7260fb3902f026c27a19ad613a7f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.EditorAction.EditDataEnvironment.Description",
+      "sourceSha256": "d4634247a0b37227ecfc1a2f9b2f7f23c7dd2488435c0e0cd15e284a936c45f3",
+      "translationSha256": "52869d06f2bfa8daf5aa091ccfef02e0a103396665d9897de453287a468a24ba",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction",
+      "sourceSha256": "c08de77b0aa179da2b40c5eedb11af51613ded3ef2d844d90141f88651633b4c",
+      "translationSha256": "920d9a8f6cbcd2975504172eaa3c84d3e385185f2c068985654349aace60d213",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "sourceSha256": "eae9ee1086559b066b0911f05273a786ac8dc13db831711dced3752078869aa9",
+      "translationSha256": "eb6ada80557fcce487020f15b9742661cfba5dd3f57915be3c180953e20ca2af",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector",
+      "sourceSha256": "fcc8798893c55415fdf0d6e35951e8b82517d1b1bd29f78c1710e19f02c0bc22",
+      "translationSha256": "df1a8e00076b837a93c48400c9e1f683c36fe557bb7db359c6ae7408ae7cdc38",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+      "sourceSha256": "d5851c3e37fb4b22cb8fd9b275d5f70113e1ee2492f999a225e9f7b4c8deb615",
+      "translationSha256": "a0e515a841b4785c7aa43ef866761c2c6b39eb70763d89d1982d62abd5c18d9c",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+      "sourceSha256": "4a2ce574c81707eb8388bb206bcdb8c5499dfa049c5b8ac64e8b102b4bc0e5be",
+      "translationSha256": "4187a83547a17d2a9f28fd316d6584043968bfc40273e9078d678fc6b163c64d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+      "sourceSha256": "c6519523c0418109cce830491cd9cdaffa5f9d6327989d22eb1e4167020b8461",
+      "translationSha256": "020055cf9eeedba07ed0a060d11a0988dd021f2dad52ea446d7d3a221aa024cf",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+      "sourceSha256": "e54f39e1744f0b72d1a10a95c32b11f428c0a1b9b713b3d7d44fb7740cfeb5b3",
+      "translationSha256": "53dddc06be11fe97d450700f079fb8aedb0ef29acfc4d15f34858f8b7c9af76d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+      "sourceSha256": "c3adcca28c1c6df799501c953914853a32cea5d0748cd90ccd6448fd3a85ce25",
+      "translationSha256": "e20cc8a315f1d8db5a5e6e49ee6a773ca157c653c3e138e3cdc182acfa3cb55b",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject",
+      "sourceSha256": "9a1ee3c7e177637fe94cf32dc6964027bb4cb19c723328f5479fb051ce2aace3",
+      "translationSha256": "8bf97180813afa96eba8879a848013daf2cb8b80aa07d95e940c6912f32aa153",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+      "sourceSha256": "acc466d62b7f451bd0dca12a613a1cec44e3b47b38fc6a66f6da1b6565805bf8",
+      "translationSha256": "bbb43748019752d493a1947a654f4d0518332773ac4f59420a1176bff0884319",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+      "sourceSha256": "6d87341b1a701d49656366b1a49fb53ed35c9bf884814964e788eb4807851d5f",
+      "translationSha256": "3023d5af41254063155d472345099187727d5480d3db6f27fbc73f15c128456f",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+      "sourceSha256": "f3aa5b8d836b69dfa0e847be619de325078fbc9e88e49dce4ff893836d9a4d7f",
+      "translationSha256": "353d8e7b11a89a0c69ffa3b6797d4bc21dba4c127bae108cf8c1be8bffa53c04",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+      "sourceSha256": "b6578cda9f0c15e4cd1152ec8f956278da4effa3e6c8b111700d0f2c837d20e3",
+      "translationSha256": "0e4add634fd5c03b88f36047b778b39c565424fbd06ef624f7fb45b0a1df4cd1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+      "sourceSha256": "52e4dff05544fecb0622592c933876bc072055e4332be4cf946c9765c3959abe",
+      "translationSha256": "02a6db9d877d50adfa35454dbabeae29fe66ddd27705fc29f67a9cd3da8e20f0",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName",
+      "sourceSha256": "96a1247ef1b2329090944a9258c14780a5a7b4e4be062c3ddffa14f23227f6cb",
+      "translationSha256": "911f621382f7e08467342e481648aba3b471d4e91de4160cf4c690800af2df06",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.VisualPropertyParse.Error.CopyBatchItemRequiresPropertyName",
+      "sourceSha256": "d37942d2eb2d4296fca35d680799e3e4343e751860f57a4ca24bbfd259ad3703",
+      "translationSha256": "1888d460356e0b7daa3207b3b04f36d1498387e667475442cda7c0de704ea9e3",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessDesign.Error.MalformedPropertyLine",
+      "sourceSha256": "69dee81ea55d600532ad6152280b4a0c94cadd50dce4a7e24d56f097bb8aea99",
+      "translationSha256": "cc8b87e9bb865b4df683006632291aec913b9c8fcfe4acc4c335bfd2622e2e56",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessDesign.Error.UnexpectedTrailingContent",
+      "sourceSha256": "93b8a094a61b45fe7ca62db841605758b24f3a47b077aea1359659bdc3b70f7b",
+      "translationSha256": "9c1edbb942821a3ced1dfe1e5548d3e5dbf14245c6d16b4ce612db5249a8a531",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessLongValue.Error.ChainTooLong",
+      "sourceSha256": "5e5771164273b895f89e5ea868f81ba484206e0ec1a04a84b3f931ac4f85a52c",
+      "translationSha256": "9f0a6d22283c3d847d9543c5b40559ce40093312b07bc77f0700810cafab4a0d",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessLongValue.Error.CyclicChain",
+      "sourceSha256": "a6c1e79c54dca871b1acda3e507c1352732d5caeecc3eb2da41ca3515b86887e",
+      "translationSha256": "1c6f9472b50aab3c67e0f97ea48d8b05eaa4cf3649197744b7b1a24a033885d0",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessLongValue.Error.UnsupportedBitmask",
+      "sourceSha256": "910bedf4ce00b594ac4c6167de7c22f88aa8d2058d95e678592779e2fee33072",
+      "translationSha256": "3ce4153e8e6b8f8d842c2016f50c9153e1d4ec343a9190fcdd7d039f27da3207",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessLongValue.Error.UnsupportedGeneration",
+      "sourceSha256": "4013eda7f1e16031473d46e1c73e617b78936dc555c163e4a7c20543827e8be0",
+      "translationSha256": "977056f7153038b189dec3e3959f59570a3689ef22fb7e63fd66bc690f740109",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared",
+      "sourceSha256": "968d351381e8d9b8af7a58d7f00e3f2d4d20653125e131d6c2090ef1fc0dbf04",
+      "translationSha256": "eef6c7625e3a9396cdc43de58e49c28d2ca5a3d843d83bab5642d8b485970ceb",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessSavedQueries.Error.JumpTableUnsupported",
+      "sourceSha256": "a1480002cf8eaf5b6180672d48d29af37fe45076cf3fd62fef8e20e670580592",
+      "translationSha256": "bd2103cc8e319a9d50c38decf8ff7eba9e1cecb5d3294e8848c92f3008dacce7",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessSavedQueries.Error.NoClauseRows",
+      "sourceSha256": "d5a43bafa771ee58c9c5ed66c62c8d8f9f72321b2e3c1b947754554e25636c3b",
+      "translationSha256": "40b65c0bfc92c22558b521d4e56339cbfc2c8dabc533958ebd37d754c4306026",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessSavedQueries.Error.RowCountExceedsDeclared",
+      "sourceSha256": "6512f4692d4fd955a8034a610ebdeb19bfbf439a3c93dd7be0759995f1450dc5",
+      "translationSha256": "d3a9fda3106b030a549b544035df40b79cb834ec158568cfcaf365acc44c14d2",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessSavedQueries.Error.UnattributedRowFailure",
+      "sourceSha256": "291f4fa171c6d0bd62423669e0e4c8c0862149a4579e2ddbae3f286ce4aa5c6c",
+      "translationSha256": "2d5e5327fa343a907daa1ddb68e6951d3fc12a7d802740ff65b752d50f552d4e",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessTableDefinition.Error.NotATdefPage",
+      "sourceSha256": "24cfed4826fc9d2bbaf45a7577e33f905a4cc16c870b2cea538af52e9e3f1b00",
+      "translationSha256": "1368594925445e10c5b62cb4267997f2d21c15d1e5338a767bf85da1a168d9b1",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessTableDefinition.Error.UnrecognizedTableType",
+      "sourceSha256": "68ca27d47536a9c80e700a06225a1124761f70ad748b5985dd621058c91bddb0",
+      "translationSha256": "8395dc7ce1efd27f48da73ef254c23bf713671217e988946fa746e8760b83240",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Vfp.AccessTableDefinition.Error.WrongPageSize",
+      "sourceSha256": "c088e89f89d856498009a5f916fe4d81f9a74ededc9052251e1ae4210782f62b",
+      "translationSha256": "f7aec53a797c56db0752a00df7b4472f36701af7d2f1d2bebe9b8367aad388cd",
+      "verdict": "accept",
+      "reason": "Source meaning and regional Spanish are acceptable; placeholders and protected technical tokens remain intact."
+    }
+  ]
+}

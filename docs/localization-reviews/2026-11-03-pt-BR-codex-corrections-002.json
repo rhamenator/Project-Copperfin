@@ -1,0 +1,1541 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions/codex-corrections-002",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "191 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.OutputNameReserved",
+      "sourceSha256": "dc1f1685db4837f4970c1fb537a551869b3dd959ea4ae4cb4b9c96a4afcfd497",
+      "translationSha256": "6533f751f2b2c9f87a0602e558d1a76fd7f93a80396fc3b2de3776b367abffd4",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.PackageRollbackFailed",
+      "sourceSha256": "4d536cce98bedefda520e30d5c53973456b26fb58164dfe92efbb5c86ea5b335",
+      "translationSha256": "16e867256e4c651452c36b5f6ceefad5a4c7ea833189c56442d30eca41cc07f8",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.PackageTransactionStartFailed",
+      "sourceSha256": "56c5cc0c73ffafa8b8ec7c4a290ed0095174f6ae8961ebe599df8a2466cabea1",
+      "translationSha256": "6d02d252a3b33d52ef3bf07e686c40f94d80cedbbc81cb70b0e92cb442d1930a",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.PlanInvalid",
+      "sourceSha256": "2f189ce70fdbef0a80d9bc7e8b2721bbcbc6fe9e030abc4f37e87ca7d57b05e6",
+      "translationSha256": "82eb2c058f4fe18a90ee062248a3efcf126423691a99c53d44022a296d2f2415",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.PrimaryOutputMissing",
+      "sourceSha256": "85857eae662cd8159d72123f2af533e532d0ad5b4dc7a7866a234107ac706b35",
+      "translationSha256": "4203818aff55674af26176b5429699bdccf0d0d8e02d418bc02169151ef9eaf6",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.SourceFileMissing",
+      "sourceSha256": "cec937b45fcdcbee8958841b37a23a775928aca59e0f388d084872485174806c",
+      "translationSha256": "d36d50cf3119948172704bf0f62e8a875cab679afa3e264a5d320aaba79596ef",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.WriteFileFailed",
+      "sourceSha256": "ca305db129595286503440d7ade414eb7992cba8872996e6b1e6a2b5cfa125d0",
+      "translationSha256": "b15088073438ada01186b9d27cf5e9b5378ccf20c02046a3a2c8934ebffbaecd",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.ArtifactRejected",
+      "sourceSha256": "9b5d01eb1fce74606c1e3ae6b61b11f8daa7131aca815913647dcb3632069805",
+      "translationSha256": "a87e5d2a10bc55fbcf84d4704480b9f82c556cf0a463b8e5f93ac94e55fa7580",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.DigestMismatch",
+      "sourceSha256": "550669022d5d15a19d39f4600c47603fc8afff7a99f85d88c0e25e23aa1e0da4",
+      "translationSha256": "a716504e16213fce4a685c0fa7da741995dbf66a63d128d526d536c510ad8389",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryIncomplete",
+      "sourceSha256": "25c655634a98548f2c51dbf27c5cdce2a74982b6663134ec7a925f39882345f7",
+      "translationSha256": "d67a7095136507e1b0cbc68bdcc96362319762060b81b9aa8c56b9eb8073933e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryInvalid",
+      "sourceSha256": "c3ca050c9fb93f0f79f28a89a77ad2913959027d42bd8486b6f6b63f5d93a9de",
+      "translationSha256": "cb5f0d509f384a1c9a2362ff06cf0b00c4cd264c5d763bac61f528a679736d16",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryMissing",
+      "sourceSha256": "882ea3b8867b6bd39056f682b19dee27bbb53fd345201f4c945f048f71b14e81",
+      "translationSha256": "a6ba96c2da66c4cb1d3fff1fc18134d03ccaf92746d2127a53b17e2be2821c07",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.ManifestMissing",
+      "sourceSha256": "7d1e6d438fb9e46c330a6ede2c03bbce6bb8b7f3ceb11ee72e8e9bf1f6d59f5c",
+      "translationSha256": "7dbe226fece59470dabf178c1a5d9e670daac3c0e235a7a82608a7e5241212d3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.PublicIdentityMismatch",
+      "sourceSha256": "d65b64689b362af130a8521fce3dd5020a4915ee1bf9ad66155ece47b25cc402",
+      "translationSha256": "92d1cb2fdb97e7d280543059d77462e132539871db0df41caad85d9b8dd5aeb6",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+      "sourceSha256": "751190d706e9461fcdfc13cf6f1f65279dee3d9c47942d9292f3ff8d4426fae1",
+      "translationSha256": "b33ec104dedc6e4d52111d2c6fe90c3a2c0e936369685d5dbe685538eb59d1ad",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.TrustInvalid",
+      "sourceSha256": "44b0f2f1551fd9a8b468c3a9571fffd8dc06c65d6ad1f6320a511b909198b21c",
+      "translationSha256": "8b6d552b402371487dcc56116f42819d3475930c040f4a1dd2fe19e5e3aa2c98",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.TrustRequired",
+      "sourceSha256": "b88cd6b5275b90a2c8344326d44f2d988badf5cffb0a42533c09a1f92e64543d",
+      "translationSha256": "9569384e507398ec073b712ec0b0de80bbfa2fbe650e7b7a24fddf5335a725e5",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner",
+      "sourceSha256": "45296cced3459ce8ac11421e15650b39d84c02117912b5014f3912278859c08b",
+      "translationSha256": "a539397d4a7d5f26f780bbb9e8e5f7727e2d12e42bac070eb4cc4ba2e7e997b5",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "sourceSha256": "c183c8df926651b3a72f6013e1b83736a9e7f126603c7f7ff27b069c209ac69d",
+      "translationSha256": "cc22ac3e943e4fba0444719f72e87c0b30083437bd208884e6ca4eb34c89bfc9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression",
+      "sourceSha256": "54b1adb582d2009cfdd81fb5e324281343198d55d57d6de14ec1f40f6a833b80",
+      "translationSha256": "81b8af9638d23077514301c7160241570ef980ffd73ae46d2cee34690f2f3b36",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments",
+      "sourceSha256": "9f1ae5ac9372fd48853d0f1f76d2e1fc273a79ef248b5829d633a0668304a45d",
+      "translationSha256": "bd9775b13e3eed6089f298da55d5c8efcd18eb988961f76747452a97a87fafa2",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.CountToSingleTarget",
+      "sourceSha256": "6e5e006376d8abdd5219d6b7d3eab9a284acb9cbc507d75e0bd17dd2ea900257",
+      "translationSha256": "64af2128993ae3e088963963011ebe7e9fbec3486bd4d97e84e1d020a3480501",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.NotNumeric",
+      "sourceSha256": "5e50dd1ab3ffcc61e3c272d033db02971291aaaf46992b1e7dd709f4f60d114b",
+      "translationSha256": "194b06e2d5472a8d1ecfdbe41a83fcb9c3c876c7691168c4900e0994911ee8c9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.RequiresExpressions",
+      "sourceSha256": "07ccb675a76c5fa2af505c962598bee91dcbc0de01a3a8a7edfddc3f571db9ff",
+      "translationSha256": "68347c9ea545c4697672722bbf9ea9e6fc44b4dc238f1b06ebab3d8eb84a87a0",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea",
+      "sourceSha256": "d488f7b24bbc9da97eb3f4b4adc54d126de679379b45d484eb7ded5157e6eafe",
+      "translationSha256": "26a59d8ba48a47eb5e7fe4a17c64d616f4d93eb1590113b8dad1edafef057999",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CommandUndo.Error.NoCommand",
+      "sourceSha256": "ddc9faff8d4ab03a8283fe8752ce3aa76f19d34782c47cf96045377c4f8b92af",
+      "translationSha256": "241aa0bc91ca2c624a9e31cafec3b4d75f7abcb2701c667c36a394f3573be99d",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.AsyncTaskCancelled",
+      "sourceSha256": "63fce069eff76810fe70316868a79c33e226fc0bd21bee6e8cc141373da215ec",
+      "translationSha256": "0ef13ab96da1976b269cee827ac20aa9061025925f97805637045f6b9b75b840",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+      "sourceSha256": "f4a5d9accdaf544e2e59d8e6c71017cf5ea5158daa0a42848b090abe731dfe3b",
+      "translationSha256": "a460c21edad4b97ebc07d3f5119601e060e1fa5f9f1e3a032e270d597c074f94",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+      "sourceSha256": "db0d79b2889346ab16a59d5f5bf57a93525090726227992276360e3a17a1dce0",
+      "translationSha256": "0726f841e14a6d79cae21a8ed811007794a2adccd1e331627595fcca000987da",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
+      "sourceSha256": "4cc246a6ebb072bd4b061b829b8340af5a08566fac9ee8e5a756c27b8643529f",
+      "translationSha256": "6298da58869e7fc2d535770490d91e00b739a30faf3db436978213914e3ebc6b",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+      "sourceSha256": "86426b23b055de68f89eb931aeeef7b547d3e3dc474412651b0f2597c75da707",
+      "translationSha256": "b78b7434c2a3ceadff89cd8dbc25eada2135b01bb83763df363360f0dbcbf944",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+      "sourceSha256": "b54c44f8a38b5360eb617cc5253cbb08e8be1c17bb2fe3a0f00e3f217166b66f",
+      "translationSha256": "7365a235c5633000c004ffcdfcbfd4ed30e4c96820a34f86ddbfb48e117c1b00",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+      "sourceSha256": "686dbf7fa9de5051fb23c2fc0806b6b0463e54140c0cf2a51c4fcd84835eda3b",
+      "translationSha256": "a47b4e8f62c5902ec756a4ed8757a8e18d882ebefbb35b0fdd651bd77fd046ab",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+      "sourceSha256": "e5a1d043f5b8d1e10543de8a84cc1589e948ce707fbedd86d04e2005bfb4c4b7",
+      "translationSha256": "87530e87a981f057407a2121b32e7db9018747db54da481ce2077e03782bc7bf",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.VerifiedBytesUnavailable",
+      "sourceSha256": "dfc9becd8a428e102aff919055d2b2828d454a896034a81bfaf30791dcbaef5b",
+      "translationSha256": "582f53f0ca568561510de88f4c5794d061bd0cefd7b99a9ce14adf98372411a9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed",
+      "sourceSha256": "cad259588ef21940960e92da396bf3791636f2364f4c4da1434cc511e70e9715",
+      "translationSha256": "dd94c75d7933ee470c0d7b5242d26a6f29ef4cb2bdf85c8464ca53afdeb0037b",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CriticalSection.Error.MutexNotFound",
+      "sourceSha256": "4e2cc0c8501df4a657aac5c5ecbb8d0b5b9a9b1eafd67fcf6228f9c238eb868c",
+      "translationSha256": "85486dc218557a395c35ff57f0a56fc4d2034fada3b792661342cfb4fb033237",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CriticalSection.Error.UnknownSection",
+      "sourceSha256": "85bc79c2ebf19817ebe37c5cb3409e7377c4ef4b86f8fcb78271977197974da7",
+      "translationSha256": "083ebb5f5f206f79480271080d33039c6cbc1d8175f1b26644d71e75a4845608",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Cursor.Error.AliasAlreadyOpen",
+      "sourceSha256": "0ef16c2085bbdd448489760cffa9eee61f703da38d9eb176850f6fd325785a5e",
+      "translationSha256": "cfd480c3efafbf8835b1f376c92850bb9135c955b12eb4cdaa498da0bb12106f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Cursor.Error.RequestedOrderMissing",
+      "sourceSha256": "3010011ae90f41dbe484bf20bb645f8abc322e2bc36fc590dbb8e055bb51bffb",
+      "translationSha256": "2a193d50f9ffe46ef0dfc554ff41df7dfc5e7060e24c3e11ad51924d11862a11",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired",
+      "sourceSha256": "d03d81c90c2166f0994efdbbaba20d37ac1043af23aef6df9fb6f97d58733185",
+      "translationSha256": "e3ba9c5b5051dca5970aa6dadacbb02ad10ab2ad67a7a9a485c583fb50309bf6",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+      "sourceSha256": "e0e76f3be199ae4fdb4122df0d16b1a481ebc465834d8aaa4e1c4bb875725e8c",
+      "translationSha256": "51b0225f685d9b225e356adc667113c4c8f6a5b643c2bf294a8df49f093e6120",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.ComponentReadFailed",
+      "sourceSha256": "22a97217a75c6566764aa425a4351b8c19095070719076fb859b4e3127d126ac",
+      "translationSha256": "ad407d258f91e62ad849b3db95606ffe8314ada25970a393909a0518f4fd8975",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.ContainerMalformed",
+      "sourceSha256": "33901fdfdacf6071614a928f70d0adbc6e463bb70e97045f06b8e8ef4232d29f",
+      "translationSha256": "704728817536e5258a9b349ab7d4b6550b2f8c873e247f895db0956559119909",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "sourceSha256": "488cb42bc114bc54a8ccca503650d707583ee3f019853dea3b7b7939384ac02b",
+      "translationSha256": "308a2eaf27a7a0883d56447be4b0ef49da02fad8c6dc37d5b00649fabb692e10",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "sourceSha256": "084206f6e3a1cf562129c611f30745950ffd6c60d264afb729a9081cab365bf7",
+      "translationSha256": "f6614962f1833e0de91fd09ef13ceab8678186e991aa24f7cd4f3564f924c8af",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "sourceSha256": "963b4242254182ed4fde007970ef247a26fe3e067eca5351c13a7578a3a1a340",
+      "translationSha256": "181d0f7c586019611000c3dbef232fdf13ccec273d676f256780d0cb7bf18c46",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "sourceSha256": "f469cecd777a85c1bf5326c5a458da29deb1a997aa39d67634d8f6df9c99f8ad",
+      "translationSha256": "f99e2e3ac438c1af5c122a6b3fa14b514840ff04e581755e2f583892cc0b5005",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+      "sourceSha256": "5d9f1a503d4605f808745c98220233073f5db95305c0dae253b83b2205cc62bd",
+      "translationSha256": "ef3a454426d9715a95e069e136895a12b09ee7a0eed235f4e7c0a985373129e0",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause",
+      "sourceSha256": "9d450f35d041fd6d6bb1e2f51b3f18500317c662603e93979037a3c9e3567170",
+      "translationSha256": "4a27e5c6aff5b724ba148f644334fb57bb9d5789ecd543102dce81ebd53ca7fe",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea",
+      "sourceSha256": "e21ec52cf659bd60159691b351cbb3eb816b99e3a3487ac48ecce8d4b9f674c0",
+      "translationSha256": "553ec9ce17f2582c2a4315c87a0e8bfe545c4e5d10350523ce797f579ff7f836",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause",
+      "sourceSha256": "6c196e0acb36868091ab59f01e9960befade54e3e2d8ba3eda68d69c6244d8d0",
+      "translationSha256": "9cb333cd070fd63803485821150867a0379cf6c0f3c8cb60b7666c277d79d799",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType",
+      "sourceSha256": "e0239e664b740a1c1a6a4c94fcd5f9145a49227aea3bca024a7e33f953caa3d8",
+      "translationSha256": "33febf3f5e024f813cc6ff13cb441b889cd005e6304c86d0c589be6e3a47515c",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+      "sourceSha256": "6ea8d08e433d52d60250d3b4af1701da0c911a8adb67f8a07027bd9ed20c21a6",
+      "translationSha256": "c8d40e812f9d7e7b8137c9011e67450491d451269eb7d3808c1a7c59379e6420",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments",
+      "sourceSha256": "f95f25d667bed638238874d4e54c687f8edd99ee8a0d7ca401dcf3b17eeebde0",
+      "translationSha256": "55ff0a78d53cfe0cce75db16994d0dd9a575f4f5cefeb9e930f6efb7ac1011c2",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType",
+      "sourceSha256": "bff255de6bcd9852d1179ef5bb5160a61f9d7a5aea8cb4cf63bfc4b708fcc3e0",
+      "translationSha256": "34df0d899e3a00afd8375ab88f1d7791f0cc371e2b6842bf6e848e63f03ca4f1",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+      "sourceSha256": "aa378b4e04b4e7b2747196e6ff6a5c5e4a94c98a07f9f6db1655e5c3c44c2744",
+      "translationSha256": "559c7d2c933245320f44c7517970edd4c09ea7bb3f7fcc6e516e9a113f26017f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+      "sourceSha256": "fee6b99d2bfb76e7502157035522c527220ad901208aaf7aeea6660030a7870e",
+      "translationSha256": "3a434ef73b895f490f2da664ac6f67afc24fc0e21835995e96c794149fdb4e99",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea",
+      "sourceSha256": "0a9b9227dece1f66a2f4aabdfaf5cfd459bf9299f9c68d821548d8da03d0560a",
+      "translationSha256": "49e40ddd18f2bd9a42a44627f292a58778a4cb97e82a366f20a64879d81e10cb",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToBinaryFieldBytesUnavailable",
+      "sourceSha256": "ce748375bb0e335216a1debdf2e70cd70b498677d93aac225c09fd6e3c246122",
+      "translationSha256": "dd659638a317043012f99324a2796beab07dc79cc1ba31b2ee2f27423997421f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea",
+      "sourceSha256": "32408670f602deff349d06170be8cdf471e5336f3e6de6780ac32526c382bc39",
+      "translationSha256": "a844952dce8ae16a9b88be21013d6f188ebdcb197ef1fb05b1d5de67a7c61563",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause",
+      "sourceSha256": "a9aa4eecb7630e9a25eedd6f398b32030b9cf97e87d3aa161fd7329f0d6f4cd5",
+      "translationSha256": "8e994aa47eeb8263607df7ed7adefa27b5e73b4f51799ba02b8e6d9216a47e05",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable",
+      "sourceSha256": "eb4fea1a6704d8abc861ddb47ce78f61cd300f8cb73ca5db954dee300c12a285",
+      "translationSha256": "ad1d6637b95222b1af453d3433c60e92d9e830c31ca8647046f40007cb42c7e6",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias",
+      "sourceSha256": "b653a74483dd3ae156d3c0b425a7bfb39f9d8d7bebbef12a9a5287f1e8f0cd29",
+      "translationSha256": "4e67c2212e4f5e81a0ac6ace42e942ff3bf60243902ea7f9d4547259346c814e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration",
+      "sourceSha256": "5ee95c7189ddbe38ac03d46a91cce49a96155ea4e6db29e1d55e5f74f0d7fb09",
+      "translationSha256": "66cfb4d90193dcacb0205beb1fb19734ac425e13c7fd29771d6b195dff045860",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration",
+      "sourceSha256": "3056126bbbc1bec581e24a5a73a672afc4e11a0338c31d501c3d581661013288",
+      "translationSha256": "c2246e33c400e6ee675dda8760e52f91ec7cfd253523d60d6b2bda3bcca96abd",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows",
+      "sourceSha256": "b4fb64a025471ac15f587241b6796ef50daa01bb3e7041dcd854d5ea9b514019",
+      "translationSha256": "8d5aad5287c7c021e5da67375352fd23696e96ce7e482dea2d47645a050c7ac7",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
+      "sourceSha256": "d07eb892e43df745ade933e4fe3deb4337937d43fd5df2741295d60fb0100b85",
+      "translationSha256": "8d5761960e9c904288614b6a7c4929427aebbf872f108ee5f76ddd60abf89b87",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType",
+      "sourceSha256": "da1003b3d93322f646e27ecc0de22efe0f68e3983a537a12e1fad8aab4c39c99",
+      "translationSha256": "1b9d75a0bb443f0c47dcb52944b239e83f72eccf11d27ddf83cbb5c48c3c3b99",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DefineBarNumberInvalid",
+      "sourceSha256": "57d504526673f1a13ee4c407b7e97499d9a3ed5015da43c83b94f3c6a0284442",
+      "translationSha256": "9200d4355a0c221e9ea42b0465b430870c5545c02c45ff250032d8ed3d3b0b0c",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseDestinationAliasesSource",
+      "sourceSha256": "32d41942ddaaef4dc202c0f73ca906532f05efd707e8036e65d375891f909173",
+      "translationSha256": "a9ceb4612267959fa0897995d452f2f46fb3c9c16cd28af1b898edb7d6f10e92",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ForClauseRequiresLogicalExpression",
+      "sourceSha256": "4b4781c7b57efacad3578900ecc765f0125b5d7bb6c17c3e97d48504d3811e14",
+      "translationSha256": "bceb785d667d1ac6117f86cb24b23cf5a19f0a0d6d2d463956a4f2c4de780297",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound",
+      "sourceSha256": "2d21fa2485aa705c3b7d14cf2b0133dc022a467d19ecc78632b3e4fd25473a7c",
+      "translationSha256": "8c1569c9e4d797c460f53eb61ab9765a80f18e54f216f79c4e220fa7e3013d12",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.GatherNoCurrentRecord",
+      "sourceSha256": "68618542d5bc943e144682a545eccb40d27460ddfd8075c81f7ca21d56af5974",
+      "translationSha256": "e345c47776933338ae64af76f292d13f0ae1f3f5d1067c42987dbfcc3ce79ea4",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea",
+      "sourceSha256": "591251cf02c650d78bb7ee0bf1dbf11b272dfc4c8e3ad26586abba8347124b37",
+      "translationSha256": "ae3a1b07be469a9922861a335a559fe5f1e53a5351269f790def5d91691a3001",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition",
+      "sourceSha256": "2f338e1020433ddd91cd03b4544364e2d3ab59d304253637228acc54d455b4b2",
+      "translationSha256": "6f95778ed37f7d6e5ae789516d05068401574919cb07abe94ab3727e6579b583",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause",
+      "sourceSha256": "cf3c033fc1d487e1aea57cabc46c67798c63bdc069e205d2a155a3b2e7789cb5",
+      "translationSha256": "5810c569b52de35700639bf1893d1c8e6ddff4133826e4a21b08a16fd11dbcf1",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid",
+      "sourceSha256": "aa2f8bf194be0e29dd7c1baed21c91b4537a61878528254d1db6c2690a69347f",
+      "translationSha256": "9e5bb27009c21ab77898e02219983b32e3c076550c298e35058bc03f6d6e1019",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.InvalidArrayName",
+      "sourceSha256": "e489b758aabe37c26960d3ae173d4e61450d3071a092e40f2fe1c2506715aa91",
+      "translationSha256": "852ad8e0d7ac6500d90ba08c7c4429da0114dccd94ce2f9ee6361e4340db9931",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+      "sourceSha256": "844168f22e6c235d251366d581e444159830790bbebf510dcd270dbef4d0b273",
+      "translationSha256": "64d5ecc253e363cdc4a5389a578022255e171800de63bcb6813ac614e5da8faf",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.MenuNotDefined",
+      "sourceSha256": "7c3c4bea27217e8382f1d3ab7c42abc28482f345b0736e173863bd57895de77a",
+      "translationSha256": "fc9a2c573ccdec41088c3d51dc2bc1862430988d16744e69fc85b609d3ec7635",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed",
+      "sourceSha256": "1ff1c46826544d5cc62ff3c83d5220bfe1aadc8d4d8dadb81bdf1cace5e1aba1",
+      "translationSha256": "b44de9d881815c664ad5d21c7b278b0913b22e2e9dcf7f5b4c86409af6d049fe",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment",
+      "sourceSha256": "e3975acad645870f359e210f18cbcee7c048282833335ebc924c6a764aae6f7c",
+      "translationSha256": "598a9983f4adb95140b7c0655d928473ee9d5caa2b7e803672711c707571b8ce",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.OnBarNumberInvalid",
+      "sourceSha256": "03d35663c01a2e6c2fa9f0061a01d3b769e15e06af3654d6cacf54a8c1761000",
+      "translationSha256": "2fe5f472b688525745734e274543d7af334021023ec7c0b1bb5f3fe1a5b34916",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.OnBarNumberNotFound",
+      "sourceSha256": "285a2a5e0f0ee532f587a444bb2ff3c0f09a6e40516ddbce92dd0b4867c7564b",
+      "translationSha256": "7399022c7b6799f1b00c3c6416625a94d2ba91b394799dd800dc8a616d25a602",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid",
+      "sourceSha256": "9b591b8f9b1435e26184250f35a36f6b8c0e8f02d4b87f0d0b36e753e67304bf",
+      "translationSha256": "e0b5feaca513be7757d49c2d3f52dc4a6f4ca77dd00989675469a90fa129ff20",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound",
+      "sourceSha256": "ec4107b85a3c0331909d9c79ba908cb4c2e90a3ae7e1292505889c9fa6a20a61",
+      "translationSha256": "9dd0b3e29f00796ba10f2b196b08b92f5aa1d3fa5ae47eeaf9aaf20422cf244f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.RenameFileTargetExists",
+      "sourceSha256": "334e98e0830c41d374d2351a445b5b48afc8a8f4a9a6d0728ef1af8c8869ee41",
+      "translationSha256": "345a48e933779af57d7bbb9a33a6f57c55b4b40675ac28cdbb336ca736bf6a54",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment",
+      "sourceSha256": "1c3f29a82c7afdbd98517052acc582d16169bd16e6b7c4393a58647f1fef19f0",
+      "translationSha256": "b2b1d2899d85242a28b2aca56023dcaefa899b64b161749f088e4e1b58ea55a0",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ScatterNoCurrentRecord",
+      "sourceSha256": "5fe9758f057a43e322e28fb49169c1da2ec6c24630dd4eaf2c792dd3e7866861",
+      "translationSha256": "ed2711eede1eee4a2988b385bfa5c6560d65089dcf1d879d829ddd9f182a31ed",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea",
+      "sourceSha256": "794993261eb6d455a78f4d7f7b77fde8e05e68e98eaae5f3d9d41f9d3271842a",
+      "translationSha256": "c3a535e7c0d8513c7680fce86d4a3a4873e218058543401380258432599eb81c",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ScatterNoFieldsMatchFieldsClause",
+      "sourceSha256": "0e9785d4e4f81be5cbba51b4f4c57ebb8da80afea746ba43aea6f53795170047",
+      "translationSha256": "0b81fabe67249a3dd012661c8223211036f292b3908b0048d494448d5f08d4f3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SetFilterRequiresSelectedWorkArea",
+      "sourceSha256": "b9d2895483923719e435bd2d46cd037250d6289e74ed13a2504a53475e99f549",
+      "translationSha256": "3175841919fc44966fb202d7a9934501788089fef0fd8e972877f1cf848b17f1",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SetMarkBarNumberInvalid",
+      "sourceSha256": "474a61245e3b6f1da1b763e59ad26a91425795961879fbe6800c40fedc3efa27",
+      "translationSha256": "460498f5bbffc27b7bab025a708081c793581df7fbd0d9e4de3e2a7ea5203d7c",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SetMarkBarNumberNotFound",
+      "sourceSha256": "bd4319d50ba3e01ca86956e68ccabf6936a923d2e427e9eef82a4eb8c664afd3",
+      "translationSha256": "d99103da4f25f1724711060da670725a123a59e7fd6e9200663d4d7263a71f84",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SetSkipBarNumberInvalid",
+      "sourceSha256": "94e43cd4c04b54cdf7a002f2f1ee1819cf294901c432134d83b98e86312408a4",
+      "translationSha256": "8c0005cce8530e530e6c1887c919ca53d718a975fdb0a687d1f7af0be8ec52d9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SleepInvalidDuration",
+      "sourceSha256": "91f7854df037bf88d916d53611ad0549cec60f57a43bf0d1ec1d476f9cde9d6a",
+      "translationSha256": "f1e69f8627db6a0b6574b6a1e6754af4a0ec19c52171ed523addf1a035b31409",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SpawnRejectsByReferenceArgument",
+      "sourceSha256": "101da96c89ee92a6604ff75ff4fe9f2587dd53e46e374abb57e1b3355b0adf28",
+      "translationSha256": "94768000c2b79309fb2e0ab5f64dfd4651dc615b031ddb594382db0e81f032f2",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed",
+      "sourceSha256": "aa378b4e04b4e7b2747196e6ff6a5c5e4a94c98a07f9f6db1655e5c3c44c2744",
+      "translationSha256": "559c7d2c933245320f44c7517970edd4c09ea7bb3f7fcc6e516e9a113f26017f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound",
+      "sourceSha256": "808476757fc824753b2580d0931b14347539f239700c6a27d22bf53a1db82472",
+      "translationSha256": "5552ed8b2577e99f26081aebbc9d3c157a98a27cf6e1dc068449ac1281f04b16",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments",
+      "sourceSha256": "c21b179f950cdee978154d992d7bc9915490b87efe3234046e5592d7d3796fad",
+      "translationSha256": "83d5993847cb5cd147f4f3b0670e000b05e1708a12c8969937ff68e1f81e47be",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.VerifiedAlterTableMutationUnsupported",
+      "sourceSha256": "23b0022e9370556dabc4775f36edc9590bd670a101b4219d82a16caee29cbf32",
+      "translationSha256": "be9094d44674d5fbd5573dbe6205fa27fc83996ab7250dd3d5c25dbb01616485",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Warning.CopyToOmittedFields",
+      "sourceSha256": "57f4b7236b15b7dc70dc068af146307871b619ec5757c78594b3f3affc36dca2",
+      "translationSha256": "ef3718e187e32dbd903ae6a6cdc9d81c24c242f3f6ade951eeea3f21b92897f8",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.DotNetMethodNotFound",
+      "sourceSha256": "02e082d7916dcefb2c1507909d73ee89efa9c39dd1e198db8e59b35d50dd2c9a",
+      "translationSha256": "ba6502a52a2b0128566d52cf76dea483a4c7879f2f404fc73d486a483d87456e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.DotNetTypeNotFound",
+      "sourceSha256": "97b31285f0424f64878d8e1286e08dc9e399cc247f0a3a598c1139edafaabaef",
+      "translationSha256": "39607d3f724c8e97c9749803b0c460898200450dfb512e2c7de4d0a404dc7557",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded",
+      "sourceSha256": "685e1e861c4e6d7bc5ea1167acbf78c7a04ab7e1361e01f0d65353c6d38b7b53",
+      "translationSha256": "6e99b15b38a4fa770b9a9a64040289d62df6e571fe13331131ade2f1973e42c3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
+      "sourceSha256": "ffe0fbb4def68b45b6b5c7e5ce87400a0a0f3fda653b26be6af5297770e0da97",
+      "translationSha256": "6949ee377d81f80f90cb78d274fabcd43ff4769c7428f4738a6cd9496b02c916",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.NativeInvokeFailed",
+      "sourceSha256": "dfb3340e61dc98cb12d9f7d00ce76d2a79588394f794acd0d75c96ba1c8ee977",
+      "translationSha256": "76196497f7641223a1c90d341126f197dc17b47b7cd61dbbf32a1160be407a53",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.CurrencyOutOfRange",
+      "sourceSha256": "a17330890a7439d246869bc89fe022825853f796bf9d328927bc2224c854a633",
+      "translationSha256": "7c37a3c07aa8e23dc2bd541d8032af4ba585c42b718c933448e2fb02b120db57",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.DivisionByZero",
+      "sourceSha256": "5f537f4311522ec665d4480fa2cf4e4f41bff0aaefb9bb9b37819dc4acac6f5b",
+      "translationSha256": "6a0ad35e4c24ac377f06279d569605097425a1d161fdc2480dacd85fcbc2c0f8",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.ExpectedFunctionArgument",
+      "sourceSha256": "5121c62c3f55e5d67af4af54ec5db1b143826121ba669bd854c58986d76b6dab",
+      "translationSha256": "93c50ecf773eaaa38d929f37eaeb862eac87bc6f1638ab2b2dbd05180af45864",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.FunctionNameMissing",
+      "sourceSha256": "264b1b1e8e59abe1e22871ace84883bf4d204333eb3de987fdda6859ab2aa086",
+      "translationSha256": "2c57d0d6e216acc58102e50d528ec0636b51f78c1a1c8c918e9e705fe8bbfe29",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.IntegerDivisionByZero",
+      "sourceSha256": "0256cbf1332fc1f133a7e53d8fa505f930bd5e897e2cf8744831684c760a2acd",
+      "translationSha256": "0439e2b57da9395ee38f2fef67291d9a3398ee5802d783b1a519e1f8eef4ab6e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.InvalidPathOrFileName",
+      "sourceSha256": "a2f09b3cb1625f54e996dfb553a59c07eccad9919aeb9bf1bd55f4cd51b9fc39",
+      "translationSha256": "2c613d2a6673c54194a6b645ab933918b40a2d7d18c56e485942e523db2d7141",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.OperandVariableNotFound",
+      "sourceSha256": "cbe2b13cfb69fd753d109d3e278d34bec2e25dbbe92402c270e60c9c4b4d846d",
+      "translationSha256": "ba2f7fb59aab01cd7949e2902e0141ddbe24779f9524468dc001e4958ae47e4b",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.UnterminatedBraceLiteral",
+      "sourceSha256": "0272595d04fb991202dc1ebe5c742e0198c785c039e0a6adfea6dd2d2552522f",
+      "translationSha256": "1080ebb0a5e4b407c45b027f9ce736cc2ef2a48daa0c29d59f3e9027e047e3f7",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.UnterminatedBracketLiteral",
+      "sourceSha256": "e9623184ca6659d726701abbec6036ae6a99d396ce09cb4e4704dcce3a5d69cb",
+      "translationSha256": "eb8ccc921c410d7c74f97d596a56e8946a36e07e6b85a7f333696c00bd1fc460",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.UnterminatedStringLiteral",
+      "sourceSha256": "dd39215e2a183f2de3af00baf821f17e68073008b951ae58a27545b513491b28",
+      "translationSha256": "6024ce3c93927e25775f1754fd7eeee09ec7f820b328f5ae8b74802e2751c063",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution",
+      "sourceSha256": "fad3d3ceabab1ac04b6498b902167ec4ba09ffa2b46426e139c4c9d61a61965d",
+      "translationSha256": "107ff7983c60bee1cec9d68254595b93bf805683055a4623e264330d0f8e6509",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop",
+      "sourceSha256": "9cdd66cbfb2493637d651d603c91a159b2324631463854e4313392e0d8ad46bc",
+      "translationSha256": "7a661f8fa21676785384205b5184f4fe4ed2ddfb6a236d06d42479f8324a08ef",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Numeric.Error.NonNegativeArgumentRequired",
+      "sourceSha256": "34c651b85c1ca9e41739e496d46270aa3bf5ffd31a64b6b3a3cddad0c966a445",
+      "translationSha256": "76fabda53947777e1630f62940ca825a058059bd0a03b854926659fa65dae6f4",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "sourceSha256": "70d82b245b4560e052516a530ee95c4a9b4a55c37887666ac916ae77923f14f2",
+      "translationSha256": "560d0b7bc7cbb14f51175cd68d3498aaa706a257d248a8b8dd3323205085b91d",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "sourceSha256": "040bf8e633ef6d1354ecf03a253c85c95551c23142f9ad585e57aeeead32412b",
+      "translationSha256": "a4472f3241b44c1120d4074019b9812c28b9a7b1d60401473f006d53ba318e7c",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "sourceSha256": "9f0c1674dc0eafee81d64e94b18603fc86600ea6de27ee1200ab04309ae59696",
+      "translationSha256": "dbba7c2df0898be29f8ceb0263ab19216830498b1406d1ad4baebe5b6108245d",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "sourceSha256": "a6a6284239cf042409fb6fb9abc78056bda3beda86c438bbc66d66ead93a4b93",
+      "translationSha256": "d4d7d04ec20768e962facad6c1f2e98623ae745de1ac5f40f01ede2d925e8e44",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "sourceSha256": "d60f0fc10071425afec7a59a9b2918e8020970ca24ea71a00f415b45a121b643",
+      "translationSha256": "aa2e98716ca6b7d8830ba31b361376817e0436f26c93286d0a8e63702d51c896",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.AliasNotFound",
+      "sourceSha256": "ef11c23faf61720c3976947feac4025d04eeb49a95625f2f3a90bbd7ee3d553b",
+      "translationSha256": "5187e28da5311190e2a80ed441959c3af6f14e5510daf9dda673a17a3f8d5443",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.ConstraintFailedForField",
+      "sourceSha256": "75f274103dbf1e92be3578650afe9b73d26c0ac1f0a2626c4e2a89c70bd77a5c",
+      "translationSha256": "57c96db588a53eea69682be498d34fe120cd87b7dc1e0d7f728e7163064b3aea",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.ConstraintFieldNotFound",
+      "sourceSha256": "562358c57ce76b1f47ef9a49ee04cc520df3a15135967be73a98c7668e146929",
+      "translationSha256": "68cf0085709064804c29d59182f9e2fbb05a3da5a338eaa14087ad80d9fb4fbe",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.InsertFieldValueCountMismatch",
+      "sourceSha256": "452132d2505ada91c9e79a84f18b3d3dddfb207caeeba3baa99585f36561706a",
+      "translationSha256": "ba1219eb9f8f0c0e2ff1fadfd0f4fa5f79b2f7a30e5f29a1a22da221211a4e19",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.InsertTargetFieldsResolveFailed",
+      "sourceSha256": "eda60168507ce5936af8e5a2747d2a30af48e3bad41360fdb99227ba4530aa49",
+      "translationSha256": "66017f2cc1c17e25f2a96639b77343793b55d65c0b03a1d5ecbb7f6e614ab2a3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound",
+      "sourceSha256": "6686a40fe9022c86815449ff0c12c059b8ebf2c6de8357e1ceb5a7183dd4a0e3",
+      "translationSha256": "6cc456a6aeed950f4dacb2a66a81ea29cb39795b815e3330216c7b62ec60efa8",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported",
+      "sourceSha256": "33d05e5d9ab972ab5988ff69a9e4d6c2c91ba76c2699a2e108e9ce7849b02f9b",
+      "translationSha256": "1c3dd39041136bde46e938baa0aeeea0fd17e196d068055ce0c90dfb43995bcf",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.TableBufferingNotEnabled",
+      "sourceSha256": "b44851ab19647ad3855e9cf3181d0e0b1ffed78e4c7cbd3b4a853eda3f995ae8",
+      "translationSha256": "ed4a31588d6833219dd403f4d84077ce6524eebfac8d21ace4628e14499acc63",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.ReportOutput.Error.OpenFailed",
+      "sourceSha256": "9a8a2af00c783adc0c352324378b230bcac487f462b96a471f4769e75ab74123",
+      "translationSha256": "4188f13d01564f4a7e54db8f201135b004fbb92a322fbdc243d289f13bbede68",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.ReportOutput.Error.PathRequired",
+      "sourceSha256": "c2fbebb9c158e974bb11309970609458b7de98648ef489dc77a5667d2d32a834",
+      "translationSha256": "1ea909b30d2bbccf43092f22ad4dac99570f48aa8ebaf665d94383cc60bf63ba",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange",
+      "sourceSha256": "6ccb3529effcb5fce0322752b21de7dc9160ee01ae4dee99fc328fede707f4bd",
+      "translationSha256": "1910777a9fcab88cdc2e6eef52176353f761055d4a02dc6be41d00de3c89b3ba",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Error.CpDbfAliasNotFound",
+      "sourceSha256": "c4e0f8d8f8c0468d78fe03f84f0950d269bb1fbd4b672d601a6572dcf449dec6",
+      "translationSha256": "b0a541a92357ee945192db224f020bec5af6adcd79a1eb5ebf21b83f5b884155",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable",
+      "sourceSha256": "58bf27de4064b5429c3a700ee558b70c744b9170237af7b040f2d8bd0b52d478",
+      "translationSha256": "9ef999a5a42ceba39c4060546bfd31fe697b009b35e88a5cecd9d982073f7027",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed",
+      "sourceSha256": "411cd812d809eccaa7a9d41848b896e9a346dc64851424b6c7efa7ce3d7ce476",
+      "translationSha256": "a3736c56d3855fe18c413fa1a34f022280a0e93875baef15e0d947656564a697",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable",
+      "sourceSha256": "74f1db62f5b8608eb7dfea90ac2d3d6681418ed5108fd9c2567c16fe629447de",
+      "translationSha256": "4af7b90e54013b6c39697da1a0fe49f03debe96b29be2de3cad7ff63909372e5",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Session.Message.ExecutionCompleted",
+      "sourceSha256": "34656981bda2e8061de2b9478cf571e1fb049354a899856bd56360a709702507",
+      "translationSha256": "192153e879b7d34a2e03ee53976307b6e370d654b93dd8ec728ce1379fed48e4",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Session.Message.StepCompleted",
+      "sourceSha256": "8c6f70a031d98109506a7feacf1ea9c50d36f74fbfe0d97aef1ea47bb6cb4539",
+      "translationSha256": "e0787be89dc09c17b4387d59ce02ef064fcc44454eae7a00eaa34f9a467e630a",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement",
+      "sourceSha256": "a3767b01e588474108a6cb5ccdae89e865a338ff07f9cd3683a22104c9bb7f4b",
+      "translationSha256": "77bcc0e210cc2086c8aee4998d710e380cf3bb892944093e3ac4f3dd33e0e144",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Statement.Error.FilterLogicalRequired",
+      "sourceSha256": "52edb8fbc23428c5126aac6e993a7ab7ae1e9e7e051c4fc3f2f031d531f1b863",
+      "translationSha256": "148f79e9f696a60144fb27c9165af3414abdfb87612adc9a362a0a02e1919ce4",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Statement.Error.ForWhileLogicalRequired",
+      "sourceSha256": "4b4781c7b57efacad3578900ecc765f0125b5d7bb6c17c3e97d48504d3811e14",
+      "translationSha256": "bceb785d667d1ac6117f86cb24b23cf5a19f0a0d6d2d463956a4f2c4de780297",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Statement.Error.SqlWhereInvalid",
+      "sourceSha256": "844f7eca5b833634a98eb89861338481a5ebc0372cb45766eb118b872c4034a3",
+      "translationSha256": "1bb2b150e8185fa7bcad266adbec2f4319d8af58dd8ae43c0f081767a1ee393d",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Total.Error.FieldNotFound",
+      "sourceSha256": "9ca4b5395f81f2873995bfd6653f4126b5f8f3cdebe7eccbe440290fd2c38fa1",
+      "translationSha256": "7d0f2189ce6edf0016338a6dce4079e6549275c69b1f2971d8a588a07f4fedfe",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Total.Error.OnFieldNotFound",
+      "sourceSha256": "fa05e8b8ade4e3dd5ee4d08224506c77947d5e5bf9c2fc42a5ae049ea4802e4d",
+      "translationSha256": "3889c3460b0523157bc65ca7da00ecaa2106abe314516cd7f4cd0e8ee7c84202",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Total.Error.OnlyNumericFields",
+      "sourceSha256": "f89b445356b23055d8df7341f9ccebd75a7f58a7ce4f3256b198bb9a6c31ff6e",
+      "translationSha256": "bc8178c91f889a20ec7d25132a3387177fcb7a747abc6d4c0700965c23769821",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Total.Error.RequiresNumericField",
+      "sourceSha256": "b63ae5a6eb8895f29278495df6e4d86dcb8179a9f9d144f0e0ceafea2dabcb68",
+      "translationSha256": "c93bf4860a2adaa92ecc0cea71bcba53aaa25bcf204309d0062464058227cd23",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Total.Error.RequiresSelectedWorkArea",
+      "sourceSha256": "993a75e559ca74e3b181b3fac59f018f556c2e2bfc9579463eda7884a55defd5",
+      "translationSha256": "7431a0a1523cb208d8aac2cd222ece9b667502a567b1fed1e633b3e6acf77656",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Total.Error.TargetWorkAreaNotFound",
+      "sourceSha256": "71ee1ee7dbee0e0c2c3c8207024c364d0987f2db9eea9cfbc558f45a3f96511f",
+      "translationSha256": "aba261e4f0ef805318669cb7777ec60b81e0036144e088d32a03ebccb03155ab",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.JournalInitializeFailed",
+      "sourceSha256": "0986e7dd9b958631fbe3596a7e93d78448ef87e5115d68ca0cf840e2f21d054a",
+      "translationSha256": "32a2e64a2ab1773ef998134259fd5abcf1ed669afc833e1aed285b76244111c9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.NoActiveTransaction",
+      "sourceSha256": "d246095b95b525c000120bc184b3bb510939ed60b89cb3026a9ca24dc67ae0b9",
+      "translationSha256": "c8d6e52f3dbd7424cb809d16cfcb7fb225202ab569db1f03e41899b791e57bc8",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+      "sourceSha256": "85f4c52080d037c0f9d9a6c23234846c187be9f06f47dd16b0efadaa316ff7a8",
+      "translationSha256": "8cda2da2a3ae61bbdc362f6987f89e33b9fc06ae2f6df26ad4e603738e84bd9f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message",
+      "sourceSha256": "75782b06304b9624287050c4d958c51fe12feeb1eae99ac7e2d5c3ad64bafe72",
+      "translationSha256": "58c8a8302f9a7d6c17be2cbb54a33a034e079e4112a929ec4e1df3aa73d23e94",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.InvalidCommand",
+      "sourceSha256": "b6eb236b64d8625c2294b395af87d43c5333c12a4e962f353bda0f0bbe6c3d7b",
+      "translationSha256": "46310f6d93c0bb88e27a866621b0580b56518622aa253cf7e311f13f3f4854d5",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.UnknownXAssetAction",
+      "sourceSha256": "9bf3f648afe73e34c1e6c5a9c757b756a638f4ee097758e5b9fdf3f2f01365b0",
+      "translationSha256": "0edf8d142abdb6e5d2e48956422fcdd177d1edd2451b68619ac47162a7645b73",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.DataAssetMalformed",
+      "sourceSha256": "83107fd465e344554052c2a1cfb29f0d754e4b6587752747a9773f39a39fafa6",
+      "translationSha256": "8f54eea52e198939c9042bcbf3c59779b354fd8fb9ff2f4863bb22128e06dac2",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.DataPolicyMalformed",
+      "sourceSha256": "26ab00838b3c0892b5b8a0b240bef033318e709988201faadf8753e547eafec7",
+      "translationSha256": "bcf7940c344c83aa7d0682a283da022d6b6b2961580d4c17090f43291f978a1e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.FederationExecutionFailed",
+      "sourceSha256": "0b6f271fb0adbb205d231380d3eb9fce322ac4ffece5a2adddb18fd3d8f10b0f",
+      "translationSha256": "422bb687331e75df2d98403b024be4841ad2ed9e436b0db4f1bf32750462d851",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.FederationRequiredOptions",
+      "sourceSha256": "9872db933c2ef22c782ca758d1758f6fda1819b3ceb8daf8730b63984fd64061",
+      "translationSha256": "3ee065a34ee8b1e30d980a9ed24de1bb68c37e380b365e82700f5383faaff7bf",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.ManifestEmptyOrInvalid",
+      "sourceSha256": "465cf1836e75ee80f74c205b0d5754b37e5ccc54b0833f771d31cd0f791d11de",
+      "translationSha256": "81d0e50c97cb5cb782312594f656efd8909d65fce029ee387c35ab31683c793f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.ManifestMissingRuntimeHostSha256",
+      "sourceSha256": "993902ed2742b9b84c4e4b0e8842c489a766e8e2fe02199f95fde35ce6d5e769",
+      "translationSha256": "09c7ceeec0885d4a822dbd6c0de9766a3d036d6ced0c80c874637856e06607f3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.ManifestNotFound",
+      "sourceSha256": "37ce6e6ac03207a1a0ee022c80746ddd4984f6383ef9fcf6979471d3c016aaaa",
+      "translationSha256": "2f8bf828c3d1ac6dffb840939f2f6d64f61f2f7fd82d4ba2aa9d33afa7ce1a6f",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+      "sourceSha256": "b59ff7c9272ec44a17125742b582681203dcbb54aea662934fc5e2b3e30d87ff",
+      "translationSha256": "a7d9e07f0f0e77f38f088ef1dd7b9b8771b1358e7ab33cb05ce8880e4a0f7d02",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "32a6e07cd95ec2d5ec8ff9d592321bf83bf1a893530cebd48bd4633d6eacc55d",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.ClassBuilder.Description",
+      "sourceSha256": "7422032b3433aeb853727e2916ac73bb4f3ce9bd108f5b39d7d88097b5a78511",
+      "translationSha256": "0015b36f3fcd0bfd776b81d1edd3aff1d1d37f65dede024e0eeeb374198a52a4",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.DataEnvironmentBuilder.Description",
+      "sourceSha256": "562f582d3c2f3cb82e322d0da20ff0fb9056cdbc51217636c4a683dbb9798d05",
+      "translationSha256": "124fc6bb13f443b843ae99eb9f86da91249e9fd0a6ab6f9c4c8ab51a6bc9a77e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.FormBuilder.Description",
+      "sourceSha256": "f0a4ace1fd2efe32002a0654a61ede8fa6e52298e37cf3e34b5b578ae82338ea",
+      "translationSha256": "3a326e9cf5d7e0b8d7e5c52f6c7c1663c33d0ef9ec57eba705624096ac982028",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Builder.ReportBuilder.Description",
+      "sourceSha256": "81ac8908a95b8a7e2cea5288521f6af1fecb963a8e433c0ee56788af6856eadd",
+      "translationSha256": "dd52e3029c5863949f0ee3dfc1baf8e7a47c4af3ae4cd5f51a7a632e2a0f9b45",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired",
+      "sourceSha256": "3cc3f4278ef15a2e14bce4a7e550d0ad0bfd08efaf40c4ad68d85480c258e8f4",
+      "translationSha256": "2833fdbd4d591cf33731c64c7cfd63f6ff1b94bb8fdcf9bf5b7cdb9841f8b33d",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+      "sourceSha256": "49c84926675c5e12188b77a22870cf3a0342be543775011904330d22369ca138",
+      "translationSha256": "b225fe1a3661c8e380f18f828c80f9455600cb3aa5591b108fbe25776fa8e9b7",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.DocumentOpen.Error.SidecarPrimaryAmbiguous",
+      "sourceSha256": "875d4864ddc48e49de2e7ff438002f0d73d8e9a96bd9ddeb7f26c82eb90e945a",
+      "translationSha256": "3fde4d17002de48b85937a15f2fadfa4f9b4f5283dac1b287d5dfed7c4e8a0a5",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.DocumentOpen.Error.SidecarPrimaryMissing",
+      "sourceSha256": "ab993e60bd842ebe85f94c7eed3f227a11d4a634ef2ab71fa6f59004b0e8a1cb",
+      "translationSha256": "3d9c7c954cc5608b0edd58b35b78c53fe767edd929cf48958d295bcb6db137da",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.EditReportExpression.Label",
+      "sourceSha256": "2260f41169a57f0549161844cff388907f6bc1cc1284b8439f56f1fc8b4b2e3e",
+      "translationSha256": "af6310e2707c075e340b2dea5e81c2df6099ac87bdbca6e3eef4c3933c715a41",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.EditVisualMethod.Description",
+      "sourceSha256": "64da118f5988a0c9e3224700aa4fd112b78bc13ef90043f370540cf5012d9d15",
+      "translationSha256": "51c0a2d1661dcef143e760fc407a329fe7d3243b21dade09befe2f62c5a346f3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.EditVisualMethod.Label",
+      "sourceSha256": "0ec1b0d73f6079239a6434e740b31f798febc079c0d1539ed8a34afc99cd8812",
+      "translationSha256": "476597b6b3e47f23fd92704ad3599abd5e8d157029e2397132e38deccc7318bb",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.Error.ActionUnavailableForContext",
+      "sourceSha256": "84d0cc5a3aa309d77d4d5adbdad174f7b7c27c2b415a03e5f3619066c4909cc1",
+      "translationSha256": "8dd788f17a5cfea181213a547b4ac65e0a0b874b6570c058e334d6340afc8251",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorAction.Error.LaunchCatalogRequiresAction",
+      "sourceSha256": "36c85f964a409aac8a32238f3633c401bb1634518d8b85727b665b264b238b70",
+      "translationSha256": "365af5b185343895f9cf08390d58433d5b8484db41a72a524bf5386fc5fa11b9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction",
+      "sourceSha256": "c08de77b0aa179da2b40c5eedb11af51613ded3ef2d844d90141f88651633b4c",
+      "translationSha256": "ddfb18288a38f3c799b00e17a1d63bc43b3ba04750be6e6e52655b331b5a5a93",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.EditorActionInvocationAdmission.Error.CommandTokenRequired",
+      "sourceSha256": "0496bc0d61c14488ebcb7efc2608dd30adffcecf97b0acce9aa20845c1f1549c",
+      "translationSha256": "5edde5ba02b1f42460a27ef388ec3e4cfa9c6815930cc974a32960f9c7ee0220",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
+      "sourceSha256": "a2804a5f64150197b974af1367cd2aa7709fbd90993852f66c32bbdb2e0631b8",
+      "translationSha256": "27dd9df3855ce27f6a7bac06f5707249ac4da80bb7d7153ab75c58e5e9c9efd6",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
+      "sourceSha256": "226127d056dbb17e13df5f62527b8e610f6b97f5839196872aaea554af890b43",
+      "translationSha256": "8140eec61ca66ba7418cdbf04e745ba6d99bf46c092be9f6b91641c915b2f5c3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.BuildTarget.NativeExecutable",
+      "sourceSha256": "cd609f783ecd8abc8b5e20f03a7348cbc4fbb3b57beb21361e814fc89c92ee26",
+      "translationSha256": "2d6f371df97f97d38789e1f4065f50420c9613e9e3feabcc613fd8bc95f9019e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary",
+      "sourceSha256": "cdbb18a2f82d0af85cc7bc78014e14d22872fdb5c18ef05cc62944b0e0c803da",
+      "translationSha256": "b29cf044d694872d35f597ccdba4322a810e6ab964e00b704deabbde70d9beb9",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable",
+      "sourceSha256": "7afa20e6473da5443048d866e7fb75e50674cf9195436dbf30a2d8523e908a12",
+      "translationSha256": "1f6f12808e4f1ce8942f798cb3c067aa68510cdb80a15871cce9d0feaaba6b7e",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.Group.Code",
+      "sourceSha256": "340f463033e0fd5ddeabb922df4d4f1b5747494d0f5ed9894f13b6e13ca831f5",
+      "translationSha256": "f58b85570398c0cc9dc6fddc8a36ecde212e9a568002f87cc3767699094c86c3",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.Group.Forms",
+      "sourceSha256": "858451263b1b9b4125fd9fb9a40f5959543162e04a14aec2712a45882f2d6e54",
+      "translationSha256": "8aefb19fe0b6360021d859d6d5a5543ee38d171f55f2d486beb79fcf687bc810",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.Group.Labels",
+      "sourceSha256": "934b8899c3d918d4b40bbb3512aed9c4ecd639c4be8e2263106536922a423121",
+      "translationSha256": "88498847f6ad3aff0fb2d9a3737b76c6c52e4e148cf42bec204bf2ad46222e1c",
+      "verdict": "accept",
+      "reason": "Accents, grammar, meaning, CLI tokens, and placeholders are sound in context."
+    }
+  ]
+}

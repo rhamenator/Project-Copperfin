@@ -1,0 +1,709 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions",
+    "Independent Codex instance /root/review_en_gb_revisions"
+  ],
+  "scope": "87 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.BreakpointSpecificationRequired",
+      "sourceSha256": "5d9f100fb32942a9dfccbc37041a12c54da21a36ff231524f25a8e46f057e106",
+      "translationSha256": "86b3bb516ca3744347a4b7befc7fddf8fb79ceb873a8eebaf333f9da76968f01",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.Column.Detail",
+      "sourceSha256": "fb5f27d5457c464102286366ef3827b11923e7f3aa1faa7eea95249e36a39abf",
+      "translationSha256": "50d45fbcc63172abd136e3712ce7fc29dedccb690c3143791462a8421efcdbe8",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Debugger.CommandFailed",
+      "sourceSha256": "283ba894bac4af700f7a2d1cfdff520db0c00c38845e14c49c21d5fa4a675972",
+      "translationSha256": "2a4180322c594068a2b62125da8e88063894531109243c940d440634b898729e",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Dialog.StudioHostTimedOut",
+      "sourceSha256": "d249a8a242110728063c2becf40f5d8ecf556be23294f6647ea8b665a7ba27dc",
+      "translationSha256": "be897bf918c0ff2d545c7015d9d65fd5666cca22e8d88ae26840346e2550f4cd",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.ClassLibrary",
+      "sourceSha256": "9cfb060487bb2b9b46b02501c90149449b3269df41a8f17ed66c103868eaaae0",
+      "translationSha256": "4b7fb6a5c786a6890c1ec47f89cff22b1d8f27f7ef116ec02803eaf9fd5a0c59",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.Label",
+      "sourceSha256": "f93b1219eaa1d94691432a1a4adf4d66f45b38bb2fd4e189773548faf5495b90",
+      "translationSha256": "7c8a825a72e970f50b8acdc1bbd2c3740bd93eb3b227fd4328c0a35cf50ddef7",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.Menu",
+      "sourceSha256": "447b3557b46c60f8ef9353a1e99cd52455b1f6b3e6abc6eafb00bf1fa9dbb1c8",
+      "translationSha256": "e972560b2983a36aeaff36f8d2a438867fa1dcd65614bc669959b4643bd91a3a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.Program",
+      "sourceSha256": "9e5923f0543087e2ad0c9415f893f40412b75e03a09c6cd6bcd56adab89238f4",
+      "translationSha256": "8f31406b49f57f9c111b68ef415b770c1071af79878b51ed645ccb33628881cc",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.Project",
+      "sourceSha256": "c2c40c5abd8b2337eee1b04dc413478cc8975846ccd919d46381adf5ba2b458d",
+      "translationSha256": "147145b7568cd6698d4105de603cfe536d7baa88a30bb56c83fc5ca5b4429233",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Guidance.Report",
+      "sourceSha256": "4e2c22b382ccc0bbca29a9f51197a60d2d1d1906ba044432933e5056410d4670",
+      "translationSha256": "bf458f43b8c36fcb19b8989fa14577a5bc3c9dbee08762d1c248562f98415056",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Project.Workflow.BuildHostMissing",
+      "sourceSha256": "0edd20516eca40e70d0914725b3f7415e36b50e3543cba587450e9dba9e06b40",
+      "translationSha256": "63d9a3061844f6c6d748a4e6f35f5c5f713407edb35e4ce1a068c4e33d713077",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.DeletedPreviewBounds",
+      "sourceSha256": "81a09220e6a4b69072173d87b768e7eb3190c23be19432c68d681263e67afc49",
+      "translationSha256": "2b53170ac65a1a26c617a23c5e9392fde011193463b98aa7a0392eb3e1a56361",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.FontFace",
+      "sourceSha256": "0dca8df31747f74c0cb106f05c4689b4056fe3f091255762b1d5c809d7a83bee",
+      "translationSha256": "ad01936674e225e3017b48c2614a9b64a99604038cb57e6165634029c71eb2fa",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.GroupingHeaderState",
+      "sourceSha256": "348b24cb31ec240c51be92aed3d7168b0d017eac2c94ebd152f486076d146cb9",
+      "translationSha256": "d4dc11ead8d4f64306ee8b95d35efd30a7bf76dea1783928303dd46d80ec49f0",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.GroupingNestingDepth",
+      "sourceSha256": "3f0357fec8142f6d73782e0a0cde1a10fcc37b246445a3fb763fcd6cc368939d",
+      "translationSha256": "b09565c6b59c0675413e982badee9ffe22fec1d4977640821483354f59fdd7e3",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.Parent",
+      "sourceSha256": "5f7953f7c9b6ba16602898e540795140db39847cf03fd10d32ef636cded0360e",
+      "translationSha256": "c801b725b4159aa4d65d126c6df8a821c9913171bd2b3fc591d6a4040014cab2",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.ReportMode",
+      "sourceSha256": "14b89a02b11e43a8fb9620b8960d83dce02167819312c29446b6c52047bdbd88",
+      "translationSha256": "19357a1232f6677faa38547229759df9a4357f1b1dd11d2615962bca0cbd212a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.SectionId",
+      "sourceSha256": "61dbe34f16d9a052d552b1aaa20c7e4ce954092486bd193d53c1694c37fbd3c4",
+      "translationSha256": "c66dbec7ae183d6c7dddd36176c61915334a6470e2b6f51859a41e760e781f0e",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.ToolTipText",
+      "sourceSha256": "6c6161874977598df55cb5dbbd742551d6b72b322f3ebdfe290e8723fc753b45",
+      "translationSha256": "5d8150ab4d4ed50e0072ff1c265a5d9e8a2a9efbb3ce32b8d5e587d591930019",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Property.TopRelativeToBand",
+      "sourceSha256": "4c9636cd4fdf4cd9300f1cec4fe02445a68ce670365460661023ac676afdba60",
+      "translationSha256": "34791649742e71d79ba9314a678080916d65161a3a701e196a9a0195626f755e",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.AddInSurfaces",
+      "sourceSha256": "9147eeacf181ec7afadd351aaf401a7bbf97007a0bf54725e091ebcec0ba8b66",
+      "translationSha256": "fdb4c7bbd690fcb14ce3b9a6c6f9e63ad19c2ada513a9d67654a4c1312ddfbe7",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.BuildWorkflowHeading",
+      "sourceSha256": "147920089c82a9d5c1e20481d38493b424bd0d61901145f2920275212d1955e0",
+      "translationSha256": "f7f6c0e5347116bb0374e89130848efd5815563100a85bdcd18bf5f3d391a4c9",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.BuildWorkflowText",
+      "sourceSha256": "e52a330ea18acebdf4eb9396cc7273efd661860d2f2fbe0277a8dfd3e06523cc",
+      "translationSha256": "904e3f86ec5606c8ed2389bee9078bae383eb08dec685586f58916507fe5e372",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.BuilderContextForms",
+      "sourceSha256": "b2e6b8c4a335ae46b6f98e104019ddca114d334f7f67c26e2ae796e69338a673",
+      "translationSha256": "43b23a8102680db9fbff14fd5ddc611ab949d61d32fe1d2c817a5a4b3377dfa8",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.BuilderContextReports",
+      "sourceSha256": "80e288d7d168da9f064733c0cf002a8b2ea18b9b1f665b9752b850b3487ef22c",
+      "translationSha256": "2136e3030d87c7f77c51bf5a3d322673e78da75a5dcb6e86ad8d92f31691478a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.BuilderContextSecurity",
+      "sourceSha256": "0f0358f3bac11fc58c5bbf297f4ce49c3b428639eb6197f86373e4f40c3bb165",
+      "translationSha256": "299ae7b2f5224825336174b947ed25b6dc8f9af057b8e332a1f312453d1232f7",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.CodeReferencesActivation",
+      "sourceSha256": "5c7f34e401b2dfc3223d65b6c4881b4761d0c9be77a3399a799f04d45f0eb0c2",
+      "translationSha256": "d95e3801a9f10dac33fb1eb8b158d0b8f8da28896b51c700c238b0b895b1de34",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.ConnectorTargets",
+      "sourceSha256": "e6d0c2f72685423d0abee5b89ccb64a3573764d1009d0bbedaf29c5ad8f88da6",
+      "translationSha256": "176378992a17b8aa2e6e517a001f271f3c96bad0558f5971bf377294e546a4a5",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.CoverageActivation",
+      "sourceSha256": "2b611cfb07f90b154c356259fcbda4fb035f6b67ad7e32a046e03471a9ff675e",
+      "translationSha256": "c97226cfa12fe9fa2a8399faa3fcfb8bd72f0707ba865d6aea6eb31b312e9692",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.CoverageNoSession",
+      "sourceSha256": "0281755313845e189051639faae38bf4c98db5217ee55e19f57013e13d821801",
+      "translationSha256": "bc40511e5182cb4028e92e05ac334a280568d5fab2facfb2b6b2aaee45da8568",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.DatabaseFederationUnavailable",
+      "sourceSha256": "575887f8b2cbbd76370f65d08e9b500fa0ad42c8ffbe33d9cf154d3d5d873253",
+      "translationSha256": "83fc931427de58a2ae826413aa2249b0075de6e78516d4847e8455630f88819c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.LabelBuildTarget",
+      "sourceSha256": "6b9f77284f6a3aa4101047a3bb809e572ff21fd116172a8dd44d420d0ea27f2d",
+      "translationSha256": "bacc715f5b3528d2c2526eb7ac455f2267e9ae47b377757f2a9d32042ff2b750",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.LabelDirectFoxSqlTargets",
+      "sourceSha256": "34c5d57fc0d8d497091ac81bf365391fd8f70da56e6a0c7acbb86d05fe55097d",
+      "translationSha256": "8b48cc892f5ea9c2ca10f1745193145c8ce037c120bfd827e32cf8eae21253a1",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.LabelDistinctRuntimeLocations",
+      "sourceSha256": "06de8ff5c905b3e3ec4815229db3d91afaeb48bf356aacac897c81783948f1ba",
+      "translationSha256": "7d6947cafcbec7c714560884f5e33015a4abf760a905ced17c7e1925121b5aac",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.LabelRuntimeReferences",
+      "sourceSha256": "9ddca36700e06ecd866d1ef633b7e6591a6047cb0f9b341ddd85dc30681ecca5",
+      "translationSha256": "c51d4a672df18265208e311d841ef4267b1c35405d3fe9655ff7fc165419fc19",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.ModernConnectorBulletTwo",
+      "sourceSha256": "86571a5932eb8b51d8bcef06737099c7113a21fe02fa2c9124a27120f9a27dfd",
+      "translationSha256": "901bb7956d7da72ed6f3e65ce027f610a2be4173fe0316fe541b8c22cbf76836",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.NextBrowserStep",
+      "sourceSha256": "d2e2b78cd995d1803943f34001299191c80cd6bfae7e1775d024cc1947f0cb27",
+      "translationSha256": "e9f8f53137d4feef6756084fec5ec7b17b42db66672e703cb2d3d189b8030522",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.NextBrowserStepDetails",
+      "sourceSha256": "50691991ed1cfc8840d52e40c44407023c37f9356a7280cc52f0cec8b56a767d",
+      "translationSha256": "99936ab7cb4c2b3da4ad53704712ea271cef0a0a94c99587a4faf321fdf36b15",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.NoConnectorTargets",
+      "sourceSha256": "e11d45afc550590f2a6eb8bd730f92f0561afde98b92e19eab7647311e5cbb95",
+      "translationSha256": "674796954fb793934b2a31e90398546eb078e90c03768220201bd66f9b4c2215",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.NoObjectBrowserNodes",
+      "sourceSha256": "584645d4f9293076a365a67430d8cb9c2486d47361a11b26878dc9cf229f6935",
+      "translationSha256": "b3064c6c0a0a45c6d129df97f3ae984cda53a4f3f260c35a0dd23706539bb1da",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.ObjectBrowser",
+      "sourceSha256": "02c1f8e39e72e8f34c6341cdace3707ffcc8ac158df7500ce234a0ea71702de1",
+      "translationSha256": "722ef3687e1e9cdbacc83d2c8ced3ea5d6d65733c1fb57fc808754dd58eee74e",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.ProjectWorkspace",
+      "sourceSha256": "1e1b6d2570b22d88ac6912ae1811a37732f21f984743a84d75bf8dd2a9823770",
+      "translationSha256": "d33cee5161ad5a58521828ce87eb6e0a77980e58a82b106e7ac028a889966aba",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.SuggestedToolboxSeeds",
+      "sourceSha256": "e5b047aab61d88b975340cd196c4f6cee5d823163b70c93a5d8cd5ca50ed2974",
+      "translationSha256": "5501b8fe43e97459eccb77a2d9815a1ab3dfa11237fb8cd4a5eb1c7e26b9da30",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.TaskListActivation",
+      "sourceSha256": "c3db70012512ceaf3de2a1f7ad964715de943815670349fb24e9c7d8c1971c23",
+      "translationSha256": "4295c6260316738fc8122e55820cf6cb0cfd774582157cbbb8054499d2c18f5c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.Toolbox",
+      "sourceSha256": "daf4e42fda7dbecb2eb08244019044e22d8c1d4df07e91947f2711482de9c9f4",
+      "translationSha256": "beb50094ac41c1480c2d4f4385517d46d06bdb689b591cc0c978f560dac4441a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Summary.ToolboxGroupLine",
+      "sourceSha256": "ee88fa9e04b94a7e18d5c785ee9e52eea4f656650885550448f33dbefd87525c",
+      "translationSha256": "417cf2cb59dff5473dbdbf20795fa0a37b57ac4ab87f8334ea6fc672db4527ed",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Tab.ObjectBrowser",
+      "sourceSha256": "8718b3f8175e7f407d86f98defd46064a5c3ea523067de33428015082f712611",
+      "translationSha256": "f0ba17c2541a91a4b5236764d57b886cc18f323f5192de8f3c2262797e8cbfd6",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "AssetEditor.Toolbox.CreateFailed",
+      "sourceSha256": "bcc4f01af711bb31fce4cbded4d2f4d385e3c880de82fd4bd8c31040bd852034",
+      "translationSha256": "190b6b2ce0835c8c322d78093d014dd8b700ece597dea7c0d7b54ea39cb06a17",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Diagnostic.UnterminatedString",
+      "sourceSha256": "4485f10bfc4b0132810e5419138b9d4aa18b1e65370142c22bb678b884c13729",
+      "translationSha256": "fcdce801622dc5b3ca0cc8b7cf86cfd98ff710b3b6c263c17735105151ff892d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Dbf.TranslationStory",
+      "sourceSha256": "53b20649598bb350322c286cf5e2bee5f309d688cc529c81a08c8e5fb18ea984",
+      "translationSha256": "27759b1dd06a21c9c225c76d1617bab5e670559cd3fa8d9da8f135626e1be26d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Mongodb.TranslationStory",
+      "sourceSha256": "4c786f674684a1aad8d5841fa7eed1dae6485c7f8551af94e0d0e8d4611d130a",
+      "translationSha256": "30666f783d02f1d7f143288634821391e4f6d687d5e2d74f34816786591e9e61",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Oracle.TranslationStory",
+      "sourceSha256": "2363b8a449ca650ecf6587de2e876913dbc8845023c7df4b1a611edbcaa2b54e",
+      "translationSha256": "68dc596fe43ea2261e7f3e467aa3f011e36ea8067125c45bb4b240635bef0283",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Postgresql.TranslationStory",
+      "sourceSha256": "f3c0e34d1b23b01666f126adf17754b4837aca547de8968942fade01c7101c9d",
+      "translationSha256": "fcd0909bf3d9e0168da66f7da6b36bb764a6820f45972ce782366c9e18ce2a0f",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.SqlServer.TranslationStory",
+      "sourceSha256": "d37fd1089a7fef57edf37a48d42afa77bf28783e9795badf6224ef342bffa075",
+      "translationSha256": "ead64473143a1f7007a9478508564276fd16700b5dd8e271414cceb170741075",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Sqlite.TranslationStory",
+      "sourceSha256": "8fadc1660fa85d6f013ace407bdcf4a4cf3d2fcb15aad63d63c99f8bb1e325a7",
+      "translationSha256": "864296930ed8358d7f3755cd901c20dd148d969104b87e5a90fc06fe691aac7b",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Guardrail.BrowseableSchemaHints",
+      "sourceSha256": "795f709b68d324b7a33f8ea1e525ca9d2481a0a238cdbe2af4358f54d7079a75",
+      "translationSha256": "86eeb29e95dee0321cd79d4670d075147b402504d309ac7cab27709cf9921f08",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Guardrail.DeterministicTranslatorsFirst",
+      "sourceSha256": "3462236856744a08031677506f4dd624b72b793a6581cd03dc06cd6c7e9170d2",
+      "translationSha256": "34334d8570b03757898b60f232fd41921755e7f67a27360a27387a1370b92183",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Guardrail.ExplainableConnectorFailures",
+      "sourceSha256": "fd232817d87ae56c4119287fd83f670cb1d4bedb94ebef0a585e5c04a61417c0",
+      "translationSha256": "7bc8b03e6ff09e05b83c44b8a744630756867794005f687f353f1564d0bea3cc",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Strategy",
+      "sourceSha256": "baeeb9ae0765acf59dcc4aebf1c58445f0dbd62b14932a66413e8c27309b4473",
+      "translationSha256": "eddc933a375421bdb2110be6247e66408f440a5a476be5a4f04466bfaec65370",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Strategy",
+      "sourceSha256": "8eab1688016b2979117926e8fdf7377bc4c5fcd16f8800f993af90d7732d1324",
+      "translationSha256": "f2039728b209fa0a295dc4d854ae2a839ff3894390628231baa772dc92723ce0",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Description",
+      "sourceSha256": "0973d9c642961c3b9d492b78d4fcb0ab0b6df60df53a5fae325b9d319bef8757",
+      "translationSha256": "11c1e6385431ac8d08b9f3195d007e9a58daac082b397b20192b47da64d25737",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Description",
+      "sourceSha256": "83b9088396de340fe141c48e638f5eceba07f47193e3ae8d004eddda6870e8f0",
+      "translationSha256": "74785a5696e2bf284b328d23d7448d4976202d65ef350baa351d2e69b7e41b85",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Title",
+      "sourceSha256": "7f33439042211d2730f3f1021bb21dcc90de1b1dd12d5acc54cea29437400169",
+      "translationSha256": "7e54b2f5a0fd2b006e2f629a307720932801c275384fcb61b2198d3d4fb8c594",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.McpHost.Title",
+      "sourceSha256": "43c209eccf53f06f1d6aa7b453ce49be66b250189a61259e3c4d5a27e87bf077",
+      "translationSha256": "bcb4215c19695a158469ab23e1b111e7bddab80addc26e19f22fe2aae93815cd",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Description",
+      "sourceSha256": "eb61b18ae9f8ea95a3103e0be35e9936af2e4d4020d11628c5be7f2762b63493",
+      "translationSha256": "4e3fedfe089065786f671963b0d435305360227e0b0f9ea8844a0ddcc0b64da9",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired",
+      "sourceSha256": "0f4b6561fd971ceaddbd1d398fafc49f5d8b3b0878fb21f3fc2c79938cf30ac6",
+      "translationSha256": "9d8867a37db2897f5ad38f2a5b02e54c05a73d55cd4b90e05ef058896f7ce3b1",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable",
+      "sourceSha256": "d2540de95566d73dcb6b268309dbbb561c7ed5aa56c46b78889bfcc08561469e",
+      "translationSha256": "f8d2849839a5e9f2c9de16ab832f9897fcdad4475414a5bec7f4279ecf4efe06",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy",
+      "sourceSha256": "867c77402382d28151fca1402c358991724593e8463393285cffecb00b090dd4",
+      "translationSha256": "869e7d3a201c947da6780eb5314d8c071c7ace999171fe9962aeebad693a7007",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired",
+      "sourceSha256": "48869af3090d90f295832a09d137e3405ad5c2add05b247285d9a79acd341075",
+      "translationSha256": "0fb843058e1dc619ab04346755e987dc7170f3b6273247b2e754343842cba8f7",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist",
+      "sourceSha256": "1605372d6d20c476db5c3c314d0d646462fcd047b4267727512f3224e40c99a9",
+      "translationSha256": "2456307596ba38ea56b9b1f63d8c9864089f75a5a6fabc348e3dfbc29b4adec8",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetOutput.PrimaryStory",
+      "sourceSha256": "5b108f1aa9e5a095a3380d49f0651f93373cc1909f977a2e1f7b6a0a165b5a30",
+      "translationSha256": "6bfa200f721b4aace252136128818acfaab188f58866811db69bc1864ee7f464",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Title",
+      "sourceSha256": "24e2af2593c3ce7942199c277f672906c30c2eda03db147838e90e545b9edfa5",
+      "translationSha256": "4e1f335ab2be8d0540d290083c1181eaa9c0723f1853a9cbebda74c1fe348c20",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Title",
+      "sourceSha256": "2a9cfc0c7a2e39af4c2dee6a578b202b93694f36aa78195054f52a8624274a8a",
+      "translationSha256": "0621bf95283ccccb887a0178727b49848b951358456ec9f0dae35a29323203a2",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Title",
+      "sourceSha256": "de61f7f7020f786671993a3a34a285737c710c55eaa737c5100a1409a8d12066",
+      "translationSha256": "0d2077c5eeb76ce3fbdd6544e6761806ac4e351a42cb16ed70b9d12c2d700f9f",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Rationale",
+      "sourceSha256": "61fa1a2d7461188e5138b724b0f272586cbf64c0783be5fdf366d5c3175ab008",
+      "translationSha256": "f665baebdb4e2c45746e4bb30391792daa346958fae38f50cc53fd3fa5856d74",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Title",
+      "sourceSha256": "1322306de82705180a88030b783f7661b9da47f2b0cd73e897061a613bebe8fe",
+      "translationSha256": "b01c59294392fac2b8c25c9f3bc1f125913948eab3a3c19db875dd290f0d4676",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Rationale",
+      "sourceSha256": "898d56a298ab563e27f0eb16ed577088378cd0dccf0c2ac76907501d4e924e27",
+      "translationSha256": "aa8ae86e165530f9cd1210547b4be6df81bc567ea72172a8c4e504c46c9e615c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Title",
+      "sourceSha256": "1147192bbbe1c642223bef8607162adbb3e98f6da5bf2b2f6ace94e79c384224",
+      "translationSha256": "21463a57e8d44d80970d1ed7eaa1cd6ba948e6e933354b27d9251068e886c1c1",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Title",
+      "sourceSha256": "532eaec0b446e71bfd103eff4a08f97a72c5c8450c15fbf22c985d804c1e6428",
+      "translationSha256": "27a7f60c383de3b9515270ecc330619f4fc5c2ebc49461c4635e2c2f39e8dcce",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale",
+      "sourceSha256": "620e4fb48f56f4a4ccaea3b8308b04438f47fb30153e4a7b507564bbe0a95831",
+      "translationSha256": "a10d711bc8fbb00d0da8f726386ac7442eb8d75e6ebe060d93c7659cd8e1acbb",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Title",
+      "sourceSha256": "250fcb1afba42c7551e0927b228c60916c9c4515ee3dd285f671e92e6d896cd0",
+      "translationSha256": "53d1e1978405d271c8b0ca4298b76b7af69183122522a49be822fff53bbe9b7f",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Guardrail.AiToolingOptIn",
+      "sourceSha256": "d6962ef08771482cccc9efdd74104e87fc4373bccd044d15554fba2130e51822",
+      "translationSha256": "62c443804513e1717c61030bcc3729ecb43bd29e66eff593f496f27ad9384026",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Guardrail.NativeFirstCore",
+      "sourceSha256": "a174c6966d60b5b2f2ae44d2e3405bc45bfded2805c460ce17f1ef7540b0d626",
+      "translationSha256": "790ea2fc671e97c25dd3fa7a8db7cad440b83a1a573319d22b849130c85f785d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Guardrail.ReleaseOutputDotNetStory",
+      "sourceSha256": "722596d8fc0097e9c921846133fe27aa48c488bd1a157fd9abd3383ba29fc5a7",
+      "translationSha256": "5fa618c8401e9f242882e943aa639df44fd83e53a84f2fa945d9e29a3a4f5778",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.CAbi.Title",
+      "sourceSha256": "e2b682a51db55d49c20bb5f2ec414af7206d19c3b6262978f313253159320c99",
+      "translationSha256": "25eb31c662e678aa3a1765cd363c37c16aaca04888fbcdb7e0958a1f8eba451a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.DotNet.OutputStory",
+      "sourceSha256": "8dc65fb512baad0418fc32442048b2f1688940163b7ae9c5f3496ac837cc47ec",
+      "translationSha256": "25a5007ee1be8e82a7a7f94d1f452d8c246694cf35427ebea4eccd8bef3fc534",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.Python.OutputStory",
+      "sourceSha256": "52dafcc9f48b688393dde35adeda5511eb701e81037e805b08c2fcb61be7121d",
+      "translationSha256": "f3a627c1c71a32f4951b476e641086196a2f105e76d6f711cd283d85a1a9a92d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    }
+  ]
+}

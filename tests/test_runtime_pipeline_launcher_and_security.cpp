@@ -1196,11 +1196,11 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "#2725: generated launcher runtime-host-missing diagnostics should resolve through the en-US catalog");
     expect(
         spanish_catalog.translate("Runtime.Package.Launcher.Error.ManifestMissing") ==
-            "No se encontro el manifiesto de Copperfin junto al iniciador.",
+            "No se encontró el manifiesto de Copperfin junto al iniciador.",
         "#2725: generated launcher manifest-missing diagnostics should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostStartFailed") ==
-            "Nao foi possivel iniciar o host de runtime do Copperfin.",
+            "Não foi possível iniciar o host de runtime do Copperfin.",
         "#2725: generated launcher runtime-host-start diagnostics should resolve through the pt-BR catalog");
     expect(
         english_catalog.translate(
@@ -1212,13 +1212,13 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         spanish_catalog.translate(
             "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
             {{"methodIdentity", "custWidget.txtName.Valid"}}) ==
-            "Se requiere port manual para el metodo xAsset de FoxPro: custWidget.txtName.Valid",
+            "Se requiere portar manualmente el método xAsset de FoxPro: custWidget.txtName.Valid",
         "#2726: xAsset manual-port diagnostics should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate(
             "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
             {{"statementText", "READ EVENTS"}}) ==
-            "Instrucao FoxPro sem suporte: READ EVENTS",
+            "Instrução do FoxPro sem suporte: READ EVENTS",
         "#2726: transpiled unsupported-statement diagnostics should resolve through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") ==
@@ -1294,13 +1294,13 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         spanish_catalog.translate(
             "Runtime.Package.Error.ContentRootRejected",
             {{"path", "outside/content"}}) ==
-            "La raiz de contenido del paquete debe ser el directorio de contenido directo dentro de la raiz del paquete: outside/content",
+            "La raíz de contenido del paquete debe ser el directorio de contenido directo dentro de la raíz del paquete: outside/content",
         "#4065: content-root rejection diagnostics should localize without changing path placeholders");
     expect(
         spanish_catalog.translate(
             "Runtime.Package.Error.ManifestPairPublishFailed",
             {{"path", "app.cfdebug"}}) ==
-            "No se pudo publicar atomicamente el par de manifiestos del paquete: app.cfdebug",
+            "No se pudo publicar de forma atómica el par de manifiestos del paquete: app.cfdebug",
         "#4056: manifest-pair publication diagnostics should localize without changing path placeholders");
     expect(
         pseudo_catalog.translate(
@@ -1321,7 +1321,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         portuguese_catalog.translate(
             "Runtime.Package.Error.ManifestPairStageFailed",
             {{"path", "app.cfmanifest.next"}}) ==
-            "Nao foi possivel preparar o par de manifestos do pacote: app.cfmanifest.next",
+            "Não foi possível preparar o par de manifestos do pacote: app.cfmanifest.next",
         "#4056: manifest-pair staging diagnostics should localize without changing path placeholders");
     expect(
         pseudo_catalog.translate(
@@ -1365,7 +1365,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "#3905: ambiguous companion diagnostics should preserve path placeholders");
     expect(
         spanish_catalog.translate("Runtime.Package.Error.PlanInvalid") ==
-            "El plan del paquete no es valido.",
+            "El plan del paquete no es válido.",
         "#2606: runtime package invalid-plan diagnostics should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput") ==
@@ -1373,7 +1373,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "#2606: runtime package primary-output diagnostics should resolve through the pt-BR catalog");
     expect(
         portuguese_catalog.translate("Runtime.Package.Error.SourceFileMissing", {{"path", "missing.prg"}}) ==
-            "O arquivo de origem nao existe: missing.prg",
+            "O arquivo de origem não existe: missing.prg",
         "#2606: runtime package source-file diagnostics should preserve placeholders through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") !=
@@ -1430,7 +1430,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "runtime-host-fixture");
     expect(
         !spanish_materialize_result.ok &&
-            spanish_materialize_result.error == "El plan del paquete no es valido.",
+            spanish_materialize_result.error == "El plan del paquete no es válido.",
         "#2606: runtime package invalid-plan diagnostics should refresh to es-419 when the runtime locale changes in-process");
 
     copperfin::runtime::RuntimePackagePlan executable_plan{};

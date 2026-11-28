@@ -1,0 +1,197 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "GPT-6 Codex",
+  "sessions": [
+    "Codex /root/review_en_gb_revisions",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "23 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+      "sourceSha256": "4abb80205ff671fb59bb1c938b8e9991f7232975009c5c9d6d4612df400f96b1",
+      "translationSha256": "7746646a36d9b7bdd881aa1ad1e336ec6154c9e5b5208b9483bf9b8a13e98564",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed",
+      "sourceSha256": "cad259588ef21940960e92da396bf3791636f2364f4c4da1434cc511e70e9715",
+      "translationSha256": "bddf4af81a5ffe88e6693aaaca53f228bc0b19d43695b053cae9716e25dc1bff",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed",
+      "sourceSha256": "85108493593733bc57498f597b6fdde5ec1288e68ca8909616c7b481e33e6215",
+      "translationSha256": "1eae253fa1ed141b9d6fbb3d4d00468ced02955eaff3516a063e92c0781c2bb1",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Bridge.Error.RequestDescriptorMismatch",
+      "sourceSha256": "5d766506c655559c367767dfea54a43fabf2b09648b4911821f54bf0f6ac23ea",
+      "translationSha256": "adb3f1ebfe0897311417f95e9c5ba1d974686db907398761babb16d1690389b2",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch",
+      "sourceSha256": "5ae1782924f7884ac6e0932cb9b65409df81750506a1d719c33e9bd771ab4d45",
+      "translationSha256": "2362b61a4b5f724df38d56b1b1dcaf4bf2c129a896b237976d73067d75cc8f90",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Bridge.Error.SourceMissingFromPackage",
+      "sourceSha256": "cb7c5096afeb2e3bdb3af449389322a3b6e2ec0c7cd7a34c1e2f086c21589061",
+      "translationSha256": "77b5bb8f8a47ee7154eb505083a97b563d7c2417b7315c3a578ea55610d9eeb6",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed",
+      "sourceSha256": "72c7c6a6c2d3b35e4f4dd2b79937ec04cc064615d8248d8caf667f9784e6cb2f",
+      "translationSha256": "5ca53d4f3ea323c838a8a9ddfff0371c5ceb22033df889d689d581cab56d8dab",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed",
+      "sourceSha256": "19b199b13bc160c00c8f9ed7d551cf201470553c01b495bb3d0a0427cada81c0",
+      "translationSha256": "f54bf1fc6d2f7c93147cea220fb8422f74a28c0c53c6180b17ce59dafc8c901a",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed",
+      "sourceSha256": "f3b24796e90f96b3fb87ed8a7fb71f9c8a552a7fe3a75b8623eec077e0b7b737",
+      "translationSha256": "cb78944f30d585f6230dd6cb5c763447c99706ceffbb5613bacc1f901f068de9",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Security.Profile.Feature.Sandbox.Title",
+      "sourceSha256": "abfc98c950ba53ca4bb767a444d49efd40c536976449434d9c0bbeb3f95a4548",
+      "translationSha256": "52cb95ba973350ce874a62edca7d9f346cb4b5d6fe968a7a5f6f16747e91b848",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "sourceSha256": "b23c5693d3c6ed78924f396314889ed460d877a35bdbcf499d37de1d0827f87a",
+      "translationSha256": "7477b09330a206928124c0a26cd6337bdaf3a90ef4e9dd46c01374bd353e3a2f",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
+      "sourceSha256": "6c6985adad8ad16897b7e6c17d59ec94e8ac57907c4961c445198a9af8143d80",
+      "translationSha256": "917b653d5320d63907a192e5448502d18b7a2983721397f035e26f877c9291fd",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "sourceSha256": "24960d25b4213ff02f98ae577305089930d86e84a27fbf0d92cbcb7ce07b9340",
+      "translationSha256": "17747148172478cff891c4d4913af0ab18515fed7e8228fccfedca025a65c0a2",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.ReportDesigner.ModernEditorDirection",
+      "sourceSha256": "9804b701d3ab5e034373390dc093c4188e57dedeb0ad8554faea88b8143051db",
+      "translationSha256": "0a554d33d42bb1e7402ed6e73eb89abe51a9a79e61c6ce0a4a6fffec03eaa5df",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "sourceSha256": "760724f89727cbc2ed58c3f2ab7a7fb6f4e88e45332e653b00fd80af053f1241",
+      "translationSha256": "10530e6c711189d47b53cfe38b06a68f5c10d1e90c6142913e945ac3a2ddb46e",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "sourceSha256": "e0fdf2c7e6d53a8539d08f9e41ff36c7c5449400e94f9ab27bde41b133609bdc",
+      "translationSha256": "c4ab915ade196551acce4eba48026c9385047ede0d9b18518f2ce9ab41d8f745",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLink",
+      "sourceSha256": "39d5342be493c1be7bc6eeca67ea61c36aa3fba1a69185cd978f00cbe3dd3821",
+      "translationSha256": "753e648beee4fa8c55095a726a1268b80448e806da34e3091ac9fe4cb31f7376",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLinkTitle",
+      "sourceSha256": "9e6482f51a09b26817ed732d646d1b354e0f1b32225057c2d3fc3ddd3f25063d",
+      "translationSha256": "df2b77fd80be96b503e6fe6e21a45e5a20f808b6b01f473a0e6bddab880b2134",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButton",
+      "sourceSha256": "2c23b386fd05447b943472e59f70280e29bf6da3c0a997f80e3dbedce6c7b7d4",
+      "translationSha256": "b7867c905e2346e234800bcb2a1faba991a2661793fee9778a55fd1f63365bb6",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButtonTitle",
+      "sourceSha256": "3c66bc5b13b7d017cc3c0451c516766508cea8928e44143f72d4ed7443ecd7a3",
+      "translationSha256": "616a4635354e4e2f0dd3e3b9ad6b80745450f10db842acd2e2943d81c518f3e6",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpIdTitle",
+      "sourceSha256": "3956ea93b0f70f60ede259b28d38caf917c748ec6e0c8c78e81c8eb586a0efea",
+      "translationSha256": "c5bdf14d017c2d92aa7b896deecbda6b206a46d2817f2d976bddd87926130f36",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpTitle",
+      "sourceSha256": "8699153bb7697ad0834f5a617020ed28a0990ba9a10eea43e949c2dddd13de9d",
+      "translationSha256": "2328d7a80557113dc70ee23c855a34347ec050a5a44a47537725b92b4a2e7adc",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.WhatsThisButton",
+      "sourceSha256": "2c23b386fd05447b943472e59f70280e29bf6da3c0a997f80e3dbedce6c7b7d4",
+      "translationSha256": "b7867c905e2346e234800bcb2a1faba991a2661793fee9778a55fd1f63365bb6",
+      "verdict": "accept",
+      "reason": "Meaning and Latin American Spanish wording are sound in context; protected identifiers and placeholders are preserved."
+    }
+  ]
+}

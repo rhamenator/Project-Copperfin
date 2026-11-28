@@ -347,7 +347,7 @@ void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
         portuguese_catalog.translate(
             "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
             {{"fieldName", "NAME"}, {"orderName", "NAME"}}) ==
-            "O campo de padrao 'NAME' correspondeu a ordem 'NAME'",
+            "O campo 'NAME' do padrão correspondeu à ordem 'NAME'",
         "#2603: index-seek plan decisions should preserve placeholders through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Runtime.IndexSeek.PatternReason.TopLevelNotPattern") ==
@@ -374,7 +374,7 @@ void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
     set_env_value("COPPERFIN_LOCALE", "es-419", true);
     const auto spanish_pattern = analyzer.analyze_expression("NAME = 'BRAVO'", {"NAME"});
     expect(
-        spanish_pattern.reason == "Comparacion simple de campo con literal",
+        spanish_pattern.reason == "Comparación simple de campo con literal",
         "#2603: index-seek analyzer should emit es-419 rationale after locale selection");
 
     set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
@@ -382,11 +382,11 @@ void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
     expect(
         portuguese_plan.selected_order.has_value() &&
             portuguese_plan.selected_order->match_reason ==
-                "correspondencia Rushmore de alta confianca",
+                "correspondência Rushmore de alta confiança",
         "#2603: index-seek matcher should refresh localized match reasons when the runtime locale changes in-process");
     expect(
         portuguese_plan.decision_rationale ==
-            "O campo de padrao 'NAME' correspondeu a ordem 'NAME'",
+            "O campo 'NAME' do padrão correspondeu à ordem 'NAME'",
         "#2603: index-seek matcher should refresh localized plan decisions when the runtime locale changes in-process");
     expect(
         portuguese_plan.selected_order.has_value() &&

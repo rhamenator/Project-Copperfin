@@ -212,6 +212,41 @@ def main() -> int:
         path.write_bytes(b"\xff\xfe{\x00}\x00")
         check(False, "UTF-16 fifth-locale catalog", "DecoderFallbackException")
         path.write_text(json.dumps(complete, ensure_ascii=False), encoding="utf-8")
+
+        external_catalog = locales / "en-GB" / "strings.json"
+        external_before = external_catalog.read_bytes()
+        generated_key = "Studio.OpenDialogTitle"
+        for managed_locale in ("es-419", "pt-BR"):
+            managed_path = locales / managed_locale / "strings.json"
+            managed_values = json.loads(managed_path.read_text(encoding="utf-8"))
+            managed_values.pop(generated_key)
+            managed_path.write_text(
+                json.dumps(managed_values, ensure_ascii=False), encoding="utf-8"
+            )
+        write_mode = subprocess.run(
+            [dotnet, "run", "--project", project, "--configuration", configuration,
+             "--no-build", "--", str(root)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        if write_mode.returncode != 0:
+            raise AssertionError(
+                f"write mode should skip external-only catalogs and sync later managed catalogs: "
+                f"{write_mode.stderr[:500]}"
+            )
+        if external_catalog.read_bytes() != external_before:
+            raise AssertionError("write mode must preserve external-only catalog bytes")
+        for managed_locale in ("es-419", "pt-BR"):
+            managed_values = json.loads(
+                (locales / managed_locale / "strings.json").read_text(encoding="utf-8")
+            )
+            if generated_key not in managed_values:
+                raise AssertionError(f"write mode did not synchronize {managed_locale}")
+
         (locales / "inventory.txt").write_text(inventory, encoding="utf-8")
         check(False, "undeclared fifth-locale directory", "Locale directories do not match")
         (locales / "inventory.txt").write_text(expanded_inventory, encoding="utf-8")

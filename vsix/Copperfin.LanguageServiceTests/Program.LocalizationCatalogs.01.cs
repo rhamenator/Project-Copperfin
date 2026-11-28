@@ -20,6 +20,28 @@ internal static partial class Program
         }
 
         var catalogRoot = Path.Combine(repositoryRoot, "resources", "locales");
+        var british = new CopperfinLocalization("en_GB", catalogRoot);
+        Expect(british.Locale == CopperfinLocalization.BritishEnglishLocale &&
+               british.Text("Licensing.Error.NoFields") == "The licence file has no fields." &&
+               british.Text("StudioHost.LaunchParse.ObjectAssignment.FillColor") == "fill-colour" &&
+               british.Text("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message") ==
+                   "Failed to analyse PRG source: file could not be opened.",
+            "#2348: managed en-GB lookup should render British prose from the shared catalog");
+        var installedBritish = new CopperfinLocalization(
+            "en-GB",
+            Path.Combine(Path.GetTempPath(), "copperfin-no-installed-catalog-" + Guid.NewGuid().ToString("N")));
+        Expect(installedBritish.Text("Licensing.Error.NoFields") == "The licence file has no fields.",
+            "#2348: installed VSIX should load the embedded en-GB catalog without a checkout or shared catalog directory");
+
+        var vsixProject = File.ReadAllText(Path.Combine(
+            repositoryRoot, "vsix", "Copperfin.VisualStudio", "Copperfin.VisualStudio.csproj"));
+        Expect(vsixProject.Contains(
+                   "<EmbeddedResource Include=\"..\\..\\resources\\locales\\en-GB\\strings.json\">",
+                   StringComparison.Ordinal) &&
+               vsixProject.Contains(
+                   "<LogicalName>Copperfin.VisualStudio.Locales.en-GB.strings.json</LogicalName>",
+                   StringComparison.Ordinal),
+            "#2348: VSIX project should embed the same en-GB catalog used by runtime localization");
         var spanish = new CopperfinLocalization("es-419", catalogRoot);
         Expect(spanish.Text("Studio.OpenDialogTitle") == "Abrir activo de Copperfin",
             "standalone Studio should consume the installed Spanish shared catalog");

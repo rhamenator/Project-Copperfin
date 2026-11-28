@@ -1,0 +1,2157 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions/codex-corrections-003",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "268 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.Group.Reports",
+      "sourceSha256": "dacca3cba3f346a40893112b8670f453650a81138e3705c0034d2392024b9797",
+      "translationSha256": "dc4bb10b6d41fdbf9b14b37128204f6567e706cabe9677480a550dfa4e8523e0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.ItemType.Form",
+      "sourceSha256": "2e0e960ab3204127b1dce399c9984c81f52a79f4d85cb0c3afddcfcfe8a2b48c",
+      "translationSha256": "5533f2c142ef3670273efc90145b93653efce6672ca66ca94f3de61f7f7e1e12",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.ItemType.Header",
+      "sourceSha256": "ba5caa4285a84d88129280d2c3f6d796b4e2da069981e845bdaa55d9e6cfe7b5",
+      "translationSha256": "773ab7b31566d4dbf5c63594cd8d03cda965f857aac3c7ee98256891dc148839",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.ItemType.Label",
+      "sourceSha256": "0e66373f45dcf3dd656151e519f7ee5e3d558d9c22cb87df339bbdd2b6c6a3c1",
+      "translationSha256": "0e4e4e5d1e1a7700c2e03e66a46debe2992e5a2a51e3bf52c31bfa790eda634e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.ItemType.ProjectHeader",
+      "sourceSha256": "6b0a73c36366d7f9d4684e355b7e0bb77f9dfc2b6dbb804807c8eda402ff63e6",
+      "translationSha256": "edaecb370c592d2472763f1dde57933d79d74cc517a5d984839d68132a921069",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ProjectWorkspace.ItemType.Report",
+      "sourceSha256": "b6ce788d9786917c9d19adaa0d904213365607c7f683d7277f508dcf142b4cc2",
+      "translationSha256": "159c89f811fa75d2762cb90c6958c32732e39350c23ec7e570195c72075babf4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.ColumnFooter",
+      "sourceSha256": "d8869741870f8ba8236b62726beabdba1b2444ba3f18c8d1f85825a4b7c0eeed",
+      "translationSha256": "49f51e745f1e968558aa10dafdfca13b7ab3080d2b530dd9acbbefe179ddc1b4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.ColumnHeader",
+      "sourceSha256": "4544e1ccc9bedb7c37cee5f6ab365a0a00ad553cfb0b5ed87e551b297e98fba6",
+      "translationSha256": "7bba1af17414e0bb3eccc63678d228f8cdc3420b0aa0e19577af4ad92e28c7f7",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.DetailFooter",
+      "sourceSha256": "f435d3420467ad3b9e4704e0c8f99d504045b8ace5e8b673b4b1c070bc7dba67",
+      "translationSha256": "b23f82835b35193c126c5a41102532dec6ced07c1f3ba03ff43758af9ce3bb35",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.DetailHeader",
+      "sourceSha256": "e869e5bcd6453a7b350328d1e83c4b15cf94a0617b82ca3c975b43d2c3e559b0",
+      "translationSha256": "d189a9f4aa8b8638de9444a569a4d0eac6f4150ea8a83a41a40f5a6e61dc6943",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.GroupFooter",
+      "sourceSha256": "d7f01de23d6ccee5ce41f0cdd791bb08a7a25ee9caa90e76d5d53db3d942d4b4",
+      "translationSha256": "53debe38ac8e3d4195257376cd969101206e387df97615a6ff5a164a7100bce1",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.GroupHeader",
+      "sourceSha256": "668f7ea8565ef2c648ad29c01092b569d88a508a82f40451981cfc4cbc6469d6",
+      "translationSha256": "1def31871d9d05598371105d6c81c1ea4aaac914324e82b587406de5193e4728",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.PageFooter",
+      "sourceSha256": "526a586e8dab6ae49e8cc5887067449d74ec090424e591f71c1806590b4e522e",
+      "translationSha256": "c646d4f496de569832fbe33f7c4c0667c03562ade790248d143166b973f7a036",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.PageHeader",
+      "sourceSha256": "505debd378365438e105087db162c288225f446e8ccfb628da4125180d5530cd",
+      "translationSha256": "e2b7022f679090208a289f6d84b1c38f71b46aae3978368b10630ba2d5acad7b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ReportLayout.Section.Title",
+      "sourceSha256": "7e8cd2056da73a7fefb6cd91f4e5d199d08d9058c517b9a2476b1b520324d674",
+      "translationSha256": "4c08a5d5feb22ce293c0fd693f6e99ad2ffb1d6bd03ce1625d1e9e9dff93c672",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Category.Containers",
+      "sourceSha256": "a22daa7f02a26cc2335378ad77101373ff0dae12da4a75801d20b4e7219d4612",
+      "translationSha256": "05a0a7c06185619c0dd384ced58ffb8f9e5d39462d1b32eb33bdd49b91e41634",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Category.Graphics",
+      "sourceSha256": "a874fca87cdd5e4e677086421a024eba3831c31f72451a6e5080e66bbd772ee9",
+      "translationSha256": "3f3a9f9e67b32cf941be8721ab3f1b2a25e389479c22cf509e1b78a9e618ab5f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Category.StandardControls",
+      "sourceSha256": "65c2266b8192fb70f1450960af784381525e5b8d041b05290713db3238cb846c",
+      "translationSha256": "d303fcb39586de69b16f13beb4945b049de2c169e154d197f9b1d89e41f999e0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.CheckBox.Title",
+      "sourceSha256": "ba489462b2e1e1465ac389b11699ea3296924c402d0d16d659502f5e83a09d07",
+      "translationSha256": "577731f8d75133606001c04e03b2b36e067ba54bc6e61bc42fe5299fbb4f27c7",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.ComboBox.Title",
+      "sourceSha256": "e625930827ffb0daa197471c76aa42666eb616e9a7e3aacde7381297bde65a78",
+      "translationSha256": "ecb18af2f17e09e0801c92a74834622607ef257a70a84f42dfb173ee4a1f7abc",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.CommandButton.Description",
+      "sourceSha256": "4021a2ba545bcdca07fe91991591d7a4f59f0e5ded841220fe505dddbaf49e32",
+      "translationSha256": "2e13476305bcf85d30a6b07579b0bf5c8976576ea170e59b3ee789336ea0be60",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.CommandButton.Title",
+      "sourceSha256": "0bef4a4639ebaec6dccd59a3c1bcfa662d04862974d792d2c6bc5c0f5b45ab02",
+      "translationSha256": "9e4ac058e810c94afa2b80f3a52d6dde1e5b001d90dac8299dd1a18052dfdd37",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Container.Description",
+      "sourceSha256": "f8242711ed1bda59a034403d87b9e2b2aff0a5c2d5ae5352128ebce62c74b2ca",
+      "translationSha256": "1fd57d95c29a82f13832935774c146d0f2a2deb57ab41cd68ea2c52d78394edd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Container.Title",
+      "sourceSha256": "0c7823e8c759af7d0d04bea22a6d64fb56065c7168977b5f19ad2225a2986178",
+      "translationSha256": "7ed4feb85e05d603a8d7966db9efdaed9cf9339d735ee555ac72003380fa4ee5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.EditBox.Description",
+      "sourceSha256": "61c39ba7162fb0e14789e4cfbd6a2176bf3ac0833df70af8c2b3fda6cdf96d01",
+      "translationSha256": "464cd6338bb2fb092474012ababa19163d2eb746a323104642373bc455b58d61",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.EditBox.Title",
+      "sourceSha256": "08949234e734257237b421fa0e2fdf31c43d7aea822576cbb856c568f685784f",
+      "translationSha256": "937c180011a29294c6dcc4f66bee63bff6c0bd78b67454138c4f4ef7a53da584",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Label.Title",
+      "sourceSha256": "0e66373f45dcf3dd656151e519f7ee5e3d558d9c22cb87df339bbdd2b6c6a3c1",
+      "translationSha256": "0e4e4e5d1e1a7700c2e03e66a46debe2992e5a2a51e3bf52c31bfa790eda634e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.PageFrame.Description",
+      "sourceSha256": "e4431a454e888c19518cda6af5975c46177a56f286f87291378594bb2cd1461f",
+      "translationSha256": "0d907d6d5e940a0637e9c3b09d8cbb1fc1020caeab07af7aaa52a63c54b77dd2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.PageFrame.Title",
+      "sourceSha256": "d1a8be10d34b7d421f1be30e3bede7cfff6aef33dbff7c9468245e85e323d0f8",
+      "translationSha256": "8cc6f5a83fdb517d1f5b0004bb6c86cf3cdce8f8cd2978dba74aff59e62cbb9c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.Shape.Description",
+      "sourceSha256": "609c3f66075e8e48bddc322f349aecbc6cb699e001fccaae6639475d5fa23929",
+      "translationSha256": "48a35f7afb758f6d5e2eae1c3d192a74d3e5c8e017206845a5d7d5db14660f34",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.Toolbox.Item.TextBox.Description",
+      "sourceSha256": "c4fd911423599cb7fc9096dae224e2565a28f3f24e6b8dbe9717a1b7b65a07f3",
+      "translationSha256": "25e4745680c37893b1504032cbe8495d5969dc66b72eff52e8f2ae4feebed13f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Batch.Error.NoCreatesProvided",
+      "sourceSha256": "958fd042b8d986484c6fc91ff32868d60ef115e8ff78b1a087fbbc033710dc25",
+      "translationSha256": "4be3a49f2592daceb9aa6ceec6d3dca1854d2710397de6a94e9f86960dd21bd6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.BatchCatalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "2a2669d69c0b9e245b2db4f4ed1ce008d3b17bac09a53599cfc6326dc90269d2",
+      "translationSha256": "b579224426bf6e9119ce072e3296148706ec69a114eb1423ddb774e53c732180",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Catalog.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "903ce566010a633246af2bd0d7bf8be5c4b80b09f3bb14d7a07be8e546c054f7",
+      "translationSha256": "c9201b1d9630a64c2a67baca6cfa895541d83923769e76c58f296f96e52418cd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Error.ItemNotFound",
+      "sourceSha256": "9a0cb818e7960ccce4d329d5d500b380ea92e4cc3c45df72a6f43068289962a4",
+      "translationSha256": "b21333cf7a6607b04d97c71bfdace73e76118cfb7c339c86901ba40fb4872551",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Error.ItemUnavailableForContext",
+      "sourceSha256": "683de6ac79272adc80f6855f352f3cd9265c09a1d2b95680e5b1bc81fc9aa510",
+      "translationSha256": "d092b1f8beb919919f4af4ba129cc2ccc070888549e53009a775b70adc44966c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable",
+      "sourceSha256": "2e582881757b00e7697a08ca9701f9338f1248afb762ffa8229bfc2cce8453e0",
+      "translationSha256": "fb56cf62343aad2396fa16e626d9145a1da7da65738b44b33ca05324c3353343",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.SelectionBatchCatalog.Error.PaletteRequired",
+      "sourceSha256": "59b52a2efa976b4da43a20ba02402f6ab9762429cdd51a2b681ac3bd817a4e76",
+      "translationSha256": "aa79dc2f2357ccda97af388b761c5c1c40f0f05b3d37810ab660d0946ecee04c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.SelectionBatchPlan.Error.PaletteRequired",
+      "sourceSha256": "33ee127514a7a035778074e4821e11c403b6c4c4db17dd96ad4b50bbd6faaa3f",
+      "translationSha256": "94a93ae3f702a339c93877e5337e8e3185ba6a223e41e49f7c77edaf402210e4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.SelectionCatalog.Error.PaletteRequired",
+      "sourceSha256": "4357405801cb068f6e3e8862ad53fb39cd383fdf03529a802803811faf69bf30",
+      "translationSha256": "388161cabb8051891d75b767992efd17efa5f0263cf840fc44fb93541a71e0a5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxCreation.SelectionPlan.Error.PaletteRequired",
+      "sourceSha256": "6d2e360cf21923064a0d2ac1fbcfc53ba94671a0a784894282f31142085c235c",
+      "translationSha256": "8535703f6c84e54d7dbc15c16820354501bb1f563cf5b65fc2738f54263f54b0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxInvocationAdmission.Error.CatalogRequiresItemMetadata",
+      "sourceSha256": "5e93e3bd179fd2df793e508f490e1c101bc3d34f3b0662fa41f9757048c0599a",
+      "translationSha256": "4aedd5ceb3af2aabf5b05b33871f44b909d772c7c5f53186a5b31f64e32abe09",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxInvocationAdmission.Error.ConsistentItemMetadataRequired",
+      "sourceSha256": "e4a964bcdeecaa84b7c6aed23719212f88ffb7c8d2a25188a3efe8afd29f4ab2",
+      "translationSha256": "2d792984b63cfd05e49088e69f8be6a938f168a2e840eb24fee4fa137782ec63",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette",
+      "sourceSha256": "eb4226a4803fa46643b851b1e39b77906429f4aedba62cc078d4697d454da2d2",
+      "translationSha256": "48736de2ec762db43ec7d2d8796fc595204cf0ddf93469aba12d5582e9e0d3ea",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired",
+      "sourceSha256": "d7a6ca21941bbaef3e61fc9276960870c9a5007d3a01ad50b632283ef32f2f5c",
+      "translationSha256": "072cb8c21b2e53446111f72a05fa5dc13b9e5208364ce8f036410aef98f32cb8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Studio.ToolboxPalette.Error.ContextUnavailable",
+      "sourceSha256": "56621a1075a1640e4e0e8e7efbd550fed66c3a0e14ec0b5a4103a0ba12b3ce68",
+      "translationSha256": "c8a652c008dc9105891df4d9ee13e1b9cfab5b31bb65b64779b56064c3db76e6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "aad5c86b7600e176396476b61abdc6357786cd212693ee15ea9a077ab4e91bb6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "be26483280690878e452ae6662df59dd135df08094a3daff2bc57485e530c250",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "sourceSha256": "eae9ee1086559b066b0911f05273a786ac8dc13db831711dced3752078869aa9",
+      "translationSha256": "0825525acd694d5750197c985153c3ab50d1430a51efa2d3821f226195b38b67",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "sourceSha256": "5a3045cf7b16e37e20695bfadc73e04712a2a472793492cfc85b3dc53ffec7f7",
+      "translationSha256": "3677d79eeb792a830c20115c2e47e60405b7c72790f240621cf8c473eff27d01",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "aad5c86b7600e176396476b61abdc6357786cd212693ee15ea9a077ab4e91bb6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "be26483280690878e452ae6662df59dd135df08094a3daff2bc57485e530c250",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "6c98204f89441c133b73ffe2d3af2dc94762260aecbd084f7d652bbc137ad2dd",
+      "translationSha256": "989adc976992cfaf5f826bcec921034cfa2ba39407f30a4638f8f5c789e6eee2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "sourceSha256": "a206d7b676c0db7f387f2b05d56a234ea5834aaee89a67207b651d18fbe64ad1",
+      "translationSha256": "f6731005e02be72ec6d6b0ce02c8babd96b6f917074af81cda2b5f62f019d656",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "aad5c86b7600e176396476b61abdc6357786cd212693ee15ea9a077ab4e91bb6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+      "sourceSha256": "833d2117ecf3525899726d8829ed408f510bb46ffe9c4d0e47b57dfb48b26559",
+      "translationSha256": "af289cac5fec15ddfc8d35a5605608316f703181df0ccdf4398b5443e6c488ab",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.LogicalValueRequired",
+      "sourceSha256": "d71ebd603923bf9e9f466067a62ecccdada59b78ead603610433d978f0b2214b",
+      "translationSha256": "51bf1473f573d8183bd7c2d6f19b6a16e45a2be0502ffde3754abfd54b4e9508",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+      "sourceSha256": "81971cb33158b376795acd21f9b21c77d4aeea471867de35474cbf974a759908",
+      "translationSha256": "048bb54f90b9b6e891e557c6e45aac6aa32cd8fda7d41c4ec6edc9443f318f32",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+      "sourceSha256": "c480152db555d2015dce726e0ece872539c5b556839b715e0c36e66e2c139dea",
+      "translationSha256": "22314f22affdfcc7e51b6aa1b9a8b478f1c0b113bf33b7c72f76b3bc7e49f55f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+      "sourceSha256": "83c954478358996b2b30550a80211d7be65563638227a12fbdf25590c13a5d43",
+      "translationSha256": "0cbdddfaee5927e01c8f1ea7b3999930e4431242723ad9aacad3d3c9abd2b023",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.NumericValueRequired",
+      "sourceSha256": "7e8c761919d91f3291f023f55e91291fd1534a2db64e658f7db58f46d3db1a33",
+      "translationSha256": "24c71b7d805750e0e2bbe6531a68db5cecea8dd4232a0baa076a8f3a8ba6f646",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+      "sourceSha256": "25219856d5fc21c43e9e8fddff39c004c5bc7104b70e7bdad6fd420e3592c22b",
+      "translationSha256": "b03d360d27ecbdc8aff5d680e0bdfca708d4d0ca55dba9f86423740df73eb794",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+      "sourceSha256": "1ee93375b852a42de2cb18f5f3914275409bae34a3e07ac156c81ee9406b7cd3",
+      "translationSha256": "0f9a7d77770b6ff0500bc476408c92f7ca43b0d40570843f5ffd6ad7a0519517",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+      "sourceSha256": "4b8924b2b128cea574b5733bb8366bded84ca6f22328842c5b7a82a670475c64",
+      "translationSha256": "310fb28cce1ffe48106c5a155b41f470764d885592c2721c7645db27e18b8f12",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+      "sourceSha256": "41a9b9617b14b5187a571c8d23e30f0f26ae35651e84ad9e55c512ab3c110895",
+      "translationSha256": "ad31d582ddf7883a2c815c351d675bab0757e91aabaf6f21e9071c5f0516c49c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+      "sourceSha256": "02cc23f77334821507668e07b6daf01933f202c10aae4918a3412fe609c4d738",
+      "translationSha256": "73f2d3ebab659974f03ae5163b95a37b7d5c7873bab5539d2e385f9e54a93eea",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode",
+      "sourceSha256": "ba8d2fb0cfa2583ca4793eea1783c1aaac6145abf13153094ad341c0971f169a",
+      "translationSha256": "9a3bacab87c23f2f1b8d5110b6b0417c43e21393b465e4365e4e893275dedc54",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
+      "sourceSha256": "a800c697ddfd2536efd153ecf0bedce8144bc74a7d282b5c9e64d64e98e3f92f",
+      "translationSha256": "8fcac0d8d268f460cf66f5584dc56f628c89b0b07b574abed96600c145718206",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAction.Distribution",
+      "sourceSha256": "93354845030274cd4bf1686abd60ab28ec52e1a792fa6f7ccb9cbd0ddff53d12",
+      "translationSha256": "7c6c90143477cb4a29abb77760bfcc08c49931cabe8c1d82d6b47b743a1fe908",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+      "sourceSha256": "72a23e549d099bbd49b9266bb96afba35da89e5a93a91b056a61c9326c16266f",
+      "translationSha256": "0568d089e17add16d014605c5b552d7c9459735b0c57fdcf7160db3e756023e8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Request.DeletedStateTargetTitle",
+      "sourceSha256": "fc907dc88d8107cfd8145d7a4a30f49971f8e963336b6b66131635b14c76bd7d",
+      "translationSha256": "212f264132df894890e071e1ef6755250e535ebaaefbd4beb9b46179bcd75ec1",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Request.DeletedStates",
+      "sourceSha256": "87bc6b9cc422bd56a19663f7fcb4f9cb8b5fcd1179c8e313a4e6e778e3b8c879",
+      "translationSha256": "079a650d4265fa799863fd405b43f0350c2d657dc8f60cb06cd53f552d808e17",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedState",
+      "sourceSha256": "b722e01b1b9745ec3821378377c59dba30f375140002ed1d84877db2587dddad",
+      "translationSha256": "35fa428f962dbf3fc3901f38c50347e14342bf427a1447452312d4e3f84815eb",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle",
+      "sourceSha256": "ba2a353eaee148ac4ae5574a7b45ba6fa25cec1e3791dfd476ff0083dbeb79c5",
+      "translationSha256": "406705dc567dc0f3fd18ee7c150adb6032f16e86ef314d96be395e25b8bbc575",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Error.InvalidPlanKind",
+      "sourceSha256": "29170e567c1fcfc8c4c1b965d32371cc246db5576fa446f880dc5b4042b0d335",
+      "translationSha256": "4f5fae536ef102ce9771b1ca9ae5dac5cda124676b8c63b98a3395ff926715ec",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Error.InvalidStatisticsState",
+      "sourceSha256": "013bb9cbc21a650f9bf6c3be8b64588b9e76a139b63f5877528f778506e8f4f7",
+      "translationSha256": "e403f74426cb6bf57b70a549fea53bb28268bb69451382a1084c90a8651c56a1",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Error.UnknownOption",
+      "sourceSha256": "0151d6245c5c52129aab74e10d22549ccd8519e7a441ee68e6bbd7aa2984aa65",
+      "translationSha256": "1bb603ba732768c8f52b92619b3376ac3f36b25e4dbec462894eb57d48fbf2a8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Error.UnsignedInteger",
+      "sourceSha256": "5df52a109b25d65cf455cc8fe22dcbecd6a3d389de2963d5a3c58a70137f6896",
+      "translationSha256": "aa7a4b2ad014e4468410cbd9315b285378cecfbd4c5959367842a83f8f915676",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.RushmoreExplain.Label.Expression",
+      "sourceSha256": "b8bc0e4f01a0ebdbfe99180d4ea3cb49092d268fecd0789d2e9372fa616e9542",
+      "translationSha256": "72e037abfd1e36d5019d228b48f9f2d22b6cfa79f941bdda4c187304e4a6c87a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.TablePreview.RecordDeleted",
+      "sourceSha256": "1185f37d33b0f89e331f101a51bb8e51165c7efda15950b86a3ebcbb363f898e",
+      "translationSha256": "c59cc33f906c19bd7157ffff636f7ec7ad617b34aab77a58e93bcc50f9cf9e93",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "8aaa1e2274d4ba763886ad0a22bd9ce1a7f2b9ccba1605a7e0e858c7fbfbc18a",
+      "translationSha256": "eaa361c89724a3a4ebcd9e929acd7d7db5c0a8199e92c0890bd788c2f753c276",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "aad5c86b7600e176396476b61abdc6357786cd212693ee15ea9a077ab4e91bb6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "be26483280690878e452ae6662df59dd135df08094a3daff2bc57485e530c250",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "aad5c86b7600e176396476b61abdc6357786cd212693ee15ea9a077ab4e91bb6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand",
+      "sourceSha256": "5cd016267197a654a7fb6f3c4aadc31450138105d83e7c77bf3beba6d6c318fc",
+      "translationSha256": "addf832776df14a71530c4ecb3635030947c273506a3814fb8e24cbca492466b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "be26483280690878e452ae6662df59dd135df08094a3daff2bc57485e530c250",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "42038cc999d805c511b4b8002ff413900b2de92da2de02ab035a1db7359d98d0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.Usage.SelectionContextTokens",
+      "sourceSha256": "3b6dbfaa303a5ab004611694dbe51479d6f6985bdf324a491a50874c9df08962",
+      "translationSha256": "6e79765182ee92b02fa904bd3fd13c6d44d22106414b31ac611d01c164ca9b05",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+      "sourceSha256": "1b0070da06f1e6aacd9a82a9210a26f47ea7104fd3d6f0a5f19abb032ebee28f",
+      "translationSha256": "cf241d86480fab8ac2e3966d8eed694abbea57366eab6840f78e50823394f62b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+      "sourceSha256": "64409d073087fa895ed812329ca8054c641a5785b80d9ae24d68c6f9b3e26b3f",
+      "translationSha256": "26cf5afa219028a9976100dfb5547ade37e000d3e9c4abfa1e958e4ef96fbe4b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodKind",
+      "sourceSha256": "01d8afdcf7c4400ec964f496a5432f0c9f8d436bb86f5850add7753485f8fcd9",
+      "translationSha256": "4a1728452daa41a9b1c57cbc2bc275bfe8490c67882abd96e92209d1f98bf38b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+      "sourceSha256": "fce240b7737b5791985b45c724bdaa46435202da0760f74e58b972df5705087f",
+      "translationSha256": "3235606fb9c1ed963cea626704cefefa4f2a428c9d469d6ebe151bfdacea5c8e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodName",
+      "sourceSha256": "1bffbaf37651e9a9ef0ab5746118b7d5947009f747153ef6d960eb3959b9495c",
+      "translationSha256": "aa72b998821fbb7e3959a8a0b7b5e66000d1441499492f94c364dce6fc21fa14",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+      "sourceSha256": "706474d20917e756acca723f85d81567bae08697ed3939d45dea48dd9bb6bd74",
+      "translationSha256": "b30aae2c5f7e85249e56d44742f63c224b83fb259309c875351d579b9c4aa8ea",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+      "sourceSha256": "74aaf42770a6a7e76d0f4fe5628c7d1efc8e0bc6ddf4e2b29c4070a3317280db",
+      "translationSha256": "4628bd34ca01f2890eff558d2fbbc290cdbd292989fcc008e80b4fabdb05c2fd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+      "sourceSha256": "0d9cf24ceb278180a4adc1bf393a52d998fdef543e3ba1bc99d8fd663fa4e6cc",
+      "translationSha256": "11404e0ec482cd0c4bb63cfc45ba35d988aaba9fa51633c04c6de8522d954da7",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+      "sourceSha256": "ae0882d7d1b904a5b3787887307ca1812fbaf3a80a8817a17ffcf40a6b677ae0",
+      "translationSha256": "821e8b839502b0b45d03a5d636b62b93452f3dcfdfb650032a29ddf172fc15f2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualMethodParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "f1ff1d4a7ea7ddf962f34e6c22bb79029ddd2b118ee1a83190ca638e600b848e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
+      "sourceSha256": "aa1c0660c769c6ebe946164e1740832aaf069b34aadfc7626f220c8b0658f7bc",
+      "translationSha256": "7bf26d6dd01a0d923c9b4315e202030bad3da7136f2e98890854eb96bbbb64fe",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+      "sourceSha256": "acc466d62b7f451bd0dca12a613a1cec44e3b47b38fc6a66f6da1b6565805bf8",
+      "translationSha256": "b7eebc784705e11bdc3ad42451b8e738a72674761b35b0b15f7b10b4ad747a3e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+      "sourceSha256": "6d87341b1a701d49656366b1a49fb53ed35c9bf884814964e788eb4807851d5f",
+      "translationSha256": "a418272014d0081c945b7950da8337c686ca237c501d9173e875c0c2af2fcb07",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "f1ff1d4a7ea7ddf962f34e6c22bb79029ddd2b118ee1a83190ca638e600b848e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+      "sourceSha256": "b6578cda9f0c15e4cd1152ec8f956278da4effa3e6c8b111700d0f2c837d20e3",
+      "translationSha256": "ed749d43f5509d668898c987e3261add7448d6627e3344c55ee015225dd10895",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyChanges",
+      "sourceSha256": "9a2e98e48e053c3d2a86b966e6cd7c8e92d835f17486071af159d931add14b53",
+      "translationSha256": "cdb65533b6908528bce66053cf805b98e0594ff4dc5eea14540956907d4d4b67",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyCopies",
+      "sourceSha256": "b67ea96839bffd4d5e696ecfd1623c8a7dd8bdd1fcc4f464c729744571279593",
+      "translationSha256": "22895715720db670a940bbe8dab72e6b0a86ccced12f6f1100d5226169bd7bd2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyPlacement",
+      "sourceSha256": "7a966011a3f2b0e4d44104ba461135470e70a9661719a0290164959152a9b8fe",
+      "translationSha256": "a607fbe4d170672884dd9ba6ea074ef99b202e3311cb50cebd183aae74e16b1c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyRenames",
+      "sourceSha256": "db546f7c4c32d82f20c808c0c8f1dd3a4767fd58d28ed74b3b58a93b985e910d",
+      "translationSha256": "edb11bd6a3c2924359947a85e1f3a214e8124c6ae5af5f66619723a6c2a55290",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "cbb57c3e0e982fcef533d64da2ba254d7c357601df4f7bf59b1514660715d1b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "StudioHost.VisualPropertyParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "f1ff1d4a7ea7ddf962f34e6c22bb79029ddd2b118ee1a83190ca638e600b848e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "VSIX.CommandWindow.NoActiveSession",
+      "sourceSha256": "e1e951822e5ca70f9a189746919608668e97ecf70ce7ec542bf76f7150e4ed4b",
+      "translationSha256": "aebdc172cbf406acdb79497544b4bc32b211cde0e2ffc3e14342d20974f2bd6f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessContainer.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessContainer.Error.SignatureMismatch",
+      "sourceSha256": "7a61b6896540a896006a902ac0a6f1b3156a3b6970396e41801adadb4be75b7e",
+      "translationSha256": "8d38d259981e7b1a651168de5e4af3a9aa91311200fd49af3f13fadf2e9507a5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.MalformedHeader",
+      "sourceSha256": "2792f7f0d2c90eb9708a60ee2a25d4a255df80091f697b5aa234a50d80462856",
+      "translationSha256": "7e2459105ec07fe14ca45d1fb64bf1986743b220f1b209263336b39546478b57",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.MalformedPropertyLine",
+      "sourceSha256": "69dee81ea55d600532ad6152280b4a0c94cadd50dce4a7e24d56f097bb8aea99",
+      "translationSha256": "c16c4123c4bcdbf9f92e7d47dd28cbaef2106a4abb916ecfcc890f5c0cc8e76b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.MissingRootBlock",
+      "sourceSha256": "87e962bd2f48059c86c15da0c0c3fa2a1fa9cae047cbccc8e7c3819181a7b54b",
+      "translationSha256": "17809e28aa4c9b8d5755696db009fd1bc7c709cd5abb8fa19f07c721a1ec466a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.ReadFileFailed",
+      "sourceSha256": "b67be4551f9fd9d67ea3e34def644d30fcafd4ada2ad30a34305c142b750a1f7",
+      "translationSha256": "99de66d35efa5c4e4970a7318cf216bdc2b9292e9cb358795a26af44ac159417",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.UnexpectedTrailingContent",
+      "sourceSha256": "93b8a094a61b45fe7ca62db841605758b24f3a47b077aea1359659bdc3b70f7b",
+      "translationSha256": "aba23b7d69e0b851e9f46202255d7d7a5117d6150de73e679f4f13d791401e01",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.UnsupportedRootType",
+      "sourceSha256": "8f5705008814a69e7e183a246ca9a9e779b5af9fefb4a8231c741d2bc56781dd",
+      "translationSha256": "c62f14f848f6d0099d3ff28a4faa0a86428e4e1c346985144af186067ca5a77a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessDesign.Error.UnterminatedString",
+      "sourceSha256": "727008cca4a378ac6c1bd99052d9e91225eb15526c2f3654ca03bd8466c7dd7e",
+      "translationSha256": "d6cff5e6adf5b64b1a7e5f855c9f3fa4698e5740d4937dcf31b552c11360b7de",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.ChainTooLong",
+      "sourceSha256": "5e5771164273b895f89e5ea868f81ba484206e0ec1a04a84b3f931ac4f85a52c",
+      "translationSha256": "4bb65ce3a0f25723886c603537c033aec2915f5c151b74419735698fb97bcd8f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.CyclicChain",
+      "sourceSha256": "a6c1e79c54dca871b1acda3e507c1352732d5caeecc3eb2da41ca3515b86887e",
+      "translationSha256": "4e72b5d30e274fee962fa76d14328805cb99a640156241e46a8f1e910a63887a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.DeclaredLengthExceeded",
+      "sourceSha256": "a8660ac1f5ac1984ad23453ba7f65462d609671a9f43c6ce3c7e21d8867951e5",
+      "translationSha256": "4a8e65d9fbeac709e8af49e9dd7b6a869066f3125e08f804d4bb3aaa87144e02",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.DescriptorTooShort",
+      "sourceSha256": "4150826c75bdd55d8606759a6ee43a74fba7bb183ccc92e0075eb43a4d4609a0",
+      "translationSha256": "455b0ed7b18b8bfe1d92cce2b33745f691443e93b5da03275996e4ba902908aa",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.InlineLengthMismatch",
+      "sourceSha256": "3b1a34c18f2ce234af59f8c0da52653d092ac8c5a1b9ef5690c37acd3452a8e5",
+      "translationSha256": "e1b085945e297eb818b4a8552df435e05a3ce90d051a19dac0b7815e58b43853",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.NotAnLvalPage",
+      "sourceSha256": "7b9fe8a28efbd5b4bed5036df1b13dacdcc30186612932f6435abb90539c20e2",
+      "translationSha256": "2163b77481e6a1715b6bee65cde29b9b251aa7afe1e536284ba637908745bbe6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.ReadPageFailed",
+      "sourceSha256": "3c3200712e5d09fee9d22061e7024ef3a46e4481e0b04e60d88e10b7fef41bd5",
+      "translationSha256": "15d357926a7c3d163bbb15854b20b4afe214f7d5953d3082d7cec22c433ce09a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.RowIndexOutOfRange",
+      "sourceSha256": "af7264a50ef524e4f7995feecdd6d06feabde59cb1fa047c15c5727ba0f3496c",
+      "translationSha256": "b48a20234d57c5c4e6e6cb9e2babbcf4496cf7185ea9a1ec48574fc06728add2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.RowStructureInvalid",
+      "sourceSha256": "5e4065ad8e62cf013d11f76f48d742d737a409be24a82bcb5f7fcd0f23db58aa",
+      "translationSha256": "f29642d15785856b908e6b28411fd96c5ae2a3ed1af9410871fbb8acb6f167d3",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "3297c33a2026cdca54b48e78717cd99115e304415c7281835facee92513bc667",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessLongValue.Error.UnsupportedGeneration",
+      "sourceSha256": "4013eda7f1e16031473d46e1c73e617b78936dc555c163e4a7c20543827e8be0",
+      "translationSha256": "f1488d7560b80434998eefec9f6d9456d606686fed0fee9a24b1f3f24d15acc0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.ColumnCountMismatch",
+      "sourceSha256": "fdedd6400a7fd2c581509268e24f96abd5636df7116df754fa33658327174c5b",
+      "translationSha256": "368db341b43a09c69c8599a55dd70af9d3284cd9d6840d9314cfac35ff58dbd9",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.NotAnAccessContainer",
+      "sourceSha256": "32e2b823cf9b904b7f0c21c7b094965023e7717c16bef2643a41446d038bf87e",
+      "translationSha256": "c737d1cd45fea2a471412b2d3d718d9b63e2aa9f9b5ccb74d82c620fb370e56b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.ReadPageFailed",
+      "sourceSha256": "3c3200712e5d09fee9d22061e7024ef3a46e4481e0b04e60d88e10b7fef41bd5",
+      "translationSha256": "15d357926a7c3d163bbb15854b20b4afe214f7d5953d3082d7cec22c433ce09a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.RowCountExceedsDeclared",
+      "sourceSha256": "968d351381e8d9b8af7a58d7f00e3f2d4d20653125e131d6c2090ef1fc0dbf04",
+      "translationSha256": "44b1271542bd214ec643b9858bcbdbae8e79e971a9404669b88dd326c336b074",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.RowStructureInvalid",
+      "sourceSha256": "729cb7d1008652c135668f7f543e9808755935af116b58f8bd9bc587e0c1d87c",
+      "translationSha256": "cf497fd7b90cbf17a2a4e1e2a3b13da33dc770c0c868734b04021969be3e7d93",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.RowTooShort",
+      "sourceSha256": "9626cf1b042771b7a75660ddb28afb8785c33bd32c59afbce732a1094606bfc9",
+      "translationSha256": "2570837c50aaa5f4c98f8c61f423d5e0f4134ac658b8423f2bc028e28dc3670d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.UnexpectedSchema",
+      "sourceSha256": "e867a69607a2aa411ac7758141a8f3fcbd563efcb9257cc83e370076a3d0ec95",
+      "translationSha256": "bc63a6e351900d69812cf69924dfcdc7555e111859ff03d4a21ca0f131bece4a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessMSysObjects.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "3297c33a2026cdca54b48e78717cd99115e304415c7281835facee92513bc667",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.ColumnCountMismatch",
+      "sourceSha256": "5336f7cbfb2241cece26c99baab9314a4e45253e19ee21b594bf8398fa150681",
+      "translationSha256": "d4bfb30adeedd757e28cd7e3dda8bfc1a041849e236c62f676e29c8fdc502fbe",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.MSysQueriesNotFound",
+      "sourceSha256": "86affc3cc7425ead9a60cc42de787a79c64e6e2b284f0b6f47059b25f30465bb",
+      "translationSha256": "ca9a355532b9245d61a946df0db4dd562af500e136d8c19019cc11d06659c89e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.NotAnAccessContainer",
+      "sourceSha256": "32e2b823cf9b904b7f0c21c7b094965023e7717c16bef2643a41446d038bf87e",
+      "translationSha256": "c737d1cd45fea2a471412b2d3d718d9b63e2aa9f9b5ccb74d82c620fb370e56b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.ReadPageFailed",
+      "sourceSha256": "3c3200712e5d09fee9d22061e7024ef3a46e4481e0b04e60d88e10b7fef41bd5",
+      "translationSha256": "15d357926a7c3d163bbb15854b20b4afe214f7d5953d3082d7cec22c433ce09a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.RowCountExceedsDeclared",
+      "sourceSha256": "6512f4692d4fd955a8034a610ebdeb19bfbf439a3c93dd7be0759995f1450dc5",
+      "translationSha256": "7c8f4b60718344eb5c7f5806e34075fdc459da26c077d64ca50af5ae8a5a9f87",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.RowStructureInvalid",
+      "sourceSha256": "729cb7d1008652c135668f7f543e9808755935af116b58f8bd9bc587e0c1d87c",
+      "translationSha256": "cf497fd7b90cbf17a2a4e1e2a3b13da33dc770c0c868734b04021969be3e7d93",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.RowTooShort",
+      "sourceSha256": "9626cf1b042771b7a75660ddb28afb8785c33bd32c59afbce732a1094606bfc9",
+      "translationSha256": "2570837c50aaa5f4c98f8c61f423d5e0f4134ac658b8423f2bc028e28dc3670d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.UnexpectedSchema",
+      "sourceSha256": "b86365f46090260e6b54bf0719d22532cb2c748b989f50ec4c5b04bd18a1de8a",
+      "translationSha256": "b419b701fc4133fd0a7ef40e9d8231f3c0b8e3710259d3d74841558e09f89fa8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessSavedQueries.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "3297c33a2026cdca54b48e78717cd99115e304415c7281835facee92513bc667",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.NotATdefPage",
+      "sourceSha256": "24cfed4826fc9d2bbaf45a7577e33f905a4cc16c870b2cea538af52e9e3f1b00",
+      "translationSha256": "3c522c7f0c36b93d4a83558f0872f76eaabfd7ecc6d31936b403c36006e0a6e7",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.NotAnAccessContainer",
+      "sourceSha256": "32e2b823cf9b904b7f0c21c7b094965023e7717c16bef2643a41446d038bf87e",
+      "translationSha256": "c737d1cd45fea2a471412b2d3d718d9b63e2aa9f9b5ccb74d82c620fb370e56b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.ReadPageFailed",
+      "sourceSha256": "3c3200712e5d09fee9d22061e7024ef3a46e4481e0b04e60d88e10b7fef41bd5",
+      "translationSha256": "15d357926a7c3d163bbb15854b20b4afe214f7d5953d3082d7cec22c433ce09a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.StructureOutOfBounds",
+      "sourceSha256": "5e7f4094b2b24a3cf2c89907d976b17147345ad9bbf4ea24a781a0b7931cda1d",
+      "translationSha256": "513bef6434bd042c99e57e3528d9054c8ad1662584ebc9ad6f9bd7a4b6b26cd8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.UnknownGeneration",
+      "sourceSha256": "585cd239e8fd6c5c41effe1ed416febdbda2662b7928f4f06716b56b9a003f57",
+      "translationSha256": "3297c33a2026cdca54b48e78717cd99115e304415c7281835facee92513bc667",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.UnrecognizedTableType",
+      "sourceSha256": "68ca27d47536a9c80e700a06225a1124761f70ad748b5985dd621058c91bddb0",
+      "translationSha256": "bc41c282f0fd3d148ca6fb575d8aed51e90fd55f2cf822bb40f891c240ce108d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AccessTableDefinition.Error.WrongPageSize",
+      "sourceSha256": "c088e89f89d856498009a5f916fe4d81f9a74ededc9052251e1ae4210782f62b",
+      "translationSha256": "9d76dd116af11e70cb71389b441dcbe399feb7471777e74bc32ba3c66694bc32",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportDestinationExists",
+      "sourceSha256": "5d4c9e70762eb9cd16924cb9dbd10c2d46629e4a99adb2ccb4b94c13558883f3",
+      "translationSha256": "7ecb785e2a572834c2f1369b11f61c1cc08345ce93353f4126f32d10c9738f6b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportDestinationScanFailed",
+      "sourceSha256": "cac229ca8b2661cbbbb9dc8b95cda172bc819368e8ef93f22f60b16ac62b4de6",
+      "translationSha256": "0b97bf85e0bda9814da2a754ab87e39a1efb773bef2f84b1748f1dce881c41f4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportDuplicateTableName",
+      "sourceSha256": "19dc374b2c0a01cdf16267a3c9d47bffaacf25db35ba2c6c1c62bb8e2fd4da80",
+      "translationSha256": "6887f96eaeb7718a00dac5dc470c4359ecb9497acfe29c33ca8937702fd375d7",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportInvalidRecords",
+      "sourceSha256": "99a009971366d567dc4729f1d16ce64fca2131f168369d4da03ec3d824d29bad",
+      "translationSha256": "0a8a2a47f8818f602ccae81b0d61a0f658f7a623697794a7d8126a87ca441895",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportNoTables",
+      "sourceSha256": "929b686a5b98b451bc56fe4e9a68975cae6cfd303c87780b3d7970744cefe38f",
+      "translationSha256": "f16f0aa846ebe4773b191984511bdaafc6fa83b3061e0c58169472da3b380895",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportStagedFileIdentityFailed",
+      "sourceSha256": "3147dd7259f18e21d7eb638d4b6ef48de6a0817d86bb114bc63038fdb0490f5e",
+      "translationSha256": "01921da39baea12b28050e7e444363297b994dab104598ca1060c863efc62bd2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DatabaseImportUnsafeTableName",
+      "sourceSha256": "7211ffab2328478236771566a5ea80972438a7016d8ad842c29c05b54e98af72",
+      "translationSha256": "c0fa9d5457d5502bd79d57df79aac86db0c3aa5c3a3a1faf3bf4888f4e1a5ddb",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
+      "sourceSha256": "5c6eedcc6c9b61c4038eb246061ef2970d5f54d3e790a759c7e5971158750483",
+      "translationSha256": "aaa1fb7b630817589e07d255665bc06c73b10536a05bc9dfc042209b89861a16",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcPathMissing",
+      "sourceSha256": "1cc343bbcd13c0c3896b21d22a6875ac89312ccc774b78dbc25e0b0d767eac10",
+      "translationSha256": "d31d5758f053400921e4566f192f356720af6ab10f877343a0897f198bd1dbd4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcPropertiesDecodeFailed",
+      "sourceSha256": "96a8932fed5ed921856d743e882310ed6ec3a721baa0f33f236f609c74eadb5f",
+      "translationSha256": "07ced07c3577ca61b2636a18fac5215d1eddea03956526eff7eacccdf6e1b0ca",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcPropertiesMemoTruncated",
+      "sourceSha256": "5d97bcac6e0ce0882f9c7bc1ecb15e81d5caa57e8611cc300e14c0c5eec9afe8",
+      "translationSha256": "74fd23b8737ecb04139a290b7c511a789c550435b30ec9f242287d3515773891",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcPropertyTypeUnsupported",
+      "sourceSha256": "9fc798393df8f52997fb8f24f44e914086db0d891434fc7ae8b8d8164635f7f1",
+      "translationSha256": "53ac031a4bf26ed7844eb5ea7748bc37a8f951df804c6aa12bc2d20ce3483d61",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcReadFailed",
+      "sourceSha256": "aba4f4bef418e13265576505debc71124be83e8cd972cfb2ae875aa5e7ff7f75",
+      "translationSha256": "54eb1db718c094fcdaaddaaeddfe7f3faee55e0beb977b844b48382cd3f23121",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.DbcTableNameUnsafe",
+      "sourceSha256": "29ddc939e2bd42e1baa7f4b6a52ad2c2e8ee8693f2701aa5e34b76f46afda58a",
+      "translationSha256": "8c6e0b43fdd6d50bf874a6833f6405ae9afb06668bdf662d516c0f1f79f67dfd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Error.PathMissing",
+      "sourceSha256": "70a3961bc47925f7163865859ca63d3f9ee3553f75b4b17f13799475b241574b",
+      "translationSha256": "88933f2a3f3a8cf25fa0e5f0e38acfa0747bab37ff82ca4e5630ee058c6d87ff",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned",
+      "sourceSha256": "2d35860572efa143f9ced2ceb334e472ede8259dca518af723bcd8a1788dff2a",
+      "translationSha256": "d2829b97f6c5d2d98d090b14f15c7f37522caae97cfb66925fcc6100802fd0cc",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing",
+      "sourceSha256": "6dbf427e7db29fb31da9e88e88db060ddace890d2120699558fdb7da9fe02b22",
+      "translationSha256": "a9931139974528c346f818e300223ca22d828ca2668fbb80f75cc202a261d92b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorNoRoom",
+      "sourceSha256": "59ad9341e85e00d20036ac41b874aee80faad3cb848e17fe55f94506bcef1336",
+      "translationSha256": "d3ba19b77d73c3df518e78139a1b3d165cb7fe735dca7bbd4d113bfe68d708b1",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldCountZero",
+      "sourceSha256": "f3d2d4d91d4e8b38feb65ef511cc58c0f1e73f61b752b2c1ba0a68872f038d0b",
+      "translationSha256": "a8206cacc6e9a60089a3032ce7c542f2b602fa54b1089dcd65b7284d645aee28",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldLayoutOverflow",
+      "sourceSha256": "911ad96f9c8e5c67ea244b49b4eda78ffd0cf89dbe42d0dffbac6ad496d5d448",
+      "translationSha256": "090e8025e3eff17622de2a5572ec7863b2e04be446b3d5131928090cc0f20016",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldLayoutOverlap",
+      "sourceSha256": "a27e6e53a4aa3660bd83d5653dd5294cf471b428113dadb3d31567156c6c6f9a",
+      "translationSha256": "e529e216b7ac645bab6937b2c93576ef0b951b61b5f3f528d309cc101efc8f7f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldNameBlank",
+      "sourceSha256": "254ebb81765bed5dfff70760281cf8761e42cca760478f588bcfefc7fbedc19b",
+      "translationSha256": "546897428c813059a7c8502fc2a6d970e651f797afb53d42250373b58c2d9f53",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldNameDuplicate",
+      "sourceSha256": "be7e28525809036101e9a662769ae31bee913ddd68a548a5a31728d876f38cb1",
+      "translationSha256": "e764dc759e970a6c883828afb60f32f52890320fe9c5de9083bbc1d8d4d7903e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldNameInvalid",
+      "sourceSha256": "75bd8434279c70e0f500c2309b8288e3867072c8818fdbd956f044287f7c15b0",
+      "translationSha256": "23eaf650ad8beeac4e70d57f186599ac96993f449217671f6fd6dc6636e2008a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfFieldOffsetInvalid",
+      "sourceSha256": "89a2d2c584eb00bb845af940905b0dfac9944351d123cc30062a8d2c6018a5d8",
+      "translationSha256": "bd08ae4b0912dd87a345001b04a5575880faf5cfc83f9e360585785ef9e39853",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfHeaderLengthExceedsFileSize",
+      "sourceSha256": "bb95f1edc6182c1819d646bbf30f1897c0cf6a7af6e65ae535a1fffd460aaa28",
+      "translationSha256": "edac55f5662e87ca93b35f21672bcdabfb37fd90f19e5ad49fda61d46413494e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfRecordLengthMismatch",
+      "sourceSha256": "90c012d0906f73ed9a68a5a06b29754c6eae7658b1a1800c778de77c70ec4df1",
+      "translationSha256": "6bcfbcb2a55c8519213e637dd254e7ffcaca0a3cbbc2d9dd7dfd3542b575cfa9",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfRecordStorageLengthMismatch",
+      "sourceSha256": "e87fe97521716389d09ce5698e96566b2aeffce53ba6507ee67ce40c2a496adc",
+      "translationSha256": "82d56c8b000c05019fc3c3ff016739e8b0a2b77ee949c4ca25448a94829b7f08",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.DbfRecordStorageTruncated",
+      "sourceSha256": "0ed45f885c58b852c20462d1056e7ce32fea846ebb84d253887b86a44444463c",
+      "translationSha256": "549f19a7cfdad172d707d35879e44d684af41e4697913f594d7b0afca3c65ad4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.ExportTableHasNoFields",
+      "sourceSha256": "a69ea5cb5e94bf6f11a70306a7f564ba0da56296b212bc758608be8e1ffd3471",
+      "translationSha256": "cba5435695c3889580431124696a3214c9c311b77e055f2fc54c09b38603384f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.MemoBlockSizeInvalid",
+      "sourceSha256": "b353c82385c7ea1e61c7a6358ae04a17269c64537b1d6fc43dd2a1911f15a213",
+      "translationSha256": "85741d279ae6a6f77ee93b762b34608e65c7bc6095a952e5cdb5e3322f53bca3",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
+      "sourceSha256": "bbe9684a6c91ab51add23e304b6cef669739de2bc317e6af3397e24f78bd4340",
+      "translationSha256": "79e1f580326908c09ce4f2187995b7d0afedd39b532dfa5ec44fbab47261a9b6",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+      "sourceSha256": "6eb26c44256c0f230a6b6481727e388ae990af44d4330d32e32ae58d546d6a73",
+      "translationSha256": "3fb56075b49f40ce5543c449d1c9fd7d76b677faacf1a636831fcf6650efe8d4",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.MysqlIdentifierTooLong",
+      "sourceSha256": "3fc189c0eacf10025f9a0b8a9ea0086772a46bbe8fd1bf246112ba52387d7dfd",
+      "translationSha256": "5284aad4a345d7208299d6a3a07857f206761316112fefe6d406f5a717483d58",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.OracleEmptyCharacterValueUnrepresentable",
+      "sourceSha256": "3eb94d63bac932b445aa060c12b1639c93aa8d81ce8bf59422921429a7ff5f9f",
+      "translationSha256": "e5d4d85ec8af02c9f8b261e14ac280a349753b908e168646aaabcdcfd2570126",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.SqliteNumericPrecisionLoss",
+      "sourceSha256": "02867fba3f1fde2a26a459cdf0a1fb21dd42563a893c67198f481e6c023b5ac2",
+      "translationSha256": "418357de932c969dfdc1788995df37632e56f0888f86d7054b86c5f809df631e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.UnsafeFieldNameBytes",
+      "sourceSha256": "6bccffcbfe2ccc6a2f5f680bef771e65b545bffb48def2617b3befedc873324e",
+      "translationSha256": "eaa6820e7666f525cd7f3b3bdc0813b5b4308d243085e94a943f669e2a470c4b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.UnsafeJsonNumericValue",
+      "sourceSha256": "43b39a5be5c24995a5ec26431a177f2f1f62c64104c16bcc6f68a5e423aa3f78",
+      "translationSha256": "39e10188419857fa5077a22fc4b4e483a4b0b589d6ca03a3bcf5cd25c69c7f23",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.AssetInspector.Validation.UnsafeNumericValue",
+      "sourceSha256": "9936d3322339e07049b4cd8ea944dfe19b200276f7b06a1788c3c295bfcf65fd",
+      "translationSha256": "121c86813a74d5b91eed2962a6ffb65687d47b55218bad0de9629b05d1a474c3",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxHeader.Error.InvalidValues",
+      "sourceSha256": "a0491e998b3665bd31a9070609aa39b7dda845691dacebf17a7765e4d0919833",
+      "translationSha256": "903f11f4821d3a747346c8f07e26e351d505cced8c886464e02641b5a3d03d09",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxHeader.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.InvalidKeyLength",
+      "sourceSha256": "bc33fc5cc6caa15daf16ccc4c106f65cbeb127e70e817b0e6555512e65288fc7",
+      "translationSha256": "7fcd27f4a2e8d594e7ee21f681e25aebcd8f480f7f4e800f8d141348522b2cac",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.KeyExpressionTooLong",
+      "sourceSha256": "57a3a58da25f539c8721170a1aa8306441d640bffb98d7f1f0f149a572efabab",
+      "translationSha256": "e04d0f661933a1291e8d923281903dabb34199e12787962f34e78ba70a9acef8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.KeyLengthUnsupported",
+      "sourceSha256": "d3477e42314a40e49ff198765b34d0dfe27d2f9e6f121a4882263eb589e163b8",
+      "translationSha256": "77fb9ada9499b93e9625266809b7f11711b396e8850e49d5624be39f7a254f4b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.LeafPageOverflow",
+      "sourceSha256": "73c5adeadb3d50ff0cfdad2d804a6f1a73d5b7988ebeb57f31cc079fef72335a",
+      "translationSha256": "750a655eaf5ea6e110e033dce8a38d9b459aa7293cf4a26f181753f887acf8bb",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.OpenFileFailed",
+      "sourceSha256": "06eb6ea8ce283e8448cdcd570a20d8cbcbb5fde9c52de2eaae9d1f87c44ce942",
+      "translationSha256": "0f43c2bbedd5f9beb54d8ddd1c0f4d68098b481baeaafa8fb0b9256d958ad85a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.RecordNumberOutOfRange",
+      "sourceSha256": "e70672e9b1b0181cba2b68b27e39815ebd0a4a0d545b5806f45c89284434cb6e",
+      "translationSha256": "7ce63a3f3b0968c463dff5dbf284e32ed9036be525794c3ee34d0916701038ac",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.CdxWriter.Error.WriteFileFailed",
+      "sourceSha256": "23532fe9265f0d20cf48d374d49eaa26a4214fb7086e18f2f63db029e889a8e3",
+      "translationSha256": "1cdc9977a653dc6a09c7ea4f0d220c95fb30c9fbf0cc781df6d2396181795e61",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Error.InvalidValues",
+      "sourceSha256": "5f746c8431eea2124015b3a021e0d01653a34b47a5e01d51ac3db11724705acc",
+      "translationSha256": "a24b363cb96d5f6d54f3655b40e046854c09e046ca2ba037f1d8ee41d5eadca0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Error.ReadHeaderFailed",
+      "sourceSha256": "8f674bc3e6ee00f7588de1a0bec8df2e7de523bdebd936767336e3ff864875fe",
+      "translationSha256": "69f5196e6a9b38a270e352e48f4ecc351d21802f2ec50b7e2df6b97bca81dcbd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Error.ShortHeader",
+      "sourceSha256": "8556516d82fb84cf306ecf316c7c3f4ca05db3512dd1bf285d9463c2c47beb18",
+      "translationSha256": "d6b5855a8adf5597f7548351fbbb9ef04fa225b11034e2bff1a6ac157496f8e0",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseIiiCompatible",
+      "sourceSha256": "6d55ee5ab85bd9a820b140842038f047bfb7c172f580772e6f20fd0c09154c06",
+      "translationSha256": "1b7bafcb42bacb231594811070cb3295fd51a84e4125b7f751c5bd894c80c9ae",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7",
+      "sourceSha256": "2c8b4edc6cf0d05aaa428a5cc252f9b2c9eab804b5682280a859bd1cc1ca428b",
+      "translationSha256": "cc7e790269db3cd416ca08311856a9e4901669eb89c6127e8c14d61c5b383e51",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7Memo",
+      "sourceSha256": "96a35cdd42dcfdac80c819865faf1ea954ba70486b965d74048270f7a8ee620e",
+      "translationSha256": "f0149eace28cfd4830f2d0c3bc6c5bdf9289efa1b156b000d32493832cac7561",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7MemoSql",
+      "sourceSha256": "06c99e3ff332798e3bd54b7be1a6df144d903153940d0df090bf8511f8ad3d69",
+      "translationSha256": "7979f66df0658a640ac409f5e94f0d732d9c3d804bf445d9d4cfddc032c3314b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfHeader.Version.DbaseLevel7SqlTable",
+      "sourceSha256": "a93576a1c38e422840ed18cca7afc6cc85726ffdfbd5bea2ed642b4c8a535b0a",
+      "translationSha256": "e192a078aaff3146bd8f3204cdce24725b03006ccd9e54d19c8779e1ab1d51ff",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfImport.Error.DestinationExists",
+      "sourceSha256": "fe53177177df6a05bebfe4f2739e5e0015b97e90d28d6dca75796e8f30a7e1cf",
+      "translationSha256": "71e527ef85bc9ec4aac43f42d74903f05681841da9ac218bff572f68cee744fa",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfImport.Error.RecordValueWouldNotFit",
+      "sourceSha256": "4dc4784f330274f7168844f9639e6b92f5b7f44602c2dead26fca9c40779a12e",
+      "translationSha256": "a39c5472aec6ad2f3e72e9f81032cf8f7d21f39d42db2b92a66fcccfe491a571",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfImport.Error.UnresolvedMemoPayload",
+      "sourceSha256": "d1174dacb4442add34dc98bddb25241309f500c878096b74a5605634075c27f8",
+      "translationSha256": "f0ac13d3f60c8f73d56dbdc59942f9eb0b34295995f600e478c0417dcd9935c8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.CharacterValueTooLarge",
+      "sourceSha256": "4fe52fee4ec4746478e7a2c63c5e51c58c64c4f6af5be9f5c511688fd96ad2cd",
+      "translationSha256": "5e8ed668de93ab6daae59d23e2b308493244fbe1ef11dce4a4013cbe305a63cf",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.CreateDestinationExists",
+      "sourceSha256": "8323cea88dba32e0e4199ab48fcba49347ec2738087abdc5390d3f4610e0bff8",
+      "translationSha256": "5abda3446e674575c62c1c7c96fe8128e7304c2be97b10fd756658e0932473a7",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.CreateFieldRequired",
+      "sourceSha256": "5b94a1105079c3bdb7838b3bf1c7bc199501bb47a1298aec52b939a64eb39bb5",
+      "translationSha256": "23e629c5828d04e330383014de5d1a25cb6c377181cf3a99d418ca22d42e9a9c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.CreateUnsupportedFieldType",
+      "sourceSha256": "5c51968b9ba92d8a90152b7999767c54df13e5672450a34e770f7b01fa440471",
+      "translationSha256": "ff983a7035d7da8690ece392f8725180ebac192765a091246328d7c28b37b5bd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.CurrencyValueInvalid",
+      "sourceSha256": "4c507d2ecc2190afbf51c48e052a84724c364470f1dfebc7b6f63adc4e145236",
+      "translationSha256": "659c8b573b256f7ea8841d38fca14503027c40e3c31311436eb5107b1743e42b",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.DoubleValueInvalid",
+      "sourceSha256": "ac3711196031c71f457a65d846f06958db9f4b49000964984406073c245e656c",
+      "translationSha256": "b55e1dcc658b584ca5038e5fbe0fb66c3104327a03f2fa64f95def1708e86868",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.DropLastField",
+      "sourceSha256": "12a31be1a1f3fbd1589f14c73f23df192dda4ac0cbf54bb9451aeb5362302f7e",
+      "translationSha256": "9c9da52ed8512af3bb78d928b167d8cda44e97a20dc6d25c6edbcd64d6f681b5",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.FieldNameRequired",
+      "sourceSha256": "d988cb9e2e7088cc2095dd6d8197d16cb636355ccdf82ccfc8c1bab9a4170cd5",
+      "translationSha256": "14108eb70a7e3f4c5113c0888d0cd424360b55eff60311a2cd3cd886e977d2c3",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.FreeTableFieldNameTooLong",
+      "sourceSha256": "f4e721e2ae51ab6a238bff000b77aca1dab700c6ab0e0693927889e554df6a82",
+      "translationSha256": "1be6da2ac3e945075bbfe3c6aa1ca66f95eca95631d60383b7508be32dde2854",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.HeaderLengthExceedsFile",
+      "sourceSha256": "d696a59d321bbaaaa0655d484c712fa73fcf71944dfdc2e871916389abf41fd2",
+      "translationSha256": "3e1c5969586bf29475a9841f9bbe4a1ee3d8676bb05ea70c4fa11e095f9ed379",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.IntegerValueTooLarge",
+      "sourceSha256": "dbf760a29a26037a732312e6e25f57f33b289d0023cb3224aff3c770becd7673",
+      "translationSha256": "e3dfa5e9eb0eb83aba6803055884ce529b8c9eeeca88c73163e167949e96fc1c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.MemoAllocationExceedsLimit",
+      "sourceSha256": "92f23dc1f7387f8e454c77baf7c90b3e8304e813befc40c0322c19c5a5c4fbb7",
+      "translationSha256": "9ab888387a1a4e502db31249a58218cc9e5b3f9a6f259ae4cdd63f9145adf72d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.MemoSidecarPathMissing",
+      "sourceSha256": "ea65105d881780da96d5a831f1caeb1176afad1e909a35686b78748d0899c890",
+      "translationSha256": "5779160f284f31b4ebde7daced16ed6ad03236f26691ac37bca2e11edf01ffce",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.NumericValueTooLarge",
+      "sourceSha256": "c344b7591e6bc9109af41e20db6bd1b6642a7de8285ece83ffd5a832e6b06ecb",
+      "translationSha256": "fde11a130e64b300918b2e28ef4855e142f84123c90b6f7d7363545cb0ce56c3",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.OpaqueValueInvalid",
+      "sourceSha256": "9da42b70c391d70658afe0be99741a355af543b49d7eef8ae869c1ded6bf75a7",
+      "translationSha256": "0b57e67afeb3ceaf841a911cc6a1106a539b8480d38956ff3b4a388209918e9d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.OpenTableFailed",
+      "sourceSha256": "40abf179c19404a0d7834570ce2a336d8fb1ce7a5844db2ea140af7e0e9d0b46",
+      "translationSha256": "520f2fe3b2f8c16224ed74774cc3c839462975259506def340b09fd8431a1da9",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.ReadMemoPayloadFailed",
+      "sourceSha256": "7beb5e10de726ecba5275cc57bf7183417a20ce2cdfaf3456fb760b00596bcbd",
+      "translationSha256": "7a57f000b4f6379cb319bda10e88522e57afcb8a79fa6fa74ccf8b463396d66d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RecordCountLimitReached",
+      "sourceSha256": "d350040cb320250af3c5342d2bbc33445d0df38e37de85e6178f8917b6a9577f",
+      "translationSha256": "36e939c82a5c90fb45f3768d50a916a1995d36b8fa811e987895b2022031db0d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RecordDataTruncated",
+      "sourceSha256": "fb465ad2d406dd619f19bbfc55061c94677d9c63ae7834313fb38abf517501fd",
+      "translationSha256": "fd774f1834fc47767ccf021879699ee65b271fe903230013abe75c28f6c79e6c",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RecordIndexOutOfRange",
+      "sourceSha256": "7e9cb9b847777a7e18f462c9ef428d6e90521a44032b08435a780526f39be479",
+      "translationSha256": "d8b446b723faca26634e04ec37bb42abba50e8c22aa77a18916e2fadc1108e62",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.RecordWidthTooLarge",
+      "sourceSha256": "43689c37c447259cd88638c65a8f655b85cb12bafdafc97e0b423c3a6798ba74",
+      "translationSha256": "3b7b773c902740eb38cec01a788975d81eedde0b06f1ab957f0a74c283709819",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TableDataTruncated",
+      "sourceSha256": "fe4928b21463ebd0a18c686c58f6e4a3fde6b01052925fe74ff84e8fea894082",
+      "translationSha256": "ee2b4d4d15b356cda92753c960cecccf3f434d362c762be0082f49c299e10e6d",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TableHeaderTruncated",
+      "sourceSha256": "f7ea9836150008b8777f2beaf848cb866aefa91e290b4ec100f66146424fc9a5",
+      "translationSha256": "ff07205d81c39b171b01882d69ca6285d02b1110ade2eba8a2d684d7bf0c98db",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TargetFieldExists",
+      "sourceSha256": "1cb9bd45f0f73a5719cd3269f5533ce440a40f60931171ac8e32c02831d91fa1",
+      "translationSha256": "403458f9b0d5d72684ca5dab028e1da6d9147c873e91e9435f41bd78256ce073",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TargetFieldNotFound",
+      "sourceSha256": "31e59959be09bb08cd874f4cc5ecbccc6cea57902467a2b4001932a4dfb49fe2",
+      "translationSha256": "1ea079a127a8f1d129a87d608242f3550d645e9ec432879aa56f5a04394d1f89",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TargetFieldNotFoundInTable",
+      "sourceSha256": "e55ec34490d7304a8d00fecfcbae0c17e4191583b8138e1c6ffdc80695cabca9",
+      "translationSha256": "7d77d2193ca525de83040e46c9ef858f0c07ca481c3e2f84d5c6f874ac1d1867",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TextEncodingConversionFailed",
+      "sourceSha256": "a178ea4b6aa7a98c03089b93de4477e7fb3f26b6ed341230895353aee8c18e9f",
+      "translationSha256": "9659eb7492ddd16d5dd2c6b44a124780d212450c97d501ccca70f34f58151388",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.TooManyFieldsForHeader",
+      "sourceSha256": "6558e2079e1d201082c5619eb7ad5e54699b72b28812c28adeb63fe01081d945",
+      "translationSha256": "75357d60bef32e15f20e97a9d1cf6619867a70b518034f2b6c2912f369d3395e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.VqValueTooLarge",
+      "sourceSha256": "df681edff8299db0e7146795da03d9138a2b57867041b6a17bde49c693cfd0cd",
+      "translationSha256": "a88fa8cf6bc5dd490128c2a44818b8b3feca9c1a996792b58c58e5fb5b12c592",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.WriteMemoSidecarFailed",
+      "sourceSha256": "b34d22d9e39327fc0c744102679aa24c5a0945de9fa1824275933c01c5e4c5b1",
+      "translationSha256": "5512428e0ac54e3400e83abaee9714160b8425318e92066db21575fb079a276e",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.DbfTable.Error.WriteTableFailed",
+      "sourceSha256": "dfebf0891266447cd84d46a137a12a6360ce98947c994ad7ba7ca8fa679bb4d4",
+      "translationSha256": "565739d523064a20784b7d963ea43430e4209e46d816e8edf60ba0d3a6a714cd",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.ClipperNtxHeaderTooSmall",
+      "sourceSha256": "cf32fedfc8f03d72fb184fc56aaf514d90a2b722137e5c88ac454ffa637718ab",
+      "translationSha256": "2cc465c241cc79ba531c6dca9337127310d4259e04804ea7fcf37aa824c5f1c8",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.ClipperNtxInvalidValues",
+      "sourceSha256": "d471969b0b13fae96bbed07506da792a811a9dc10bec039b16af3b14baceb038",
+      "translationSha256": "9b06677a6015430133cb609e2ee243cdd3804b856976a4510a00b34cf20db785",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.DbaseMdxInvalidValues",
+      "sourceSha256": "9b85021623a1e6935cd9b82ee825264c0d7c21dbebcb1f0e5274adafe18e3c66",
+      "translationSha256": "16ff55a28a4530bb1d0a1ffc7272ccc6dd89c27f15f44dc8dff561d68855e2e2",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing",
+      "sourceSha256": "0beba3921fd3d7d89125bbdcea6abe007d7d20bf8f433af3bec598fd2ea67a46",
+      "translationSha256": "f3369165ef0410d8e6f7347432a0671d140bab0969694f422b99b63a8393a97a",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.DbaseNdxHeaderTooSmall",
+      "sourceSha256": "746c5306be45adadd984263d83c1033c642da36ca9430988cddde1593fd91559",
+      "translationSha256": "30ac3ed9f36e8c1fad63088bada24670bdb7929b6a0d4b6705d2efd1d16619de",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.DbaseNdxInvalidValues",
+      "sourceSha256": "f6d2ae9f42bb6a45fcae3a72691bcde4e7d1d74a2c4a67eb23b24af6b24fd77b",
+      "translationSha256": "fe0d2e0799184b91089534414e5b23cab7b7b332ab259dbd73ff930dd39aad31",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Vfp.IndexProbe.Error.OpenFileFailed",
+      "sourceSha256": "f744299cee808baaf732e5a19861ebf286c3e2e9c40f928e6f2c6aae0816eb65",
+      "translationSha256": "995910649df1188b3937ecfc7dcd842ae7ca6e8ede7480eabc8f89abe492077f",
+      "verdict": "accept",
+      "reason": "Meaning, grammar, accents, placeholders, and protected technical tokens are sound in context."
+    }
+  ]
+}

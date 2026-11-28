@@ -1,0 +1,717 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions",
+    "Independent Codex instance /root/review_en_gb_revisions"
+  ],
+  "scope": "88 exact-value pt-BR corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.AmbiguousCompanionPath",
+      "sourceSha256": "232237bdeefacbd421dac6edf2a4e9bea5de5c85c0cdc7f3989bb36298acc8e9",
+      "translationSha256": "4c60df5d65f36bb787223983cf30a081fde95d8fa19d95d5174190970c2413cf",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.AmbiguousProjectAssetPath",
+      "sourceSha256": "f7eecbcbe616df1b5addfff95390c4906e6b503fffc7c4ebc27569210c31b487",
+      "translationSha256": "5c57f993557be289ce36f294e13a977e4024e468ec64fe376a1b18b909859676",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CopyFileFailed",
+      "sourceSha256": "fbb3c6c977db29b3834082ca067b87faa9c21dea1ca6261d3cc71338e586d92e",
+      "translationSha256": "af0961cdca2a87759f26c472a94e26c40d397a890ce6a0066be01c7a44d84071",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CreateContentRootFailed",
+      "sourceSha256": "d32fa2739f50ffb4c9b86fa43d76563f48aee0d8f6c7183b3edc446ed3b19d3b",
+      "translationSha256": "4374a41f3f35783581344639f531ffa24eacd62feb9e8ecdb814d871c89e0e4a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+      "sourceSha256": "9a3e31f6165f0786bbde4c04f0240e99fecbfbaa487168bc235a557a44f3b8f0",
+      "translationSha256": "aec55b56c4c5bda4bb825b916466be64225d2b2122587597c707147269b055f6",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "sourceSha256": "40f1b61a38d2ce7a6a61a2a005247b8d8291e57f54c3f8399803639ed4542c20",
+      "translationSha256": "e2ebd3dfba3b90e702b3b374474c7df9bc0e026af8c3175e99ecf7a0a2b9b25f",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "sourceSha256": "83b0b479c5582dcd1697d264ca5ac4be98ca5d87e0a6e92cdf299705e8a86ff5",
+      "translationSha256": "b15532d59c9123f4cf9f74f973f1c1dbb46cab22325f52ad39f8e328c0c66381",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "sourceSha256": "c7e382f15ba33660823f33fc571099e8ad70fde94964b870981779d500bb7c28",
+      "translationSha256": "51b83d163badab9bdc815885a5b1b1754d9d3526b711727787dd01ebfd6753dc",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "sourceSha256": "fa93818644dffd2ce0621487cecf087974c3e301d202188e934d1449d8e248e2",
+      "translationSha256": "df378c363ed21083526eb36ad84c1cee6773c17492885e90586d739d03c5ef78",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.SqlNonNumeric",
+      "sourceSha256": "49b4d3e007b8a8d4db49d7c9ee635b0380a007698d5277eacbfbfc6f97d0dc8a",
+      "translationSha256": "b120cd1008a009253ddf0b19b4b67c01ccda92d00d23df008f75716b793171b5",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound",
+      "sourceSha256": "80590a927ea872d280c3a5deb6df2d5cf7b37b6ecb605549f59892bb2f6c7510",
+      "translationSha256": "25800e561879b8438efd828abf5921420ec17f2461ce425015a4152db2aa85fd",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+      "sourceSha256": "a9b03dc1f006a37135d1cc5e0b6b0051407c699514e4bf9ce0ab5899d21e2d41",
+      "translationSha256": "8a793a45db3f6db02d2858ffcfc2571f95383d97179a665d5a89219ed7d9ccb4",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CommandUndo.Error.JournalInitializeFailed",
+      "sourceSha256": "591f5586333813f1f6318871510538cdeab865489807f549525c5be28fe25f3c",
+      "translationSha256": "671d377a341df5f71e7b90511b1d79b27f99ba6280b15765dc6fdae3ae2effce",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CommandUndo.Error.JournalPersistFailed",
+      "sourceSha256": "05cc5d6aeef205a17a4fc809dc29d1d8132ef223f4206cb345495664a3cedb6a",
+      "translationSha256": "c5683ecff752cde159fa2f428cc1ca985eb3a79b08047c3a4e985f29daef241b",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CommandUndo.Error.JournalReplayFailed",
+      "sourceSha256": "a051ee58a2a841767a180c16153f4b20c1b56facfbb1574395c7d9f456e369ad",
+      "translationSha256": "1dc0877e8a1ab0d62756d9e46cb3bfaae7ca2e7215c7f8a2ab5fcda328bbf735",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded",
+      "sourceSha256": "e030318cf86c1d0ae4d3050dd09e34a8b22a74be9e0a136eb200e60b07037292",
+      "translationSha256": "ca28ce922a19bf242c3203b05bf1af37de1dcb577cdaf8840a17cdf424d468cc",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded",
+      "sourceSha256": "4a41f0c07466c6d6831cdeb426fdc09f9c76ea29808eba4d63622b283831b3da",
+      "translationSha256": "fa0030a909ff40b18fb19bd564a4b44ca9fbbad00e530db988e2a15ff4f1a35a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded",
+      "sourceSha256": "8029db288d8342baa6b853b8dbc269d8beeac1d3052e621d89246dd2717f31e2",
+      "translationSha256": "2339caf5280f7e8b6f3cf1506d31dd66126d5f7c21d3d86d9763d6650e0ced51",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.CriticalSection.Error.BlockingOperation",
+      "sourceSha256": "2a4a063a6d60b3c0380c50836f2be43a66f504009ce7c97112fe6d75e3ba6167",
+      "translationSha256": "effaa3320e0e45458c7b189c8c4239b270ee384982f9c3ed569257220349e74c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor",
+      "sourceSha256": "0f3e7648bfb570b8959e6e1a02ddfa29494fea0e8866b532e148dc0b7fb45915",
+      "translationSha256": "79536412a1318c49d37d9e355c64118d4acea27ab17a1023c5638576cd09a5cb",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromSdfFieldWriteFailed",
+      "sourceSha256": "b84ee07ee679f6eb194d77fd0db0535b0176603a98ebb127f846dc0534c2ba51",
+      "translationSha256": "f48aecb337e828f7838dd95b3641ddcdff1fa70f72d02df8c4fd542a1a3e0622",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTargetReshapedDuringFor",
+      "sourceSha256": "47b82556ccd8baf1624940f1583d51ba229e660e98503a17eefc61ddcdf8a07a",
+      "translationSha256": "b9601c03230b34ba548d1e33f634e2be8fac29286b07f2ddc2330724ae51e3e6",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+      "sourceSha256": "58f5eadaad109180ba9851aecdfde534d44e74423d155a95cc60067f8f477dab",
+      "translationSha256": "4b27aed82a030bc9e956a25f2abd6eea741c39589c3128ab5a7b1640a8921567",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable",
+      "sourceSha256": "069eac9f138354dce99f3a09c09a42b07fabb7712bee65e4b00fcf0d844bf014",
+      "translationSha256": "5e389a75de5df50006fda9a94ee50e340481e1c5bc5516493a471139a3bcc65a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToSdfFieldValueTooWide",
+      "sourceSha256": "650fd3e4b928db8a9531749d6651ccbda7b5420e55b38d5c86558ca7602edc48",
+      "translationSha256": "54102f60e8e0f1a97b16149833f76f47b6fb00eb95f0e486b70a0a8708ef3c02",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+      "sourceSha256": "b5ce4576137f7665490ee8783fff341acf8f975ce9cdf5dc2ee14ce3b61c9f40",
+      "translationSha256": "a52e0ab37fcfcc98d481df4794c5a51234af0af3db09062bd3d1eb425a34d679",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+      "sourceSha256": "84ff5496f6d799f49f5e3b53e1431537d264a4b341485ba609740a790af7105d",
+      "translationSha256": "843461a4e8e639f2ebe222d8d706aa2a80619f8040fd82f8aa03fca109d5d8ff",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
+      "sourceSha256": "326f666ad5ba047360b6e583722ac9ed3feaabd2bd3945f1fa4ecfb56c9e6879",
+      "translationSha256": "dcc34b68b32d7f52b2f5d4cdfed3b58a7017561dd1a383ab38d4a53fecd1c90b",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath",
+      "sourceSha256": "3e84bb7cdb761b989e048ee8959cacc834f983c596268a9822e5df02ce4c3834",
+      "translationSha256": "7f714b4e3f12b5a853dd972492a25cdf11b72403c0fd1a54579457b7cb010170",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlOpenOutputFailed",
+      "sourceSha256": "32dc4a75da6b65e97af75f5de5d7664540038e38f41a1158d24f0401d1f2fe85",
+      "translationSha256": "5a13975016e96f6fb313e110461776f6cab6a40812f063e380fe020cf01b0fff",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlWriteOutputFailed",
+      "sourceSha256": "11a3f6d8ff8da0b549d0b6d742fade18274b057e50e539c0aa250824275cc41b",
+      "translationSha256": "d82ba4e6ac4275a074515f04578d5d57d06138e515ceb9c99bf7b1dc0916e79f",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed",
+      "sourceSha256": "51c96c3b2c54fce203ed7edb617d21cf642090ef634a73466fd6770ff38a2b28",
+      "translationSha256": "d4db3634e2f42b1bbf12e8a9d4dcad09a124ef0502ae31ff13f9285aef8c537a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax",
+      "sourceSha256": "c3fc09c2eee455c75d644990d3c40a4416046105d5f750b535c5f52cf95cb677",
+      "translationSha256": "f7c2faaa8f5b433df898e5bd4a13cc450dc31bdcfdfcac2d93b32468c9d525c8",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed",
+      "sourceSha256": "4d7a01375d0414eb737ae70d63cef3a60b648b411b20e1e690d7136e68f9d567",
+      "translationSha256": "bf2cd1450e2acff30059317824a93c797962a99c670a57a41b2fe7b099bfdc2c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseMysqlSqlOpenOutputFailed",
+      "sourceSha256": "383ef765a45470f5779f337e1d41cd3a5db88d92fba0e1312b81d52add569a1a",
+      "translationSha256": "2f6ef37734c49523bb90b7c971703f94593284c40fd88330f31d5cac850bdcd2",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseMysqlSqlWriteOutputFailed",
+      "sourceSha256": "23e9878c510d0fab3fcf8226353be7ad1e86aa4e3b1bcea0ac1a693c4bf71572",
+      "translationSha256": "2021ff8dff96c5179102c1220b932f9b43c978042ccedfc11a09eecd5112a1e9",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseOracleSqlOpenOutputFailed",
+      "sourceSha256": "fbdf7d679a096c6448104978ec2fb01079b623ec864a14c06303901fcf7ac71e",
+      "translationSha256": "8beb5fa437939c1a30e26ea231d85ac7a4d0b7e82107055f8276bc2113b3ca28",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseOracleSqlWriteOutputFailed",
+      "sourceSha256": "82e3c76d41b9bd2a99286f086965ab938180493d36a942c8bd675890943f2fd2",
+      "translationSha256": "1f044ceab6264b6ebd3e7a888aa9565674762a8fd5015dfd4865456d30a9b88c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabasePostgresqlSqlOpenOutputFailed",
+      "sourceSha256": "ce6bfaa32b90d5745a8e2bc025d57696d9415741c14c8bdc1ddc54635ea95821",
+      "translationSha256": "bfdaa8fa65d4bb5ed1dd9b9bda152a1358b74574de9602b426718512e454cefa",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabasePostgresqlSqlWriteOutputFailed",
+      "sourceSha256": "a5291f46b20c050d214996c650e4592e7cec0944e2274b43734706d129f029ef",
+      "translationSha256": "859b53cb323176c15863014f37a945a3296029fc10ce080718412c3f26ca2ac3",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlOpenOutputFailed",
+      "sourceSha256": "c2c33054c172789a0400aeaef24f04f42873b98012e2d48c27ded151fef6ac13",
+      "translationSha256": "8d0294dac57839d7d6ccb4b4cbc2e172e1ecfd0245e410a51b2c6f22150f65c6",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlWriteOutputFailed",
+      "sourceSha256": "f30d879ab23adcf97dcfbed22e2ad9a589336c28e54b48e550c4f39ecaeefe23",
+      "translationSha256": "c83d40a3c67359fa470fa71398086f9457b85f5f374673cdbf4f56f97953e519",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseSqliteSqlOpenOutputFailed",
+      "sourceSha256": "4e10c416e138fbe428c685ce3425d07d4c58db0cc3ad907feff14041cea91d49",
+      "translationSha256": "c026915ae1405b1bea39abf5a49422cbf7e6619da4e7bd7973dad0dc6dd71008",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseSqliteSqlWriteOutputFailed",
+      "sourceSha256": "042cf4dfa38d422021938f03b1954997f18baae7ffcaf66011e629cad6d8e5d8",
+      "translationSha256": "7c8a9c9dfe687a90bf560f99c816fff43c5c0b0310c1f63c436a02277841e4c2",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlserverSqlOpenOutputFailed",
+      "sourceSha256": "bbe4b0ba29bc5dec39219e0eeac517acd152e889ab3fcb1de6cd6106c7270ca3",
+      "translationSha256": "a504c262763dacaea9fed9c8b695f81dd4a064fba6decd6e4299451ee2eefb41",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseSqlserverSqlWriteOutputFailed",
+      "sourceSha256": "b9742c836182bef67c7855ed8036f2b9c2a8c99d7a4fb2b04089477783ecb74e",
+      "translationSha256": "1e7ff2303b99ff9319278b15cdee78fdb724f83e91378ad89182e7ee88a7078a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonSyntax",
+      "sourceSha256": "6699fda8a46d525072c333b12c9e5b815d1ee401077cb945c8e2146d02373bad",
+      "translationSha256": "d7ca534155f075c2798d00aa4c0fbd8a3ee273d9ea3019321d69aad269ccd41d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ImportDatabaseSourceOpenFailed",
+      "sourceSha256": "e3e984bb29ae824c5aabfd3c3f8d643de5e7f74de12809972f3d250b6eb48e59",
+      "translationSha256": "5c0ff3fb7df895778e202faa957a548a2621c435d1b120344763afd7f8217b36",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed",
+      "sourceSha256": "1fb564399ca7f9e5840a7ce95af2b6a44bbb255cdf9352cfd26108301dbf70ee",
+      "translationSha256": "4dfecb9e8c413f05210d363e6c357912e36826ec593013b02da6d241ce39eb84",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SaveToOpenFailed",
+      "sourceSha256": "d390ef733a88c003874785cc1d9f1d86dff62ea270f285b26cf2024429f514b0",
+      "translationSha256": "cf318288fab9b2a80d03c84e5753684cd5182e28ee7ecb99abab9b2e102f456b",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.SaveToWriteFailed",
+      "sourceSha256": "139a576cfbbbc1f322a280fc0f36d35f7b85fdaf6e2bff7006130691a8cb4554",
+      "translationSha256": "b80b2f5cc6de1c9b680f387df55191407ff1aa2724cbc602763afd41e1880230",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject",
+      "sourceSha256": "97a886058fe1d44b2c8b2b2de2ffb12f5503e961c76736416ef2d2f1ed9eaef8",
+      "translationSha256": "4460a155d9c042f1e9eec44a6dd3450c1e0ca6955a1ff447d989f85c9cd9e8e9",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dispatch.Error.TryBlockMissingEndtry",
+      "sourceSha256": "0c83bf634c2edc3e8d90ff05c82d765bd966a5cbd1ad6272dd459adb4188488f",
+      "translationSha256": "89a216ce48a5e1b26078024fb1cb8fb256d3827ccb9271c4123abc6dabcd79ea",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed",
+      "sourceSha256": "914299f52e760af3a2ae3954d414b469446b37cdbba7197b7bfdbd42a4e6fb21",
+      "translationSha256": "306f40d5d79d351296e02a304e7716eed072fd5e973e9cf12e0b8e191dce96da",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+      "sourceSha256": "bf57c0f074df89b1c5cc24bc7a5562634fd7f420e47c24de6d9418597c1a0fc8",
+      "translationSha256": "29785b62950cac51f3b9840e816ac196b0064cdeea615dbc5418612e3df830b1",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Expression.Error.InvalidArgument",
+      "sourceSha256": "5f59a1979c26da033943e42b268ea4274c4fc76d493361e0e618a20d2a0e2784",
+      "translationSha256": "657c92c6fd49fb9942e45e46429cae438302930e67e916e39808cbe9fb842041",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.CursorBufferingNotEnabled",
+      "sourceSha256": "6ffa3abb6c7c75ba8484e1c2ba70f93625774e24baddabc41b5121b01a7edb1c",
+      "translationSha256": "222cc7ab3931e9feab972d8a82b4789916bacfbec856780ef49f9d7bc0cb83e8",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Records.Error.TooFewArguments",
+      "sourceSha256": "78a4d463de9297b20236ef40e561eefddcd5095dd9017ac6159c8a43a1320016",
+      "translationSha256": "269de369eff9d4c4c66f4bb615be32549dc61da35fc6351c14501c3ec763ef59",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.ReportOutput.Error.WriteFailed",
+      "sourceSha256": "7146f1dcbc42c58f0b239a748a38114b210a0eaca0b2662ce8c3d5a781336d6e",
+      "translationSha256": "daf701659d1e64d6a05ff8c7f8c516522cbbf556bc3db5cacad35233c1a07356",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Error.CollectionKeyNotUnique",
+      "sourceSha256": "ddad9ad0148330dc3c11e0db34b795519498820b6f01cbc93238494cd12cceba",
+      "translationSha256": "3c3d4e462cf230789cb7ac2d9c7052e7d9d68e5b10311218222901d2e5457e65",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlTargetUnreadable",
+      "sourceSha256": "130d5453fd4a22b63dbea17b4055dcfcdca6ce571c13fcf05e1d4717ddd1012c",
+      "translationSha256": "6239e134cce535ab22668f9d1da1a60fe63672ba4c1e2754578cc7caf01b7169",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlWriteFailed",
+      "sourceSha256": "c7707f1828dabcbe0027ecf68642d321ba3bd332382814974727b62fd699f152",
+      "translationSha256": "cc63b8ae7081231e1ccbfa5058568f62cb946016970c5abd8a66eb0e3849ca44",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed",
+      "sourceSha256": "2e18d8f28aa2e1d75047ddcb63b4d3d2e1984c45d4ccbd6cf5d9f147b7fc4fea",
+      "translationSha256": "7dda68e746a1df9968066dba3a6b7475b0093da3bac7c729c4d67ee324de340e",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.BackupJournalPersistFailed",
+      "sourceSha256": "31e7ad7000ea2b427b6c86bcb8bc12bf0165a27daeb4dadfb059e4c91ca75fa3",
+      "translationSha256": "8dd7c2a9b7532dec4441a878224d83fdf1d988cca6d246d144875f6e56946d82",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.BackupLockTimeout",
+      "sourceSha256": "47bff4b2475e7668a12bbc08125387f680db1f171d6bf78ca1c1b5b85240271a",
+      "translationSha256": "d14cdaa2332619f7bafd13f95241bae1506e1bf1639f7d673d08ef06c5287f2d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.JournalReplayFailed",
+      "sourceSha256": "28933d38d0115c980c517f9f32b62f16df11c7ebda95f2f0a6016d4097d2a094",
+      "translationSha256": "b01de002d02b1454f0294cb52f6a2b62155080a87a1aa09054969c3c6f124fb9",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Prg.Transaction.Error.JournalStatePersistFailed",
+      "sourceSha256": "5a77c32baba72f45daffc26904d3e933f50552b59359beae399b76b1177e3af5",
+      "translationSha256": "4507e34884af67baa30f0b2cca8754919169694e278c0abe8930aeec4185ad4b",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.XAsset.Error.MenuPopupNameInvalid",
+      "sourceSha256": "a0a8f00e23da2b1128e7b869cecf0d21be2c8728a5607edd2816a1f64e70390a",
+      "translationSha256": "ca4bef3b67aa6c066c98aa035ec09c4eb1abf482ff4b316189f372c8df73a59b",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.XAsset.Error.PathUnrepresentable",
+      "sourceSha256": "4488f62643464293b161408574a57e39e9bd683f38b4e81c957cb45f43aebf57",
+      "translationSha256": "2e8b4e88605daead6a3ebf9308bfc63b225fed8fd29ba14338da15befd550495",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.XAsset.Error.TablePreviewMissing",
+      "sourceSha256": "78ffdeed1487c5165d249221b217c9a6e8f6e7d1b92aa02e134841a2d896e781",
+      "translationSha256": "f2dc754a707a2002e967573bea19a7ca6f7a506190b027fe20e0e3c770ad9a03",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.XAsset.Error.UnsupportedExecutableFamily",
+      "sourceSha256": "9931aa49493cebf8ca1dab4323999f68f8649655684fbd92182e57f966cceaf7",
+      "translationSha256": "c7b1ba4465d7fcdfe9e6f09ae829c3c93a6bae0cebe0eb559af03ef842669569",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed",
+      "sourceSha256": "85108493593733bc57498f597b6fdde5ec1288e68ca8909616c7b481e33e6215",
+      "translationSha256": "9a20ff445b699b532a5984b00a78b55af437f0596ed2daf6328848e0577d9863",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.PrgStartupRequired",
+      "sourceSha256": "c6ee6b7cf771117afcfbbaf60a1a9721624034b16c59a1af8cb58c14d2617968",
+      "translationSha256": "26b6c2cfc44b2a3fea6fe3546b70690dce1feab476c9f6711edce27ec634b428",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequestArtifactNotFound",
+      "sourceSha256": "095a2dd65b8bfc426517d800f4080e834e9dd4bf1fb32abeb5e23ddbd2066f04",
+      "translationSha256": "32be1f93483f589cc3a19a9dd01a116e9eeefce4b7a6470f7790c22dbbfddc1d",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequestDescriptorMismatch",
+      "sourceSha256": "5d766506c655559c367767dfea54a43fabf2b09648b4911821f54bf0f6ac23ea",
+      "translationSha256": "ce1f9e1d3ea4831f9c3f83fdfbf5a33e47725da61fd16828963140e901e087eb",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch",
+      "sourceSha256": "5ae1782924f7884ac6e0932cb9b65409df81750506a1d719c33e9bd771ab4d45",
+      "translationSha256": "3f9dd00c42f889b7b56b75ee75ab8ec827df6c498783bf6ba288a41a1453ef1a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequestParameterCountMismatch",
+      "sourceSha256": "d66a7e2fa4350fc6ca31f42b3ad85f80a999eb858698177d8d33892183cf52dd",
+      "translationSha256": "28b5c066066e2d84ee120640a9b927f046b2119b9d9767e7c312b6104e2a577c",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequestParameterNameMismatch",
+      "sourceSha256": "e5bd0f26f9f6be4a3c09fbe31eb532e99db08b2cc6f87b6bc0ef3e468513c4af",
+      "translationSha256": "d43ac6f1dfab60262b9264c99d8be69a36fb7590251323e1178bc65ffa867e04",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch",
+      "sourceSha256": "46e06253b1320dc11e3cf2117e010b629457b4fcba401e3925904b1bb89c130e",
+      "translationSha256": "a31a2e6fee1d879562324dabc9e11c3cb8d5549173a21f78490538f3c64ef407",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.RequiredArguments",
+      "sourceSha256": "6b8edfc309badcca6a20ce7dd60ef627dd81131b7246909f213797b673d33173",
+      "translationSha256": "b92428746623327cd076bf85c753f7ef0b144a0638483c6a47256241856fdf2a",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.SourceArtifactNotFound",
+      "sourceSha256": "ada15bc6549caef851a2c3543c862b81f44c71ce1843fb94f6dac8f287282723",
+      "translationSha256": "a0c7601424be064bd83b8ed85c43264a5d3f9444a14a01733c9587891d17e856",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.SourceMissingFromPackage",
+      "sourceSha256": "cb7c5096afeb2e3bdb3af449389322a3b6e2ec0c7cd7a34c1e2f086c21589061",
+      "translationSha256": "33bd9828d6bd33dff6f71508e0003cde909c614638d93f637d218c61265e737e",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.UnsupportedRoutineExportName",
+      "sourceSha256": "fa695074e5a2511a2450f544176916d18da8d47d5a2d1795f632b0094ef76be5",
+      "translationSha256": "6015587fbd50acda35224456ee3ddca27ce0f3d681e02b89930558a074820cc0",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed",
+      "sourceSha256": "72c7c6a6c2d3b35e4f4dd2b79937ec04cc064615d8248d8caf667f9784e6cb2f",
+      "translationSha256": "541a57fc639ba8b1a5f600fe49963761ca00791f621d4962ef9759aeaac832ae",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed",
+      "sourceSha256": "19b199b13bc160c00c8f9ed7d551cf201470553c01b495bb3d0a0427cada81c0",
+      "translationSha256": "c3ba674a61dc8405e88b49135964efb57c3a867aa95d8b4d15ed49f5966cf4b0",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+      "sourceSha256": "325133964523c59aa86753c109ef00dea56e876b35a9fa3dde98cb4f33f1f448",
+      "translationSha256": "ffad3678f203aef816d4ec5745d98686ac06b49ed13f0d881febbfc155e6d2c6",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed",
+      "sourceSha256": "f3b24796e90f96b3fb87ed8a7fb71f9c8a552a7fe3a75b8623eec077e0b7b737",
+      "translationSha256": "bb34639c5aa88b6929354621da7906fedd876ff19b88ebaedd0c4405e3492584",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound",
+      "sourceSha256": "2d0fe24a72b30057b36a50d1201ad9383acf3f3109dcdb44b95d272fc4a2ea16",
+      "translationSha256": "b0603a99cd1ca5c21f768d6298d832367e614575acb1c33c86cfff84db598894",
+      "verdict": "accept",
+      "reason": "Meaning and natural Brazilian Portuguese are acceptable; placeholders and protected technical tokens are preserved."
+    }
+  ]
+}

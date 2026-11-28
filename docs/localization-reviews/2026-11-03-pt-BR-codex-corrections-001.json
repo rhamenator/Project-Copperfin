@@ -1,0 +1,781 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "sessions": [
+    "/root/review_pt_revisions/codex-corrections-001",
+    "/root/review_es_revisions/codex-corrections-001-independent-review"
+  ],
+  "scope": "96 exact-value pt-BR corrections authored by a separate Codex instance and independently accepted by another Codex instance.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "sourceSha256": "ae2adef0015e6509d0a2ee8269f04560b58786c25505236797964736a4b0aed1",
+      "translationSha256": "df87bb1af46164e569ca9e002e9af4edbc88e1e69fa90be71947e8d15fb4f559",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "sourceSha256": "9bb6c6ec8edab1b7ae8451e7e899ee6deae5cc8c6a7057e1b182d7c041311e47",
+      "translationSha256": "dfa5040aaf4c779a76477ab6f7d6fb09d621ba12fb92fd9f4f038d72f250406e",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.DotnetPublishFailedToStart",
+      "sourceSha256": "0f5e15bb7d2c0f955bb9f652cba994db3e6572495858120daaff00e2b76ca1c6",
+      "translationSha256": "121b19d78a8a3cc751a659f5dbfafbcd34c77c606f1d9f1c0283294a2293226e",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "sourceSha256": "ad8e7cd43832135a54fb9bbe7fabab95f466f64423b33d5e0b8c8a597243b155",
+      "translationSha256": "0173004ec9e6cffd132dc559045411621ce6f6eeaa3ef5cf93686eb36435370d",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "sourceSha256": "bd7fc377d5dd860e0aa45479e0f6be5f425593da0b9b8d0ef389c7b442ff44b2",
+      "translationSha256": "f2d2a0558df2c4e4b733a2ef8b7266baac85c3b3193af2b8471493a4b3ad1ab1",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.RequiredProjectAndOutput",
+      "sourceSha256": "fe079aa1d54cdbc8ed88526cd6c33440d2255acd5a98ed91d2825425994c184d",
+      "translationSha256": "338568f03f11fb2846dce146b56d5fb2a7937014244a1ac845859d2e3329596e",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "32a6e07cd95ec2d5ec8ff9d592321bf83bf1a893530cebd48bd4633d6eacc55d",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "sourceSha256": "fb1c277d77b7923edb1b8378be8572b152bdfa7d189fd9a84129d123fb521c73",
+      "translationSha256": "5bce8c6b522f2e18d9ba83bb1518e28a4d7c8b14d3525a2d9a0440f4aba56b7f",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Error.CatalogMissing",
+      "sourceSha256": "c8c15400c0e2b81baf61506e7fe0120cb13e6fbe50795130dfb8f3dc918f4f67",
+      "translationSha256": "1cc935e233faf15e7ce7b6d8c0d3aae96cb576b53e0f597c7111e0caf37bb749",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Help.LocaleOption",
+      "sourceSha256": "8f3d93adaf45b7387a4f50f7c8da048423e487442c3fd40251c8d7166a1b2824",
+      "translationSha256": "12bb7fa10c5bcd32a243ce8e818ce9348ec98ead925ac742816dc4b0135a735f",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.JsonApi.AccessMode",
+      "sourceSha256": "4824b03e88c6dc192397977381eb6e06f0c1248365edec447313d3bec82e823e",
+      "translationSha256": "2590c207ecca351b01c59a41bf05c98292140de0b0be60e2ba23e41f6269f4a4",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.JsonApi.TranslationStory",
+      "sourceSha256": "879b46001d291d27e28f4ac406248265db418202bb43783d1fbb5d05d81138fe",
+      "translationSha256": "7b37244386d470dc687ad76ee677db44685b46a7e1733b1591ebc76fb32cdef4",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Vector.AccessMode",
+      "sourceSha256": "1c477c171df5d88e83d139ec179708500de5710b2a3be2c8e7fd7a7bac7d3155",
+      "translationSha256": "0d1b79daf16400c7435f1ae0dec819601381840d7f97151d328c128457e57884",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Connector.Vector.TranslationStory",
+      "sourceSha256": "2ef70127473d2815e6ca9fc0a304cbb54da96fc7cd5ef92f89809314f4da9056",
+      "translationSha256": "00077df60089613c355c8d7981e5867cc396e7f392e333d74ba406fe79ca5b85",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.Guardrail.AiPlanningOptional",
+      "sourceSha256": "c408369a30988caf61f9593399cbf82bd2142928b0619905316c0070c989cbd2",
+      "translationSha256": "568256ae61264c154150719efc2d74217c2e7f92876775826b2a703d6cffd458",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Complexity",
+      "sourceSha256": "254b1be00be19fefad09cf9e64702c3a315bd51acd079d63dd5e77ad181332f3",
+      "translationSha256": "daf68b482f0865fadb92aebd075234845746f9ee899b30c0c799ddb01800d3c1",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Complexity",
+      "sourceSha256": "978bd72178fe18bf321e4e127e22a02fb63ce480d7dd6ca7a1de292813fecd45",
+      "translationSha256": "cf9bbc8ba1da4e5877a9bfba28f23af6a8d85c7276c4ee13763667d18c801a05",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.SourceShape",
+      "sourceSha256": "17d06a6b23c8a7d7b0e99b7956825ada74936ee7e7c6e9494ff1ce5ea586e082",
+      "translationSha256": "6ccce4031297b4d9e3913cd6ccdafd4a98ebb89be2ba3998cd8a7a4e50fdf2f6",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.TargetShape",
+      "sourceSha256": "d94d91dcc2efc7f187da19256a6addfe531a0c33b2f4f27e056dda9154c5f394",
+      "translationSha256": "f0a2b6eb176b01ed14d572c4bb42d1a727153eaf39e145ca7ebb9648885f3001",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Title",
+      "sourceSha256": "eb6100f83ee6e834afd4108b0cbc19283d7909eb9ba7bb37596915ecc25f3dcd",
+      "translationSha256": "f149d7496bb4a92556d6c5f622867253f23ea7b6e3b45a67e2637ec74423e534",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Complexity",
+      "sourceSha256": "c082456a7766e23a18db084cd34b6ff510baef506548b897cc80e9b7d3e121c8",
+      "translationSha256": "4a45b48a139b69522af27f4bb21ca3a34a41a8fe41a7e7d5760218daa2c10384",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.TargetShape",
+      "sourceSha256": "47c18ed07fa2545b2b7491dc505ab88a0d199d2b8efacb5b33e0d36829fa237e",
+      "translationSha256": "958adeed3e44df48fb24261910a3c4d56e6d4267ad67e8be2cd1c6cfce9b853c",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Title",
+      "sourceSha256": "e87c086e3552f91b09be49c6c3c5c3276b0bfec6395be22ec8ccbccc805aa0d9",
+      "translationSha256": "fd6d984b4b105635fa904bf20c335965a1fdae0bef88cac8e89a3eea8e4cca15",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Complexity",
+      "sourceSha256": "254b1be00be19fefad09cf9e64702c3a315bd51acd079d63dd5e77ad181332f3",
+      "translationSha256": "daf68b482f0865fadb92aebd075234845746f9ee899b30c0c799ddb01800d3c1",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Strategy",
+      "sourceSha256": "bb34d39e46b5560d90c5cd5b3628b94533f71dcf0ccd7edc159371fb4b574b01",
+      "translationSha256": "e286a44236a8408dc8888d8e947ef3d863f23acf2a37c854970909f4083ebd80",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Database.QueryPath.XbasePolyglot.TargetShape",
+      "sourceSha256": "031eefd66f1b07e455292816dad42cacd95fe4de436f54107c9147105a7abe70",
+      "translationSha256": "5f47d9153c1ea5a792ae4589e0440be49666489d2f14f4e13c1535c49c056c03",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.AiAssist.TrustBoundary",
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "ce6232404445d53aa4b4852c6ac01b8038900d32950d364ba2369f10d7c1cd9b",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.TrustBoundary",
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "ce6232404445d53aa4b4852c6ac01b8038900d32950d364ba2369f10d7c1cd9b",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Description",
+      "sourceSha256": "9052d866ec9e8aad5cd458e769d0efe26f1f8972ae23d8f170618750fd32328e",
+      "translationSha256": "bd1328a53ab9edaae7a186b9359babae2681eda8510d3121a9e7e08437599576",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.LocalModels.TrustBoundary",
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "ce6232404445d53aa4b4852c6ac01b8038900d32950d364ba2369f10d7c1cd9b",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.McpHost.TrustBoundary",
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "ce6232404445d53aa4b4852c6ac01b8038900d32950d364ba2369f10d7c1cd9b",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.TrustBoundary",
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "ce6232404445d53aa4b4852c6ac01b8038900d32950d364ba2369f10d7c1cd9b",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy",
+      "sourceSha256": "cfffdbfdbe422fb0d5fe3a531d08d4be1d22c2fc9cb197d28a89013332a272c9",
+      "translationSha256": "d4000efeded45ceee02bfa31e1286977a92a1e8ec40c2ed19cba0f757df3eeea",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired",
+      "sourceSha256": "b20a3195135c7cc4cca70a5ab137671d3b3e479171a54977d385be8c7e1d603a",
+      "translationSha256": "4c22a54077d07aa2f6710dd771a9251889d45a08c01634b56f41750fd49f3cf6",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityOutsideActorScope",
+      "sourceSha256": "40a34a7e8e445da27aed2e042d1cbb0ca4e5a452d1ad0e7fe5bedc80a1d3cbd5",
+      "translationSha256": "c93691afed47e5e2bc6331a6d6b10517a78ee9f3e69fe6e980f4061f9e6e011c",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable",
+      "sourceSha256": "a5434c0b53dbba8f5b382f667bf9ad3a074070641473c051a1e50d89644d3b3d",
+      "translationSha256": "a75ab81ae829fa0ca26d335ef2235971c0a5a9836255748c5641afabc0e63e7f",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget",
+      "sourceSha256": "9fde687cdcf75bce233e47dcfdfc517c224768b4672e882a8503bf20ee36ace1",
+      "translationSha256": "21eb09020dfbfaf81c2e233a37f2a99c5dec28bc42b4a55e6c5acdd65f0a31b7",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.ExternalIoDenied",
+      "sourceSha256": "a6f939ac631101ccb893cf54c9f80d183166c3fa032fc1eaeed38cbe83457cb3",
+      "translationSha256": "c33efee8cf25d541554563bd9029927612c8848d8c5078a6ca67b4d3620814c3",
+      "verdict": "accept",
+      "reason": "Standard pt-BR E/S correctly localizes English I/O; accents, meaning, and placeholders are sound."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.PolicyContextUnverified",
+      "sourceSha256": "8d36caa7cf151b4d353205c4117f55db4eda14432c5a28e4c5d77fb9e1e53626",
+      "translationSha256": "561e358278f8fb17f655830fd1c8cbe6f1a1a8c5324a1368821716a9c9933521",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied",
+      "sourceSha256": "923ebca35234950ddb9e9412c13a2528f689635770e71e4de073f8b787397b8e",
+      "translationSha256": "c48e69fa481c7b75a911f0ebed07485c212f15c76ee076ac7f15d15de2080865",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetInteropDecision.SecretAccessDenied",
+      "sourceSha256": "cb50911a7eb8075fed57b22041705f928df65e46ad039fc3aa635e71e3d677c1",
+      "translationSha256": "58619c01dadf308913d53ce1e6319d762962125a72e4a9410ee0ed97977e8190",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Rationale",
+      "sourceSha256": "5b752a4466612cfad31a817dc37b9909f6c8fb9e9960affe6162907812a93fcd",
+      "translationSha256": "028b121d2c03b5bcb8de87da3749adb402ecdd96ae433dcf688da4bee1a31516",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Rationale",
+      "sourceSha256": "e6043b7e9943b3dc483c6f6c464c1ba507c02be21ce2b4e1cc932569e4036167",
+      "translationSha256": "0416d2df7e737e301ba07f23504872fd86509c9d1d7bbf09d5768823fc482f84",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Title",
+      "sourceSha256": "df6ababcfed00a21f554966b3f6318938ef029d268b983e8e6ecb0c70f944ff6",
+      "translationSha256": "5ff66edc63100dbcd246acbe2401f8af15d9bc445f12a0053e37695f4ce10e22",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Rationale",
+      "sourceSha256": "0fac8b5330fccc058e69a2bd07da941f6835d95cad3de461c020425d501ddc50",
+      "translationSha256": "04aa0118ffa49e2f7fdd5e68c53c5c4e56f02da0146f183d6d9254e1515a23e8",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Rationale",
+      "sourceSha256": "3858ab2715e412f17d5f23027b4ad5716e2baedd8419cf87be63b81511d1f9cb",
+      "translationSha256": "8aee34368c8ad4ad540447c4722c106a7b0ecdc6e8e75f3f7af9d757c1fa7d0d",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Title",
+      "sourceSha256": "c8fe78f792d2a624927850d8cd5edc90a9ab548c921c8fd15e8f8e147edf5b9f",
+      "translationSha256": "5d9a07d477cffe1ad1e2af4be739875a6c87271cc317137cee580d3bb2ba73aa",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Guardrail.DotNetPolicyControlled",
+      "sourceSha256": "8fa2d123bd35cc5de292ddd2e77d5512252d08e5b263275f987cdfa5a5b494bf",
+      "translationSha256": "18319b15be8796a713a60ec0f41484ccabdcf0f5cea3d7aa6d6d121e82d62e9d",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.CAbi.IntegrationMode",
+      "sourceSha256": "dba415ccf149d3d9bd3f4b0d41dd222021a73ec82b3f94af3e17adce5496acd1",
+      "translationSha256": "15c94fe564fc4ff3648ef93a0cb5881f9d4fe69c2dd1037cf097c390a78aed69",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.CAbi.OutputStory",
+      "sourceSha256": "0b4c7bcd4081200d50779eed947e76ad62b0741e4ecdeaefc51d1f3c0f2f48d0",
+      "translationSha256": "59f37d12f4cb8df53c174ed82b1d232731383e88faee5d8f0d1e23891da5ffcc",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.DotNet.TrustBoundary",
+      "sourceSha256": "b171a7b969a673cde3b5cccefec452dfb79e2dd6707737e1109bfa553b1a122b",
+      "translationSha256": "a59c17d63f39c9ceee4ecac33f3d9fca8557bd47774fadd46931bde895800f29",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Platform.Extensibility.Language.Xbase.TrustBoundary",
+      "sourceSha256": "6d61b39fce1f236e729df71ba6fbbfd8fb69983531c66ccc10f9de0ceccfa2c3",
+      "translationSha256": "d75e5110d676dca90d824b5c2958ebd47de30fa1f8db5e0980746360441fbc23",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+      "sourceSha256": "b58d0766f5b4499696feb488d7064612700fa712a45361edb841cde45932becd",
+      "translationSha256": "cf517404b86861b6f79b9c013496a4622c7b29e2a5054405aac298eea909218f",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+      "sourceSha256": "18fae6c6835fce31f37ec26caa2acd56e94231480502fd9626dd3e07da60dd55",
+      "translationSha256": "d9523ba75c08b7436a7d28a87cbbb918b33bd9f8a94f5f3b86d4122ba7db5732",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown",
+      "sourceSha256": "9b1f7d55f971b9c51bd5098effac155233e2f18456fe245c79665c896ac6688f",
+      "translationSha256": "56a48c3c5106559c8c83f3906205cf19e18a1ae32acfdf3fb3002766978e4297",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate",
+      "sourceSha256": "053828abddc483e0a3bb57389692390d23ced79af50ff824b7962568f3a4f759",
+      "translationSha256": "68c73678f3552d27ac62d801461d91895ff7e290ebb8c946e2d04daf7a78278a",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression",
+      "sourceSha256": "856dab1420dc8f4bad8b485797af1e152bd804ab7e9423086be9c145d57d2452",
+      "translationSha256": "bcbc445d591d2e127b60e23459476ea7d6e2406c01bb24136d9cb5f50eed583f",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
+      "sourceSha256": "d04591985cad4f2afad7718f31d0ed238fbc0ca4c1dfc3d4ad6ffdad04edbb41",
+      "translationSha256": "afb8f9ff09901397dd42498e2e09d33bf83cf210e220aa84e4593b0ede5ea164",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex",
+      "sourceSha256": "dafc963d6338d1b1709f1c46cd15195720ffe38de969ff326437b76ba98f9bbf",
+      "translationSha256": "97bd949d3ab673171b0c3dd6bf7a1b17d15959e83975d7636b735cf7801b1a0e",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled",
+      "sourceSha256": "f5f6d1337f02a45d0bae34d67af2c8fb61e883b697a81c681911afa300478bcc",
+      "translationSha256": "6195ff00da6c8c9b414af96a57d90d397fd3436572b7051d92aae35ba6717d6c",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression",
+      "sourceSha256": "3dc07732cb7c36fe2ff64b0c80caf69d27d37d742085132afd343b26b3c0b2ce",
+      "translationSha256": "56db7493dcd99e7b6c08ce96c318e11057cabda47d707210f856b789769226e7",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexSeek",
+      "sourceSha256": "4f532b5ca9b0239296332b8fe9123974a739664a794197b508f80f431d2ab1a3",
+      "translationSha256": "1c9cbe5111c4b549317d6b09ca8398b1572cfcf99f0967d494736ac6eef031ad",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Absent",
+      "sourceSha256": "540ce21f8b331a40eb6f0714ea928263fd66d2c467764823639f3c158f51cf63",
+      "translationSha256": "50276fb260e57f67da697860780c282f6aafdfd9a8a7920402d65627ff9633ba",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Corrupted",
+      "sourceSha256": "1bd6247672af9889cfd33f95325d6e4550e05d223200bd0e6a47080326f9ad04",
+      "translationSha256": "94e668164f05ac4bb5e2e0a8f4830facf527441313512ac94fb1f710c5b19542",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Fresh",
+      "sourceSha256": "28db10779dd33f428f8da9cb288168a76666fb665bfbbac71623a7fd1d5dcc78",
+      "translationSha256": "1347030af67081c539edda6555d0aa492c86c02b639f62e4ed57553d6eff0e3d",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.Explain.Statistics.Stale",
+      "sourceSha256": "e6f61b4ecd233e274e612d9606d64c7e2d8fdf31a78e295c2224408896297998",
+      "translationSha256": "0511a740a87abab6a97416c8f48655e0e8dac41711fdc38ad522e33f5d573d48",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch",
+      "sourceSha256": "4515327a45dfd53cf3235edab2478a94378fa6bb1bb1a591305e4e2dad3b99e8",
+      "translationSha256": "f809a93373ae905a87c27f6eedef41138406e05653d71c5d3a188ea173bac896",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch",
+      "sourceSha256": "cd00fa0bfe1f8d2153d56e2490f8167a91525eda3f6c5bfea61bd4f7333e0f0b",
+      "translationSha256": "744d8d028ef5e87b38721dac092b624c1b7d5d0758d2bdebdbd4f529540addf4",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.MatchReason.NoMatch",
+      "sourceSha256": "9bc94ab9b39bfff44297d99f66b2d1dc08ba96658be582098c879d223aa84283",
+      "translationSha256": "744e5fde6a742f464c7a1ab58b3fb51831d9a49421796ee6ade6d14b9800d103",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch",
+      "sourceSha256": "5dcded1f8645796d4d249052182087eb722563fab71d7d64c831a7ac2fe80334",
+      "translationSha256": "ae63c1f7e4e33fcec5f568c87f049d603c1208d1aab3b10d2bb3d39235baa278",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+      "sourceSha256": "aa51bee5de893b99cda296700bcc1e4a2351fe65fd80f3f65eb6994ecd38ef57",
+      "translationSha256": "cbaedda5ac23341452c5e5113511ae6bd17072f85fdcd9d4f6da5b5620444194",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+      "sourceSha256": "5d69bd95b04a1f5bb7508fe7b950b1b9981342c32315b15d73fe11b9dcdc67ce",
+      "translationSha256": "c684eadc5fb1ac0a004827797d19fd9b85c9b80c129b23a78c5d594938631d17",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+      "sourceSha256": "994f62d938abb72fc3e729293a666b816ad89a1769ac8feb1dd37f085484cc08",
+      "translationSha256": "86dfd8850755811a50c480171aa1bfea9de235268dbbacc7d5a25f91fab5a6d6",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelNotPattern",
+      "sourceSha256": "4275ff6fca26bdbb14e52feb138eb71a2c4e2899b8a70293c4106df07558ba14",
+      "translationSha256": "c9a65730b65ba79621297021290a7b88f6971c23061eaa7705f0ce38993386e8",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "sourceSha256": "45a350b8b8d6ce38a78f7cf4141e7fcab230621622214fe28810e37192ae5004",
+      "translationSha256": "655c26a72079ad2a39c0defc572b5024a6b5c04d517f15b13afb357978e40801",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+      "sourceSha256": "c8557f482d09e01c21f2b7cbfced361adea3c21bc416d411704e5b90b2f60b08",
+      "translationSha256": "9e8d6299272cf9740799022a99c306137e13137c09c3f81a716a28ca5468b993",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "sourceSha256": "3ad5c53ef61b0449babb078fb99da39aa6911fb5f67e77a544262d3bae702ad8",
+      "translationSha256": "f5abba07f7284306ae75b80a5505f1ba7955b8f0c4c3fddfb74b7e389cb697ab",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
+      "sourceSha256": "46cc0310b859fff80b5341282379c244c1869640f3a8f8e88d15434f3fa4d44e",
+      "translationSha256": "4d9a0b2102110379e55193926e3a8af6fb36ee70f502ed7c39b242e96c3e5b13",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+      "sourceSha256": "fc29d8663a74fb2978d5911965a5b9a7a5c1c42b343100738939cfd7e1f367f7",
+      "translationSha256": "f3ebd66e48e74b28bc7aa462f9b318e93e85ec6a8c710d761f52a418d36da078",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+      "sourceSha256": "2dc2b642a9164e744dedde61de79db94a7fc86207986a7d7091c33bb3080cd42",
+      "translationSha256": "5a9e26d67198fd5a7a9bdcbbf5b2d672534f05f60858fd22eeee81bbd4fba02b",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
+      "sourceSha256": "81c054f4f98c74f3503a5580d8c8d722eacb59349a864b411483710ac22ccfd9",
+      "translationSha256": "ccac576844f27252b9c790f64c2a276c3068b767caae915d54640af262f232f5",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CreateDirectoryFailed",
+      "sourceSha256": "79fd8c565f032346c6d3d3f7d18ea5f008ce92a3fac30ddb99a2adac32b885be",
+      "translationSha256": "dccfde5a93bf9247efae4631c7c059c4f8f7db6ffd04e7cc253d2bcf1885330e",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CreateFileFailed",
+      "sourceSha256": "e7649c76efa6c9d5c4532d8f720c5f8ec1a94be45d4b5fe622524f132e95cb78",
+      "translationSha256": "8890398bf4097485e7790617e018f9a25874449629289718bc36631101dcaa7e",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+      "sourceSha256": "3b9cc924bbc7f34cd0468777539a7fae13134f7e2981a97d33cb189001265d31",
+      "translationSha256": "bc16af5e6a9756275e75fa9ccc3f57a0772a00a768234c13c3f9d46ebac4c056",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+      "sourceSha256": "271ac9bd38bc8ab2a5d2ded01e21af0b1918dc7499917e438196f94f8772bf4c",
+      "translationSha256": "452f984405837970948eab24d84cdb5cee89359e754df839c6b0bb1a102a58de",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.CreatePackageRootFailed",
+      "sourceSha256": "c5669fd0d0aae6e8dbe510ca9a419dc5b00e4265d48d168b4ad84c2b427a5111",
+      "translationSha256": "d09282151c8d44aca886627ac2693c178d96ff00acb797218d7ccadedff03541",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.DuplicateStagedAssetPath",
+      "sourceSha256": "e1e111727ccebac71b9ed494e718aa61876def61f78510fa77ed86bda7de7677",
+      "translationSha256": "f5233cdb5c1deb1091df99c49f84a01ea6a9f43ba9644cfa6e58ccd285463777",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+      "sourceSha256": "872e695098bceb99989642e4da981307bf5c9d5867dffb0875bc154c940591fb",
+      "translationSha256": "998477360214bbd2d55096a0c4b7f97f6a0b75e3dd4e3b72c906183bd9d8639f",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.LauncherArtifactUnexpected",
+      "sourceSha256": "c1cb1ff261f1278553f6dd8914a7944098ecb698c9b7a4e2987a07c03bb00681",
+      "translationSha256": "a002a53f0df046cf0c2f251214d194562742e214935d09b5df9659cf3d4b5e89",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.ManifestPairPublishFailed",
+      "sourceSha256": "f26e497b39328502dbbea6e707206dc76094b12c6f23b28e2061022713919e71",
+      "translationSha256": "21ebea94409c4d27dada319433a950a762317036040df2e9b7e79c5cbf6b96f3",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.ManifestPairRollbackFailed",
+      "sourceSha256": "4fae2c9cfa0b5abb251ec3f9c90d2c8f31d514da31b218c32a06453cebbc017a",
+      "translationSha256": "7d3678e187e1e2be6ded9154a7233ae9273b3a46c491d3bbc937b17f0ea4ec12",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.ManifestPairStageFailed",
+      "sourceSha256": "73ad6ca77ed52eab9c899a0a9c43e2f6afb2828525a42d2b07be866434f863c4",
+      "translationSha256": "b7abf1a27fd60f0c37ce68e1566e5e4c84118b3b194afe72ca2c1dddbb133461",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.ManifestPairTransactionCollision",
+      "sourceSha256": "a337eda20f5b3b76df36a12aba665a7481578c98e3913b05e697fae467cc1de8",
+      "translationSha256": "3ac128ed0c1e50731f502a5473214b84c4d1f22299cd7c0e1908329b55ce6643",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
+      "sourceSha256": "d1a55ca136cf96cad969d74a0dbaad6fca367ec9d58953477be7f204922c20ee",
+      "translationSha256": "d896be8293481a71e38ed9ff52182f00dbec9855d526bac923f098e88af54318",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
+      "sourceSha256": "3d7629353de7946c749c4f1876a135229c602704c16e84c7c92408cfac6605d2",
+      "translationSha256": "eccbb659455abcadbee625256753aaac35eb7615e9195fa090a71369e625557c",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    },
+    {
+      "locale": "pt-BR",
+      "key": "Runtime.Package.Error.OpenFileFailed",
+      "sourceSha256": "8a288c3ec85c10b1067f35c80ea63efdabe7cefbab5002be030fe5723a8aaa1a",
+      "translationSha256": "1181986d667ccdd2fa251469190e99e658e3b89045b65bbce1baa404a0fa60d5",
+      "verdict": "accept",
+      "reason": "Accents and grammar are sound in context; protected identifiers and placeholders are retained."
+    }
+  ]
+}

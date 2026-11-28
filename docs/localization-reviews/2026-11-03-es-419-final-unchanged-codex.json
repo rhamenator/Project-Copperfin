@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "sessions": [
+    "codex:/root/review_en_gb_revisions/es-419-untriaged-2-resolution-2026-11-03",
+    "Independent Codex instance /root/review_es_revisions"
+  ],
+  "scope": "Final independent disposition for two formerly source-identical es-419 entries: translated GetObject and intentional technical Builder label.",
+  "residualUncertainty": "Builder terminology is inconsistent in neighboring generic UI labels and needs separate glossary cleanup; rendered UI remains unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "LanguageService.IntelliSense.Keyword.GetObject",
+      "sourceSha256": "867f1222d06f609cc059d6612faf0ebee3fb0b17f23275348d41127e185b929f",
+      "translationSha256": "676c24c7f0114de3460e0fbf0ddda4930eaa267381a5f53ac0f46588d250cc4e",
+      "verdict": "accept",
+      "reason": "The IntelliSense entry documents GETOBJECT as a function-style call. The proposal accurately conveys a call that binds an existing COM automation object or one identified by a moniker; COM and the technical moniker term remain intact."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.EditorAction.OpenBuilder.Label",
+      "sourceSha256": "090940e7325896cc06b13348b51fbaba86a5d9d1937fc37a4e3a3f02f00401db",
+      "translationSha256": "090940e7325896cc06b13348b51fbaba86a5d9d1937fc37a4e3a3f02f00401db",
+      "verdict": "accept",
+      "reason": "The code uses this as a localized editor-action label, while adjacent es-419 action description and Builder tool titles retain Builder. Source-identical Builder is a coherent intentional product label pending a broader glossary cleanup."
+    }
+  ]
+}

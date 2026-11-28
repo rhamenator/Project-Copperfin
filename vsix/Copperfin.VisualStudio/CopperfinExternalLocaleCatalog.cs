@@ -13,9 +13,26 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinExternalLocaleCatalog
 {
+    private const string BritishEnglishResourceName =
+        "Copperfin.VisualStudio.Locales.en-GB.strings.json";
+
     public static IReadOnlyDictionary<string, string>? Load(string locale, string? configuredRoot)
     {
-        return LoadFromBaseDirectory(locale, configuredRoot, AppContext.BaseDirectory);
+        return LoadFromBaseDirectory(locale, configuredRoot, AppContext.BaseDirectory)
+            ?? LoadEmbedded(locale);
+    }
+
+    internal static IReadOnlyDictionary<string, string>? LoadEmbedded(string locale)
+    {
+        if (!string.Equals(locale, CopperfinLocalization.BritishEnglishLocale,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        using var stream = typeof(CopperfinExternalLocaleCatalog).Assembly
+            .GetManifestResourceStream(BritishEnglishResourceName);
+        return stream is null ? null : ReadCatalog(stream);
     }
 
     internal static IReadOnlyDictionary<string, string>? LoadFromBaseDirectory(
@@ -34,13 +51,8 @@ internal static class CopperfinExternalLocaleCatalog
             try
             {
                 using var stream = File.OpenRead(catalogPath);
-                var serializer = new DataContractJsonSerializer(
-                    typeof(Dictionary<string, string>),
-                    new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true });
-                if (serializer.ReadObject(stream) is Dictionary<string, string> catalog)
-                {
-                    return new Dictionary<string, string>(catalog, StringComparer.Ordinal);
-                }
+                var catalog = ReadCatalog(stream);
+                if (catalog is not null) return catalog;
             }
             catch (IOException)
             {
@@ -65,6 +77,39 @@ internal static class CopperfinExternalLocaleCatalog
         }
 
         return null;
+    }
+
+    private static IReadOnlyDictionary<string, string>? ReadCatalog(Stream stream)
+    {
+        try
+        {
+            var serializer = new DataContractJsonSerializer(
+                typeof(Dictionary<string, string>),
+                new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true });
+            return serializer.ReadObject(stream) is Dictionary<string, string> catalog
+                ? new Dictionary<string, string>(catalog, StringComparer.Ordinal)
+                : null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (SerializationException)
+        {
+            return null;
+        }
+        catch (InvalidDataContractException)
+        {
+            return null;
+        }
+        catch (XmlException)
+        {
+            return null;
+        }
     }
 
     private static IEnumerable<string> CandidateRoots(string? configuredRoot, string baseDirectory)

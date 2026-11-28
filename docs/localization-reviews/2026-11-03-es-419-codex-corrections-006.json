@@ -1,0 +1,773 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "GPT-6 Codex",
+  "sessions": [
+    "Codex /root/review_en_gb_revisions",
+    "/root/review_pt_revisions"
+  ],
+  "scope": "95 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+      "sourceSha256": "5d9f1a503d4605f808745c98220233073f5db95305c0dae253b83b2205cc62bd",
+      "translationSha256": "89e76e3f7d1bdaecd6af601a1ac3cf8335f7b87bdd541549acec4b149bcc305f",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause",
+      "sourceSha256": "9d450f35d041fd6d6bb1e2f51b3f18500317c662603e93979037a3c9e3567170",
+      "translationSha256": "31aee530e08590e0ed37d9b5e46e7738a768b1141ad4c6d337d5f78e3ab0c3e3",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea",
+      "sourceSha256": "e21ec52cf659bd60159691b351cbb3eb816b99e3a3487ac48ecce8d4b9f674c0",
+      "translationSha256": "9338cbe24572c19da3f13a62944381a044f9d1b0b86e28a5811182b5a5d013c5",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause",
+      "sourceSha256": "6c196e0acb36868091ab59f01e9960befade54e3e2d8ba3eda68d69c6244d8d0",
+      "translationSha256": "648fa17e39ab762cbc1b0cac16ce9ea0ac2b697689d8f868f774cd109fa71913",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromSdfMemoMixedTargets",
+      "sourceSha256": "9f155d1c973823d4d010efd23346a42340bb792adf38d500ef026a358c83e81c",
+      "translationSha256": "17fa4e7cc737cbb4be5abfa9a8fa6c5155a98fb694874023d5d5f3b1bb5884d1",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTargetReshapedDuringFor",
+      "sourceSha256": "47b82556ccd8baf1624940f1583d51ba229e660e98503a17eefc61ddcdf8a07a",
+      "translationSha256": "be4c439c4d13c620529ac6a0c80bf479eda917c70462763f1494e1748b5e1dd8",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTextMemoVfpIncompatible",
+      "sourceSha256": "1c87f68fceccd8f1070173f98056c24625e428a6f8ce9224efe455de4025187c",
+      "translationSha256": "822011f56babcb4b87b69267c0f4291e3a0d9263268886405b0f5130df7d755e",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+      "sourceSha256": "6ea8d08e433d52d60250d3b4af1701da0c911a8adb67f8a07027bd9ed20c21a6",
+      "translationSha256": "dd57004cd6681327468f7d890397da123ccab0773adbbc59007cb0cfb043e714",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+      "sourceSha256": "58f5eadaad109180ba9851aecdfde534d44e74423d155a95cc60067f8f477dab",
+      "translationSha256": "da480f79a58644629d7a9cf95e57a2d821b487493045fa95da47a913b4561701",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle",
+      "sourceSha256": "875a35a6caeed1f10784ed29c352bb679f065a88f82757763c0885502311cbe3",
+      "translationSha256": "1b5a4f89c58ac4346213edac51ece4227cf23adbf08511d6e9350df14690994e",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CommandInvalidArgumentType",
+      "sourceSha256": "bff255de6bcd9852d1179ef5bb5160a61f9d7a5aea8cb4cf63bfc4b708fcc3e0",
+      "translationSha256": "029b64c715839cdb37ce422694017971e913c4685e7fe98fbec1b572304a4e15",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+      "sourceSha256": "fee6b99d2bfb76e7502157035522c527220ad901208aaf7aeea6660030a7870e",
+      "translationSha256": "eba68223b4d7ff5b68c34817a6a3157a730e4c2500b06ff02e248d5ffae727b5",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyFileFailed",
+      "sourceSha256": "b900335bc970821861038588b0e818b390b3159c8d4cbc9114dc3eeaa43fb155",
+      "translationSha256": "b864452cbdad83d286bc6a81b5314cca784ddba382c86c55d520253efa5da559",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable",
+      "sourceSha256": "069eac9f138354dce99f3a09c09a42b07fabb7712bee65e4b00fcf0d844bf014",
+      "translationSha256": "e15d06b520a8892bcb7a7fa4c690eb55cbfc91093d884ca24538609eaa495818",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea",
+      "sourceSha256": "0a9b9227dece1f66a2f4aabdfaf5cfd459bf9299f9c68d821548d8da03d0560a",
+      "translationSha256": "9466b1a9c8826e4d17f335f3a5e541ddcd113e98b166570510e65295e7a7241c",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToBinaryFieldBytesUnavailable",
+      "sourceSha256": "ce748375bb0e335216a1debdf2e70cd70b498677d93aac225c09fd6e3c246122",
+      "translationSha256": "0aae3072feb12b712f973ef7b0e93a7c56871dd35c958c7dd9579766057f4f24",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea",
+      "sourceSha256": "32408670f602deff349d06170be8cdf471e5336f3e6de6780ac32526c382bc39",
+      "translationSha256": "4c161fe9d3e37e73ed1202a32a75354042addef38e3e34d1a45bebe476d54614",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause",
+      "sourceSha256": "a9aa4eecb7630e9a25eedd6f398b32030b9cf97e87d3aa161fd7329f0d6f4cd5",
+      "translationSha256": "a36561b3702e1fc9ffc87d588be1ccddb8677e966a847a9241c025710a693cbf",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToSdfFieldValueTooWide",
+      "sourceSha256": "650fd3e4b928db8a9531749d6651ccbda7b5420e55b38d5c86558ca7602edc48",
+      "translationSha256": "caffcc8073126762e586dd071e831b32b385c6d8d76d1e170ac74599bc89a424",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable",
+      "sourceSha256": "eb4fea1a6704d8abc861ddb47ce78f61cd300f8cb73ca5db954dee300c12a285",
+      "translationSha256": "4e882158df3d0a5ea2c2c5cd7c5422fb713a844db7e833643041e577fbff40f3",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+      "sourceSha256": "b5ce4576137f7665490ee8783fff341acf8f975ce9cdf5dc2ee14ce3b61c9f40",
+      "translationSha256": "c2915fe2af6de5680432a01768041152c8130dab38ba70840fe56721633d6bc3",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+      "sourceSha256": "84ff5496f6d799f49f5e3b53e1431537d264a4b341485ba609740a790af7105d",
+      "translationSha256": "0a62f358ecf97a2aa05794faa019e36fb21109d8915f57c5ef28c885f075fb90",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias",
+      "sourceSha256": "b653a74483dd3ae156d3c0b425a7bfb39f9d8d7bebbef12a9a5287f1e8f0cd29",
+      "translationSha256": "5ca0e021f585b527fa6805b8e783f11ac358a399da7b7fe496b227997c08a63d",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration",
+      "sourceSha256": "5ee95c7189ddbe38ac03d46a91cce49a96155ea4e6db29e1d55e5f74f0d7fb09",
+      "translationSha256": "b67192afc15f3bd8461fd9a9a484294f80b0efb17831f891259c1cfd4916f514",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration",
+      "sourceSha256": "3056126bbbc1bec581e24a5a73a672afc4e11a0338c31d501c3d581661013288",
+      "translationSha256": "9ca998241ff7bd8a0503124ffad943a786a61d51737853e5c86364fbf6a3b26f",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
+      "sourceSha256": "326f666ad5ba047360b6e583722ac9ed3feaabd2bd3945f1fa4ecfb56c9e6879",
+      "translationSha256": "7d34cf4f17ef6123c6a61f6aeda6bfdad5ce3fd16af372361eb5210f2b3b90b3",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
+      "sourceSha256": "d07eb892e43df745ade933e4fe3deb4337937d43fd5df2741295d60fb0100b85",
+      "translationSha256": "d7f3e0722019664b4c4a986f9c0316bd3af36cef6e020e65fb7e9d6aa80f9c8e",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath",
+      "sourceSha256": "3e84bb7cdb761b989e048ee8959cacc834f983c596268a9822e5df02ce4c3834",
+      "translationSha256": "fe465c97802259c94a5a29520e13fee185b741e62bcfd86e3d8b931e8acfa3af",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType",
+      "sourceSha256": "da1003b3d93322f646e27ecc0de22efe0f68e3983a537a12e1fad8aab4c39c99",
+      "translationSha256": "8161b261356b3a156f1cf610d8a574201964aa8eae138bffb95634d9d030c65c",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.EraseFailed",
+      "sourceSha256": "31b40f44d235ea1654940dfe9ce9e7d37b13d9484df8a4790075b0be17b6eff8",
+      "translationSha256": "0606b22789ab001a42fe071fe206e97185c4b1caf27ccdacb1785f861ce45fb5",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlOpenOutputFailed",
+      "sourceSha256": "32dc4a75da6b65e97af75f5de5d7664540038e38f41a1158d24f0401d1f2fe85",
+      "translationSha256": "ead57198d058bfe62cf70abba5ae67a63f86175fc77dc1a852b9dc33ff7e7cd4",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseAccessSqlWriteOutputFailed",
+      "sourceSha256": "11a3f6d8ff8da0b549d0b6d742fade18274b057e50e539c0aa250824275cc41b",
+      "translationSha256": "766d9d371f923c753f74ad6814f2bb6b4e23bd7cd4d1a685361144c782befd8a",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonOpenOutputFailed",
+      "sourceSha256": "51c96c3b2c54fce203ed7edb617d21cf642090ef634a73466fd6770ff38a2b28",
+      "translationSha256": "b8559cf9a1cd0f48da7a5d3838822abb888d40b4ef17aa30d53f27b17f9d1d3d",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonSyntax",
+      "sourceSha256": "c3fc09c2eee455c75d644990d3c40a4416046105d5f750b535c5f52cf95cb677",
+      "translationSha256": "51eb3f6d6ade3de6c0b5e4f02d170a5c8f823e71ccd17950aabe87cab02c32fd",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ExportDatabaseJsonWriteOutputFailed",
+      "sourceSha256": "4d7a01375d0414eb737ae70d63cef3a60b648b411b20e1e690d7136e68f9d567",
+      "translationSha256": "db11625f690cd0f8f76ac5b3df098d26e2780909c7b5e6dbaa699dd2f6ca1b7f",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ForClauseRequiresLogicalExpression",
+      "sourceSha256": "4b4781c7b57efacad3578900ecc765f0125b5d7bb6c17c3e97d48504d3811e14",
+      "translationSha256": "78078bfbd3fd145943cef575fa5638a9f53d5ec54af10c06f1438169e01b9ae7",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound",
+      "sourceSha256": "2d21fa2485aa705c3b7d14cf2b0133dc022a467d19ecc78632b3e4fd25473a7c",
+      "translationSha256": "cd6cf5dec304805a0d54edf62b18ee250b0264ff17b106f833a623238d6936bb",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea",
+      "sourceSha256": "591251cf02c650d78bb7ee0bf1dbf11b272dfc4c8e3ad26586abba8347124b37",
+      "translationSha256": "93801dc83f5775c4d462aaa2b7b49a9171af27cd7ec9dcf98fc9f7d810dbc4e7",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition",
+      "sourceSha256": "2f338e1020433ddd91cd03b4544364e2d3ab59d304253637228acc54d455b4b2",
+      "translationSha256": "94fa2a267b41880532fea440283834a48b7e2f6594cc31344083699dc3a4935d",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ImportDatabaseJsonSyntax",
+      "sourceSha256": "6699fda8a46d525072c333b12c9e5b815d1ee401077cb945c8e2146d02373bad",
+      "translationSha256": "f67e1e28570d02ea7d4462aba42c69ed25d119c8239080b17cc23ff524858fa1",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause",
+      "sourceSha256": "cf3c033fc1d487e1aea57cabc46c67798c63bdc069e205d2a155a3b2e7789cb5",
+      "translationSha256": "ef9e8818590ddedbc3e4d9da6b0c08ee1529c74cf4208351afb935be832e6b07",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.InvalidArrayName",
+      "sourceSha256": "e489b758aabe37c26960d3ae173d4e61450d3071a092e40f2fe1c2506715aa91",
+      "translationSha256": "8a39d27aaf5b4e7aa3f7bab100880bf12137ec5346a72c540e94c727df5e3f80",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+      "sourceSha256": "844168f22e6c235d251366d581e444159830790bbebf510dcd270dbef4d0b273",
+      "translationSha256": "c54c868774829cdf2d1dfad2a3c11ded27d309ce3855bece78f9ac6e8444fd6a",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.MenuNotDefined",
+      "sourceSha256": "7c3c4bea27217e8382f1d3ab7c42abc28482f345b0736e173863bd57895de77a",
+      "translationSha256": "f8a4f4d47d54d3429f7ceafb28a957b79382634a3dcad1a86d9719cf8ef28657",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed",
+      "sourceSha256": "1ff1c46826544d5cc62ff3c83d5220bfe1aadc8d4d8dadb81bdf1cace5e1aba1",
+      "translationSha256": "3f08bce0ed37891b3010e2e42ff55272ca8c53bbe1a0ddebfc2332f46635fd11",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment",
+      "sourceSha256": "e3975acad645870f359e210f18cbcee7c048282833335ebc924c6a764aae6f7c",
+      "translationSha256": "4ee634a21d235d1ced875e913d42276318455eb4e46fd2774aa6e6f03bc1690d",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.OnBarNumberInvalid",
+      "sourceSha256": "03d35663c01a2e6c2fa9f0061a01d3b769e15e06af3654d6cacf54a8c1761000",
+      "translationSha256": "58e59503101af639720526ac9727330ab3a1981cc68dac8d33787209c928cee6",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.OnBarNumberNotFound",
+      "sourceSha256": "285a2a5e0f0ee532f587a444bb2ff3c0f09a6e40516ddbce92dd0b4867c7564b",
+      "translationSha256": "dd7425052c06b27cd9de5ed6e8679199503fe98f46e2a91e3df5ad119ea7f6ac",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberInvalid",
+      "sourceSha256": "9b591b8f9b1435e26184250f35a36f6b8c0e8f02d4b87f0d0b36e753e67304bf",
+      "translationSha256": "ace8c150a9f14e09d199e087055c5202700ef5e04d4aa21a9774dcc750a44723",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.OnSelectionBarNumberNotFound",
+      "sourceSha256": "ec4107b85a3c0331909d9c79ba908cb4c2e90a3ae7e1292505889c9fa6a20a61",
+      "translationSha256": "db69a014e197f2c94967a33d15096e05467223e40aa60a9f8631ab1678668364",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.RenameFileFailed",
+      "sourceSha256": "2fb5839fb6118e5dd89533b0125cdb1181055795479f76b61971ab887a10eaa5",
+      "translationSha256": "703ca00b0449bf9a00c0c80bf569789ba37c21eb1242ceca671befaf468b37ca",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.RenameFileTargetExists",
+      "sourceSha256": "334e98e0830c41d374d2351a445b5b48afc8a8f4a9a6d0728ef1af8c8869ee41",
+      "translationSha256": "fbd81665048fe0891ed476dfd92897e0cde58e647125d518c64eb2af5671fa7b",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment",
+      "sourceSha256": "1c3f29a82c7afdbd98517052acc582d16169bd16e6b7c4393a58647f1fef19f0",
+      "translationSha256": "e85bda4259f3a90d2b05855bb52a399e416856a7ef4c29cdc2b7bdc29b769d53",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea",
+      "sourceSha256": "794993261eb6d455a78f4d7f7b77fde8e05e68e98eaae5f3d9d41f9d3271842a",
+      "translationSha256": "a676944db449eb934cb5d28c73d95103896a973c1851a731dbb886281c185d97",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.ScatterNoFieldsMatchFieldsClause",
+      "sourceSha256": "0e9785d4e4f81be5cbba51b4f4c57ebb8da80afea746ba43aea6f53795170047",
+      "translationSha256": "337a005e1373ead37dc704e6781cdd609e2325aa1169edfd9ce85c0ff2868e44",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.SetFilterRequiresSelectedWorkArea",
+      "sourceSha256": "b9d2895483923719e435bd2d46cd037250d6289e74ed13a2504a53475e99f549",
+      "translationSha256": "3c5e375961f8c56ea172c4ca4084bb767a6b467e59631fa8698ab6d5faa61579",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.SetMarkBarNumberInvalid",
+      "sourceSha256": "474a61245e3b6f1da1b763e59ad26a91425795961879fbe6800c40fedc3efa27",
+      "translationSha256": "3cfe7b93799d308dffadaa87cca75b4366242d339a216c3f85cc20934a733f20",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.SetSkipBarNumberInvalid",
+      "sourceSha256": "94e43cd4c04b54cdf7a002f2f1ee1819cf294901c432134d83b98e86312408a4",
+      "translationSha256": "9a4705971e099aae4f67bb4e684459c983b4f1103fb447de7954c1ecb2fd6608",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.SleepInvalidDuration",
+      "sourceSha256": "91f7854df037bf88d916d53611ad0549cec60f57a43bf0d1ec1d476f9cde9d6a",
+      "translationSha256": "39df0506ec21d7f5f9c922cbff4bff5df0475bb0df65f8e68d78dff7825ebe46",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.UnknownTaskHandle",
+      "sourceSha256": "b16e933248fd984f7d9659dc74f04d9f91a6d3a162098fb94a461ca4a1dfa321",
+      "translationSha256": "9f5ee4b645098ec18ac7b2439df41ed707fe011c3605d05c2eebe6a3a6783ecd",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound",
+      "sourceSha256": "808476757fc824753b2580d0931b14347539f239700c6a27d22bf53a1db82472",
+      "translationSha256": "acb41ffe8ff5c8948e211358cd1ac90aeae7b46f96623c40b151bedf146e7705",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments",
+      "sourceSha256": "c21b179f950cdee978154d992d7bc9915490b87efe3234046e5592d7d3796fad",
+      "translationSha256": "2aaf2887f5ce37405000ea79a5967694cf4d48dda661c5421c0c4fbed646f80c",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Error.VerifiedAlterTableMutationUnsupported",
+      "sourceSha256": "23b0022e9370556dabc4775f36edc9590bd670a101b4219d82a16caee29cbf32",
+      "translationSha256": "32080df017728d062a8709393c18d88793a32f93a959b7c42fa5b500f9701544",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dispatch.Warning.CopyToOmittedFields",
+      "sourceSha256": "57f4b7236b15b7dc70dc068af146307871b619ec5757c78594b3f3affc36dca2",
+      "translationSha256": "672fce11ed95d0b6ffdb7f7711f666b4b536a1263ba81e60c71743c482ed0a59",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Dll.Error.AppDomainDispatchQueryFailed",
+      "sourceSha256": "057729bf168c23f1acae1ad63c7628672ee9f2bb048d6d33e30be803e5ddf454",
+      "translationSha256": "bb767ae69f69c84f453a01444d38890df0dc70da5733cbce87139c1ac9b8aa68",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Runtime.Prg.Expression.Error.InvalidDateValue",
+      "sourceSha256": "47214c6d09cd1a0e6bc13b8fc8028c5e74b678dbe14f268b6a903e33e0b427ba",
+      "translationSha256": "cd3b0f9e7a01f13aaa98a46e0d4afd1d25e592baf2ae418d4bce7e7e786e7007",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Category.Graphics",
+      "sourceSha256": "a874fca87cdd5e4e677086421a024eba3831c31f72451a6e5080e66bbd772ee9",
+      "translationSha256": "3f3a9f9e67b32cf941be8721ab3f1b2a25e389479c22cf509e1b78a9e618ab5f",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Category.StandardControls",
+      "sourceSha256": "65c2266b8192fb70f1450960af784381525e5b8d041b05290713db3238cb846c",
+      "translationSha256": "e438ccaa625b2ca6e0a497b1dcaa82d0c84628a7b6d842304635d40b37bf4d02",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.CheckBox.Title",
+      "sourceSha256": "ba489462b2e1e1465ac389b11699ea3296924c402d0d16d659502f5e83a09d07",
+      "translationSha256": "5df38ab3927c0df389c03063cc3dc2fe9e53ea183fb812c7ae6299bb0868cc83",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.CommandButton.Description",
+      "sourceSha256": "4021a2ba545bcdca07fe91991591d7a4f59f0e5ded841220fe505dddbaf49e32",
+      "translationSha256": "fbc06ebc403cccea10837a2bf7dc517c8ce2413b34e82e5165838a36f0d1548b",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.CommandButton.Title",
+      "sourceSha256": "0bef4a4639ebaec6dccd59a3c1bcfa662d04862974d792d2c6bc5c0f5b45ab02",
+      "translationSha256": "bec9014ed0ab12c0a2492d70fa232b03b37aa64e1135d00c0fd82544695764ff",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Container.Description",
+      "sourceSha256": "f8242711ed1bda59a034403d87b9e2b2aff0a5c2d5ae5352128ebce62c74b2ca",
+      "translationSha256": "5b39a4b136df7be12bdb46aa8f267f81ffc38ba336dd21dcd93238c60974df0d",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.EditBox.Description",
+      "sourceSha256": "61c39ba7162fb0e14789e4cfbd6a2176bf3ac0833df70af8c2b3fda6cdf96d01",
+      "translationSha256": "6c8e6f074a904eb2c124aa92d1b6fe205078622692b9e883f2e548f50a9440a8",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.EditBox.Title",
+      "sourceSha256": "08949234e734257237b421fa0e2fdf31c43d7aea822576cbb856c568f685784f",
+      "translationSha256": "02e21d1538ab629d826a7be1de2a157797041e05a80127a14e3070ddfa260f12",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Grid.Description",
+      "sourceSha256": "36adaa744c126ec616b07c48c5c1b7958ff6ef6cbc9404ec56d731bfc424b4c5",
+      "translationSha256": "e094236964dcb88029abdf7867e161edb677959c366dc98c9e64f17f815b9e1c",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Grid.Title",
+      "sourceSha256": "0d7d12ac624c66e687f98a68ce621c8a44531d5da1db7d0005aa215e2f1d964f",
+      "translationSha256": "7e795dd6843abbe40e73aa0a4a143d8b5850f29f87d554cdc1bfbc7e7a1d3bd6",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Label.Description",
+      "sourceSha256": "b31a7f8d707db1a0cfc85d12a5fe0132973d5fc2faa9049fd06d317aaec5c166",
+      "translationSha256": "6aa276f5c184be7cc305523310918dad028602a099d613eaee3c159f6a311afd",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Line.Description",
+      "sourceSha256": "4804ecfdabd5c6b140a54bab685ba686748e0e1135e8016334ee45f4d79f0d11",
+      "translationSha256": "25d992e2f457d9bfac1f33c76a300af1d5e0717398114f91edd94c11bb08f6a7",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Line.Title",
+      "sourceSha256": "d7852cd0d2453e8c9b71b61cad6423697997b1e518b5de2493111524e294fa6c",
+      "translationSha256": "0ae1ea31051ce2ac1b99feaabc181c3043cf6da2459379d340adbbdc0376d610",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.OLEControl.Description",
+      "sourceSha256": "dc14978239a24e16eef90ef578b57ff7febcd733cbdf26188de6c937a4c619ad",
+      "translationSha256": "dee07842503c79ce0de7b66370e4b860e9cc20218b193ca1eb7cd8ee31e9e43c",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.PageFrame.Description",
+      "sourceSha256": "e4431a454e888c19518cda6af5975c46177a56f286f87291378594bb2cd1461f",
+      "translationSha256": "a4ecd443291ea10e4dbaecae68927f60ed3a9f63644cbb0dda077565cacb9941",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.PageFrame.Title",
+      "sourceSha256": "d1a8be10d34b7d421f1be30e3bede7cfff6aef33dbff7c9468245e85e323d0f8",
+      "translationSha256": "fc73c07cc1b8b26351ac57e160d9dc3563a487111077c63062886dd3ef7d9bb2",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.Toolbox.Item.Shape.Description",
+      "sourceSha256": "609c3f66075e8e48bddc322f349aecbc6cb699e001fccaae6639475d5fa23929",
+      "translationSha256": "2d49c2e216d148421067b8e3dd797e6b96e4ee2bdb1687cea80f78108cfb8651",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds",
+      "sourceSha256": "89420b625adfdc7fed157514fdcb24b85324c2132809e63b5b4deda79db1f11b",
+      "translationSha256": "a79df51a4a7f2a9ad9ce638dd8ab1e234480a6a3b91354e3387ed199000881e0",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeedsTitle",
+      "sourceSha256": "e103b71106bd41233a6e3270325f4bb5c5a0d36300ec65e867efdcc0edf94e19",
+      "translationSha256": "d8980775a60cd90d7e2f0e1285f6ee96d13193eb3906161834f35b3ef4a4aa65",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "sourceSha256": "85154c5a81f5cba33c2bc958805fe3d83e7ea923e4de5ec0720d889fab31e6c1",
+      "translationSha256": "73811a24e9c5bf9cf2e2b5c7a7df5f15a8b465d4bfc0a9d65f8fa513014c19c6",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "sourceSha256": "5626847a3e3afcb5ea6bf0d34b1588814677916a5fef92cf4760a6d1291a17ea",
+      "translationSha256": "12f060e41a6764bb599f536e2b27783ab915be78ba8edae0ae482539710965a4",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "sourceSha256": "76982be7250a5f93f4200ba3eeae6da2b6c3b2944547ca8c6512727f104cdf8c",
+      "translationSha256": "a8ec0d30c796b683e5a0b9cb459a9b34f11460c7c0652b6220764a81d90cd094",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "sourceSha256": "2e7cd478f3aa209e9e3b688b2028245b09a55c170627bfa769c8d5412df81fa2",
+      "translationSha256": "c797ddd69df01ea1a3ef83faab24a552d9c309e279c4d86d496d5523df2ff15c",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "sourceSha256": "e232d03abcf3be121743dfdcaee54adc482895179c0fdcbde42f177e97f7192d",
+      "translationSha256": "71f6574af4b0b9b87ad8fcf444956d470b59aa8b67565da37890ac8ec84d12c9",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "sourceSha256": "275ffa4ac0448f38dea3e28f404e38d8727b3cde18238559042451a999545d5d",
+      "translationSha256": "87196afa417f9ae59029bec36b9d452624858b7284c8fcab31172670524d97d3",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "sourceSha256": "51f60edc63ca67071914d447b5d8d444b770a00a732cb6c4494daee0af6c713a",
+      "translationSha256": "ad6df632f433b478ccd277fd2e3d4733dc3439daac84259258d4113f8d467bee",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "sourceSha256": "f6e8b915627e42f1f28aaeaf0541cc7c5321b3d32f327bbcda1e9d429aa67fe1",
+      "translationSha256": "14cd4f66e4f7c4e1652eb232286e398f3d8df9828f36d6656573734f47eeaec7",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "sourceSha256": "331a4a6f28b83963f2342e3a736a0c8125ba087ced05e64e000e26f393a6697f",
+      "translationSha256": "46c91350dc27b71697fd0742e48f763c912198ec4849333cebeb402a87c9ff91",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "sourceSha256": "9eaf277597b73df97c83ae90e3b8ef688f0fd67d7170ce7e24b23d74627aa01f",
+      "translationSha256": "b7a64c652f0d2fc54400e07d6b9ec0bb61c3384796054562f0aafd0eff4e7468",
+      "verdict": "accept",
+      "reason": "Proposal preserves the source meaning and protected syntax, or corrects clear Spanish orthography."
+    }
+  ]
+}

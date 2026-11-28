@@ -3,6 +3,8 @@
 Copperfin localization is a release-readiness track for shipping locale-ready builds without changing machine-readable contracts. The first portable C++ locales are:
 
 - `en-US`: source-of-truth/default English fallback.
+- `en-GB`: British/international English v1 catalog; complete keys with
+  regional spelling and independent AI review of changed entries.
 - `es-419`: Latin American Spanish placeholder catalog; not production-ready until separately reviewed.
 - `pt-BR`: Brazilian Portuguese placeholder catalog; not production-ready until separately reviewed.
 - `qps-ploc`: pseudo-locale for testing string routing, expansion, Unicode handling, and hard-coded text assumptions.

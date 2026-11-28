@@ -537,7 +537,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(spanish_missing_assignments.reason == copperfin::runtime::DebugPauseReason::error,
            "#2595: es-419 CALCULATE without assignments should still pause with an error");
     expect(
-        spanish_missing_assignments.message == "CALCULATE requiere una o mas asignaciones agregadas TO/INTO",
+        spanish_missing_assignments.message == "CALCULATE requiere una o más asignaciones agregadas TO/INTO",
         "#2595: es-419 CALCULATE missing-assignment error should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
@@ -548,7 +548,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(portuguese_malformed_expression.reason == copperfin::runtime::DebugPauseReason::error,
            "#2595: pt-BR CALCULATE malformed-expression should still pause with an error");
     expect(
-        portuguese_malformed_expression.message == "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
+        portuguese_malformed_expression.message == "CALCULATE exige expressões agregadas como COUNT() ou SUM(field)",
         "#2595: pt-BR CALCULATE malformed-expression error should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
@@ -568,7 +568,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(spanish_no_work_area.reason == copperfin::runtime::DebugPauseReason::error,
            "#2721: es-419 SUM without a selected work area should still pause with an error");
     expect(
-        spanish_no_work_area.message == "SUM requiere un area de trabajo seleccionada",
+        spanish_no_work_area.message == "SUM requiere un área de trabajo seleccionada",
         "#2721: es-419 aggregate no-work-area error should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
@@ -579,7 +579,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(portuguese_target_mismatch.reason == copperfin::runtime::DebugPauseReason::error,
            "#2721: pt-BR SUM TO target mismatch should still pause with an error");
     expect(
-        portuguese_target_mismatch.message == "SUM TO exige uma variavel por cada expressao agregada",
+        portuguese_target_mismatch.message == "SUM TO exige uma variável por expressão agregada",
         "#2721: pt-BR aggregate TO target-count mismatch should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);

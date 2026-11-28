@@ -1,0 +1,1 @@
+- 2026-11-03: Drive the v1 locale review gate from the declared inventory and require exact independent evidence for intentionally source-identical strings, so newly added language packs cannot silently bypass release review (#7073).

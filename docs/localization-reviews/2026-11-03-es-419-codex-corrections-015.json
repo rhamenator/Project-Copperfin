@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "GPT-6.1 Sol",
+  "sessions": [
+    "Codex /root/review_es_revisions",
+    "Codex /root/review_pt_revisions"
+  ],
+  "scope": "16 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.CommandTokenRequired",
+      "sourceSha256": "2d5bea6fa2329d26e66f7fba127e646c23970530bad83ffab2a494de6850fbec",
+      "translationSha256": "e6f4162b065b8e415ac2a56d7208b799a839722cc62e5ef693b1980dd9c28f38",
+      "verdict": "accept",
+      "reason": "Retains command-token requirement and identifies the execution-catalog entry."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.EntryPointRequired",
+      "sourceSha256": "3bd012d0aab5e7bd34fa9de6deea78c98956ec5bb599479dd81c5d3311e63c91",
+      "translationSha256": "de56f872edd38131b5f974969d1693e6a3988fc9aa586e899beeb5be15583725",
+      "verdict": "accept",
+      "reason": "Retains required launch entry point without altering the technical field."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "e91537ff49b009eadb5b761e08cfebb43668bb22f91d72500af616c001abbf54",
+      "translationSha256": "d8812db4f1eccf637e596ad3b1582175e7e9f460aff4ff5e41a10389525ca5e6",
+      "verdict": "accept",
+      "reason": "Correctly expresses the explicit execution-admission gate."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.CatalogEntry.Error.ValidatedBuilderIdRequired",
+      "sourceSha256": "31b4ddf307c4441b0345c439a50ae41d6dc3302aef7dd7e2e96c233efa7b1992",
+      "translationSha256": "465f67d326d1078bdd5a2d8ae6d7a84dda063ee34673d0197d3d24437daa7c45",
+      "verdict": "accept",
+      "reason": "Retains validated Builder ID requirement and product term."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Error.AdmittedInvocationRequired",
+      "sourceSha256": "b4ffceb3456a9edd89983995dde208f6ccaaaf4cd687cbc74f6eb6f190b3bea1",
+      "translationSha256": "5e7db2c2621b09fd8b45285315cbd3aafa252a2b8030d8dbee16cbf86de5d5f2",
+      "verdict": "accept",
+      "reason": "Preserves authorized invocation and excludes dry-run mode before dispatch planning."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Error.CommandTokenRequired",
+      "sourceSha256": "7b11d1257a62fa510fe8400a39dac34f6920f8adb7d284b6233629a84ddc2325",
+      "translationSha256": "90dc826ef4b769dd2de65a9a7222040c580b764e5a3590f9d3a52c8dd550cce3",
+      "verdict": "accept",
+      "reason": "Retains required command token before dispatch planning."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Error.EntryPointRequired",
+      "sourceSha256": "f892e43afa1e02e2113dc9c058d441dd0f813f6a45e326f0ffcd86744f33a094",
+      "translationSha256": "3178fe935c3d6179d15efc898bdee93f8fae3fff30fd760f7b768f4de5559836",
+      "verdict": "accept",
+      "reason": "Preserves the launch entry-point requirement."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder",
+      "sourceSha256": "8fa9b1d2106f2aaf4db1e80bc00ff038925fc85a6ffce76732c9a3244e3cd2f2",
+      "translationSha256": "9bfc4116d612d508f08a566b7f5fd57a46ec310726ca7b30a596d3618f11c398",
+      "verdict": "accept",
+      "reason": "Retains at least one Builder in context for the execution catalog."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Error.ValidatedBuilderIdRequired",
+      "sourceSha256": "b94a8764ce7e00cbc523e28bb879fe9b4ee0d613e08a7ebcc373807bee74770a",
+      "translationSha256": "3fec4f6f18d9f1d5660882a114e677c333871edaf0cc3d9936e4df402f7182c7",
+      "verdict": "accept",
+      "reason": "Preserves validated Builder ID requirement."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Execution.Error.ExecutionAdmissionRequired",
+      "sourceSha256": "d94eca85f39c4b5982332eecb5eafa33d2f1044dea10c0a06cd0fc047c8490da",
+      "translationSha256": "98bf268301598342bcf97b58d9b19c880771581e768b1624f9f2646e82aace22",
+      "verdict": "accept",
+      "reason": "Correctly describes the explicit execution authorization."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Execution.Error.ExecutorRequired",
+      "sourceSha256": "a3b4e53c43ca7c66991efcf289b7ce95bdbfbf5af720f7e18b646e752cc03568",
+      "translationSha256": "a2373da51660ac79401da120ce94621e98f5e50a8b84ea45c768b69410bb22c4",
+      "verdict": "accept",
+      "reason": "Preserves the requirement for an executor."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired",
+      "sourceSha256": "042e1a23ff0c75dcaf76715d45f0ad295a633c4bf97e8c6e218d9d20a6bda997",
+      "translationSha256": "976b8f53e2f17cff59f6a8d28c6a7f6914876578d50a13776054eaf69a1cd660",
+      "verdict": "accept",
+      "reason": "Preserves validated Builder ID requirement at execution stage."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder",
+      "sourceSha256": "2effebc2897e911c9e098302ddaab203d12d4aeaf6ebba63fad3e8edddb008fd",
+      "translationSha256": "77e9b82ac39a36ee9ecb0a349053a3223424ccb8380501deee0db995319b2666",
+      "verdict": "accept",
+      "reason": "Retains selected-context execution-catalog requirement for at least one Builder."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder",
+      "sourceSha256": "4dda749a7966c94fccb9ee9e90bba12bd9161e5967bd8081fd8b26e611e70cf4",
+      "translationSha256": "120920f38a33e4d727f1d2c9999b54c03d33c7bfffa293ca5ecbfe1df154e130",
+      "verdict": "accept",
+      "reason": "Retains authorization-catalog requirement for at least one Builder in selected context."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.RequestName.Dispatch",
+      "sourceSha256": "64d2cde0727cd59554c888720bd0982a6b2aed3ae058b8fbd26896e790d36542",
+      "translationSha256": "6153e680481983b1161148eb169093102e247fa3109f1bac5889524b2b5091d0",
+      "verdict": "accept",
+      "reason": "As a request-name fragment, “preparación del inicio” identifies dispatch planning without claiming execution."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "sourceSha256": "3fb5bae2ea65a5b33c6aad4cbf375400519cfd2051709c7279abd077ef96e033",
+      "translationSha256": "d290ef85472c1089e837dce64b4bb8a00d4f7fdcd3a504700047d174f5660a54",
+      "verdict": "accept",
+      "reason": "As a request-name fragment, “autorización para iniciar” reflects invocation-admission gate."
+    }
+  ]
+}

@@ -1,0 +1,261 @@
+{
+  "date": "2026-11-03",
+  "reviewerType": "independent AI",
+  "model": "GPT-6 Codex",
+  "sessions": [
+    "Codex /root/review_es_revisions",
+    "Independent Codex agent /root/review_en_gb_revisions"
+  ],
+  "scope": "31 exact-value es-419 corrections authored and independently accepted by separate Codex instances.",
+  "residualUncertainty": "Text-only AI review; rendered UI and runtime behavior remain unverified.",
+  "entries": [
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "cf6d7691e46827977a9c4cb6021d489402ce2fca21e73731b0b7af0fec7553a6",
+      "translationSha256": "3965d43372124bb41dc3d2e25d4bffa9eb27b3408014f59910de4b482f70bc3a",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "sourceSha256": "101311655bfb8ee6fc3d28e0ad12345c67a804374dd49abcc35aa3b9c1fc3c6d",
+      "translationSha256": "f3efaf71cf28e9e124364430bb29435f05a3758cdc6ee4cc8bc347109f6f6fc8",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "sourceSha256": "e30fc60ace85df044b30e643285e271ee1c6dba0ff34b4f14db440f22b49b558",
+      "translationSha256": "1b731f08ec477eccde9f5a681ca8c5bf363358f266ba6aee0b6719651ccf79d4",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "sourceSha256": "a5a7102a5643c448b38b43b3d15320fef81a21937810c57b0b55323e143b30ac",
+      "translationSha256": "6b0c27f00c503491a9a55447be1b3f03d6ef124d154ac0305c97e9968e901d1c",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "sourceSha256": "414a602a00c1442909cedb4dcf007b582339d7b6e37dd87b0ca132d377aab51c",
+      "translationSha256": "a5f5cfc03db44f552885f3610e96e5d0476bc561c969573c3bf702be7ec9264d",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "sourceSha256": "dc95fafe996fcb864232ede1cbf243cd3d220185d06c10040dad52f9d7ce3035",
+      "translationSha256": "8beef5f70720d334148b0a2f01363dfb409b2e904a83067681386380cb9ee534",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "sourceSha256": "7fc053db44bc509d4177281b0b63a3f2cc565331df82c87d6700fa3ccf6dc7b8",
+      "translationSha256": "af59fb4049a4987bf4a494193296c6d00bbfed1404afae117588136d48123bed",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "a36629bd9671f0fd3804f1434f6579074f4253e9725eb1b17e1c36ccef316dcb",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "1cd955e5a73a8d46994a01080ba23fb2fd8a29fd471ccaa3794fca36b6162ff8",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "3a42d8f9a5714926b85392d05d66aa26f37792dcc6ad464f9ed62b523514fd6e",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "sourceSha256": "811ebf65b1097f596a7cfa4d19957c083a95affe046d0c5c61dd6b9284a81f4c",
+      "translationSha256": "911c330c8722900f0c9bbbdba45e098f23b5af45ea2823ac2a18376ca03de69a",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+      "sourceSha256": "1ac66255ec1e880ef991858ad3e977f57fdf25c15aee7836ccf081d35c2ded96",
+      "translationSha256": "7caf82df3dcfc8a912e484b5896079f080e41c23aca1f4793900864a46839b0a",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle",
+      "sourceSha256": "f253db6df3bb434d13354d8b74eb7e6cd309309389d0ea0a59e42b9e4dff93ed",
+      "translationSha256": "57906eca3e8e7fd2fef66961ef524279a79750601456b1fbaac6c0658474d586",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.BuildersWizards.ParityScope",
+      "sourceSha256": "4678cd2a498b07fa92c8e29733e307b9858855fe5d2331ea9d107a38fed6a643",
+      "translationSha256": "605b146029fef9b14fe58abe39e5b11cd43299f15bff17188f7870b1431470af",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.BuildersWizards.Title",
+      "sourceSha256": "9102606aaf8fd4768341b30251b44839ca3e800b7f5641aaaea2cacb72dad3d5",
+      "translationSha256": "6a013fbcdb752dfcefd82e855099442172239cb3649306a4fb5663782889439e",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.ClassDesigner.ParityScope",
+      "sourceSha256": "023fff73516ac3f0ff1a7207d95aad0e01d3ec54101663c4407e2b313988da20",
+      "translationSha256": "64a78c37a1f4f7d611623f31a9ef695858bc0f85b97aba3ee4ab28b6130af8d5",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.FormsDesigner.ParityScope",
+      "sourceSha256": "7caef9e0b4168bee1b7bf857c994abcebfbeb1ca1876badb9c58c80773b96bff",
+      "translationSha256": "aa5ed75eddd31f7e4efce77521b2d8cde855826cd6243137c1ac8f8df345499d",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.ProductSubsystem.LabelDesigner.ParityScope",
+      "sourceSha256": "c832efe30d83fb6f2995e30735b162e0f9dc2e9b89961a22159dce0bc9aa8c9c",
+      "translationSha256": "fa78c8cbadcb5d6a6fa542c36f9655575ad912dcfd68ad694583f76bb8df4cc1",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+      "sourceSha256": "f97549ecfc89f30fd399eb7e2ec748a4247ffce5039636c95bd59bae3bebbcd5",
+      "translationSha256": "1b5da61045b8cd548bbd2b34693537fd56ba35c2f680bf1437ac4aa977291bf9",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MaxLeft",
+      "sourceSha256": "42e15e79ea29151dfba7343ff3f88701a911c302f5f6b868272eba188601c2b7",
+      "translationSha256": "3131134f76a2be2fb6800ebb05f0e25ea245f6b01d8b7a32d132467730a78f7a",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.MaxTop",
+      "sourceSha256": "26811a8b955dbcc670a8280e9643cdb46726a46ef00f441695c15b835be51e0a",
+      "translationSha256": "707aa6946485273be74c7173759433d0d4da6a89246518416c312e86236e29b2",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.WhatsThisHelp",
+      "sourceSha256": "0e8e5b3e4b386056af1e33b7c312741ffa62262a5318067172af36d601c66ad0",
+      "translationSha256": "96f40f4d1c77f7bb1e110ef8f8a945f8c4c9d9084205157a8575791447d58151",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.WhatsThisHelpID",
+      "sourceSha256": "fcc3ca44ad7d3e2168fe0673cc1b703d82e2348c59259ae24af5e3bc5699019b",
+      "translationSha256": "c5bdf14d017c2d92aa7b896deecbda6b206a46d2817f2d976bddd87926130f36",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedBackColor",
+      "sourceSha256": "a952088d1378a79c1fb45a2e34d0362dfb3d8b269af820d8e14fcf4ea618ad31",
+      "translationSha256": "5c0bf6764093024d57681364cb84911aa0032906e3530e4cda827e8cf65ba10b",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "VisualAssetEditor.PropertyLabel.SelectedForeColor",
+      "sourceSha256": "e865e193cf06c4e039038ea29f49f1a691eca8681b0ef0bc20ec666d3e111ac0",
+      "translationSha256": "d5d272789fd2be09ce63964499d172efca0185d3e072fb15e8fcc9e27c6f404f",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderRegistry.Error.BuilderIdRequired",
+      "sourceSha256": "e022d3a39932f7f465a801712530123075f82d953c99636ee8c2b53d46b85883",
+      "translationSha256": "999e2ad206687baa67d5342bfcd9372db0bdca3c523a41328ddc4141ad49afdf",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderRegistry.Error.BuilderUnavailableForContext",
+      "sourceSha256": "35502dc2b5850d95960605cd57f1c2c67956d0e62da67791de852bb8be437121",
+      "translationSha256": "f8a4e0d571a1a7870479f93e396135300ad802d6b794c8131907a18a6a21a1ab",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderRegistry.Error.LaunchCatalogRequiresBuilder",
+      "sourceSha256": "3c1210123a9ee63c088c285dab0362d80cc4d7df46936b80b7c71d2bc9c77ffb",
+      "translationSha256": "1ae6d86cf7138ec73accf1bdfb7cb30d96861db918bc941918b332619de340bb",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderInvocationAdmission.Error.EntryPointRequired",
+      "sourceSha256": "1aa8dfa34b6882205c95f9f160d713b1bd16a31c2dbe95007e1c9a0e27b020c9",
+      "translationSha256": "728e18ca539d99ecf1a2a2de5f14344bb608a7edad0796a8f51ca5e253340543",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "Studio.BuilderInvocationAdmission.Error.ValidatedBuilderIdRequired",
+      "sourceSha256": "7781300d0611dfd79b669cee74f9ada7f3e6306eff9e926b7ceed4704176f255",
+      "translationSha256": "1774da62a77e002b4b64a3d844d26aa1ec8181cb38eaf0791dff84e0bcb8f895",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    },
+    {
+      "locale": "es-419",
+      "key": "AssetEditor.Property.ReportMode",
+      "sourceSha256": "14b89a02b11e43a8fb9620b8960d83dce02167819312c29446b6c52047bdbd88",
+      "translationSha256": "b10e7f0e6316281a7804695a8e3c9eb6817c4523f46ebd7f417648e44e61fc57",
+      "verdict": "accept",
+      "reason": "La propuesta conserva el significado y la sintaxis protegida; la redacción y las tildes son adecuadas para es-419."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+- 2026-11-06: Align native localization regression expectations with independently reviewed es-419 and pt-BR catalog wording while retaining placeholder, command-token, and runtime-output checks.

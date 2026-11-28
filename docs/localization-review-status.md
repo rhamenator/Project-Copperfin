@@ -1,7 +1,8 @@
 # v1 locale review status (#7073)
 
 The `es-419` and `pt-BR` catalogs have complete key presence (3,146 entries each)
-but remain unreviewed language packs. `docs/localization-reviews/<locale>.json`
+and partial independent AI text review. Neither pack is production-ready.
+`docs/localization-reviews/<locale>.json`
 records, for every key, the SHA-256 of the en-US source and current translation,
 source status, translation status, and independent review status/provenance. Hashes detect stale source or translation text; metadata in a repository file does not authenticate that a model session occurred.
 Ledgers and referenced evidence must be direct regular files in the managed
@@ -24,21 +25,22 @@ is explicitly updated. `--write` preserves valid review links for entries whose
 source and translation hashes are unchanged. The normal check reports unresolved entries instead of
 mistaking populated keys for translated or verified text.
 
-Current status after localizing four documented IntelliSense examples in each
-language (2026-11-03):
+Current status after the fifteenth Spanish and eleventh Portuguese independently
+reviewed correction batches (2026-11-03):
 
-| Locale | Populated | Changed translation candidates | Unchanged/untriaged | Exact invariant exceptions | Independent AI reviewed | Human reviewed |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| es-419 | 3,146 | 2,925 | 218 | 3 | 4 | 0 |
-| pt-BR | 3,146 | 2,923 | 220 | 3 | 4 | 0 |
+| Locale | Populated | Changed translation candidates | Intentional source text | Unchanged/untriaged | Exact invariant exceptions | Independent AI reviewed | Human reviewed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| es-419 | 3,146 | 3,067 | 76 | 0 | 3 | 2,929 | 0 |
+| pt-BR | 3,146 | 3,066 | 77 | 0 | 3 | 2,853 | 0 |
 
-A changed candidate is **not** a verified translation. Equal source text is
-untriaged unless its exact key and source value appear in
-`docs/localization-invariant-exceptions.json` with a specific reason. That
-list currently covers only VFP application filenames and one Visual FoxPro
-field-type label. FoxPro/VFP command tokens, `COM`, and `Copperfin` remain
-unchanged inside translated prose as code/product identifiers; whole prose
-entries containing those words are not exempt.
+A changed candidate is **not** a verified translation. Equal source text needs
+an exact independent review explaining intentional use in that locale, or a
+narrow exact invariant exception in
+`docs/localization-invariant-exceptions.json`. The exception list covers VFP
+application filenames and one Visual FoxPro field-type label. FoxPro/VFP
+command tokens, `COM`, and `Copperfin` remain unchanged inside translated
+prose as code/product identifiers; whole prose entries containing those words
+are not automatically exempt.
 
 Initial glossary for the corrected IntelliSense descriptions:
 
@@ -67,7 +69,9 @@ three self-attested read-only sessions; per-entry session attribution was not
 retained. The third session accepted clearer
 CreateObject wording after review feedback. Exact source/translation hashes, session provenance,
 decisions and residual uncertainty are retained in
-`docs/localization-reviews/2026-11-03-intellisense-claude.json`. No native
+`docs/localization-reviews/2026-11-03-intellisense-claude.json`. The 44 function
+descriptions have separate exact-hash acceptance and disclosed limitations in
+`docs/localization-reviews/2026-11-03-intellisense-functions-claude.json`. No native
 speaker or qualified human has reviewed either complete
 pack. Phrasing, technical terminology, regional variation, tone, formality,
 accessibility, layout and screenshots remain open. Independent AI advice may
