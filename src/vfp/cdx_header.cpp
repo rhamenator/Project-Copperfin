@@ -1101,7 +1101,7 @@ bool read_cdx_pool_text(
         text.push_back(static_cast<char>(ch));
     }
     text = trim_copy(std::move(text));
-    return true;
+    return saw_terminator;
 }
 
 bool parse_structural_tag_directory(

@@ -142,6 +142,27 @@ void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
     expect(!empty_declared_for_result.ok && empty_declared_for_result.probe.tags.empty(),
            "a multi-byte FOR-expression span containing only NUL bytes must fail closed without partial tags");
 
+    auto unterminated_key_expression = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    write_le_u16(unterminated_key_expression, tag_header_offset + 510U,
+                 static_cast<std::uint16_t>(std::string_view("field_name").size()));
+    const auto unterminated_key_result = copperfin::vfp::parse_index_probe(
+        unterminated_key_expression, unterminated_key_expression.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!unterminated_key_result.ok && unterminated_key_result.probe.tags.empty(),
+           "a declared key-expression span without its NUL terminator must fail closed without partial tags");
+
+    auto unterminated_for_expression = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "NOT DELETED()",
+         .root_page = 9U}
+    });
+    write_le_u16(unterminated_for_expression, tag_header_offset + 506U,
+                 static_cast<std::uint16_t>(std::string_view("NOT DELETED()").size()));
+    const auto unterminated_for_result = copperfin::vfp::parse_index_probe(
+        unterminated_for_expression, unterminated_for_expression.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!unterminated_for_result.ok && unterminated_for_result.probe.tags.empty(),
+           "a declared FOR-expression span without its NUL terminator must fail closed without partial tags");
+
     auto invalid_pointer = make_synthetic_structural_cdx({
         {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
     });

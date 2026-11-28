@@ -25,19 +25,23 @@ The refreshed local Codex review on `877f585b8baa811dbb2534932f650e9a71792ba9`
 found that a declared FOR-expression span longer than the native terminator-only
 form could decode empty and be exposed as unfiltered. Both retained real VFP9
 fixtures were checked: each encodes no FOR clause as a one-byte NUL at header
-pages 1536 and 3072. The current uncommitted fix rejects only spans longer than
-one byte that decode empty, and adds a multi-byte all-NUL regression while the
-real fixtures remain positive controls. Release `test_vfp_assets` passes 1/1;
-the first broader test attempt caught the need to preserve the observed one-byte
-encoding, then the narrowed regression passed. Changelog assembly validates
-281 fragments and `git diff --check` passes. Record exact test/build details in
-the retained evidence file (SHA-256
-`ca769531c54f98c105d80777fa45ce17293a38b4c830b6630cf0f7d21610eee0`). The
-repair is currently based on pre-fix head `877f585b8baa811dbb2534932f650e9a71792ba9`;
-the fix commit, if not already on the branch, is the next source action. After
-push, record its exact hash in the retained evidence and obtain a fresh local
-Codex review on that exact head; update PR verification text. Hosted checks
-must be green on that same head before merge.
+pages 1536 and 3072. The first attempted guard rejected that valid native form;
+the narrowed rule rejects only longer spans that decode empty and preserves the
+one-byte NUL case. A second exact-head local Codex review on
+`daf1cfd22295103f696fb4e2ea7234f652de8c9d` found that declared expression
+spans lacking their NUL terminator could be exposed as truncated text. The
+current uncommitted patch requires a terminator for every nonzero span and adds
+key/FOR truncation regressions, with the real fixtures as positive controls.
+GNU 15.2 Release `test_vfp_assets` passes 1/1 (0.49 sec); changelog assembly
+validates 281 fragments and `git diff --check` passes. Retained exact-stage
+evidence is
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
+(SHA-256 `d4105cd0313680e2235effc4ee1a8bf0b42c5240ad2551e9cbf305bdb22d18a4`).
+Current uncommitted code is based on pushed head
+`daf1cfd22295103f696fb4e2ea7234f652de8c9d`. NEXT: signed+DCO commit and push,
+then obtain a fresh local Codex review on the exact pushed head, update PR
+verification text, and require all hosted checks green on that same head before
+merge.
 
 Hosted `migration (pr)` failed on `test_dbf_table` because its synthetic
 two-tag CDX helper still used the old heuristic layout. The parser correctly
