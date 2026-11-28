@@ -37,92 +37,112 @@ namespace {
 
 using namespace copperfin::tests::vfp_assets_support;
 
-std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_tag, bool include_for_expression) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, include_second_tag ? 2U : 1U);
+struct SyntheticCdxTag {
+    std::string name;
+    std::string key_expression;
+    std::string for_expression;
+    std::size_t root_page = 9U;
+    std::uint16_t root_flags = 0x0003U;
+    std::uint16_t root_entries = 1U;
+    bool descending = false;
+    std::size_t header_page = 0U;
+};
 
-    if (include_second_tag) {
-        write_le_u32(bytes, 1028U, 11U * 512U);
-        write_le_u32(bytes, 1032U, 4U * 512U);
-        write_le_u16(bytes, 11U * 512U, 0x0001U);
-        write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-        write_le_u16(bytes, 4U * 512U, 0x0003U);
-        write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-        write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
-        write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
-        write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
-        write_ascii(bytes, (11U * 512U) + 24U, "customer_id");
-    } else {
-        write_le_u32(bytes, 1028U, 4U * 512U);
-        write_le_u16(bytes, 4U * 512U, 0x0003U);
-        write_le_u16(bytes, (4U * 512U) + 2U, 1U);
-        write_ascii(bytes, (3U * 512U) - 10U, "NAME");
-        write_ascii(bytes, (4U * 512U) + 24U, "UPPER(NAME)");
+std::vector<std::uint8_t> make_synthetic_structural_cdx(const std::vector<SyntheticCdxTag>& tags) {
+    constexpr std::size_t page_size = 512U;
+    constexpr std::size_t directory_offset = 2U * page_size;
+    constexpr std::size_t key_length = 10U;
+    constexpr std::size_t bytes_per_directory_entry = 3U;
+    std::vector<std::uint8_t> bytes(16U * page_size, 0U);
+    write_le_u32(bytes, 0U, static_cast<std::uint32_t>(directory_offset));
+    write_le_u32(bytes, 4U, 0xFFFFFFFFU);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(key_length));
+    bytes[14U] = 0xE0U;
+    bytes[15U] = 0x01U;
+
+    write_le_u16(bytes, directory_offset, 0x0003U);
+    write_le_u16(bytes, directory_offset + 2U, static_cast<std::uint16_t>(tags.size()));
+    write_le_u32(bytes, directory_offset + 4U, 0xFFFFFFFFU);
+    write_le_u32(bytes, directory_offset + 8U, 0xFFFFFFFFU);
+    const std::size_t entry_data_end = 24U + tags.size() * bytes_per_directory_entry;
+    std::size_t key_cursor = page_size;
+    for (std::size_t index = 0U; index < tags.size(); ++index) {
+        const SyntheticCdxTag& tag = tags[index];
+        const std::size_t header_page = tag.header_page == 0U ? 3U + (index * 2U) : tag.header_page;
+        const std::size_t header_offset = header_page * page_size;
+        const std::size_t root_offset = tag.root_page * page_size;
+        const std::size_t key_chars = tag.name.size();
+        const std::size_t trailing_count = key_length - key_chars;
+        const std::size_t entry_offset = directory_offset + 24U + (index * bytes_per_directory_entry);
+        const std::uint32_t packed = static_cast<std::uint32_t>(header_offset) |
+            (static_cast<std::uint32_t>(trailing_count) << 20U);
+        bytes[entry_offset] = static_cast<std::uint8_t>(packed & 0xFFU);
+        bytes[entry_offset + 1U] = static_cast<std::uint8_t>((packed >> 8U) & 0xFFU);
+        bytes[entry_offset + 2U] = static_cast<std::uint8_t>((packed >> 16U) & 0xFFU);
+        key_cursor -= key_chars;
+        write_ascii(bytes, directory_offset + key_cursor, tag.name.c_str());
+
+        write_le_u32(bytes, header_offset, static_cast<std::uint32_t>(root_offset));
+        write_le_u16(bytes, header_offset + 502U, tag.descending ? 1U : 0U);
+        const std::uint16_t key_length_with_terminator = static_cast<std::uint16_t>(
+            tag.key_expression.empty() ? 0U : tag.key_expression.size() + 1U);
+        const std::uint16_t for_length_with_terminator = static_cast<std::uint16_t>(
+            tag.for_expression.empty() ? 0U : tag.for_expression.size() + 1U);
+        write_le_u16(bytes, header_offset + 506U, for_length_with_terminator);
+        write_le_u16(bytes, header_offset + 510U, key_length_with_terminator);
+        const std::size_t expression_offset = header_offset + page_size;
+        if (!tag.key_expression.empty()) {
+            write_ascii(bytes, expression_offset, tag.key_expression.c_str());
+        }
+        if (!tag.for_expression.empty()) {
+            write_ascii(bytes, expression_offset + key_length_with_terminator, tag.for_expression.c_str());
+        }
+        write_le_u16(bytes, root_offset, tag.root_flags);
+        write_le_u16(bytes, root_offset + 2U, tag.root_entries);
     }
-
-    if (include_for_expression) {
-        write_ascii(bytes, 5U * 512U, "DELETED() = .F.");
-    }
-
+    write_le_u16(bytes, directory_offset + 12U, static_cast<std::uint16_t>(
+        page_size - entry_data_end - (page_size - key_cursor)));
+    write_le_u32(bytes, directory_offset + 14U, 0x0000FFFFU);
+    bytes[directory_offset + 18U] = 0x0FU;
+    bytes[directory_offset + 19U] = 0x0FU;
+    bytes[directory_offset + 20U] = 16U;
+    bytes[directory_offset + 21U] = 4U;
+    bytes[directory_offset + 22U] = 4U;
+    bytes[directory_offset + 23U] = static_cast<std::uint8_t>(bytes_per_directory_entry);
     return bytes;
 }
 
+std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_tag, bool include_for_expression) {
+    if (include_second_tag) {
+        return make_synthetic_structural_cdx({
+            {"CUSTOMER_I", "customer_id", "", 11U, 0x0001U, 1U, false},
+            {"COMPANY_NA", "UPPER(company_name)", include_for_expression ? "DELETED() = .F." : "", 12U, 0x0003U, 2U, false}
+        });
+    }
+    return make_synthetic_structural_cdx({
+        {"NAME", "UPPER(NAME)", include_for_expression ? "DELETED() = .F." : "", 9U, 0x0003U, 1U, false}
+    });
+}
+
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_decoys() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-
-    write_ascii(bytes, (3U * 512U) - 10U, "CUSTOMER_I");
-    write_ascii(bytes, (3U * 512U) + 24U, "customer_invoice_id");
-    write_ascii(bytes, (4U * 512U) + 24U, "invoice_deleted = .F.");
-    write_ascii(bytes, (11U * 512U) + 24U, "customer_id");
-    write_ascii(bytes, (12U * 512U) + 16U, "DELETED() = .F.");
-
+    auto bytes = make_synthetic_structural_cdx({
+        {"CUSTOMER_I", "customer_id", "DELETED() = .F.", 11U, 0x0001U, 1U, false}
+    });
+    write_ascii(bytes, 13U * 512U, "customer_invoice_id");
+    write_ascii(bytes, 12U * 512U + 16U, "invoice_deleted = .F.");
     return bytes;
 }
 
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_descriptive_tag_name() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 4U * 512U);
-
-    write_ascii(bytes, (3U * 512U) - 10U, "FULLNAME");
-    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(LAST+FIRST)");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {"FULLNAME", "UPPER(LAST+FIRST)", "", 9U, 0x0003U, 1U, false}
+    });
 }
 
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_plain_field_expression() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 4U * 512U);
-
-    write_ascii(bytes, (3U * 512U) - 10U, "NAME");
-    write_ascii(bytes, (4U * 512U) + 24U, "NAME");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {"NAME", "NAME", "", 9U, 0x0003U, 1U, false}
+    });
 }
 
 std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
@@ -2919,6 +2939,20 @@ void test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_prod
         expect(probe_result.probe.tags.front().name_hint == "FRUITNAME", "the written CDX should expose the tag name, uppercased");
     }
 
+    const fs::path extended_name_cdx_path = temp_dir / "extended_name.cdx";
+    const auto extended_name_write = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        extended_name_cdx_path.string(), dbf_path.string(), "tag-with-punct", "NAME", 10U, entries);
+    expect(extended_name_write.ok,
+           "the documented writer profile should accept printable punctuation and names longer than ten bytes: " +
+               extended_name_write.error);
+    const auto extended_name_probe = copperfin::vfp::parse_index_probe_from_file(extended_name_cdx_path.string());
+    expect(extended_name_probe.ok,
+           "the reader should parse a writer-profile tag name longer than ten bytes: " + extended_name_probe.error);
+    if (extended_name_probe.ok && !extended_name_probe.probe.tags.empty()) {
+        expect(extended_name_probe.probe.tags.front().name_hint == "TAG-WITH-PUNCT",
+               "the reader should preserve the full uppercased writer-profile tag name");
+    }
+
     std::vector<std::uint8_t> raw_cdx_bytes(static_cast<std::size_t>(fs::file_size(cdx_path)), 0U);
     {
         std::ifstream input(cdx_path, std::ios::binary);
@@ -2956,6 +2990,27 @@ void test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_prod
         dbf_header_result.header.has_production_index(),
         "create_vfp_cdx_single_tag_index_file should set the DBF's has_production_index flag");
 
+    const fs::path empty_dbf_path = temp_dir / "empty_fruit.dbf";
+    const fs::path empty_cdx_path = temp_dir / "empty_fruit.cdx";
+    const std::vector<std::vector<std::string>> empty_records;
+    const auto empty_dbf_create = copperfin::vfp::create_dbf_table_file(
+        empty_dbf_path.string(), fields, empty_records);
+    expect(empty_dbf_create.ok,
+           "empty-index compatibility test: DBF fixture should be created: " + empty_dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> empty_entries;
+    const auto empty_write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        empty_cdx_path.string(), empty_dbf_path.string(), "emptyfruit", "NAME", 10U, empty_entries);
+    expect(empty_write_result.ok,
+           "the existing CDX writer should accept an empty index for an empty table: " + empty_write_result.error);
+    const auto empty_probe_result = copperfin::vfp::parse_index_probe_from_file(empty_cdx_path.string());
+    expect(empty_probe_result.ok,
+           "the parser should preserve readable metadata for the writer's empty leaf: " + empty_probe_result.error);
+    if (empty_probe_result.ok && !empty_probe_result.probe.tags.empty()) {
+        expect(empty_probe_result.probe.tags.front().name_hint == "EMPTYFRUIT" &&
+                   empty_probe_result.probe.tags.front().key_expression_hint == "NAME",
+               "the empty writer index should still expose its tag name and key expression");
+    }
+
     fs::remove_all(temp_dir, ignored);
 }
 
@@ -2980,6 +3035,115 @@ void test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name() {
     expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject an empty tag name");
     expect(!write_result.error.empty(), "an empty-tag-name rejection should carry a localized error message");
     expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the tag name is rejected");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_control_tag_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_control_tag_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"APPLE"}});
+    expect(dbf_create.ok, "CDX writer control-name test: DBF fixture should be created: " + dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "APPLE"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), std::string("TAG\x01", 4U), "NAME", 10U, entries);
+    expect(!write_result.ok, "the CDX writer should reject control bytes in its profile-specific tag name");
+    expect(!fs::exists(cdx_path), "the CDX writer should not emit a file for a control-byte tag name");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_empty_key_expression_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_empty_expression_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"APPLE"}});
+    expect(dbf_create.ok, "CDX writer empty-expression test: DBF fixture should be created: " + dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "APPLE"}};
+    {
+        std::ofstream existing_cdx(cdx_path, std::ios::binary);
+        existing_cdx << "preserve";
+    }
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), "NAME_TAG", "", 10U, entries);
+    expect(!write_result.ok, "the CDX writer should reject an empty key expression");
+    expect(!write_result.error.empty(), "empty-expression rejection should report a localized error");
+    expect(fs::file_size(cdx_path) == 8U, "empty-expression rejection must preserve the existing CDX size");
+    {
+        std::ifstream existing_cdx(cdx_path, std::ios::binary);
+        char contents[8]{};
+        existing_cdx.read(contents, 8);
+        expect(std::string(contents, 8U) == "preserve",
+               "empty-expression rejection must preserve existing CDX contents");
+    }
+    const auto dbf_header = copperfin::vfp::parse_dbf_header_from_file(dbf_path.string());
+    expect(dbf_header.ok && !dbf_header.header.has_production_index(),
+           "empty-expression rejection must leave the DBF production-index flag unchanged");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_unreadable_key_expression_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_unreadable_expression_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"APPLE"}});
+    expect(dbf_create.ok, "CDX writer unreadable-expression test: DBF fixture should be created: " + dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "APPLE"}};
+
+    std::string embedded_nul_expression = "NAME";
+    embedded_nul_expression.push_back('\0');
+    embedded_nul_expression += " + 'TAIL'";
+    const std::vector<std::string> rejected_expressions{
+        embedded_nul_expression,
+        std::string("NAME\x01", 5U),
+        std::string("NAME\x7F", 5U),
+        " \t\r\n\v\f",
+    };
+    for (const std::string& expression : rejected_expressions) {
+        {
+            std::ofstream existing_cdx(cdx_path, std::ios::binary | std::ios::trunc);
+            existing_cdx << "preserve";
+        }
+        const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+            cdx_path.string(), dbf_path.string(), "NAME_TAG", expression, 10U, entries);
+        expect(!write_result.ok, "the CDX writer should reject an expression its reader cannot parse");
+        expect(!write_result.error.empty(), "unreadable-expression rejection should report a localized error");
+        expect(fs::file_size(cdx_path) == 8U,
+               "unreadable-expression rejection must preserve the existing CDX size");
+        {
+            std::ifstream existing_cdx(cdx_path, std::ios::binary);
+            char contents[8]{};
+            existing_cdx.read(contents, 8);
+            expect(std::string(contents, 8U) == "preserve",
+                   "unreadable-expression rejection must preserve existing CDX contents");
+        }
+        const auto dbf_header = copperfin::vfp::parse_dbf_header_from_file(dbf_path.string());
+        expect(dbf_header.ok && !dbf_header.header.has_production_index(),
+               "unreadable-expression rejection must leave the DBF production-index flag unchanged");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -4924,25 +5088,12 @@ void test_export_database_as_sql_still_preserves_blank_numeric_as_null() {
 // those existing tests only exercise CDX-format parsing in isolation,
 // decoupled from any real DBF field-name constraint.
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_for_postgresql_index_test() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, "CUST_ID");
-    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_N");
-    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
-    write_ascii(bytes, (11U * 512U) + 24U, "cust_id");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {.name = "CUST_ID", .key_expression = "cust_id", .for_expression = "", .root_page = 11U,
+         .root_flags = 0x0001U, .root_entries = 1U},
+        {.name = "COMPANY_N", .key_expression = "UPPER(company_name)", .for_expression = "", .root_page = 12U,
+         .root_flags = 0x0003U, .root_entries = 2U}
+    });
 }
 
 void test_export_database_as_postgresql_sql_maps_types_and_creates_indexes() {
@@ -5386,25 +5537,10 @@ void test_export_database_as_sqlite_sql_accepts_zero_with_oversized_exponent() {
 // containing at least one uppercase letter) to be recognized at all.
 std::vector<std::uint8_t> make_synthetic_single_tag_cdx_bytes(
     const std::string& tag_name, const std::string& key_expression) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, tag_name.c_str());
-    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_N");
-    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
-    write_ascii(bytes, (11U * 512U) + 24U, key_expression.c_str());
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {.name = tag_name, .key_expression = key_expression, .for_expression = "",
+         .root_page = 9U, .root_flags = 0x0001U, .root_entries = 1U}
+    });
 }
 
 void test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables() {
@@ -5555,25 +5691,10 @@ void test_export_database_as_postgresql_sql_omits_indexes_without_cdx() {
 // rejects a second CREATE INDEX for an already-existing relation name,
 // leaving an otherwise advertised runnable export incomplete.
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_two_tags_on_same_column() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, "SKU_ASC");
-    write_ascii(bytes, (3U * 512U) - 10U, "SKU_DESC");
-    write_ascii(bytes, (4U * 512U) + 24U, "sku");
-    write_ascii(bytes, (11U * 512U) + 24U, "sku");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {"SKU_ASC", "sku", "", 11U, 0x0001U, 1U, false},
+        {"SKU_DESC", "sku", "", 12U, 0x0003U, 2U, false}
+    });
 }
 
 // Parameterized sibling of make_synthetic_cdx_bytes_with_two_tags_on_same_column()
@@ -5584,25 +5705,10 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_two_tags_on_same_column(
 // common prefix.
 std::vector<std::uint8_t> make_synthetic_two_tag_cdx_bytes(
     const std::string& tag1_name, const std::string& tag2_name, const std::string& key_expression) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, tag1_name.c_str());
-    write_ascii(bytes, (3U * 512U) - 10U, tag2_name.c_str());
-    write_ascii(bytes, (4U * 512U) + 24U, key_expression.c_str());
-    write_ascii(bytes, (11U * 512U) + 24U, key_expression.c_str());
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {tag1_name, key_expression, "", 11U, 0x0001U, 1U, false},
+        {tag2_name, key_expression, "", 12U, 0x0003U, 2U, false}
+    });
 }
 
 // #5559 review (chatgpt-codex-connector): PostgreSQL silently truncates
@@ -9003,7 +9109,11 @@ int main() {
     test_export_database_as_json_inaccessible_path_returns_structured_failure();
 #endif
     test_parse_index_probe_for_cdx();
-    test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed();
+    test_parse_synthetic_vfp9_compound_cdx_preserves_tag_tuples();
+    test_parse_cdx_expression_preserves_code_page_bytes();
+    test_parse_vfp9_cdx_directory_name_width_is_independent_of_key_length();
+    test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings();
+    test_parse_real_vfp9_compound_cdx_recovers_directory_metadata();
     test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed();
     test_parse_cdx_header_root_offset_beyond_16_bits();
     test_parse_index_probe_for_dcx();
@@ -9056,6 +9166,9 @@ int main() {
     test_scan_access_saved_queries_reports_ok_with_no_queries();
     test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_production_index_flag();
     test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name();
+    test_create_vfp_cdx_single_tag_index_file_rejects_control_tag_name();
+    test_create_vfp_cdx_single_tag_index_file_rejects_empty_key_expression_without_mutation();
+    test_create_vfp_cdx_single_tag_index_file_rejects_unreadable_key_expression_without_mutation();
     test_create_vfp_cdx_single_tag_index_file_rejects_key_exceeding_declared_length();
     test_create_vfp_cdx_single_tag_index_file_rejects_key_longer_than_compression_encoding_limit();
     test_create_vfp_cdx_single_tag_index_file_rejects_record_number_out_of_range();

@@ -8,6 +8,7 @@
 #include "copperfin/localization/localization.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -401,7 +402,9 @@ bool looks_like_tag_page_offset(
            (offset % page_size) == 0U;
 }
 
-bool has_unbound_compound_root_directory_tags(
+// Retained only as legacy fail-closed logic for comparison while all active
+// parsing now goes through the structural tuple decoder below.
+[[maybe_unused]] bool has_unbound_compound_root_directory_tags(
     const std::vector<std::uint8_t>& bytes,
     std::size_t root_page_offset,
     std::size_t page_size) {
@@ -676,7 +679,11 @@ std::size_t binding_anchor_offset(const CdxTagDescriptor& tag, std::size_t page_
     return 0U;
 }
 
-std::vector<CdxTagDescriptor> extract_tag_descriptors(
+// Heuristic tag extraction is deliberately disconnected: it produced false
+// metadata for the retained real VFP9 compound fixture. Keep the dormant
+// implementation during this bounded recovery so its helper behavior remains
+// available for a separately reviewed cleanup.
+[[maybe_unused]] std::vector<CdxTagDescriptor> extract_tag_descriptors(
     const std::vector<std::uint8_t>& bytes,
     std::size_t page_size,
     std::size_t key_length) {
@@ -876,6 +883,380 @@ std::vector<CdxTagDescriptor> extract_tag_descriptors(
     return tags;
 }
 
+struct CompactLeafEntry {
+    std::string key;
+    std::uint32_t value = 0;
+    std::uint32_t key_offset = 0;
+};
+
+bool is_cdx_tag_name(std::string_view name) {
+    if (name.empty() || name.size() > 10U ||
+        (std::isalpha(static_cast<unsigned char>(name.front())) == 0 && name.front() != '_')) {
+        return false;
+    }
+    return std::all_of(name.begin(), name.end(), [](char ch) {
+        return is_identifier_char(ch);
+    });
+}
+
+bool is_copperfin_writer_tag_name(std::string_view name) {
+    return !name.empty() && name.size() <= (512U - 32U) &&
+        std::all_of(name.begin(), name.end(), [](unsigned char ch) {
+            return ch >= 0x20U && ch <= 0x7EU;
+        });
+}
+
+bool decode_compact_leaf_page(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t page_offset,
+    std::size_t page_size,
+    std::size_t key_length,
+    bool require_root,
+    std::vector<CompactLeafEntry>& entries) {
+    if (page_size != 512U || page_offset > bytes.size() ||
+        page_size > bytes.size() - page_offset || key_length == 0U || key_length > 10U) {
+        return false;
+    }
+
+    const std::uint16_t attributes = read_le_u16(bytes, page_offset);
+    const std::uint16_t key_count = read_le_u16(bytes, page_offset + 2U);
+    constexpr std::uint16_t root_flag = 0x0001U;
+    constexpr std::uint16_t leaf_flag = 0x0002U;
+    if ((attributes & leaf_flag) == 0U ||
+        (require_root && (attributes & root_flag) == 0U) || key_count == 0U) {
+        return false;
+    }
+
+    const std::uint32_t record_mask = read_le_u32(bytes, page_offset + 14U);
+    const std::uint64_t duplicate_mask = bytes[page_offset + 18U];
+    const std::uint64_t trailing_mask = bytes[page_offset + 19U];
+    const unsigned record_bits = bytes[page_offset + 20U];
+    const unsigned duplicate_bits = bytes[page_offset + 21U];
+    const unsigned trailing_bits = bytes[page_offset + 22U];
+    const std::size_t bytes_per_entry = bytes[page_offset + 23U];
+    if (bytes_per_entry == 0U || bytes_per_entry > 8U || record_mask == 0U ||
+        record_bits == 0U || record_bits > 32U ||
+        duplicate_bits > 8U || trailing_bits > 8U ||
+        record_bits + duplicate_bits + trailing_bits > bytes_per_entry * 8U) {
+        return false;
+    }
+
+    constexpr std::size_t entry_data_start = 24U;
+    const std::size_t entry_data_bytes = static_cast<std::size_t>(key_count) * bytes_per_entry;
+    if (entry_data_bytes > page_size - entry_data_start) {
+        return false;
+    }
+    const std::size_t entry_data_end = entry_data_start + entry_data_bytes;
+    std::size_t key_end = page_size;
+    std::string previous_key(key_length, ' ');
+    std::vector<CompactLeafEntry> decoded;
+    decoded.reserve(key_count);
+
+    for (std::size_t index = 0U; index < key_count; ++index) {
+        const std::size_t entry_offset = page_offset + entry_data_start + (index * bytes_per_entry);
+        std::uint64_t packed = 0U;
+        for (std::size_t byte_index = bytes_per_entry; byte_index > 0U; --byte_index) {
+            packed = (packed << 8U) | bytes[entry_offset + byte_index - 1U];
+        }
+
+        const std::uint32_t value = static_cast<std::uint32_t>(packed & record_mask);
+        const std::uint64_t duplicate_count = (packed >> record_bits) & duplicate_mask;
+        const std::uint64_t trailing_count =
+            (packed >> (record_bits + duplicate_bits)) & trailing_mask;
+        if (duplicate_count > key_length || trailing_count > key_length ||
+            duplicate_count + trailing_count > key_length) {
+            return false;
+        }
+
+        const std::size_t chunk_length = key_length -
+            static_cast<std::size_t>(duplicate_count + trailing_count);
+        if (chunk_length > key_end || key_end - chunk_length < entry_data_end) {
+            return false;
+        }
+        const std::size_t chunk_start = key_end - chunk_length;
+        std::string key(key_length, ' ');
+        std::copy_n(previous_key.begin(), static_cast<std::size_t>(duplicate_count), key.begin());
+        std::copy_n(
+            bytes.begin() + static_cast<std::ptrdiff_t>(page_offset + chunk_start),
+            chunk_length,
+            key.begin() + static_cast<std::ptrdiff_t>(duplicate_count));
+
+        std::string name = key;
+        while (!name.empty() && name.back() == ' ') {
+            name.pop_back();
+        }
+        if (!is_cdx_tag_name(name)) {
+            return false;
+        }
+
+        decoded.push_back({
+            .key = std::move(key),
+            .value = value,
+            .key_offset = static_cast<std::uint32_t>(page_offset + chunk_start)
+        });
+        previous_key = decoded.back().key;
+        key_end = chunk_start;
+    }
+
+    const std::uint16_t free_space = read_le_u16(bytes, page_offset + 12U);
+    if (free_space != key_end - entry_data_end) {
+        return false;
+    }
+    entries = std::move(decoded);
+    return true;
+}
+
+// Copperfin's existing single-tag writer has a deliberately documented
+// six-page profile (docs/77). Its directory page stores a right-aligned
+// name with leading NUL padding and a copied free-space value that is not
+// consistent with the generic compact-leaf equation. Admit only that exact
+// single-tag page shape here; ordinary VFP9 pages still use the structural
+// decoder above.
+bool decode_copperfin_single_tag_directory(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t page_offset,
+    std::vector<CompactLeafEntry>& entries) {
+    constexpr std::size_t page_size = 512U;
+    if (page_offset > bytes.size() || page_size > bytes.size() - page_offset) {
+        return false;
+    }
+
+    if (read_le_u16(bytes, page_offset) != 0x0003U ||
+        read_le_u16(bytes, page_offset + 2U) != 1U ||
+        read_le_u32(bytes, page_offset + 4U) != 0xFFFFFFFFU ||
+        read_le_u32(bytes, page_offset + 8U) != 0xFFFFFFFFU ||
+        read_le_u16(bytes, page_offset + 12U) != 0x01DEU ||
+        read_le_u16(bytes, page_offset + 14U) != 0xFFFFU ||
+        bytes[page_offset + 16U] != 0U || bytes[page_offset + 17U] != 0U ||
+        bytes[page_offset + 18U] != 0x0FU || bytes[page_offset + 19U] != 0x0FU ||
+        bytes[page_offset + 20U] != 16U || bytes[page_offset + 21U] != 4U ||
+        bytes[page_offset + 22U] != 4U || bytes[page_offset + 23U] != 3U ||
+        read_le_u32(bytes, page_offset + 28U) != 48U) {
+        return false;
+    }
+
+    const std::uint32_t tag_header_offset = read_le_u32(bytes, page_offset + 24U);
+    std::size_t actual_name_start = page_offset + 32U;
+    while (actual_name_start < page_offset + page_size && bytes[actual_name_start] == 0U) {
+        ++actual_name_start;
+    }
+    if (actual_name_start == page_offset + page_size ||
+        !std::all_of(bytes.begin() + static_cast<std::ptrdiff_t>(page_offset + 32U),
+                     bytes.begin() + static_cast<std::ptrdiff_t>(actual_name_start),
+                     [](std::uint8_t value) { return value == 0U; })) {
+        return false;
+    }
+
+    std::string name(bytes.begin() + static_cast<std::ptrdiff_t>(actual_name_start),
+                     bytes.begin() + static_cast<std::ptrdiff_t>(page_offset + page_size));
+    if (!is_copperfin_writer_tag_name(name) ||
+        !looks_like_tag_page_offset(tag_header_offset, page_size, bytes.size())) {
+        return false;
+    }
+    entries = {{.key = std::move(name), .value = tag_header_offset,
+                .key_offset = static_cast<std::uint32_t>(actual_name_start)}};
+    return true;
+}
+
+bool is_copperfin_single_tag_stats_page(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t offset,
+    std::uint16_t key_length) {
+    constexpr std::size_t page_size = 512U;
+    constexpr std::array<std::uint8_t, 10U> footer{0U, 0U, 5U, 0U, 1U, 0U, 0U, 0U, 5U, 0U};
+    if (offset > bytes.size() || page_size > bytes.size() - offset ||
+        read_le_u16(bytes, offset) != key_length || read_le_u16(bytes, offset + 2U) != 0U ||
+        read_le_u16(bytes, offset + 12U) != key_length || read_le_u16(bytes, offset + 14U) != 0x0160U ||
+        read_le_u32(bytes, offset + 24U) != 11U ||
+        read_le_u32(bytes, offset + 28U) != 1U || read_le_u32(bytes, offset + 32U) != 2U) {
+        return false;
+    }
+    return std::equal(footer.begin(), footer.end(),
+                      bytes.begin() + static_cast<std::ptrdiff_t>(offset + 502U));
+}
+
+bool read_cdx_pool_text(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t offset,
+    std::size_t length,
+    std::string& text) {
+    if (length == 0U || offset > bytes.size() || length > bytes.size() - offset) {
+        text.clear();
+        return length == 0U;
+    }
+
+    text.clear();
+    bool saw_terminator = false;
+    for (std::size_t index = 0U; index < length; ++index) {
+        const unsigned char ch = bytes[offset + index];
+        if (ch == 0U) {
+            saw_terminator = true;
+            continue;
+        }
+        const bool allowed_ascii_control = ch == '\t' || ch == '\n' || ch == '\v' ||
+            ch == '\f' || ch == '\r';
+        if (saw_terminator || (ch < 0x20U && !allowed_ascii_control) || ch == 0x7FU) {
+            return false;
+        }
+        text.push_back(static_cast<char>(ch));
+    }
+    text = trim_copy(std::move(text));
+    return saw_terminator;
+}
+
+bool parse_structural_tag_directory(
+    const std::vector<std::uint8_t>& bytes,
+    std::uint64_t file_size,
+    const CdxHeader& header,
+    std::vector<CdxTagDescriptor>& tags) {
+    if (header.page_size != 512U ||
+        static_cast<std::uint64_t>(header.root_node_offset) + header.page_size > file_size) {
+        return false;
+    }
+
+    std::vector<CompactLeafEntry> directory_entries;
+    const std::size_t directory_offset = static_cast<std::size_t>(header.root_node_offset);
+    if (!decode_compact_leaf_page(
+            bytes,
+            directory_offset,
+            header.page_size,
+            10U,
+            true,
+            directory_entries) &&
+        !decode_copperfin_single_tag_directory(bytes, directory_offset, directory_entries)) {
+        return false;
+    }
+
+    std::set<std::string> seen_names;
+    std::set<std::uint32_t> seen_headers;
+    std::set<std::uint32_t> seen_tag_roots;
+    std::vector<CdxTagDescriptor> decoded_tags;
+    decoded_tags.reserve(directory_entries.size());
+    for (const CompactLeafEntry& directory_entry : directory_entries) {
+        const std::uint32_t tag_header_offset = directory_entry.value;
+        if (!looks_like_tag_page_offset(tag_header_offset, header.page_size, bytes.size()) ||
+            static_cast<std::uint64_t>(tag_header_offset) + (header.page_size * 2U) > file_size ||
+            static_cast<std::uint64_t>(tag_header_offset) + (header.page_size * 2U) > bytes.size()) {
+            return false;
+        }
+
+        const std::size_t header_offset = static_cast<std::size_t>(tag_header_offset);
+        const std::uint32_t tag_root_offset = read_le_u32(bytes, header_offset);
+        const bool copperfin_writer_tag = directory_entries.size() == 1U &&
+            is_copperfin_single_tag_stats_page(bytes, header_offset, header.key_length_hint);
+        std::string name = directory_entry.key;
+        if (!copperfin_writer_tag) {
+            while (!name.empty() && name.back() == ' ') {
+                name.pop_back();
+            }
+            if (!is_cdx_tag_name(name)) {
+                return false;
+            }
+        }
+        if (!seen_names.insert(uppercase_copy(name)).second ||
+            !seen_headers.insert(tag_header_offset).second) {
+            return false;
+        }
+        if (copperfin_writer_tag) {
+            const std::size_t writer_root_offset = header_offset + (header.page_size * 2U);
+            if (writer_root_offset > bytes.size() ||
+                header.page_size > bytes.size() - writer_root_offset ||
+                read_le_u16(bytes, writer_root_offset) != 0x0007U) {
+                return false;
+            }
+            std::string key_expression;
+            const std::size_t expression_offset = header_offset + header.page_size;
+            if (!read_cdx_pool_text(bytes, expression_offset, header.page_size, key_expression) ||
+                key_expression.empty()) {
+                return false;
+            }
+            decoded_tags.push_back({
+                .name_hint = name,
+                .key_expression_hint = key_expression,
+                .for_expression_hint = {},
+                .tag_header_offset_hint = tag_header_offset,
+                .tag_page_offset_hint = static_cast<std::uint32_t>(writer_root_offset),
+                .name_offset_hint = directory_entry.key_offset,
+                .key_expression_offset_hint = static_cast<std::uint32_t>(expression_offset),
+                .for_expression_offset_hint = 0U,
+                .inferred_name = false,
+                .descending_hint = false,
+                .direction_known = true
+            });
+            continue;
+        }
+
+        if (tag_root_offset == directory_offset ||
+            !seen_tag_roots.insert(tag_root_offset).second ||
+            !looks_like_tag_page_offset(tag_root_offset, header.page_size, bytes.size()) ||
+            static_cast<std::uint64_t>(tag_root_offset) + header.page_size > file_size ||
+            static_cast<std::uint64_t>(tag_root_offset) + header.page_size > bytes.size()) {
+            return false;
+        }
+        const std::size_t tag_root_page_offset = static_cast<std::size_t>(tag_root_offset);
+        const std::uint16_t tag_root_attributes = read_le_u16(bytes, tag_root_page_offset);
+        const std::uint16_t tag_root_entry_count = read_le_u16(bytes, tag_root_page_offset + 2U);
+        constexpr std::uint16_t cdx_root_flag = 0x0001U;
+        constexpr std::uint16_t known_cdx_page_flags = 0x0007U;
+        constexpr std::size_t maximum_page_entries = (512U - 24U) / 2U;
+        if ((tag_root_attributes & cdx_root_flag) == 0U ||
+            (tag_root_attributes & static_cast<std::uint16_t>(~known_cdx_page_flags)) != 0U ||
+            tag_root_entry_count > maximum_page_entries) {
+            return false;
+        }
+
+        const std::uint16_t key_expression_length = read_le_u16(bytes, header_offset + 510U);
+        const std::uint16_t for_expression_length = read_le_u16(bytes, header_offset + 506U);
+        const std::uint16_t descending_word = read_le_u16(bytes, header_offset + 502U);
+        if (key_expression_length == 0U || descending_word > 1U ||
+            static_cast<std::size_t>(key_expression_length) + for_expression_length > header.page_size) {
+            return false;
+        }
+
+        std::string key_expression;
+        std::string for_expression;
+        const std::size_t expression_pool_offset = header_offset + header.page_size;
+        if (!read_cdx_pool_text(
+                bytes, expression_pool_offset, key_expression_length, key_expression) ||
+            key_expression.empty()) {
+            return false;
+        }
+        const std::size_t for_expression_offset = expression_pool_offset + key_expression_length;
+        if (!read_cdx_pool_text(
+                bytes, for_expression_offset, for_expression_length, for_expression)) {
+            return false;
+        }
+        // The retained real VFP9 captures encode no FOR clause as a single
+        // NUL terminator. Longer declared spans that decode to no text are
+        // incomplete metadata and must not be exposed as an unfiltered tag.
+        if (for_expression_length > 1U && for_expression.empty()) {
+            return false;
+        }
+
+        decoded_tags.push_back({
+            .name_hint = name,
+            .key_expression_hint = key_expression,
+            .for_expression_hint = for_expression,
+            .tag_header_offset_hint = tag_header_offset,
+            .tag_page_offset_hint = tag_root_offset,
+            .name_offset_hint = directory_entry.key_offset,
+            .key_expression_offset_hint = static_cast<std::uint32_t>(expression_pool_offset),
+            .for_expression_offset_hint = for_expression_length == 0U
+                ? 0U
+                : static_cast<std::uint32_t>(for_expression_offset),
+            .inferred_name = false,
+            .descending_hint = descending_word == 1U,
+            .direction_known = true
+        });
+    }
+
+    if (decoded_tags.empty()) {
+        return false;
+    }
+    tags = std::move(decoded_tags);
+    return true;
+}
+
 }  // namespace
 
 bool CdxHeader::looks_like_cdx() const {
@@ -922,32 +1303,16 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
         };
     }
 
-    // A VFP9 compound root directory can contain multiple names while all
-    // per-entry page pointers are the invalid sentinel. The variable-length
-    // name tail is not enough to bind each tag to its own header page, so the
-    // existing fixed-slot/expression-run heuristics must not escape as
-    // authoritative metadata. Reject this narrowly scoped shape until the
-    // root-directory packing and tag associations are structurally decoded.
-    if (has_unbound_compound_root_directory_tags(
-            bytes,
-            static_cast<std::size_t>(header.root_node_offset),
-            header.page_size)) {
-        return {
-            .ok = false,
-            .header = header,
-            .tags = {},
-            .error = cdx_header_text("Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata")
-        };
-    }
-
     CdxParseResult result{
         .ok = true,
         .header = header,
         .tags = {},
         .error = {}
     };
-    if (bytes.size() > 16U) {
-        result.tags = extract_tag_descriptors(bytes, header.page_size, header.key_length_hint);
+    if (!parse_structural_tag_directory(bytes, file_size, header, result.tags)) {
+        result.ok = false;
+        result.tags.clear();
+        result.error = cdx_header_text("Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata");
     }
     return result;
 }

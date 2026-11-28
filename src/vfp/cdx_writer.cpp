@@ -250,8 +250,33 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
     // required header fields (docs/77's "Tag-table page" layout). A name
     // longer than kPageSize - 32 would overlap and corrupt those fields.
     constexpr std::size_t kTagTableHeaderSize = 32U;
-    if (tag_name.empty() || tag_name.size() > (kPageSize - kTagTableHeaderSize)) {
+    if (tag_name.empty() || tag_name.size() > (kPageSize - kTagTableHeaderSize) ||
+        !std::all_of(tag_name.begin(), tag_name.end(), [](unsigned char ch) {
+            return ch >= 0x20U && ch <= 0x7EU;
+        })) {
         result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidTagName");
+        return result;
+    }
+
+    if (key_expression.empty()) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.EmptyKeyExpression");
+        return result;
+    }
+
+    const bool key_expression_is_reader_compatible = std::all_of(
+        key_expression.begin(), key_expression.end(), [](unsigned char ch) {
+            const bool allowed_ascii_control = ch == '\t' || ch == '\n' || ch == '\v' ||
+                ch == '\f' || ch == '\r';
+            return ch != 0U && (ch >= 0x20U || allowed_ascii_control) && ch != 0x7FU;
+        });
+    if (!key_expression_is_reader_compatible) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidKeyExpression");
+        return result;
+    }
+    if (std::all_of(key_expression.begin(), key_expression.end(), [](unsigned char ch) {
+            return std::isspace(ch) != 0;
+        })) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.EmptyKeyExpression");
         return result;
     }
 

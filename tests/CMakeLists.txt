@@ -703,6 +703,7 @@ foreach(runtime_host_test_target IN ITEMS
             test_runtime_host_audit_containment.cpp
             test_runtime_host_audit_contracts.cpp
             test_runtime_host_audit_main.cpp
+            prg_engine_test_support.cpp
         )
     endif()
     add_executable(${runtime_host_test_target} ${runtime_host_test_sources})

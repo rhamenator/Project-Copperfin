@@ -161,44 +161,82 @@ void write_people_dbf(
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
+void write_synthetic_cdx_tags(
+    const std::filesystem::path& path,
+    const std::vector<SyntheticCdxTag>& tags) {
+    constexpr std::size_t page_size = 512U;
+    constexpr std::size_t directory_offset = 2U * page_size;
+    constexpr std::size_t directory_entry_size = 3U;
+    constexpr std::size_t key_length = 10U;
+    if (tags.empty() || tags.size() > 4U) {
+        throw std::length_error("write_synthetic_cdx_tags: expected one through four tags");
+    }
+
+    std::vector<std::uint8_t> bytes(16U * page_size, 0U);
+    write_le_u32(bytes, 0U, static_cast<std::uint32_t>(directory_offset));
+    write_le_u32(bytes, 4U, 0xFFFFFFFFU);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(key_length));
+    bytes[14U] = 0xE0U;
+    bytes[15U] = 0x01U;
+
+    write_le_u16(bytes, directory_offset, 0x0003U);
+    write_le_u16(bytes, directory_offset + 2U, static_cast<std::uint16_t>(tags.size()));
+    write_le_u32(bytes, directory_offset + 4U, 0xFFFFFFFFU);
+    write_le_u32(bytes, directory_offset + 8U, 0xFFFFFFFFU);
+    const std::size_t entry_data_end = 24U + tags.size() * directory_entry_size;
+    std::size_t key_cursor = page_size;
+    for (std::size_t index = 0U; index < tags.size(); ++index) {
+        const SyntheticCdxTag& tag = tags[index];
+        if (tag.name.empty() || tag.name.size() > key_length || tag.expression.empty() ||
+            tag.expression.size() + 1U > page_size ||
+            std::any_of(tag.name.begin(), tag.name.end(), [](unsigned char ch) {
+                return std::isalnum(ch) == 0 && ch != '_';
+            })) {
+            throw std::length_error("write_synthetic_cdx_tags: invalid tag name or expression");
+        }
+
+        const std::size_t header_offset = (3U + index * 2U) * page_size;
+        const std::size_t expression_offset = header_offset + page_size;
+        const std::size_t root_offset = (9U + index * 2U) * page_size;
+        const std::size_t trailing_count = key_length - tag.name.size();
+        const std::size_t entry_offset = directory_offset + 24U + index * directory_entry_size;
+        const std::uint32_t packed = static_cast<std::uint32_t>(header_offset) |
+            (static_cast<std::uint32_t>(trailing_count) << 20U);
+        bytes[entry_offset] = static_cast<std::uint8_t>(packed & 0xFFU);
+        bytes[entry_offset + 1U] = static_cast<std::uint8_t>((packed >> 8U) & 0xFFU);
+        bytes[entry_offset + 2U] = static_cast<std::uint8_t>((packed >> 16U) & 0xFFU);
+        key_cursor -= tag.name.size();
+        std::copy(tag.name.begin(), tag.name.end(),
+                  bytes.begin() + static_cast<std::ptrdiff_t>(directory_offset + key_cursor));
+
+        write_le_u32(bytes, header_offset, static_cast<std::uint32_t>(root_offset));
+        write_le_u16(bytes, header_offset + 502U, tag.descending ? 1U : 0U);
+        write_le_u16(bytes, header_offset + 510U, static_cast<std::uint16_t>(tag.expression.size() + 1U));
+        std::copy(tag.expression.begin(), tag.expression.end(),
+                  bytes.begin() + static_cast<std::ptrdiff_t>(expression_offset));
+        write_le_u16(bytes, root_offset, 0x0007U);
+        write_le_u16(bytes, root_offset + 2U, 1U);
+    }
+    write_le_u16(bytes, directory_offset + 12U,
+                 static_cast<std::uint16_t>(key_cursor - entry_data_end));
+    write_le_u32(bytes, directory_offset + 14U, 0x0000FFFFU);
+    bytes[directory_offset + 18U] = 0x0FU;
+    bytes[directory_offset + 19U] = 0x0FU;
+    bytes[directory_offset + 20U] = 16U;
+    bytes[directory_offset + 21U] = 4U;
+    bytes[directory_offset + 22U] = 4U;
+    bytes[directory_offset + 23U] = static_cast<std::uint8_t>(directory_entry_size);
+
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
 void write_synthetic_cdx(
     const std::filesystem::path& path,
     const std::string& tag_name,
     const std::string& expression,
     bool descending) {
-    std::vector<std::uint8_t> bytes(4096U, 0U);
-    write_le_u16(bytes, 0U, 1024U);
-    write_le_u16(bytes, 12U, 10U);
-    write_le_u16(bytes, 14U, 480U);
-    write_le_u16(bytes, 1024U, 0x0003U);
-    write_le_u16(bytes, 1026U, 0x0001U);
-    write_le_u32(bytes, 1028U, 2048U);
-
-    if (expression.size() > (bytes.size() - 2048U)) {
-        throw std::length_error("write_synthetic_cdx: expression too long for synthetic fixture buffer");
-    }
-    for (std::size_t index = 0; index < expression.size(); ++index) {
-        bytes[2048U + index] = static_cast<std::uint8_t>(expression[index]);
-    }
-
-    // Persisted ASCENDING/DESCENDING creation direction (issue #5358): a
-    // single byte at a fixed offset (502) within the tag's own header
-    // page (2048 here), determined empirically against a real, fully
-    // patched VFP9 install -- see CdxTagDescriptor::descending_hint.
-    if (descending) {
-        bytes[2048U + 502U] = 0x01U;
-    }
-
-    const std::size_t tail_offset = (3U * 512U) - 10U;
-    if (tag_name.size() > (bytes.size() - tail_offset)) {
-        throw std::length_error("write_synthetic_cdx: tag_name too long for synthetic fixture buffer");
-    }
-    for (std::size_t index = 0; index < tag_name.size(); ++index) {
-        bytes[tail_offset + index] = static_cast<std::uint8_t>(tag_name[index]);
-    }
-
-    std::ofstream output(path, std::ios::binary);
-    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    write_synthetic_cdx_tags(path, {{tag_name, expression, descending}});
 }
 
 void write_synthetic_idx(const std::filesystem::path& path, const std::string& expression) {

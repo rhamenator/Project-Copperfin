@@ -18,8 +18,12 @@ void test_parse_index_probe_for_cdx() {
             "directory tag names should still bind to the matching plain-field expression");
         expect(result.probe.tags[0].for_expression_hint.empty(), "tags should not borrow FOR expressions from a different key-expression span");
         expect(!result.probe.tags[0].inferred_name, "directory-derived tag names should not be marked as inferred");
+        expect(result.probe.tags[0].direction_known && !result.probe.tags[0].descending_hint,
+            "the first synthetic tag direction should be explicitly ascending");
         expect(result.probe.tags[1].name_hint == "COMPANY_NA", "directory leaf parsing should preserve the second stored tag name");
-        expect(result.probe.tags[1].tag_page_offset_hint == (4U * 512U), "CDX probe should surface the second tag page hint");
+        expect(result.probe.tags[1].tag_page_offset_hint == (12U * 512U), "CDX probe should surface the second tag root page hint");
+        expect(result.probe.tags[0].tag_header_offset_hint == (3U * 512U), "CDX probe should preserve the first tag header page association");
+        expect(result.probe.tags[1].tag_header_offset_hint == (5U * 512U), "CDX probe should preserve the second tag header page association");
         expect(result.probe.tags[1].tag_sort_marker_hint == "flags:0x0003,entries:2", "CDX probe should expose per-tag page marker hints");
         expect(
             result.probe.tags[1].key_expression_hint == "UPPER(company_name)",
@@ -30,14 +34,178 @@ void test_parse_index_probe_for_cdx() {
             result.probe.tags[1].for_expression_hint == "DELETED() = .F.",
             "page-local FOR expressions should attach to the matching CDX tag");
         expect(!result.probe.tags[1].inferred_name, "directory-derived tag names should not be marked as inferred");
+        expect(result.probe.tags[1].direction_known && !result.probe.tags[1].descending_hint,
+            "the second synthetic tag direction should be explicitly ascending");
     }
 }
 
-void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() {
+void test_parse_synthetic_vfp9_compound_cdx_preserves_tag_tuples() {
+    const auto bytes = make_synthetic_structural_cdx({
+        {"PERSON_I", "UPPER(last_name)", "", 11U, 0x0003U, 1U, false},
+        {"ZIP_DESC", "postal_code", "NOT DELETED()", 12U, 0x0003U, 1U, true}
+    });
+    const auto result = copperfin::vfp::parse_index_probe(
+        bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
+    expect(result.ok && result.probe.tags.size() == 2U,
+           "a structurally well-formed synthetic compound CDX should parse both tags");
+    if (result.probe.tags.size() == 2U) {
+        const auto& first = result.probe.tags[0];
+        const auto& second = result.probe.tags[1];
+        expect(first.name_hint == "PERSON_I" && first.key_expression_hint == "UPPER(last_name)" &&
+                   first.for_expression_hint.empty() && first.direction_known && !first.descending_hint,
+               "the first synthetic directory entry must retain its exact ascending tag tuple");
+        expect(second.name_hint == "ZIP_DESC" && second.key_expression_hint == "postal_code" &&
+                   second.for_expression_hint == "NOT DELETED()" && second.direction_known &&
+                   second.descending_hint,
+               "the second synthetic directory entry must retain its exact filtered descending tuple");
+        expect(first.tag_header_offset_hint == 1536U && second.tag_header_offset_hint == 2560U,
+               "synthetic directory entries must bind distinct tag header pages");
+    }
+}
+
+void test_parse_cdx_expression_preserves_code_page_bytes() {
+    std::string expression = "UPPER('CAF";
+    expression.push_back(static_cast<char>(static_cast<unsigned char>(0xE9U)));
+    expression += "')";
+    const auto bytes = make_synthetic_structural_cdx({
+        {.name = "ACCENTED", .key_expression = expression, .for_expression = "", .root_page = 9U}
+    });
+    const auto result = copperfin::vfp::parse_index_probe(
+        bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
+    expect(result.ok && result.probe.tags.size() == 1U,
+           "a CDX expression with a high-bit code-page byte should remain parseable");
+    if (result.ok && result.probe.tags.size() == 1U) {
+        expect(result.probe.tags.front().key_expression_hint == expression,
+               "CDX expression bytes should be preserved exactly instead of filtered by the host locale");
+    }
+}
+
+void test_parse_vfp9_cdx_directory_name_width_is_independent_of_key_length() {
+    auto bytes = make_synthetic_structural_cdx({
+        {.name = "WIDE_TAG", .key_expression = "UPPER(customer_name)",
+         .for_expression = "", .root_page = 9U}
+    });
+    // VFP9 allows compound CDX key lengths through 240 characters; the
+    // directory still stores a tag name in its fixed 10-character slot.
+    write_le_u16(bytes, 12U, 240U);
+    const auto result = copperfin::vfp::parse_index_probe(
+        bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
+    expect(result.ok && result.probe.tags.size() == 1U,
+           "a long CDX key-length hint must not change the fixed tag-name directory width");
+    if (result.probe.tags.size() == 1U) {
+        expect(result.probe.tags.front().name_hint == "WIDE_TAG" &&
+                   result.probe.tags.front().key_expression_hint == "UPPER(customer_name)",
+               "the fixed-width directory name and the longer key expression must remain independently decoded");
+    }
+}
+
+void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
+    const auto duplicate_names = make_synthetic_structural_cdx({
+        {.name = "SHARED", .key_expression = "first_key", .for_expression = "", .root_page = 9U},
+        {.name = "SHARED", .key_expression = "second_key", .for_expression = "", .root_page = 12U}
+    });
+    const auto duplicate_name_result = copperfin::vfp::parse_index_probe(
+        duplicate_names, duplicate_names.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!duplicate_name_result.ok && duplicate_name_result.probe.tags.empty(),
+           "duplicate tag names must fail closed without publishing a partial directory");
+
+    const auto duplicate_headers = make_synthetic_structural_cdx({
+        {.name = "FIRST_TAG", .key_expression = "first_key", .for_expression = "", .root_page = 9U,
+         .root_flags = 0x0003U, .root_entries = 1U},
+        {.name = "SECOND_TAG", .key_expression = "second_key", .for_expression = "", .root_page = 12U,
+         .root_flags = 0x0003U, .root_entries = 1U, .header_page = 3U}
+    });
+    const auto duplicate_header_result = copperfin::vfp::parse_index_probe(
+        duplicate_headers, duplicate_headers.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!duplicate_header_result.ok && duplicate_header_result.probe.tags.empty(),
+           "distinct tags cannot bind to the same header page");
+
+    const auto duplicate_roots = make_synthetic_structural_cdx({
+        {.name = "FIRST_TAG", .key_expression = "first_key", .for_expression = "", .root_page = 11U},
+        {.name = "SECOND_TAG", .key_expression = "second_key", .for_expression = "", .root_page = 11U}
+    });
+    const auto duplicate_root_result = copperfin::vfp::parse_index_probe(
+        duplicate_roots, duplicate_roots.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!duplicate_root_result.ok && duplicate_root_result.probe.tags.empty(),
+           "distinct tag headers cannot ambiguously share one root page");
+
+    auto empty_declared_for_expression = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "NOT DELETED()",
+         .root_page = 9U}
+    });
+    constexpr std::size_t tag_header_offset = 3U * 512U;
+    const std::size_t for_expression_offset = tag_header_offset + 512U +
+        std::string_view("field_name").size() + 1U;
+    empty_declared_for_expression[for_expression_offset] = 0U;
+    const auto empty_declared_for_result = copperfin::vfp::parse_index_probe(
+        empty_declared_for_expression, empty_declared_for_expression.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!empty_declared_for_result.ok && empty_declared_for_result.probe.tags.empty(),
+           "a multi-byte FOR-expression span containing only NUL bytes must fail closed without partial tags");
+
+    auto unterminated_key_expression = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    write_le_u16(unterminated_key_expression, tag_header_offset + 510U,
+                 static_cast<std::uint16_t>(std::string_view("field_name").size()));
+    const auto unterminated_key_result = copperfin::vfp::parse_index_probe(
+        unterminated_key_expression, unterminated_key_expression.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!unterminated_key_result.ok && unterminated_key_result.probe.tags.empty(),
+           "a declared key-expression span without its NUL terminator must fail closed without partial tags");
+
+    auto unterminated_for_expression = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "NOT DELETED()",
+         .root_page = 9U}
+    });
+    write_le_u16(unterminated_for_expression, tag_header_offset + 506U,
+                 static_cast<std::uint16_t>(std::string_view("NOT DELETED()").size()));
+    const auto unterminated_for_result = copperfin::vfp::parse_index_probe(
+        unterminated_for_expression, unterminated_for_expression.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!unterminated_for_result.ok && unterminated_for_result.probe.tags.empty(),
+           "a declared FOR-expression span without its NUL terminator must fail closed without partial tags");
+
+    auto invalid_pointer = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    constexpr std::size_t directory_entry_pointer_offset = (2U * 512U) + 24U;
+    invalid_pointer[directory_entry_pointer_offset] = 0xFFU;
+    invalid_pointer[directory_entry_pointer_offset + 1U] = 0xFFU;
+    invalid_pointer[directory_entry_pointer_offset + 2U] = 0x0FU;
+    const auto invalid_pointer_result = copperfin::vfp::parse_index_probe(
+        invalid_pointer, invalid_pointer.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!invalid_pointer_result.ok && invalid_pointer_result.probe.tags.empty(),
+           "an unaligned or out-of-range tag-header association must not yield a partial descriptor");
+
+    auto expression_as_root = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    write_le_u32(expression_as_root, tag_header_offset, 4U * 512U);
+    const auto expression_as_root_result = copperfin::vfp::parse_index_probe(
+        expression_as_root, expression_as_root.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!expression_as_root_result.ok && expression_as_root_result.probe.tags.empty(),
+           "a tag header pointing at its expression-pool page must not publish a tag root");
+
+    auto unused_page_as_root = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    write_le_u32(unused_page_as_root, tag_header_offset, 14U * 512U);
+    const auto unused_page_as_root_result = copperfin::vfp::parse_index_probe(
+        unused_page_as_root, unused_page_as_root.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!unused_page_as_root_result.ok && unused_page_as_root_result.probe.tags.empty(),
+           "an unused in-range page without CDX root attributes must not be published as a tag root");
+
+    auto directory_page_as_root = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    constexpr std::size_t directory_page_offset = 2U * 512U;
+    write_le_u32(directory_page_as_root, tag_header_offset, directory_page_offset);
+    const auto directory_page_as_root_result = copperfin::vfp::parse_index_probe(
+        directory_page_as_root, directory_page_as_root.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!directory_page_as_root_result.ok && directory_page_as_root_result.probe.tags.empty(),
+           "a tag root pointing to the compound directory page must not publish a tag descriptor");
+}
+
+void test_parse_real_vfp9_compound_cdx_recovers_directory_metadata() {
     namespace fs = std::filesystem;
-    const copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
-    const auto english_catalog = copperfin::localization::load_catalogs(
-        copperfin::localization::resolve_catalog_root(), "en-US");
     const fs::path fixture_root = fs::path(COPPERFIN_TEST_SOURCE_DIR) /
         "tests/fixtures/vfp9-descending-observation-output";
     const fs::path cdx_path = fixture_root / "descending.CDX";
@@ -45,13 +213,47 @@ void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() 
 
     const auto direct_result = copperfin::vfp::parse_index_probe_from_file(
         copperfin::platform::path_to_utf8_string(cdx_path));
-    expect(!direct_result.ok,
-           "a real VFP9 compound CDX with unbound directory entries must not report successful tag metadata");
-    expect(direct_result.probe.tags.empty(),
-           "a rejected compound CDX must not expose heuristic tag names or expressions");
-    expect(direct_result.error == english_catalog.translate(
-               "Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata"),
-           "a rejected compound CDX should expose the specific localized incomplete-metadata error");
+    expect(direct_result.ok,
+           "the real VFP9 compound CDX directory must parse when each tag is structurally bound");
+    expect(direct_result.probe.tags.size() == 2U,
+           "the real VFP9 compound CDX must expose both directory entries");
+    if (direct_result.probe.tags.size() == 2U) {
+        const auto& ascending = direct_result.probe.tags[0];
+        const auto& descending = direct_result.probe.tags[1];
+        expect(ascending.name_hint == "ASCTAG", "the real VFP9 first tag must decode as ASCTAG");
+        expect(ascending.key_expression_hint == "name", "ASCTAG must bind its real key expression");
+        expect(ascending.for_expression_hint.empty(), "ASCTAG must not borrow a FOR expression");
+        expect(ascending.direction_known && !ascending.descending_hint,
+               "ASCTAG creation direction must be known as ascending");
+        expect(ascending.tag_header_offset_hint == 1536U && ascending.tag_page_offset_hint == 2560U,
+               "ASCTAG must bind the directory entry to its header and root pages");
+        expect(descending.name_hint == "DESCTAG", "the real VFP9 second tag must decode as DESCTAG");
+        expect(descending.key_expression_hint == "name", "DESCTAG must bind its real key expression");
+        expect(descending.for_expression_hint.empty(), "DESCTAG must not borrow a FOR expression");
+        expect(descending.direction_known && descending.descending_hint,
+               "DESCTAG creation direction must be known as descending");
+        expect(descending.tag_header_offset_hint == 3072U && descending.tag_page_offset_hint == 4096U,
+               "DESCTAG must bind the directory entry to its header and root pages");
+    }
+
+    const auto second_real_cdx = copperfin::vfp::parse_index_probe_from_file(
+        copperfin::platform::path_to_utf8_string(
+            fs::path(COPPERFIN_TEST_SOURCE_DIR) /
+            "tests/fixtures/vfp9-index-order-recovery/indexed_demo.cdx"));
+    expect(second_real_cdx.ok && second_real_cdx.probe.tags.size() == 2U,
+           "the independent real VFP9 CDX capture must also bind both tags");
+    if (second_real_cdx.probe.tags.size() == 2U) {
+        expect(second_real_cdx.probe.tags[0].name_hint == "ASCTAG" &&
+                   second_real_cdx.probe.tags[0].key_expression_hint == "name" &&
+                   second_real_cdx.probe.tags[0].direction_known &&
+                   !second_real_cdx.probe.tags[0].descending_hint,
+               "the independent capture's first tag tuple must match VFP9's ascending ASCTAG");
+        expect(second_real_cdx.probe.tags[1].name_hint == "DESCTAG" &&
+                   second_real_cdx.probe.tags[1].key_expression_hint == "name" &&
+                   second_real_cdx.probe.tags[1].direction_known &&
+                   second_real_cdx.probe.tags[1].descending_hint,
+               "the independent capture's second tag tuple must match VFP9's descending DESCTAG");
+    }
 
     const auto table_result = copperfin::vfp::inspect_asset(
         copperfin::platform::path_to_utf8_string(dbf_path));
@@ -62,10 +264,10 @@ void test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed() 
         [](const copperfin::vfp::AssetInspectionResult::IndexAsset& index) {
             return index.probe.kind == copperfin::vfp::IndexKind::cdx;
         });
-    expect(!exposed_cdx,
-           "the table inspection must not expose heuristic tags from an unbound compound CDX");
-    expect(has_validation_issue(table_result, "index.companion_parse_failed"),
-           "the table inspection must visibly qualify its unparsed compound CDX companion");
+    expect(exposed_cdx,
+           "table inspection must expose the structurally parsed real VFP9 CDX");
+    expect(!has_validation_issue(table_result, "index.companion_parse_failed"),
+           "table inspection must not qualify a successfully parsed real VFP9 CDX as failed");
 }
 
 void test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed() {
@@ -75,16 +277,15 @@ void test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed() {
         (static_cast<std::uint32_t>(bytes[1]) << 8U) |
         (static_cast<std::uint32_t>(bytes[2]) << 16U) |
         (static_cast<std::uint32_t>(bytes[3]) << 24U));
-    // A 512-byte CDX page has only 508 bytes after its four-byte header;
-    // 128 four-byte pointers exceed the page boundary.
+    // The declared compact leaf entry array cannot fit beside the page header.
     write_le_u16(bytes, root_page_offset + 2U, 128U);
 
     const auto result = copperfin::vfp::parse_index_probe(
         bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
     expect(!result.ok,
-           "a compound root directory whose declared pointers exceed its page must fail closed");
+           "a compound root directory whose compact entries exceed its page must fail closed");
     expect(result.probe.tags.empty(),
-           "an overfull compound root directory must not fall through to whole-file tag heuristics");
+           "an overfull compound root directory must not fall through to heuristic tag extraction");
 }
 
 void test_parse_cdx_header_root_offset_beyond_16_bits() {
@@ -96,7 +297,7 @@ void test_parse_cdx_header_root_offset_beyond_16_bits() {
     bytes[15] = 0x01U;
 
     const auto result = copperfin::vfp::parse_cdx_header(bytes, 129U * 512U);
-    expect(result.ok, "parse_cdx_header should accept a root node offset beyond 16 bits");
+    expect(!result.ok, "a header-only buffer must not claim a complete CDX tag parse");
     expect(
         result.header.root_node_offset == (128U * 512U),
         "CDX root node offset should not be truncated to its low 16 bits");
@@ -116,7 +317,7 @@ void test_parse_index_probe_for_dcx() {
     expect(result.probe.tags.size() == 1U, "DCX probe should reuse the shared CDX-family tag parser");
     if (!result.probe.tags.empty()) {
         expect(result.probe.tags.front().name_hint == "NAME", "DCX probe should preserve the stored tag name");
-        expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "DCX probe should preserve the stored tag page hint");
+        expect(result.probe.tags.front().tag_page_offset_hint == (9U * 512U), "DCX probe should preserve the stored tag root page hint");
         expect(result.probe.tags.front().tag_sort_marker_hint == "flags:0x0003,entries:1", "DCX probe should expose per-tag page marker hints");
         expect(result.probe.tags.front().key_expression_hint == "UPPER(NAME)", "DCX probe should expose the key expression hint");
         expect(result.probe.tags.front().normalization_hint == "upper", "DCX probe should expose first-pass normalization hints");
@@ -157,7 +358,7 @@ void test_parse_index_probe_for_cdx_binds_descriptive_tag_names_from_tag_page_hi
         expect(
             result.probe.tags.front().key_expression_hint == "UPPER(LAST+FIRST)",
             "tag-page-local binding should attach expressions even when the tag name does not resemble the expression");
-        expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "descriptive-tag CDX probe should preserve the stored tag page hint");
+        expect(result.probe.tags.front().tag_page_offset_hint == (9U * 512U), "descriptive-tag CDX probe should preserve the stored tag root page hint");
         expect(result.probe.tags.front().normalization_hint == "upper", "descriptive-tag CDX probe should still derive normalization hints");
         expect(result.probe.tags.front().collation_hint == "case-folded", "descriptive-tag CDX probe should still derive collation hints");
     }
@@ -175,8 +376,8 @@ void test_parse_index_probe_for_cdx_preserves_plain_field_expression_tags() {
             result.probe.tags.front().key_expression_hint == "NAME",
             "plain-field CDX probe should keep a direct field-name key expression instead of dropping it");
         expect(
-            result.probe.tags.front().tag_page_offset_hint == (4U * 512U),
-            "plain-field CDX probe should preserve the stored tag page hint");
+            result.probe.tags.front().tag_page_offset_hint == (9U * 512U),
+            "plain-field CDX probe should preserve the stored tag root page hint");
     }
 }
 

@@ -105,7 +105,11 @@ tag name, uppercased, right-aligned to the page end with no fixed slot
         width -- CONFIRMED via two additional real fixtures with
         different name lengths: "IDX1" (4 chars) occupies exactly
         bytes [508:512), "SHORTIX"/"CKEYTAG" (7 chars) occupy exactly
-        [505:512). The name occupies `[512 - len(name):512)`.
+        [505:512). The name occupies `[512 - len(name):512)`. The
+        Copperfin writer accepts printable ASCII bytes only and caps the
+        name at 480 bytes; its profile-specific reader preserves those
+        names even though native VFP tag identifiers use a narrower
+        structural format.
 ```
 
 ### Tag statistics page (page 3)
@@ -155,6 +159,13 @@ starting at byte 0, NUL-padded:
 [0:N) key expression text, e.g. "cKey" for `INDEX ON cKey TAG cKeyTag`
 [N:512) zero
 ```
+The Copperfin writer requires a non-empty expression; it rejects an empty or
+whitespace-only value before creating the CDX or changing the DBF
+production-index flag, so every file it reports as written remains readable
+by the profile-aware parser.
+It also rejects embedded NUL, disallowed ASCII control bytes, and DEL in the
+expression before writing; the writer and reader preserve high-bit VFP
+code-page bytes and allow the same tab/newline controls the reader accepts.
 
 ### Leaf data page (page 5, single-leaf-page case only)
 

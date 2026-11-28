@@ -1,31 +1,68 @@
 # Agent Handoff
 
-## Active slice — compound CDX metadata containment (#5620, PR #7354)
+## Active slice — structural compound CDX tag metadata (#5620)
 
-Continue in /home/rich/.codex/worktrees/cdx-compound-fail-closed-5620/Project-Copperfin
-on fix/cdx-compound-fail-closed-5620, now updated from base
-b569a70d1957fc9a326039d74feed9ee0aca0a97 to
-origin/main merge f13f960e863ea3c1860b564d057827b214864b72. Owner-prioritized
-#5620 is first, followed by order/SEEK #6334 and print-expression #6413.
-Against the retained real VFP9 fixture
-tests/fixtures/vfp9-descending-observation-output/ (CDX SHA-256
-6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520,
-DBF SHA-256
-fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab), the
-bounded fix rejects an unbound multi-entry root directory, localizes its
-diagnostic, and keeps DBF reading available while omitting the untrusted index
-descriptor. It does not decode the tag directory or resolve ordered scans/SEEK.
-Focused GNU 15.2 Debug test_vfp_assets and test_localization pass; four
-locale catalogs parse. PR #7354's prior head
-7772af86c1cb7efc2c83c800a7821c079271e584 had all hosted checks green and a
-clean exact-head Codex review. The owner-authorized PR #7353 evidence change
-merged as f13f960e863ea3c1860b564d057827b214864b72; this update resolves the
-resulting agent-handoff.md conflict. That merge changes the PR #7354 head, so
-prior review and CI evidence do not qualify the new head. NEXT: push this
-conflict resolution, request Codex review on the exact new head, require all
-hosted checks green and zero unresolved conversations, then merge. Keep issue
-#5620 open and do not claim a promo-video baseline until structural compound-
-tag decoding is implemented and replayed; #6334 and #6413 remain queued.
+Continue in `/home/rich/.codex/worktrees/cdx-directory-structural-5620/Project-Copperfin`
+on `fix/cdx-directory-structural-5620`, based on `origin/main`
+`0f3addaae04e949b8edfc87e21ee8901d13d43eb`. Issue #5620 is owner-authored,
+open, and `agent-approved`. The exact frozen VFP9 inputs are `descending.CDX`
+SHA-256 `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`,
+paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
+and independent `indexed_demo.cdx`
+`9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
+
+PR #7356 is open at hosted head `bd76564cc99369963747f25714c1b5b46ccdd623`
+(verify the live PR head before acting). The parser recovers both retained real
+VFP9 tags (`ASCTAG`/`DESCTAG`, expression `name`, ascending/descending), binds
+names, headers, roots, and NUL-terminated expression spans, and preserves the
+fingerprinted single-tag writer profile. The writer rejects empty,
+whitespace-only, embedded-NUL, disallowed-control, and DEL key expressions
+before touching either file while preserving high-bit code-page bytes.
+Independent local Codex review was clean on `58d2de1e8`; reviews on `877f585b8`
+and `daf1cfd` found empty-declared-FOR and unterminated-expression gaps,
+respectively. Both are fixed in pushed commits `daf1cfd22295103f696fb4e2ea7234f652de8c9d`
+and `bd76564cc99369963747f25714c1b5b46ccdd623`, with positive real-fixture
+coverage preserving VFP9's one-byte NUL no-FOR encoding.
+
+The exact-head review of `bd76564cc99369963747f25714c1b5b46ccdd623` found two
+remaining legacy synthetic DCX generators in
+`tests/test_prg_engine_database_lifecycle.cpp` and
+`tests/test_runtime_host_debug_output_support.h`. They used the former
+heuristic directory shape, so OPEN DATABASE would fail before those tests' own
+behavior. The current uncommitted patch changes both to the existing structural
+`write_synthetic_cdx` helper and adds `prg_engine_test_support.cpp` to the
+runtime-host audit test target. GNU 15.2 Release built `test_vfp_assets`,
+`test_prg_engine_database_lifecycle`, and `test_runtime_host_audit_stream`;
+focused CTest passed 3/3 in 6.63 seconds. Changelog validation reports 281
+fragments valid and `git diff --check` is clean. Retained stage evidence is
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
+(SHA-256 `929dc774659c12c92ca4f23276c159bb4b80673c4edbcf15967ab6115b61bc02`).
+NEXT: signed+DCO commit and push; then fresh local Codex review on the exact
+pushed head, update PR verification text, and require all hosted checks green
+on that same head before merge. Runtime order/SCAN/SEEK behavior is not claimed;
+#6334 remains queued behind this merge.
+
+Hosted `migration (pr)` failed on `test_dbf_table` because its synthetic
+two-tag CDX helper still used the old heuristic layout. The parser correctly
+returned no tags for that obsolete fixture. The current working tree rewrites
+only that helper as a structurally bound compact leaf; production behavior and
+the expected relation-inference result are unchanged. GNU15.2 Release
+`test_dbf_table` passes 1/1 after the repair, and the full focused set
+(`test_vfp_assets`, `test_dbf_table`, ordered iteration, `SEEK`, numeric
+behavior, localization) passes 6/6. Changelog validation reports 281
+fragments valid; `git diff --check` passes. Exact review, failure, and repair
+evidence is retained in
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
+(SHA-256 `ae8de0944f01b646c4314d8c598bbbc53429c776c87d3d1833003762f687f259`).
+
+This is metadata recovery only; no runtime `SET ORDER`, ordered scan, or `SEEK`
+claim is established. After #5620 review/merge, continue to #6334 using the
+owner-requested large, varied VFP9-tested data set for prefix compression, duplicate
+ties, ascending/descending order, exact/missing/boundary `SEEK`, preserving
+native observations and hashes. Then #6413 print-expression aggregation. NEXT:
+commit and push the migration-fixture correction, update PR #7356's verification
+text, and obtain a clean local Codex review on the exact new pushed head.
+Recheck hosted reviews/checks and resolve every conversation before merge.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 

@@ -1391,37 +1391,66 @@ void test_import_xbase_table_to_vfp_native_preserves_deleted_record_flag() {
     fs::remove_all(temp_dir, ignored);
 }
 
-// #5534: a two-tag synthetic CDX, matching the exact byte layout already
-// independently verified against real Jet3/Jet4-adjacent CDX work
-// elsewhere in this test suite (tests/test_vfp_assets.cpp's
-// make_synthetic_cdx_family_bytes() and its own #5537-era sibling
-// make_synthetic_cdx_bytes_for_postgresql_index_test()) -- CDX tag
-// discovery in src/vfp/cdx_header.cpp uses proximity-scored heuristics
-// tuned against real VFP9-generated files, not a simple fixed-offset
-// read, so always using this exact proven two-tag shape (rather than a
-// simplified single-tag variant, which was tried here and found to
-// silently discover zero tags) is deliberate, not incidental.
+// #5534 / #5620: a structurally encoded two-tag compact-leaf CDX. The first
+// tag's plain-column expression is used by relation inference; the second
+// functional expression is a control that must not be treated as a column.
 std::vector<std::uint8_t> make_two_tag_cdx_bytes(
     const std::string& first_tag_name, const std::string& first_key_expression,
     const std::string& second_tag_name, const std::string& second_key_expression) {
+    constexpr std::size_t page_size = 512U;
+    constexpr std::size_t directory_offset = 2U * page_size;
+    constexpr std::size_t directory_key_length = 10U;
+    constexpr std::size_t directory_entry_size = 3U;
+    const std::array<std::string, 2U> tag_names{first_tag_name, second_tag_name};
+    const std::array<std::string, 2U> expressions{first_key_expression, second_key_expression};
+    const std::array<std::uint32_t, 2U> header_offsets{
+        static_cast<std::uint32_t>(3U * page_size), static_cast<std::uint32_t>(5U * page_size)};
+    const std::array<std::uint32_t, 2U> root_offsets{
+        static_cast<std::uint32_t>(11U * page_size), static_cast<std::uint32_t>(12U * page_size)};
+
     std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
+    write_le_u32(bytes, 0U, static_cast<std::uint32_t>(directory_offset));
+    write_le_u32(bytes, 4U, 0xFFFFFFFFU);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(directory_key_length));
     bytes[14] = 0xE0U;
     bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 4U * 512U);
-    write_le_u32(bytes, 1032U, 11U * 512U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_ascii(bytes, (3U * 512U) - 20U, first_tag_name);
-    write_ascii(bytes, (3U * 512U) - 10U, second_tag_name);
-    write_ascii(bytes, (4U * 512U) + 24U, first_key_expression);
-    write_ascii(bytes, (11U * 512U) + 24U, second_key_expression);
+    write_le_u16(bytes, directory_offset, 0x0003U);
+    write_le_u16(bytes, directory_offset + 2U, 2U);
+    write_le_u32(bytes, directory_offset + 4U, 0xFFFFFFFFU);
+    write_le_u32(bytes, directory_offset + 8U, 0xFFFFFFFFU);
+
+    std::size_t key_cursor = page_size;
+    for (std::size_t index = 0U; index < tag_names.size(); ++index) {
+        const std::size_t entry_offset = directory_offset + 24U + (index * directory_entry_size);
+        const std::size_t trailing_count = directory_key_length - tag_names[index].size();
+        const std::uint32_t packed_pointer = header_offsets[index] |
+            (static_cast<std::uint32_t>(trailing_count) << 20U);
+        bytes[entry_offset] = static_cast<std::uint8_t>(packed_pointer & 0xFFU);
+        bytes[entry_offset + 1U] = static_cast<std::uint8_t>((packed_pointer >> 8U) & 0xFFU);
+        bytes[entry_offset + 2U] = static_cast<std::uint8_t>((packed_pointer >> 16U) & 0xFFU);
+        key_cursor -= tag_names[index].size();
+        write_ascii(bytes, directory_offset + key_cursor, tag_names[index]);
+
+        const std::size_t header_offset = header_offsets[index];
+        write_le_u32(bytes, header_offset, root_offsets[index]);
+        write_le_u16(bytes, header_offset + 502U, 0U);
+        write_le_u16(bytes, header_offset + 506U, 0U);
+        write_le_u16(bytes, header_offset + 510U, static_cast<std::uint16_t>(expressions[index].size() + 1U));
+        write_ascii(bytes, header_offset + page_size, expressions[index]);
+        write_le_u16(bytes, root_offsets[index], index == 0U ? 0x0001U : 0x0003U);
+        write_le_u16(bytes, root_offsets[index] + 2U, 1U);
+    }
+
+    const std::size_t entry_data_end = 24U + (tag_names.size() * directory_entry_size);
+    write_le_u16(bytes, directory_offset + 12U, static_cast<std::uint16_t>(
+        page_size - entry_data_end - (page_size - key_cursor)));
+    write_le_u32(bytes, directory_offset + 14U, 0x0000FFFFU);
+    bytes[directory_offset + 18U] = 0x0FU;
+    bytes[directory_offset + 19U] = 0x0FU;
+    bytes[directory_offset + 20U] = 16U;
+    bytes[directory_offset + 21U] = 4U;
+    bytes[directory_offset + 22U] = 4U;
+    bytes[directory_offset + 23U] = static_cast<std::uint8_t>(directory_entry_size);
     return bytes;
 }
 
@@ -1455,7 +1484,7 @@ void test_infer_xbase_index_relations_finds_shared_indexed_column() {
     expect(copperfin::vfp::create_dbf_table_file(customers_path.string(), customers_fields, {{"1", "Acme"}}).ok,
            "relation-inference test: customers fixture should be created");
     {
-        // One tag a plain reference to the shared CUST_ID column, one a
+        // One tag is a plain reference to the shared CUST_ID column, one a
         // composite expression on NAME that must not be treated as a
         // plain-column reference.
         const auto cdx_bytes = make_two_tag_cdx_bytes("CUST_ID", "cust_id", "NAME_TAG", "UPPER(name)");
@@ -1471,7 +1500,7 @@ void test_infer_xbase_index_relations_finds_shared_indexed_column() {
     expect(copperfin::vfp::create_dbf_table_file(orders_path.string(), orders_fields, {{"1", "First order"}}).ok,
            "relation-inference test: orders fixture should be created");
     {
-        // One tag a plain reference to the shared CUST_ID column, one a
+        // One tag is a plain reference to the shared CUST_ID column, one a
         // composite expression on NOTES that must not be treated as a
         // plain-column reference.
         const auto cdx_bytes = make_two_tag_cdx_bytes("CUST_ID", "cust_id", "NOTE_TAG", "UPPER(notes)");

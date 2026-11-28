@@ -25,20 +25,32 @@ and `docs/32-recovered-requirements-traceability.md`'s allowed-evidence rules.
 The retained real VFP9 CDX is also a regression input for compound-tag
 metadata. Its SHA-256 is `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`
 and the paired DBF SHA-256 is
-`fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`. Before
-the fail-closed guard, `copperfin_inspect` exposed three heuristic tag names
-(`CTAGASCTAG`, `CHARLIE`, and `BRAVOALPHA`) instead of VFP9's `AscTag` and
-`DescTag`. The root directory has two entries with invalid page-association
-sentinels, so the current parser now rejects its tag metadata and companion
-table inspection emits `index.companion_parse_failed` without publishing those
-guesses.
+`fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`. The
+earlier byte-search parser exposed three heuristic tag names (`CTAGASCTAG`,
+`CHARLIE`, and `BRAVOALPHA`) instead of VFP9's `AscTag` and `DescTag`; the
+intermediate fail-closed guard rejected the compound directory entirely. The
+structural recovery now binds both real directory entries to their own tag
+header, expression, and root pages. The decoded names are `ASCTAG` and
+`DESCTAG`, both key expressions are `name`, and their recorded directions are
+ascending and descending respectively. The DBF inspector again lists the
+companion CDX successfully.
 
-This contains the known false metadata but does not decode compound tag names,
-expressions, direction, or tag-page associations. Ordered `SET ORDER`, scans,
-and `SEEK` behavior remain a separate follow-up once structural tag binding is
-recovered. The parser test uses this already-committed fixture; the additional
-three-record fixture captured in PR #7353 is evidence only until that PR is
-merged.
+These claims concern metadata only. Ordered runtime `SET ORDER`, scans, and
+`SEEK` still require separate replay and regression work before the promo video
+can demonstrate those behaviors. The independent real capture under
+`tests/fixtures/vfp9-index-order-recovery/` is also covered by parser tests.
+
+From the repository root, the direct checks are:
+
+```sh
+copperfin_inspect tests/fixtures/vfp9-descending-observation-output/descending.CDX
+copperfin_inspect tests/fixtures/vfp9-descending-observation-output/descending.dbf
+```
+
+Both report `status: ok`; the CDX output includes `multi_tag: true`,
+`tag[0].name_hint: ASCTAG`, `tag[1].name_hint: DESCTAG`, and `name` as each
+tag's key expression. The DBF output reports `has_structural_cdx: true` and
+lists the successfully parsed CDX as `index[1]`.
 
 ## What was captured vs. not
 
