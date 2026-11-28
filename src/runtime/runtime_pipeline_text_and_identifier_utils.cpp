@@ -160,6 +160,26 @@ std::string sanitize_cpp_identifier(const std::string& value, const std::size_t 
     return sanitized;
 }
 
+std::vector<std::string> build_cpp_parameter_identifiers(
+    const std::vector<std::string>& parameter_names) {
+    std::vector<std::string> identifiers;
+    identifiers.reserve(parameter_names.size());
+    std::unordered_set<std::string> used_identifiers;
+
+    for (std::size_t index = 0; index < parameter_names.size(); ++index) {
+        const std::string base_identifier =
+            "copperfin_parameter_" + sanitize_cpp_identifier(parameter_names[index], index);
+        std::string identifier = base_identifier;
+        std::size_t collision_suffix = 2U;
+        while (!used_identifiers.insert(identifier).second) {
+            identifier = base_identifier + "_" + std::to_string(collision_suffix++);
+        }
+        identifiers.push_back(std::move(identifier));
+    }
+
+    return identifiers;
+}
+
 std::string sanitize_csharp_identifier(std::string value, const std::string& fallback) {
     value = trim_copy(std::move(value));
     if (value.empty()) {

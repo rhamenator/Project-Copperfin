@@ -4,6 +4,7 @@
 
 #include "test_prg_engine_control_flow_support.h"
 
+#include <cmath>
 #include <locale>
 
 namespace cf_test_prg_engine_control_flow {
@@ -43,6 +44,36 @@ void test_total_numeric_formatting_ignores_global_locale() {
     expect(
         copperfin::runtime::format_total_numeric_value(1234.5, 0U) == "1235",
         "TOTAL integral rounding should remain unchanged under a comma-decimal global locale");
+    expect(
+        copperfin::runtime::format_total_numeric_value(-1234.5, 0U) == "-1235" &&
+            copperfin::runtime::format_total_numeric_value(-0.5, 0U) == "-1" &&
+            copperfin::runtime::format_total_numeric_value(-0.4, 0U) == "0",
+        "TOTAL integral formatting should preserve half-away rounding and unsigned zero");
+    constexpr double signed_64_boundary = 9223372036854775808.0;
+    expect(
+        copperfin::runtime::format_total_numeric_value(
+            std::nextafter(signed_64_boundary, 0.0), 0U) == "9223372036854774784" &&
+            copperfin::runtime::format_total_numeric_value(signed_64_boundary, 0U) ==
+                "9223372036854775808" &&
+            copperfin::runtime::format_total_numeric_value(
+                std::nextafter(signed_64_boundary, signed_64_boundary * 2.0), 0U) ==
+                "9223372036854777856" &&
+            copperfin::runtime::format_total_numeric_value(-signed_64_boundary, 0U) ==
+                "-9223372036854775808" &&
+            copperfin::runtime::format_total_numeric_value(
+                std::nextafter(-signed_64_boundary, -signed_64_boundary * 2.0), 0U) ==
+                "-9223372036854777856",
+        "#7322: TOTAL should preserve finite zero-decimal values at neighboring signed-64 boundaries");
+    expect(
+        copperfin::runtime::format_total_numeric_value(9.0e18, 0U) ==
+                "9000000000000000000" &&
+            copperfin::runtime::format_total_numeric_value(1.0e19, 0U) ==
+                "10000000000000000000" &&
+            copperfin::runtime::format_total_numeric_value(-1.0e19, 0U) ==
+                "-10000000000000000000" &&
+            copperfin::runtime::format_total_numeric_value(1.8e19, 0U) ==
+                "18000000000000000000",
+        "#7322: TOTAL should format finite zero-decimal values outside signed-64 range without sign inversion");
 }
 
 void test_aggregate_functions_respect_visibility() {
@@ -506,7 +537,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(spanish_missing_assignments.reason == copperfin::runtime::DebugPauseReason::error,
            "#2595: es-419 CALCULATE without assignments should still pause with an error");
     expect(
-        spanish_missing_assignments.message == "CALCULATE requiere una o mas asignaciones agregadas TO/INTO",
+        spanish_missing_assignments.message == "CALCULATE requiere una o más asignaciones agregadas TO/INTO",
         "#2595: es-419 CALCULATE missing-assignment error should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
@@ -517,7 +548,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(portuguese_malformed_expression.reason == copperfin::runtime::DebugPauseReason::error,
            "#2595: pt-BR CALCULATE malformed-expression should still pause with an error");
     expect(
-        portuguese_malformed_expression.message == "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
+        portuguese_malformed_expression.message == "CALCULATE exige expressões agregadas como COUNT() ou SUM(field)",
         "#2595: pt-BR CALCULATE malformed-expression error should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
@@ -537,7 +568,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(spanish_no_work_area.reason == copperfin::runtime::DebugPauseReason::error,
            "#2721: es-419 SUM without a selected work area should still pause with an error");
     expect(
-        spanish_no_work_area.message == "SUM requiere un area de trabajo seleccionada",
+        spanish_no_work_area.message == "SUM requiere un área de trabajo seleccionada",
         "#2721: es-419 aggregate no-work-area error should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
@@ -548,7 +579,7 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     expect(portuguese_target_mismatch.reason == copperfin::runtime::DebugPauseReason::error,
            "#2721: pt-BR SUM TO target mismatch should still pause with an error");
     expect(
-        portuguese_target_mismatch.message == "SUM TO exige uma variavel por cada expressao agregada",
+        portuguese_target_mismatch.message == "SUM TO exige uma variável por expressão agregada",
         "#2721: pt-BR aggregate TO target-count mismatch should localize the prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
@@ -856,6 +887,51 @@ void test_total_command_for_local_tables() {
         expect(totals_result.table.records[0].values[0].display_value == "WEST", "TOTAL IN alias should keep the targeted cursor's group key");
         expect(totals_result.table.records[0].values[1].display_value == "20", "TOTAL IN alias should sum numeric fields for the targeted cursor");
         expect(totals_result.table.records[0].values[2].display_value == "9", "TOTAL IN alias should sum each requested numeric field");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_total_command_preserves_large_positive_numeric_sum() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_large_sum";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "AMOUNT", .type = 'N', .length = 20U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"EAST", "9000000000000000000"}, {"EAST", "9000000000000000000"}});
+    expect(create_result.ok, "#7322: large-Numeric TOTAL input DBF should be created");
+
+    const fs::path output_path = temp_root / "totals.dbf";
+    const fs::path main_path = temp_root / "total_large_sum.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "TOTAL TO '" + output_path.string() + "' ON REGION FIELDS AMOUNT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#7322: TOTAL of two positive N(20,0) values should complete");
+
+    const auto totals_result =
+        copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
+    expect(totals_result.ok && totals_result.table.records.size() == 1U,
+           "#7322: large positive TOTAL output should remain a readable one-row DBF");
+    if (totals_result.ok && totals_result.table.records.size() == 1U) {
+        expect(totals_result.table.records[0].values[1].display_value ==
+                   "18000000000000000000",
+               "#7322: TOTAL must persist the reproduced exactly representable N(20,0) sum");
     }
 
     fs::remove_all(temp_root, ignored);

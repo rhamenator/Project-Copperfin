@@ -741,13 +741,23 @@
         return source;
     }
 
+    if ((function == "bitand" || function == "bitor" || function == "bitxor") &&
+        arguments.size() == 1U) {
+        // RQ-CF-PRG-BIT-FOLD-COVERAGE-001: installed VFP9 reports error 1229
+        // when a folding BIT function receives one operand instead of two
+        // operands. Reject here rather than falling through as an unresolved
+        // routine and fabricating the lowercase function name as a string.
+        throw PrgCompatibilityError(
+            runtime_text("Runtime.Prg.Dll.Error.TooFewArguments"), 1229);
+    }
     if (function == "bitand" && arguments.size() >= 2U) {
         // RQ-CF-PRG-BITAND-NUMERIC-001: selected-session checked conversion;
         // validate every operand, even after an intermediate result becomes0.
         const auto behavior = numeric_behavior(set_callback);
         std::uint32_t result = std::numeric_limits<std::uint32_t>::max();
         for (const auto& argument : arguments) {
-            const auto operand = checked_bitand_argument(argument, behavior);
+            const auto operand = checked_bit_pattern_argument(
+                argument, behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
             if (!operand) {
                 throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
             }
@@ -765,7 +775,8 @@
         const auto behavior = numeric_behavior(set_callback);
         std::uint32_t result = 0U;
         for (const auto& argument : arguments) {
-            const auto operand = checked_bitor_argument(argument, behavior);
+            const auto operand = checked_bit_pattern_argument(
+                argument, behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
             if (!operand) {
                 throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
             }
@@ -783,7 +794,8 @@
         const auto behavior = numeric_behavior(set_callback);
         std::uint32_t result = 0U;
         for (const auto& argument : arguments) {
-            const auto operand = checked_bitxor_argument(argument, behavior);
+            const auto operand = checked_bit_pattern_argument(
+                argument, behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
             if (!operand) {
                 throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
             }
@@ -797,8 +809,9 @@
     }
     if (function == "bitnot" && !arguments.empty()) {
         // RQ-CF-PRG-BITNOT-NUMERIC-001: selected-session checked conversion;
-        // leave the shared coercion for other bit functions unchanged.
-        const auto operand = checked_bitnot_argument(arguments[0], numeric_behavior(set_callback));
+        // retain BITNOT's distinct nonfinite rejection in the shared converter.
+        const auto operand = checked_bit_pattern_argument(
+            arguments[0], numeric_behavior(set_callback), BitPatternNonfinitePolicy::reject);
         if (!operand) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
         }
@@ -809,8 +822,9 @@
         // RQ-CF-PRG-BITCLEAR-NUMERIC-001: independent clear-bit observations.
         // Check the position even when the value has no bits left to clear.
         const NumericBehavior behavior = numeric_behavior(set_callback);
-        const auto value = checked_bitclear_value_argument(arguments[0], behavior);
-        const auto position = checked_bitclear_position_argument(arguments[1], behavior);
+        const auto value = checked_bit_pattern_argument(
+            arguments[0], behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
+        const auto position = checked_bit_index_argument(arguments[1], behavior);
         if (!value || !position) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
         }
@@ -826,8 +840,9 @@
         // RQ-CF-PRG-BITSET-NUMERIC-001: independently recovered value/position.
         // Check the position even when the value already has every bit set.
         const NumericBehavior behavior = numeric_behavior(set_callback);
-        const auto value = checked_bitset_value_argument(arguments[0], behavior);
-        const auto position = checked_bitset_position_argument(arguments[1], behavior);
+        const auto value = checked_bit_pattern_argument(
+            arguments[0], behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
+        const auto position = checked_bit_index_argument(arguments[1], behavior);
         if (!value || !position) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
         }
@@ -842,8 +857,9 @@
     if (function == "bittest" && arguments.size() >= 2U) {
         // RQ-CF-PRG-BITTEST-NUMERIC-001: check both operands, even after value0.
         const NumericBehavior behavior = numeric_behavior(set_callback);
-        const auto value = checked_bittest_value_argument(arguments[0], behavior);
-        const auto position = checked_bittest_position_argument(arguments[1], behavior);
+        const auto value = checked_bit_pattern_argument(
+            arguments[0], behavior, BitPatternNonfinitePolicy::vfp9_infinity_zero);
+        const auto position = checked_bit_index_argument(arguments[1], behavior);
         if (!value || !position) {
             throw PrgCompatibilityError(runtime_text("Runtime.Prg.Expression.Error.InvalidArgument"), 11);
         }

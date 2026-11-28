@@ -155,7 +155,7 @@ void test_sql_runtime_errors_localize_without_changing_runtime_behavior() {
     const auto spanish_sql_message = spanish_missing_command.globals.find("csqlmessage");
     expect(spanish_sql_message != spanish_missing_command.globals.end() &&
                copperfin::runtime::format_value(spanish_sql_message->second) ==
-                   "SQLEXEC requiere un comando o una instruccion SQL preparada",
+                   "SQLEXEC requiere un comando o una instrucción SQL preparada",
            "#2596: es-419 SQLEXEC missing-command error should localize the prose (got '" +
                (spanish_sql_message != spanish_missing_command.globals.end()
                     ? copperfin::runtime::format_value(spanish_sql_message->second)

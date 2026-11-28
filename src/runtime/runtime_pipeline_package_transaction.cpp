@@ -2614,6 +2614,9 @@ RuntimeMaterializeResult materialize_runtime_package(
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
     std::string error;
+    if (!validate_runtime_package_plan_path_text(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!validate_public_output_artifact_name(plan, error)) {
         return {.ok = false, .error = error};
     }
@@ -2707,6 +2710,9 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::string error;
+    if (!validate_runtime_package_plan_path_text(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!validate_public_output_artifact_name(plan, error)) {
         return {.ok = false, .error = error};
     }
@@ -2817,6 +2823,9 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
 RuntimeBuildResult abort_runtime_package_transaction(
     const RuntimePackagePlan& plan) {
     std::string error;
+    if (!validate_runtime_package_plan_path_text(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!validate_public_output_artifact_name(plan, error)) {
         return {.ok = false, .error = error};
     }

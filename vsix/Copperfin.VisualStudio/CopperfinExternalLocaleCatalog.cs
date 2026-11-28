@@ -22,7 +22,7 @@ internal static class CopperfinExternalLocaleCatalog
             ?? LoadEmbedded(locale);
     }
 
-    private static IReadOnlyDictionary<string, string>? LoadEmbedded(string locale)
+    internal static IReadOnlyDictionary<string, string>? LoadEmbedded(string locale)
     {
         if (!string.Equals(locale, CopperfinLocalization.BritishEnglishLocale,
                 StringComparison.OrdinalIgnoreCase))

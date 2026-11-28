@@ -1,0 +1,4 @@
+0b7fc34dbd48c112e40737d7644e111d0e0c40956ee7c9895094538a08a799a4  tests/fixtures/vfp9-listitem-column-numeric/preservation-plan.md
+43ea38aa6cd8d0792f0295396afd6a1bb470fcc67666019cd14500d3dc5dd87b  tests/fixtures/vfp9-listitem-column-numeric/excluded-scope-preservation.cpp
+788b8b119589ca0a9f8709a476f0e6eee2ee90ede68082fb6a023d49396bc4e3  tests/fixtures/vfp9-listitem-column-numeric/audit-preservation.cjs
+353b7990a5102203996c8ae57bbd013e9804cd14b9bb968fd4a5f964014d41d4  tests/fixtures/vfp9-listitem-column-numeric/run-preservation.sh

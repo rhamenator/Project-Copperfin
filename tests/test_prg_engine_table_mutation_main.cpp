@@ -69,6 +69,7 @@ int main()
     test_append_blank_supports_opaque_field_layouts_at_runtime();
     test_cancel_rolls_back_active_transaction();
     test_update_command_sets_scoped_records();
+    test_explicit_empty_where_rejects_before_mutation();
     test_update_and_delete_accept_in_subquery_predicates();
     test_update_and_delete_accept_not_in_subquery_predicates();
     test_sql_style_for_clauses_accept_macro_expressions();

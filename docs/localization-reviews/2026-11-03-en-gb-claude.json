@@ -1202,14 +1202,6 @@
       "reason": "Two-pass UK spelling review; identifier-shaped labels accepted with supplied source-consumer evidence."
     }
   ],
-  "residualUncertainty": [
-    "I have not seen the code. The 60 identifier-like entries (LaunchParse and PropertyLabel) cannot be settled without checking how they are consumed (parsed, matched or only displayed).",
-    "Whether 'catalog' is a fixed term in the product's code or documentation is unknown.",
-    "This is an independent automated review. It is not native-speaker or human certification, and nuances of register and house style may remain.",
-    "I counted the supplied array at 149 entries, which matches changedEntryCount.",
-    "The evidence covers FillColor, FillColorTitle, Property.Color and the catalogue prose pattern. That the same pattern holds for all 40 LaunchParse values and all 20 PropertyLabel values is your statement, and I haven't verified it independently.",
-    "I haven't seen other consumers such as tests or snapshots that compare localized strings, logs or telemetry that record the label text, or external tools that parse help output. Any of these could depend on the old spelling.",
-    "This is not native-speaker or human linguistic certification. It is a consistency judgment based on the code evidence you supplied."
-  ],
+  "residualUncertainty": "I have not seen the code. The 60 identifier-like entries (LaunchParse and PropertyLabel) cannot be settled without checking how they are consumed (parsed, matched or only displayed).; Whether 'catalog' is a fixed term in the product's code or documentation is unknown.; This is an independent automated review. It is not native-speaker or human certification, and nuances of register and house style may remain.; I counted the supplied array at 149 entries, which matches changedEntryCount.; The evidence covers FillColor, FillColorTitle, Property.Color and the catalogue prose pattern. That the same pattern holds for all 40 LaunchParse values and all 20 PropertyLabel values is your statement, and I haven't verified it independently.; I haven't seen other consumers such as tests or snapshots that compare localized strings, logs or telemetry that record the label text, or external tools that parse help output. Any of these could depend on the old spelling.; This is not native-speaker or human linguistic certification. It is a consistency judgment based on the code evidence you supplied.",
   "limits": "Second-pass verdict on 60 label-like values was by group and relied on supplied source-consumer evidence, not independent code inspection. No native-speaker or human certification."
 }

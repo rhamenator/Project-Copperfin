@@ -1,21 +1,300 @@
 #!/usr/bin/env python3
 """Track source, translation and independent-review state for v1 locale entries."""
 
+from __future__ import annotations
+
 import argparse
 from collections import Counter
+import datetime
+import errno
 import hashlib
 import json
-from pathlib import Path
+import os
 import re
+import stat
+import uuid
+from pathlib import Path
+from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parent.parent
 STATUS_ROOT = ROOT / "docs" / "localization-reviews"
 PROTECTED_SYNTAX = re.compile(r"<[A-Za-z][A-Za-z0-9_-]*>|(?<!\w)--[A-Za-z][A-Za-z0-9-]*|\bCOPPERFIN_[A-Z0-9_]+\b")
+ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
+INVENTORY_ENTRY = re.compile(r"[a-z][A-Za-z0-9-]* (source|unreviewed|pseudo)\Z")
+HAS_DIRECTORY_FDS = all(
+    operation in os.supports_dir_fd for operation in (os.open, os.stat, os.unlink, os.rename))
 
 
 def protected_syntax(value: str) -> Counter[str]:
     return Counter(PROTECTED_SYNTAX.findall(value))
+
+
+def digest(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def load_json(path: Path) -> object:
+    return json.loads(
+        path.read_text(encoding="utf-8"), object_pairs_hook=reject_duplicate_keys)
+
+
+def load_catalog(locale: str) -> dict[str, str]:
+    path = ROOT / "resources" / "locales" / locale / "strings.json"
+    data = load_json(path)
+    if not isinstance(data, dict) or any(
+            not isinstance(key, str) or not isinstance(value, str)
+            for key, value in data.items()):
+        raise ValueError(f"Catalog must map string keys to string values: {path}")
+    return data
+
+
+def load_object(path: Path, label: str) -> dict:
+    data = load_json(path)
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a JSON object: {path}")
+    return data
+
+
+def status_member_name(path: Path) -> str:
+    """Return a direct STATUS_ROOT member name after containment checks."""
+    if path.parent != STATUS_ROOT or path.name in ("", ".", ".."):
+        raise ValueError(f"Review-status path is not a direct managed file: {path}")
+    validate_status_root()
+    return path.name
+
+
+def validate_status_root() -> os.stat_result:
+    """Validate containment and return the directory identity checked by path."""
+    try:
+        details = os.stat(STATUS_ROOT, follow_symlinks=False)
+        if not stat.S_ISDIR(details.st_mode):
+            raise ValueError
+        project_root = ROOT.resolve(strict=True)
+        status_root = STATUS_ROOT.resolve(strict=True)
+        status_root.relative_to(project_root)
+    except (OSError, ValueError):
+        raise ValueError(
+            f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}") from None
+    return details
+
+
+def ensure_status_root_for_write() -> None:
+    """Create the managed ledger directory without traversing a linked ancestor."""
+    expected = ROOT / "docs" / "localization-reviews"
+    if STATUS_ROOT != expected:
+        raise ValueError(f"Unexpected managed review-status directory: {STATUS_ROOT}")
+    if HAS_DIRECTORY_FDS and os.mkdir in os.supports_dir_fd:
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+        flags |= getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        root_descriptor = None
+        docs_descriptor = None
+        status_descriptor = None
+        try:
+            root_descriptor = os.open(ROOT, flags)
+            docs_descriptor = os.open("docs", flags, dir_fd=root_descriptor)
+            try:
+                os.mkdir("localization-reviews", 0o755, dir_fd=docs_descriptor)
+            except FileExistsError:
+                pass
+            try:
+                status_descriptor = os.open("localization-reviews", flags, dir_fd=docs_descriptor)
+            except OSError as error:
+                if error.errno in (errno.ELOOP, errno.ENOTDIR):
+                    raise ValueError(
+                        f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}") from None
+                raise
+            if not stat.S_ISDIR(os.fstat(status_descriptor).st_mode):
+                raise ValueError(
+                    f"Review-status directory must be a real directory inside the project: {STATUS_ROOT}")
+        except OSError as error:
+            raise ValueError(
+                f"Unable to create or open managed review-status directory: {STATUS_ROOT}") from error
+        finally:
+            if status_descriptor is not None:
+                os.close(status_descriptor)
+            if docs_descriptor is not None:
+                os.close(docs_descriptor)
+            if root_descriptor is not None:
+                os.close(root_descriptor)
+    else:
+        try:
+            root = ROOT.resolve(strict=True)
+            docs = ROOT / "docs"
+            docs_details = os.stat(docs, follow_symlinks=False)
+            if not stat.S_ISDIR(docs_details.st_mode):
+                raise ValueError
+            docs.resolve(strict=True).relative_to(root)
+            STATUS_ROOT.mkdir(exist_ok=True)
+        except (OSError, ValueError):
+            raise ValueError(
+                f"Unable to create managed review-status directory: {STATUS_ROOT}") from None
+    validate_status_root()
+
+
+def open_status_root() -> Optional[int]:
+    """Walk from the selected project root without following directory links."""
+    if not HAS_DIRECTORY_FDS:
+        return None
+    if STATUS_ROOT != ROOT / "docs" / "localization-reviews":
+        raise ValueError(f"Unexpected managed review-status directory: {STATUS_ROOT}")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    flags |= getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    root_descriptor = None
+    docs_descriptor = None
+    try:
+        root_descriptor = os.open(ROOT, flags)
+        docs_descriptor = os.open("docs", flags, dir_fd=root_descriptor)
+        return os.open("localization-reviews", flags, dir_fd=docs_descriptor)
+    except OSError as error:
+        raise ValueError(f"Unable to open managed review-status directory: {STATUS_ROOT}") from error
+    finally:
+        if docs_descriptor is not None:
+            os.close(docs_descriptor)
+        if root_descriptor is not None:
+            os.close(root_descriptor)
+
+
+def ensure_regular_status_fd(file_descriptor: int, path: Path) -> None:
+    details = os.fstat(file_descriptor)
+    if not stat.S_ISREG(details.st_mode):
+        raise ValueError(f"Review-status file must be a regular file: {path}")
+
+
+def load_status_object(path: Path, label: str) -> dict:
+    """Load a direct managed JSON file without following links or blocking on FIFOs."""
+    name = status_member_name(path)
+    directory = open_status_root()
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    try:
+        try:
+            if directory is None:
+                details = os.stat(path, follow_symlinks=False)
+                if not stat.S_ISREG(details.st_mode):
+                    raise ValueError(f"Review-status file must be a regular file: {path}")
+                descriptor = os.open(path, flags)
+            else:
+                descriptor = os.open(name, flags, dir_fd=directory)
+        except OSError as error:
+            raise ValueError(f"Unable to open regular {label.lower()}: {path}") from error
+        try:
+            ensure_regular_status_fd(descriptor, path)
+            with os.fdopen(descriptor, "r", encoding="utf-8", closefd=False) as stream:
+                data = json.load(stream, object_pairs_hook=reject_duplicate_keys)
+        finally:
+            os.close(descriptor)
+    finally:
+        if directory is not None:
+            os.close(directory)
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a JSON object: {path}")
+    return data
+
+
+def exceptions() -> dict[str, str]:
+    data = load_object(ROOT / "docs" / "localization-invariant-exceptions.json", "Invariant exceptions")
+    if data.get("version") != 1:
+        raise ValueError("Unsupported invariant exception version")
+    result = {}
+    for entry in data["entries"]:
+        key, value = entry["key"], entry["sourceValue"]
+        if key in result or not entry["reason"].strip():
+            raise ValueError(f"Duplicate or unexplained invariant exception: {key}")
+        result[key] = value
+    return result
+
+
+def write_ledger(path: Path, ledger: dict) -> None:
+    """Atomically replace one direct, regular managed ledger without following links."""
+    entries = list(ledger["entries"].items())
+    lines = ["{", '  "version": 1,',
+             f'  "locale": {json.dumps(ledger["locale"], ensure_ascii=False)},',
+             '  "entries": {']
+    for index, (key, record) in enumerate(entries):
+        separator = "," if index + 1 < len(entries) else ""
+        lines.append(f"    {json.dumps(key, ensure_ascii=False)}: "
+                     f"{json.dumps(record, ensure_ascii=False, separators=(',', ':'))}{separator}")
+    lines.extend(["  }", "}"])
+    payload = ("\n".join(lines) + "\n").encode("utf-8")
+    name = status_member_name(path)
+    directory = open_status_root()
+    temporary_name = f".{name}.{uuid.uuid4().hex}.tmp"
+    create_flags = (os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                    getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_BINARY", 0))
+    create_flags |= getattr(os, "O_NOFOLLOW", 0)
+    temporary_descriptor = None
+    temporary_path = STATUS_ROOT / temporary_name
+    try:
+        try:
+            current = (os.stat(path, follow_symlinks=False) if directory is None else
+                       os.stat(name, dir_fd=directory, follow_symlinks=False))
+        except FileNotFoundError:
+            current = None
+        except OSError as error:
+            raise ValueError(f"Unable to inspect review ledger: {path}") from error
+        if current is not None and not stat.S_ISREG(current.st_mode):
+            raise ValueError(f"Review ledger must be a regular file: {path}")
+        destination_mode = stat.S_IMODE(current.st_mode) if current is not None else 0o666
+        try:
+            if directory is None:
+                temporary_descriptor = os.open(temporary_path, create_flags, destination_mode)
+            else:
+                temporary_descriptor = os.open(
+                    temporary_name, create_flags, destination_mode, dir_fd=directory)
+            ensure_regular_status_fd(temporary_descriptor, path)
+            if current is not None and hasattr(os, "fchmod"):
+                os.fchmod(temporary_descriptor, destination_mode)
+            with os.fdopen(temporary_descriptor, "wb", closefd=False) as stream:
+                stream.write(payload)
+                stream.flush()
+                os.fsync(temporary_descriptor)
+            # Windows does not grant delete sharing to this os.open handle, so
+            # release it before os.replace attempts to rename the temporary file.
+            os.close(temporary_descriptor)
+            temporary_descriptor = None
+            # Reject a static link/nonregular destination. If it is replaced after
+            # this check, rename replaces that directory entry rather than following it.
+            try:
+                destination = (os.stat(path, follow_symlinks=False) if directory is None else
+                               os.stat(name, dir_fd=directory, follow_symlinks=False))
+            except FileNotFoundError:
+                destination = None
+            if destination is not None and not stat.S_ISREG(destination.st_mode):
+                raise ValueError(f"Review ledger must be a regular file: {path}")
+            if directory is None:
+                os.replace(temporary_path, path)
+            else:
+                os.replace(temporary_name, name, src_dir_fd=directory, dst_dir_fd=directory)
+                try:
+                    os.fsync(directory)
+                except OSError as error:
+                    if error.errno not in (errno.EINVAL, errno.ENOTSUP, errno.ENOSYS):
+                        raise
+            temporary_name = ""
+        finally:
+            if temporary_descriptor is not None:
+                os.close(temporary_descriptor)
+            if temporary_name:
+                try:
+                    if directory is None:
+                        temporary_path.unlink()
+                    else:
+                        os.unlink(temporary_name, dir_fd=directory)
+                except FileNotFoundError:
+                    pass
+    finally:
+        if directory is not None:
+            os.close(directory)
 
 
 def reviewed_locales() -> dict[str, tuple[str, str | None]]:
@@ -102,49 +381,6 @@ def is_latin_american_spanish(locale: str) -> bool:
     }
 
 
-def digest(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
-def load_catalog(locale: str) -> dict[str, str]:
-    path = ROOT / "resources" / "locales" / locale / "strings.json"
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def load_object(path: Path, label: str) -> dict:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError(f"{label} must be a JSON object: {path}")
-    return data
-
-
-def exceptions() -> dict[str, str]:
-    data = load_object(ROOT / "docs" / "localization-invariant-exceptions.json", "Invariant exceptions")
-    if data.get("version") != 1:
-        raise ValueError("Unsupported invariant exception version")
-    result = {}
-    for entry in data["entries"]:
-        key, value = entry["key"], entry["sourceValue"]
-        if key in result or not entry["reason"].strip():
-            raise ValueError(f"Duplicate or unexplained invariant exception: {key}")
-        result[key] = value
-    return result
-
-
-def write_ledger(path: Path, ledger: dict) -> None:
-    """Keep one reviewable JSON line per semantic key."""
-    entries = list(ledger["entries"].items())
-    lines = ["{", '  "version": 1,',
-             f'  "locale": {json.dumps(ledger["locale"], ensure_ascii=False)},',
-             '  "entries": {']
-    for index, (key, record) in enumerate(entries):
-        separator = "," if index + 1 < len(entries) else ""
-        lines.append(f"    {json.dumps(key, ensure_ascii=False)}: "
-                     f"{json.dumps(record, ensure_ascii=False, separators=(',', ':'))}{separator}")
-    lines.extend(["  }", "}"])
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true", help="refresh the per-entry ledger")
@@ -157,7 +393,10 @@ def main() -> int:
             raise ValueError(f"Invariant exception source changed: {key}")
     failures = []
     evidence_cache = {}
-    for locale, (role, parent) in reviewed_locales().items():
+    locales = reviewed_locales()
+    if args.write:
+        ensure_status_root_for_write()
+    for locale, (role, parent) in locales.items():
         translated = load_catalog(locale)
         for key in translated.keys() & source.keys():
             if protected_syntax(translated[key]) != protected_syntax(source[key]):
@@ -167,8 +406,7 @@ def main() -> int:
             raise ValueError(f"Catalog key mismatch: {locale}")
         path = STATUS_ROOT / f"{locale}.json"
         if args.write:
-            STATUS_ROOT.mkdir(parents=True, exist_ok=True)
-            previous = load_object(path, "Review ledger") if path.exists() else {}
+            previous = load_status_object(path, "Review ledger") if os.path.lexists(path) else {}
             previous_entries = previous.get("entries", {})
             if not isinstance(previous_entries, dict):
                 raise ValueError(f"Malformed review ledger entries: {path}")
@@ -199,7 +437,7 @@ def main() -> int:
                     record["reviewProvenance"] = old["reviewProvenance"]
                 records[key] = record
             write_ledger(path, {"version": 1, "locale": locale, "entries": records})
-        ledger = load_object(path, "Review ledger")
+        ledger = load_status_object(path, "Review ledger")
         entries = ledger.get("entries")
         if (ledger.get("version") != 1 or ledger.get("locale") != locale or
                 not isinstance(entries, dict) or entries.keys() != translated.keys()):
@@ -241,16 +479,25 @@ def main() -> int:
                     failures.append(f"{locale}/{key}: invalid review provenance path")
                 else:
                     if evidence_name not in evidence_cache:
-                        evidence_cache[evidence_name] = load_object(
+                        evidence_cache[evidence_name] = load_status_object(
                             STATUS_ROOT / evidence_name, "Review evidence")
                     evidence = evidence_cache[evidence_name]
                     evidence_entries = evidence.get("entries")
                     if not isinstance(evidence_entries, list) or any(
                             not isinstance(entry, dict) for entry in evidence_entries):
                         raise ValueError(f"Malformed review evidence entries: {evidence_name}")
-                    if (not isinstance(evidence.get("date"), str) or not evidence["date"].strip() or
-                            not isinstance(evidence.get("scope"), str) or not evidence["scope"].strip()):
-                        raise ValueError(f"Review evidence lacks date or scope: {evidence_name}")
+                    if (not isinstance(evidence.get("date"), str) or
+                            not ISO_DATE.fullmatch(evidence["date"]) or
+                            not isinstance(evidence.get("scope"), str) or not evidence["scope"].strip() or
+                            not isinstance(evidence.get("residualUncertainty"), str) or
+                            not evidence["residualUncertainty"].strip()):
+                        raise ValueError(
+                            f"Review evidence lacks date, scope, or residual uncertainty: {evidence_name}")
+                    try:
+                        datetime.date.fromisoformat(evidence["date"])
+                    except ValueError:
+                        raise ValueError(
+                            f"Review evidence has an invalid date: {evidence_name}") from None
                     matching = [entry for entry in evidence.get("entries", [])
                                 if entry.get("locale") == locale and entry.get("key") == key]
                     expected_reviewer = "independent AI" if review == "ai-reviewed" else "human"
@@ -260,6 +507,13 @@ def main() -> int:
                             any(not isinstance(session, str) or not session.strip()
                                 for session in evidence["sessions"])):
                         raise ValueError(f"AI review evidence lacks model or session metadata: {evidence_name}")
+                    if review == "human-reviewed" and (
+                            not isinstance(evidence.get("reviewerId"), str) or
+                            not evidence["reviewerId"].strip() or
+                            not isinstance(evidence.get("qualifications"), str) or
+                            not evidence["qualifications"].strip()):
+                        raise ValueError(
+                            f"Human review evidence lacks reviewer identity or qualifications: {evidence_name}")
                     if (evidence.get("reviewerType") != expected_reviewer or
                             len(matching) != 1 or matching[0].get("verdict") != "accept" or
                             matching[0].get("sourceSha256") != record["sourceSha256"] or
@@ -273,7 +527,7 @@ def main() -> int:
             counts[status] += 1
             if review in ("ai-reviewed", "human-reviewed"):
                 counts[review] += 1
-        print(f"{locale}: {len(translated)} populated; {counts['candidate']} translation candidates; "
+        print(f"{locale}: {len(source)} populated; {counts['candidate']} translation candidates; "
               f"{counts['untriaged']} unchanged/untriaged; "
               f"{counts['intentional-source-text']} intentional source text; "
               f"{counts['invariant']} exact invariants; "
@@ -282,11 +536,11 @@ def main() -> int:
             failures.append(f"{locale}: translation triage or independent review incomplete")
         if role == "overlay":
             regional_path = STATUS_ROOT / f"{locale}-regional.json"
-            if not regional_path.exists():
+            if not os.path.lexists(regional_path):
                 if args.release:
                     failures.append(f"{locale}: regional review evidence is missing")
             else:
-                regional = load_object(regional_path, "Regional review evidence")
+                regional = load_status_object(regional_path, "Regional review evidence")
                 parent_path = ROOT / "resources" / "locales" / parent / "strings.json"
                 overlay_path = ROOT / "resources" / "locales" / locale / "strings.json"
                 expected_parent_hash = hashlib.sha256(parent_path.read_bytes()).hexdigest()
@@ -298,6 +552,8 @@ def main() -> int:
                         regional.get("verdict") != "accept" or
                         not isinstance(regional.get("model"), str) or not regional["model"].strip() or
                         not isinstance(regional.get("sessions"), list) or not regional["sessions"] or
+                        any(not isinstance(session, str) or not session.strip()
+                            for session in regional["sessions"]) or
                         not isinstance(regional.get("residualUncertainty"), str) or
                         not regional["residualUncertainty"].strip()):
                     failures.append(f"{locale}: regional review evidence is stale or incomplete")

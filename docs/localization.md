@@ -23,24 +23,31 @@ catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`
 or `<locale> overlay <parent>`.
 The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
 catalog awaiting the separate per-entry release gate), and `pseudo`
-(only test-only `qps-ploc`). An `overlay` contains only keys that differ from
-its previously declared full parent, which must be the nearest packaged catalog
-in the shared native/managed fallback chain (for example, `de-DE overlay de` or
-`es-MX overlay es-419`; `de-Latn-AT` must use a packaged `de-Latn` catalog when one exists).
-Neutral `pt` cannot overlay `pt-BR` because native hosts forward it as `pt-BR`.
-The runtime resolves missing keys through that parent and then `en-US`. A neutral
-`es` request tries the full `es-419` catalog before English; non-Latin-American
-Spanish tags such as `es-ES` do not inherit it. Adding a full locale requires a
-complete catalog and an inventory entry in the same change. The catalog generator, native parity
-test, and installer contract reject undeclared directories or declared catalogs
-with missing keys, blank values, changed placeholders, invalid UTF-8, or
-missing/changed installed artifacts. `unreviewed` reports review status, not
-content completeness; equal key counts do not establish translation quality.
-An overlay requires exact parent/overlay hashes and independent regional
-review evidence before the strict release gate can pass, including when the
-overlay has no changed strings.
-
-The source-of-truth locale is `en-US`. Populated but not yet release-ready
+(only test-only qps-ploc). Adding a locale requires a complete catalog and
+an inventory entry in the same change. An overlay contains only keys that
+differ from its previously declared full parent, which must be the nearest
+packaged catalog in the shared native/managed fallback chain (for example,
+de-DE overlay de or es-MX overlay es-419; de-Latn-AT must use a packaged
+de-Latn catalog when one exists). Neutral pt cannot overlay pt-BR because
+native hosts forward it as pt-BR. Neutral es tries the full es-419 catalog
+before English; non-Latin-American Spanish tags such as es-ES do not inherit
+it. The catalog generator, native parity test, and installer contract reject
+undeclared directories or unexpected per-locale artifacts. The generator
+additionally rejects invalid UTF-8; the generator and native parity test
+reject missing keys, blank values, and changed placeholders; the installer
+contract rejects missing or changed installed artifacts. The generator admits
+the inventory, managed catalog source, and each strings.json only as regular
+files: links, FIFOs, directories, and other nonregular inputs fail in both
+check and synchronization modes. Catalog updates use a same-directory
+temporary file and replace the admitted catalog entry without following a
+linked final target. These checks fail closed for links already present in
+the selected checkout; callers must retain exclusive control of the checkout
+during generation because concurrent catalog edits or parent-directory
+rebinding are outside this host tool's contract. Unreviewed reports review
+status, not content completeness; equal key counts do not establish
+translation quality. An overlay requires exact parent/overlay hashes and
+independent regional review evidence before the strict release gate can pass,
+including when the overlay has no changed strings.`. Populated but not yet release-ready
 catalogs exist for `en-GB`, `es-419`, and `pt-BR`; `qps-ploc` is test-only.
 A complete catalog and inventory entry do not by themselves make a language pack ready.
 The planned global left-to-right regional scope and deferred UI work are
@@ -72,11 +79,25 @@ Fallback is deterministic:
 ```text
 es-MX -> es-MX -> es-419 -> es -> en-US
 es-AR -> es-AR -> es-419 -> es -> en-US
+es-US -> es-US -> es-419 -> es -> en-US
+es-Latn-419 -> es-Latn-419 -> es-Latn -> es-419 -> es -> en-US
+es-ES -> es-ES -> es -> en-US
+es-Latn-ES -> es-Latn-ES -> es-Latn -> es -> en-US
 pt-BR -> pt-BR -> pt -> en-US
 pt-PT -> pt-PT -> pt -> en-US
 fr-CA -> fr-CA -> fr -> en-US
 unknown -> unknown -> en-US
 ```
+
+An explicit Spanish region uses `es-419` when it is in the
+[CLDR `es_419` parent-locale set](https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml):
+AR, BO, BR, BZ, CL, CO, CR, CU, DO, EC, GT, HN, JP, MX, NI, PA, PE, PR,
+PY, SV, US, UY, and VE. The numeric region `419` also uses that catalog.
+A script subtag before the region does not change that decision.
+`es-ES`, regionless Spanish, and Spanish with other regional subtags use their
+exact/script/language catalogs and then `en-US`; they do not inherit the Latin
+American pack. This is a fallback policy, not an assertion that `es-419` is
+linguistically unsuitable for every speaker outside the listed regions.
 
 Missing keys fall back through the locale chain. If no catalog provides a key, the lookup returns the stable key rather than blank text.
 
@@ -122,13 +143,16 @@ the owner accepted independent AI linguistic review with disclosed limits on
 per-entry source and translation identity, independent review provenance,
 regional references where useful, terminology decisions, regional suitability,
 tone/formality, euphemism/directness, offensive-wording concerns, and residual
-uncertainty with release evidence. AI review is not native-speaker or human
-cultural certification. Every source-identical value outside the narrow
-exact-invariant list must be translated or have independent, exact-text review
-explaining why the source wording is intentional in that locale. The ledger
-records this as `intentional-source-text`. Any unresolved source-identical
-prose, stale review,
-or known runtime leak blocks promotion. A qualified human review remains
+uncertainty with release evidence. Repository review evidence is self-attested;
+it identifies the reviewer or model/session but does not authenticate that the
+review occurred. AI review is not native-speaker or human cultural
+certification. Every source-identical value outside the narrow exact-invariant
+list must be translated or have independent, exact-text review explaining why
+the source wording is intentional in that locale. The ledger records this as
+`intentional-source-text`. Any unresolved source-identical prose, stale review,
+or known runtime leak blocks promotion. Rendered-surface validation and known
+runtime leaks are separate release-readiness evidence rather than checks
+performed by the ledger script. A qualified human review remains
 valuable but is not the v1.0 release gate under this owner decision.
 
 ## Invariant Contracts
@@ -172,4 +196,5 @@ When adding new user-facing text:
 
 Add non-English translation candidates only within an owner-authorized
 language-pack workstream. Populated keys and machine-generated translations
-remain unreviewed until the per-entry and rendered-surface release gates pass.
+remain unreviewed until the per-entry ledger gate and separate rendered-surface
+release validation pass.

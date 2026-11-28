@@ -4481,6 +4481,10 @@
             }
             case StatementKind::update_command:
             {
+                if (statement.where_clause_present && trim_copy(statement.tertiary_expression).empty())
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.SyntaxError"), 10);
+                }
                 const std::string target_expression = trim_copy(statement.secondary_expression).empty()
                                                           ? trim_copy(statement.identifier)
                                                           : trim_copy(statement.secondary_expression);
@@ -4616,6 +4620,10 @@
             }
             case StatementKind::delete_from_command:
             {
+                if (statement.where_clause_present && trim_copy(statement.expression).empty())
+                {
+                    throw PrgCompatibilityError(runtime_text("Runtime.Prg.Statement.Error.SyntaxError"), 10);
+                }
                 CursorState *cursor = resolve_cursor_target_expression(statement.identifier, frame);
                 if (cursor == nullptr)
                 {
@@ -6538,6 +6546,10 @@
                                     operand = make_string_value(unquote_string(candidate));
                                 }
                             }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
+                            }
                             catch (...)
                             {
                                 // Preserve the previous expression-evaluation fallback;
@@ -6626,6 +6638,10 @@
                                     operand = make_string_value(unquote_string(candidate));
                                 }
                             }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
+                            }
                             catch (...)
                             {
                                 // Preserve the previous expression-evaluation fallback;
@@ -6667,6 +6683,10 @@
                                 {
                                     operand = make_string_value(unquote_string(candidate));
                                 }
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -6751,6 +6771,10 @@
                                 {
                                     operand = make_string_value(unquote_string(candidate));
                                 }
+                            }
+                            catch (const PrgStringFunctionCancellation &)
+                            {
+                                throw;
                             }
                             catch (...)
                             {
@@ -14633,6 +14657,11 @@
                 return {};
             }
         }
+        }
+        catch (const PrgStringFunctionCancellation &)
+        {
+            abandon_resumed_expression();
+            throw;
         }
         catch (const PrgCompatibilityError &error)
         {

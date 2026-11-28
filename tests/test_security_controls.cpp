@@ -213,7 +213,7 @@ void test_security_diagnostics_resolve_through_localization_catalog() {
         "#2388: external process diagnostics should preserve executable placeholders");
     expect(
         spanish_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows") ==
-            "El hardening de procesos actualmente es un no-op fuera de Windows.",
+            "El refuerzo de seguridad de procesos no realiza ninguna acción fuera de Windows por el momento.",
         "#2601: es-419 process-hardening status should localize the prose");
     expect(
         spanish_catalog.translate("Security.Secret.Error.InvalidReferenceFormat") ==
@@ -225,7 +225,7 @@ void test_security_diagnostics_resolve_through_localization_catalog() {
         "#2601: pt-BR audit malformed-line error should localize the prose");
     expect(
         portuguese_catalog.translate("Security.Sha256.Error.OpenFileFailed", {{"path", "missing.bin"}}) ==
-            "Nao foi possivel abrir o arquivo para SHA-256: missing.bin",
+            "Não foi possível abrir o arquivo para SHA-256: missing.bin",
         "#2601: pt-BR SHA-256 open-file error should localize the prose while preserving the path");
     expect(
         pseudo_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows") !=
@@ -254,7 +254,7 @@ void test_security_diagnostics_follow_selected_locale() {
         const auto missing_file = copperfin::security::sha256_hex_for_file("missing-security-hash-input.bin");
         expect(!missing_file.ok, "#2601: pt-BR SHA-256 missing-file lookup should still fail");
         expect(
-            missing_file.error == "Nao foi possivel abrir o arquivo para SHA-256: missing-security-hash-input.bin",
+            missing_file.error == "Não foi possível abrir o arquivo para SHA-256: missing-security-hash-input.bin",
             "#2601: pt-BR SHA-256 missing-file error should route through the selected locale");
     }
 
@@ -542,7 +542,7 @@ void test_audit_stream_append_rejects_invalid_existing_tail() {
             localized_malformed_log.string(), "runtime.rejected", "localized-malformed-tail");
         expect(!localized.ok, "#3970: localized malformed-tail append should reject corruption");
         expect(
-            localized.error == "El log de auditoria existente tiene una cola no valida o truncada.",
+            localized.error == "El registro de auditoría existente tiene un final no válido o truncado.",
             "#3970: malformed-tail rejection should route through the selected locale");
         expect(localized.entry_hash.empty(),
                "#3970: localized malformed-tail rejection should not return an entry hash");

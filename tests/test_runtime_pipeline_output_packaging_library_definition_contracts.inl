@@ -11,7 +11,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
     write_text(project_dir / "librarymain.prg",
                "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
     write_text(project_dir / "helper.prg",
-               "FUNCTION AddNumbers\nPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
+               "FUNCTION AddNumbers\nPARAMETERS namespace, @value, value\nRETURN 1\nENDFUNC\n"
+               "FUNCTION copperfin_parameter_namespace\nLPARAMETERS namespace\nRETURN 1\nENDFUNC\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -69,7 +70,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
            "library-output plan should derive a native-wrapper PowerShell build script filename");
     expect(fs::path(plan.library_api_manifest_path).filename() == "LibraryDemo.dll.api",
            "library-output plan should derive a matching DLL API-manifest filename");
-    expect(plan.exported_symbols.size() == 2U,
+    expect(plan.exported_symbols.size() == 3U,
            "library-output plan should discover routine exports from PRG assets");
 
     const auto result = copperfin::runtime::materialize_runtime_package(
@@ -739,13 +740,13 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should target the packaged runtime-host filename");
         expect(wrapper_source.find("#define COPPERFIN_VFP_DLL_CALL __stdcall") != std::string::npos,
                "library-output wrapper source should declare the VFP DLL calling-convention macro");
-        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int tcMode)") != std::string::npos,
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int copperfin_parameter_tcMode)") != std::string::npos,
                "library-output wrapper source should scaffold procedure entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("(void)tcMode;") == std::string::npos,
+        expect(wrapper_source.find("(void)copperfin_parameter_tcMode;") == std::string::npos,
                "library-output wrapper source should consume DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for InitLibrary");
-        expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&InitLibrary), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&::InitLibrary), stub_emission_wrapper);") != std::string::npos,
                "library-output wrapper source should preserve InitLibrary bridge metadata");
         expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(\n        descriptor);") != std::string::npos,
                "library-output wrapper source should build a bridge invocation from the descriptor");
@@ -995,7 +996,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should route the placeholder return through the generated stub-emission output-application call-site.");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "library-output wrapper source should encode the export name into the bridge invocation plan");
-        expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
+        expect(wrapper_source.find("{\"tcMode\", std::to_string(copperfin_parameter_tcMode), \"int\"}") != std::string::npos,
                "library-output wrapper source should preserve the DLL placeholder argument binding");
         expect(wrapper_source.find(", stub_emission_wrapper);") != std::string::npos,
                "library-output wrapper source should feed the bridge result from the enriched descriptor and shared placeholder return binding");
@@ -1188,14 +1189,18 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should record the placeholder fallback integer value.");
         expect(wrapper_source.find("int success_int_value = -1;") != std::string::npos,
                "library-output wrapper source should record the typed native success integer value.");
-        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
-               "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("(void)tnRight;") == std::string::npos,
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int copperfin_parameter_namespace, int copperfin_parameter_value, int copperfin_parameter_value_2)") != std::string::npos,
+               "library-output wrapper source should scaffold keyword-safe unique C++ parameter identifiers");
+        expect(wrapper_source.find("(void)copperfin_parameter_value_2;") == std::string::npos,
                "library-output wrapper source should consume multiple DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for AddNumbers");
-        expect(wrapper_source.find("\"parameters\", \"tnLeft\\|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
-               "library-output wrapper source should preserve AddNumbers bridge metadata");
+        expect(wrapper_source.find("\"parameters\", \"namespace\\|value\\|value\", 3U, reinterpret_cast<void*>(&::AddNumbers), stub_emission_wrapper);") != std::string::npos,
+               "library-output wrapper source should preserve original AddNumbers bridge metadata");
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL copperfin_parameter_namespace(int copperfin_parameter_namespace)") != std::string::npos,
+               "library-output wrapper source should cover a parameter identifier that shadows its export symbol");
+        expect(wrapper_source.find("\"lparameters\", \"namespace\", 1U, reinterpret_cast<void*>(&::copperfin_parameter_namespace), stub_emission_wrapper);") != std::string::npos,
+               "library-output wrapper source should globally qualify shadowed export-symbol addresses");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "library-output wrapper CMake should declare a shared library target");
@@ -1336,8 +1341,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output DLL API manifest should record AddNumbers source provenance");
         expect(library_api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                "library-output DLL API manifest should record InitLibrary parameter names");
-        expect(library_api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
-               "library-output DLL API manifest should record AddNumbers parameter names");
+        expect(library_api_manifest.find("function_parameters=AddNumbers|namespace|value|value") != std::string::npos,
+               "library-output DLL API manifest should retain original AddNumbers parameter names");
         expect(library_api_manifest.find("function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
                "library-output DLL API manifest should record InitLibrary parameter declaration style");
         expect(library_api_manifest.find("function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
@@ -1541,16 +1546,16 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record AddNumbers source provenance");
         expect(debug_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                "library-output debug manifest should record InitLibrary parameter names");
-        expect(debug_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
-               "library-output debug manifest should record AddNumbers parameter names");
+        expect(debug_manifest.find("library_function_parameters=AddNumbers|namespace|value|value") != std::string::npos,
+               "library-output debug manifest should retain original AddNumbers parameter names");
         expect(debug_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
                "library-output debug manifest should record InitLibrary parameter declaration style");
         expect(debug_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
                "library-output debug manifest should record AddNumbers parameter declaration style");
-        expect(debug_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
+        expect(debug_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int copperfin_parameter_tcMode") != std::string::npos,
                "library-output debug manifest should record InitLibrary call-surface contract");
-        expect(debug_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
-               "library-output debug manifest should record AddNumbers call-surface contract");
+        expect(debug_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int copperfin_parameter_namespace, int copperfin_parameter_value, int copperfin_parameter_value_2") != std::string::npos,
+               "library-output debug manifest should record keyword-safe unique AddNumbers call-surface identifiers");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,

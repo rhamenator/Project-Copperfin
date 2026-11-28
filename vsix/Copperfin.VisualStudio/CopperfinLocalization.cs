@@ -2706,18 +2706,24 @@ internal sealed class CopperfinLocalization
         fallbackChain = LocaleFallbackChain(Locale);
         catalogRoot = catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
         externalCatalogs = new ConcurrentDictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
+        embeddedCatalogs = new ConcurrentDictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal);
     }
 
     public string Locale { get; }
 
-    // Native hosts do not have a neutral pt catalog; retain the requested UI identity
-    // while forwarding the same pt-BR catalog that the managed neutral-pt chain uses.
-    public string NativeHostLocale => string.Equals(Locale, "pt", StringComparison.Ordinal)
-        ? PortugueseBrazilLocale : Locale;
+    // Native hosts do not have neutral pt/es catalogs; retain the requested UI
+    // identity while forwarding the same regional catalog used by managed lookup.
+    public string NativeHostLocale => Locale switch
+    {
+        "pt" => PortugueseBrazilLocale,
+        "es" => SpanishLatinAmericaLocale,
+        _ => Locale
+    };
 
     private readonly IReadOnlyList<string> fallbackChain;
     private readonly string? catalogRoot;
     private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> externalCatalogs;
+    private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> embeddedCatalogs;
     private static readonly IReadOnlyDictionary<string, string> EmptyExternalCatalog =
         new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -2851,10 +2857,11 @@ internal sealed class CopperfinLocalization
                 chain.Add(candidate);
             }
         }
-        Add(locale);
-        if (locale == "es")
+        // The compiled en catalog is the final source-text fallback. Do not
+        // let that alias precede an installed en-US catalog for English requests.
+        if (!string.Equals(locale, DefaultLocale, StringComparison.Ordinal))
         {
-            Add(SpanishLatinAmericaLocale);
+            Add(locale);
         }
         var parts = locale.Split('-');
         var regionIndex = parts.Length > 1 && parts[1].Length == 4 && IsAsciiLetters(parts[1])
@@ -2878,7 +2885,14 @@ internal sealed class CopperfinLocalization
             {
                 Add(SpanishLatinAmericaLocale);
             }
-            Add(parent);
+            if (!string.Equals(parent, DefaultLocale, StringComparison.Ordinal))
+            {
+                Add(parent);
+            }
+        }
+        if (string.Equals(locale, "es", StringComparison.Ordinal))
+        {
+            Add(SpanishLatinAmericaLocale);
         }
         Add("en-US");
         if (locale == "pt")
@@ -2927,10 +2941,21 @@ internal sealed class CopperfinLocalization
             if (!string.Equals(Locale, PseudoLocale, StringComparison.Ordinal))
             {
                 var externalCatalog = externalCatalogs.GetOrAdd(locale,
-                    candidate => CopperfinExternalLocaleCatalog.Load(candidate, catalogRoot) ?? EmptyExternalCatalog);
+                    candidate => CopperfinExternalLocaleCatalog.LoadFromBaseDirectory(
+                        candidate, catalogRoot, AppContext.BaseDirectory) ?? EmptyExternalCatalog);
                 if (externalCatalog.TryGetValue(key, out var externalLocalized))
                 {
                     return externalLocalized;
+                }
+            }
+            if (string.Equals(Locale, BritishEnglishLocale, StringComparison.Ordinal) &&
+                string.Equals(locale, "en-US", StringComparison.Ordinal))
+            {
+                var embeddedBritishCatalog = embeddedCatalogs.GetOrAdd(BritishEnglishLocale,
+                    candidate => CopperfinExternalLocaleCatalog.LoadEmbedded(candidate) ?? EmptyExternalCatalog);
+                if (embeddedBritishCatalog.TryGetValue(key, out var embeddedBritish))
+                {
+                    return embeddedBritish;
                 }
             }
             if (Catalogs.TryGetValue(locale, out var catalog) && catalog.TryGetValue(key, out var localized))

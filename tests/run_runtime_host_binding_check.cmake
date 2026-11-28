@@ -833,7 +833,7 @@ execute_process(
 )
 if(NOT indirect_startup_result EQUAL 4 OR
    NOT indirect_startup_output MATCHES "status: error" OR
-   NOT indirect_startup_output MATCHES "La ruta del paquete no supero la validacion de contencion fisica: outside\\.prg" OR
+   NOT indirect_startup_output MATCHES "La ruta del paquete no superó la validación de confinamiento físico: outside\\.prg" OR
    indirect_startup_output MATCHES "INDIRECTION_TARGET_EXECUTED")
     message(FATAL_ERROR "Runtime host did not fail closed with a localized error for an indirect startup path.\nstdout:\n${indirect_startup_output}\nstderr:\n${indirect_startup_error}")
 endif()

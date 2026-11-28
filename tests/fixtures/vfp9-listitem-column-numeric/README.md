@@ -14,11 +14,14 @@ as causal for the near-integer discrepancy](cause-established.md). Ordinary2.5
 reads column2. The owner requested diagnosis, not implementation or automation
 resumption; earlier unknown-cause statements below are historical.
 
-Current continuation: owner product/scope choice required under
-[#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189); see
-[repeatable same-bits native counterexamples and viable options](numeric-origin-policy-gap.md).
-The earlier selection/recovery checkpoint below is retained history, not a
-claim that the newly demonstrated native origin distinction is resolved.
+Current continuation: the owner selected the metadata-compatible path under
+[#7189](https://github.com/rhamenator/Project-Copperfin/issues/7189). The
+retained factorial/settings audit now recovers the conversion formula. The
+historical unused-helper checkpoint implemented it without caller wiring; the
+later bounded caller is recorded in the local implementation checkpoint below.
+See [unused-helper foundation](unused-helper-phase.md) and the
+[frozen safe-public original phase](frozen-original-phase.md). The earlier choice and
+selection/recovery checkpoints below are retained history.
 
 Selection-only checkpoint from origin/main
 b6d1a7634e56435ad3326d92f13efa3f4fe241d3, after PR7187 merge and owned cleanup.
@@ -97,6 +100,146 @@ and emitted only nine entries. That partial file is retained as
 selection-main-inputs.initial-nine.sha256, NOT a ten-input qualification. The
 correct policy source is tests/CopperfinTestIsolation.cmake; the new ten-entry
 manifest is independently checked against origin/main, with no source changes.
+
+## Local implementation checkpoint (2026-10-31)
+
+The historical selection/recovery ordering above is now fulfilled through the
+bounded caller and hostile gates. Both complete original106 compiler suites ran
+before wiring and failed only the four expected public shards. Both complete
+fixed106 suites now pass all subjects, including four public shards at92 reads
+each, with unchanged544 frozen inputs and no sanitizer diagnostics. Each
+compiler's four pre-wire-authored fixed-only hostile shards also passes56 reads
+with empty stderr and unchanged source/binary hashes. The caller changes only
+the exact-two-argument existing-ID ListItem supplied-column Numeric/exact
+selector; first-selector behavior and every other route remain outside this
+slice. The frozen excluded-scope harness subsequently captured 256 rows across
+eight contexts at the exact pre-wire commit and current candidate with both
+GNU and Clang sanitizer builds. All four audits pass, diagnostics are empty,
+and each SAME-compiler baseline/fixed pair is whole-byte identical at SHA-256
+`90187666e02d52fcf6d9bc71d3ef4fe2ac4f3cd3f29985bb3bf4cb1b0b9e2611`;
+frozen source and all nine library hashes reverify. See
+[the preservation boundary and procedure](preservation-plan.md). Five
+development contracts pass and the required repeat MEDIUM walkthrough is clean
+at exact head `659a3f558`. A one-shot 612-input broader manifest now freezes the
+current runtime/test sources and a 131-test GNU/Clang gate. Its first invocation
+failed before test execution because the runner incorrectly named the CTest-only
+isolation contract as a Ninja build target; retained attempt1 reports both builds
+status1 and `unknown target`. Corrected v2 removes only that build-list entry
+while the same regex still selects all 131 tests. Broader qualification,
+exact-head review and hosted integration remain
+mandatory before merge. No parent, hazard, system or release closure is claimed.
+
+Attempt2 then completed all 131 GNU tests and found one bounded stale control:
+the earlier constant-division suite still required `((5/2)+0)/iTwo` to remain
+metadata-unknown, while this branch intentionally admits the native-evidenced
+one-integer additive chain and existing runtime-division consumer. The other
+130 tests passed. Corrected v3 strengthens those 20 mode/setting/fixed contexts
+to the composed recovered descriptors and fixes the runner's relative JUnit
+receipt path. Clang attempt2 was stopped during its build once the GNU finding
+was actionable; no Clang result is claimed.
+
+The first focused v3 assertion used the Integer-width composition for every
+setting and failed closed in 16 nonzero-DECIMALS contexts. Diagnostic output
+showed the assigned `iTwo` carries the already recovered real assignment
+descriptor there; the resulting W25/29/37/39 D4/8/16/18 values match the
+existing runtime-division native table. V4 corrects only that expected table,
+retains the diagnostic on future mismatch and freezes the exact current inputs.
+
+The frozen v4 gate then completed at signed+DCO exact head
+`f513e89a55906ef9abb1c10c946d76065b146caa`. GNU passed 131/131 in
+918.11 seconds and Clang with the configured sanitizers passed 131/131 in
+4964.20 seconds, with zero failures, skips or disabled tests in either JUnit
+receipt. The immutable v4 input manifest reverified before receipt packaging.
+Retained receipt SHA-256 values are GNU log
+`4e4ab899542f918bcbc00d3229226c06320bf9a9f70ddc4a4523f42be7dd1e5f`,
+GNU JUnit
+`ce65b3366af833b2e6f829a7aabc7d4861d7277851c746b8087c0c5af82c1b54`,
+Clang log
+`72bae3c791301a97d5ab4c0e2836aa4a40edc097d8c5132111446deb9edade43`
+and Clang JUnit
+`faf96e698886359a0243dbbb6377bf212391d4e7252a399affeb09838a8c70fa`.
+Exact-head review and hosted integration remain mandatory before merge.
+
+## Review-fix checkpoint (2026-11-02)
+
+Automated review of the initial PR head found five bounded gaps. The repair
+keeps two-argument ListItem reads on the property-first, side-effect-free path
+and carries both typed selectors through that path instead of invoking the
+method dispatcher. The checked conversion now admits only a finite integral
+ordinary Numeric ID in `1..32767` that already exists on a coherent unbound
+RowSourceType-zero control; excluded selectors/configurations fall back to the
+legacy property route. Fractional quantization now derives from the exact
+binary value rather than the shared ROUND text conversion, without changing
+ROUND. The direct helper executable now fails on accumulated assertions, and
+the preservation audit requires the invoke phase.
+
+Focused GNU and Clang coverage passes the direct helper plus all four public
+class/mode/session shards per compiler. A fresh frozen-v2 strengthened 256-call
+preservation capture using fractional excluded columns is byte-identical
+between the retained pre-wire baseline and the review-fix candidate under both
+GNU and Clang at SHA-256
+`43db202a798d41ed3d1ec331a0835d454bf683963b3e22a5746453d47d770d53`;
+all four framing audits pass and stderr is empty. The exact-head repeat at
+`736357435c33f1577425fb3637ecea1fb667c0f2` is retained at
+`build/listitem-column-native/preservation-v2/` with zero-status compile,
+execution, audit and comparison receipts.
+
+The first frozen-v5 GNU broader run passed 130/131 tests. Its sole failure,
+`test_prg_engine_runtime_surface_functions`, exposed that the newly transported
+second raw selector also allowed the existing one-selector `List` hook to
+consume ordinary two-column `List(row, column)` reads and return column one.
+The repair makes that hook explicitly one-selector-only, matching the already
+guarded ListItem hook. The failed v5 receipt remains retained; a successor
+manifest is required before either broader compiler lane is repeated.
+
+Frozen-v6 qualification retains the one-selector guard and passes all 131
+selected tests under GNU in 785.22 seconds and Clang sanitizers in 5051.29
+seconds, with zero failures, skips or disabled tests. Product and remote heads
+are both `736357435c33f1577425fb3637ecea1fb667c0f2`; the immutable 620-input
+manifest reverified after both lanes. Retained log/JUnit SHA-256 pairs are GNU
+`92a1444a4a41a6736fe1b5e4c08c5264fa6e1cc5e1e87a68adae8499df73c179` /
+`778e2cf4ddd7f4765c19ef608752244a794dc43c150c90e877269e80ee219cc1`
+and Clang `6579d54f135544456c8157ca823a45bd31cb47f943f667894e5226247830748c` /
+`de12f935906e92346aa849104f028e7e8b1291b4127a3c557544d06e7be49526`.
+Hosted completion and a clean authorized exact-head review remain mandatory.
+
+## DQ/DV-5611-LISTITEM-COLUMN-NUMERIC-001 development walkthrough
+
+Misuse severity is MEDIUM. The procedural delta is deliberately narrow: only
+an exact-two-argument `ListItem(existingStableId, suppliedColumn)` read with an
+already-resolved ordinary stable ID may route the second Numeric/exact-integer
+selector through the recovered checked conversion. It does not reinterpret the
+first argument as a row position, alter one-argument/other-arity calls, create
+rows, change binding/RowSourceType behavior, or claim arbitrary expression,
+column-capacity, allocation, persistence or lifecycle parity. Constant
+arithmetic metadata hooks preserve only the native-evidenced bounded chain and
+leave payloads unchanged; unsupported origins, descriptor shapes and values
+remain fail-closed.
+
+The misuse walkthrough checks that guidance cannot be read as blanket rounding,
+a binary tolerance, a canonical-double shortcut, proof that every fractional
+Numeric is valid, or authority to weaken missing/malformed-metadata rejection.
+It also keeps safe-public original failures, fixed-only hostile corroboration
+and modeled excluded-scope preservation as separate evidence layers. The first
+delegated development walkthrough at exact head `d24e468c3` found missing
+arithmetic-requirement mapping, this assurance plan, and stale pre-wire wording;
+the first repair addressed those items. A repeat at `3811417a5` then found one
+incorrect fixed106 attribution, a stale intermediate gate status and two stale
+pre-wire source comments. Those repairs were confirmed by a clean read-only
+repeat at exact head `659a3f558`, including the intentionally historical
+fixed544 evidence and its two comment-only mismatches. This is maintainer
+development review, not independent-human, system, release or hazard-closure
+evidence.
+
+Rollback is a reviewed revert of the bounded caller, arithmetic-metadata hooks,
+tests and corresponding documentation while retaining native captures,
+original/fixed/hostile/preservation failures and receipts for investigation.
+After rollback, rerun the frozen original/fixed and preservation contracts so a
+partial revert cannot silently restore unchecked conversion or stale claims.
+Field notification identifies the exact affected head, Numeric mode, control
+class, argument shape and evidence limitation in the pull request and admitted
+issues; correct linked requirements/hazard guidance and do not claim family,
+parent, KBX, hazard, system or release closure.
 
 ## Retained hosted qualification dependency
 

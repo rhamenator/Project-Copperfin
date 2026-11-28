@@ -7,7 +7,7 @@ int main()
     using namespace copperfin::test_support;
     test_curval_evaluates_on_disk_record();
     test_curval_uses_verified_post_commit_session_image();
-    test_lupdate_reads_table_header_date_and_designator_variants();
+    test_lupdate_reads_file_date_and_designator_variants();
     test_lupdate_respects_set_date_format();
     test_lupdate_designator_edge_cases();
     test_curval_verified_commit_overlay_survives_cursor_reopen();

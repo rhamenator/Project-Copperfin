@@ -125,6 +125,9 @@ RuntimeBuildResult build_runtime_package_primary_output(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::string error;
+    if (!validate_runtime_package_plan_path_text(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!validate_public_output_artifact_name(plan, error)) {
         return {.ok = false, .error = error};
     }

@@ -1,0 +1,1 @@
+- 2026-11-27: Add a real VFP9-written structural CDX fixture with ascending and descending tags for index-reader and ordered-navigation regression coverage.

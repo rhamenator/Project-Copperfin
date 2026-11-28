@@ -633,6 +633,12 @@ add_library(cf_xbase_runtime
     src/runtime/xasset_methods.cpp
 )
 
+if(COPPERFIN_BUILD_TESTS)
+    target_compile_definitions(cf_xbase_runtime PRIVATE
+        COPPERFIN_ENABLE_PRG_STRING_FUNCTION_TEST_HOOKS=1
+    )
+endif()
+
 target_include_directories(cf_prg_analysis
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include

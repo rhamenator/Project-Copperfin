@@ -2,7 +2,8 @@
         RuntimeOleObjectState &runtime_object,
         const std::string &property_name,
         const Frame &source_frame,
-        const PrgValue *raw_selector)
+        const PrgValue *raw_selector,
+        const PrgValue *raw_secondary_selector)
     {
         const std::string normalized_property_name = normalize_identifier(property_name);
         if (normalized_property_name.empty())
@@ -339,7 +340,8 @@
             // display row before legacy text/cell resolution. Explicit columns,
             // textual GETPEM and unsupported types retain the old path.
             const auto selector_open = normalized_property_name.find_first_of("([");
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "list")
             {
                 const auto& set_state = current_set_state();
@@ -362,9 +364,29 @@
                     list_cell->row_slot,
                     list_cell->column_slot);
             }
+            // RQ-CF-PRG-LISTITEM-COLUMN-NUMERIC-001: preserve property-first,
+            // side-effect-free routing while carrying the supplied column's
+            // exact payload/kind/metadata past selector text formatting.
+            if (raw_selector != nullptr && raw_secondary_selector != nullptr &&
+                selector_open != std::string::npos &&
+                normalized_property_name.substr(0U, selector_open) == "listitem")
+            {
+                const auto& set_state = current_set_state();
+                const auto mode = set_state.find("numericbehavior");
+                const auto behavior = mode != set_state.end() &&
+                    normalize_identifier(mode->second) == "vfp9"
+                    ? NumericBehavior::vfp9 : NumericBehavior::copperfin;
+                if (auto typed_value = read_native_list_control_item_cell_supplied_column_numeric(
+                        runtime_object, *raw_selector, *raw_secondary_selector, behavior);
+                    typed_value.has_value())
+                {
+                    return *typed_value;
+                }
+            }
             // RQ-CF-PRG-LISTITEM-NUMERIC-001: raw one-selector identity,
             // implicit column 1; textual GETPEM and explicit columns stay old.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "listitem")
             {
                 const auto& set_state = current_set_state();
@@ -389,7 +411,8 @@
             }
             // RQ-CF-PRG-ITEMDATA-INDEX-NUMERIC-001: preserve property-first
             // routing, but do not recover Numeric indices from formatted text.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 is_native_itemdata_member_name(runtime_object,
                     normalized_property_name.substr(0U, selector_open)))
             {
@@ -407,13 +430,14 @@
             }
             if (const auto item_data_slot =
                     parse_native_list_control_itemdata_member_slot(runtime_object, property_name);
-                item_data_slot.has_value())
+                raw_secondary_selector == nullptr && item_data_slot.has_value())
             {
                 return read_native_list_control_item_data(runtime_object, *item_data_slot);
             }
             // RQ-CF-PRG-INDEXTOITEMID-NUMERIC-001: keep property-first routing
             // and exact raw Numeric identity; textual GETPEM keeps its old path.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "indextoitemid")
             {
                 const auto& set_state = current_set_state();
@@ -429,7 +453,7 @@
                 }
             }
             if (const auto item_id_slot = resolve_indextoitemid_member_slot();
-                item_id_slot.has_value())
+                raw_secondary_selector == nullptr && item_id_slot.has_value())
             {
                 return read_native_list_control_item_id_for_slot(
                     runtime_object,
@@ -437,7 +461,8 @@
             }
             // RQ-CF-PRG-ITEMIDTOINDEX-NUMERIC-001: preserve raw typed item ID
             // before textual GETPEM/legacy selector coercion can round it.
-            if (raw_selector != nullptr && selector_open != std::string::npos &&
+            if (raw_selector != nullptr && raw_secondary_selector == nullptr &&
+                selector_open != std::string::npos &&
                 normalized_property_name.substr(0U, selector_open) == "itemidtoindex")
             {
                 const auto& set_state = current_set_state();
@@ -453,7 +478,7 @@
                 }
             }
             if (const auto item_index_id = resolve_itemidtoindex_member_item_id();
-                item_index_id.has_value())
+                raw_secondary_selector == nullptr && item_index_id.has_value())
             {
                 return read_native_list_control_index_for_item_id(
                     runtime_object,

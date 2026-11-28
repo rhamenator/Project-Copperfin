@@ -346,9 +346,9 @@ void run_library_build_host_smoke(
                    "build host DLL debug manifest should record InitLibrary parameter declaration style");
             expect(debug_manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
                    "build host DLL debug manifest should record AddNumbers parameter declaration style");
-            expect(debug_manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
+            expect(debug_manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int copperfin_parameter_tcMode") != std::string::npos,
                    "build host DLL debug manifest should record InitLibrary call surface");
-            expect(debug_manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
+            expect(debug_manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int copperfin_parameter_tnLeft, int copperfin_parameter_tnRight") != std::string::npos,
                    "build host DLL debug manifest should record AddNumbers call surface");
         }
         if (extension == "fll") {
@@ -1224,9 +1224,9 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route the placeholder return through the generated stub-emission output-application call-site.");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
-            expect(wrapper_source.find("(void)tcMode;") == std::string::npos,
+            expect(wrapper_source.find("(void)copperfin_parameter_tcMode;") == std::string::npos,
                    "build host DLL wrapper should consume DLL arguments through bridge call bindings.");
-            expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
+            expect(wrapper_source.find("{\"tcMode\", std::to_string(copperfin_parameter_tcMode), \"int\"}") != std::string::npos,
                    "build host DLL wrapper should preserve the DLL placeholder argument binding");
             expect(wrapper_source.find(", stub_emission_wrapper);") != std::string::npos,
                    "build host DLL wrapper should feed the bridge result from the enriched descriptor and shared placeholder return binding");

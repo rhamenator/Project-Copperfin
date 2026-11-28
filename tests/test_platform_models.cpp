@@ -215,7 +215,7 @@ void test_default_security_profile() {
         expect(spanish_security_admin->title == "Administrador de seguridad",
                "#2600: es-419 security-admin title should localize the prose");
         expect(spanish_security_admin->description ==
-                   "Es responsable del mapeo de identidades, la politica de roles y la configuracion de confianza.",
+                   "Es responsable de la asignación de identidades, la política de roles y la configuración de confianza.",
                "#2600: es-419 security-admin description should localize the prose");
     }
 
@@ -228,7 +228,7 @@ void test_default_security_profile() {
     if (spanish_project_open != spanish_profile.permissions.end()) {
         expect(spanish_project_open->title == "Abrir proyecto",
                "#2600: es-419 project.open title should localize the prose");
-        expect(spanish_project_open->description == "Abrir e inspeccionar assets del proyecto.",
+        expect(spanish_project_open->description == "Abrir e inspeccionar los recursos del proyecto.",
                "#2600: es-419 project.open description should localize the prose");
     }
 
@@ -257,7 +257,7 @@ void test_default_security_profile() {
     }
 
     expect(portuguese_profile.package_policy ==
-               "pacotes assinados, extensoes assinadas, manifestos explicitos de confianca",
+               "pacotes assinados, extensões assinadas, manifestos de confiança explícitos",
            "#2600: pt-BR security package policy should localize the prose");
     expect(!portuguese_profile.hardening_profiles.empty() &&
                portuguese_profile.hardening_profiles[2] ==
@@ -387,9 +387,9 @@ void test_default_extensibility_profile() {
     expect(spanish_xbase != spanish_profile.languages.end(),
            "#2599: es-419 extensibility profile should still expose the xbase language entry");
     if (spanish_xbase != spanish_profile.languages.end()) {
-        expect(spanish_xbase->title == "Runtime nativo Copperfin/xBase",
+        expect(spanish_xbase->title == "Entorno de ejecución nativo de Copperfin/xBase",
                "#2599: es-419 xbase language title should localize the prose");
-        expect(spanish_xbase->trust_boundary == "nucleo confiable",
+        expect(spanish_xbase->trust_boundary == "núcleo confiable",
                "#2599: es-419 xbase trust boundary should localize the prose");
     }
 
@@ -400,15 +400,15 @@ void test_default_extensibility_profile() {
     expect(spanish_mcp != spanish_profile.ai_features.end(),
            "#2599: es-419 extensibility profile should still expose the MCP feature");
     if (spanish_mcp != spanish_profile.ai_features.end()) {
-        expect(spanish_mcp->title == "Capacidad de host MCP",
+        expect(spanish_mcp->title == "Función de host MCP",
                "#2599: es-419 MCP feature title should localize the prose");
-        expect(spanish_mcp->trust_boundary == "limite de herramienta externa administrado por politica",
+        expect(spanish_mcp->trust_boundary == "límite de herramienta externa administrado por políticas",
                "#2599: es-419 MCP feature trust boundary should localize the prose");
     }
 
     expect(!spanish_profile.guardrails.empty() &&
                spanish_profile.guardrails[0] ==
-                   "El nucleo de ejecucion confiable sigue siendo nativo primero y orientado a la seguridad.",
+                   "El núcleo de ejecución confiable prioriza lo nativo y la seguridad.",
            "#2599: es-419 extensibility guardrails should localize without falling back to English");
 
     const auto portuguese_python =
@@ -421,7 +421,7 @@ void test_default_extensibility_profile() {
         expect(portuguese_python->title == "Sidecar de Python e jobs de analitica",
                "#2599: pt-BR python language title should localize the prose");
         expect(portuguese_python->output_story ==
-                   "O suporte a Python e posicionado como sidecar ou servico de jobs para ciencia de dados e automacao, nao como o nucleo confiavel.",
+                   "O suporte a Python é posicionado como sidecar ou recurso de jobs para ciência de dados e automação, não como o núcleo confiável.",
                "#2599: pt-BR python output story should localize the prose");
     }
 
@@ -432,10 +432,10 @@ void test_default_extensibility_profile() {
     expect(portuguese_task_primitives != portuguese_profile.dotnet_output.parity_matrix.end(),
            "#2599: pt-BR extensibility profile should still expose task-primitives parity");
     if (portuguese_task_primitives != portuguese_profile.dotnet_output.parity_matrix.end()) {
-        expect(portuguese_task_primitives->title == "Primitivas Task/Async",
+        expect(portuguese_task_primitives->title == "Primitivas de Task/Async",
                "#2599: pt-BR task-primitives title should localize the prose");
         expect(portuguese_task_primitives->rationale ==
-                   "Expor comportamento no estilo async/await por meio de fachadas de comandos e funcoes amigaveis para FP/VFP.",
+                   "Expor comportamento no estilo async/await por meio de fachadas de comandos e funções compatíveis com FP/VFP.",
                "#2599: pt-BR task-primitives rationale should localize the prose");
         expect(!portuguese_task_primitives->reason_tags.empty() &&
                    portuguese_task_primitives->reason_tags[0] == "ergonomics",
@@ -447,7 +447,7 @@ void test_default_extensibility_profile() {
         portuguese_profile.dotnet_output.parity_matrix.end(),
         [](const auto& capability) { return capability.id == "collection-helpers"; });
     expect(portuguese_collections != portuguese_profile.dotnet_output.parity_matrix.end() &&
-               portuguese_collections->title == "Ajudantes de colecao e dicionario",
+               portuguese_collections->title == "Auxiliares de coleção e dicionário",
            "#280: the collection facade disposition should localize in pt-BR");
 
     const auto pseudo_safe_http = std::find_if(
@@ -522,7 +522,7 @@ void test_default_extensibility_profile() {
                "#4359: extensibility language ids must remain invariant across locale refresh");
         expect(live_english_xbase->title == "Native Copperfin/xBase Runtime",
                "#4359: default extensibility profile should begin in en-US");
-        expect(live_spanish_xbase->title == "Runtime nativo Copperfin/xBase",
+        expect(live_spanish_xbase->title == "Entorno de ejecución nativo de Copperfin/xBase",
                "#4359: default extensibility profile should refresh to es-419");
         expect(live_pseudo_xbase->title.find("[!! ") != std::string::npos,
                "#4359: default extensibility profile should refresh to qps-ploc");
@@ -738,7 +738,7 @@ void test_dotnet_interop_policy_gateway() {
             .capability_id = "task-primitives",
             .estimated_latency_ms = 10U}),
         spanish_catalog);
-    expect(spanish_allowed.reason == "permitida por politica con ruta que requiere auditoria",
+    expect(spanish_allowed.reason == "permitida por política con ruta que requiere auditoría",
            "#2599: es-419 allowed .NET interop reason should localize the prose");
     expect(spanish_allowed.execution_path == "pending_audit",
            "#279: localized policy evaluation should preserve the pending-audit path");
@@ -752,7 +752,7 @@ void test_dotnet_interop_policy_gateway() {
             .untrusted_input = true,
             .security_sensitive = true}),
         portuguese_catalog);
-    expect(portuguese_denied.reason == "capacidade negada pela politica de allowlist/denylist",
+    expect(portuguese_denied.reason == "capacidade negada pela política de lista de permissões/lista de bloqueio",
            "#2599: pt-BR denylisted .NET interop reason should localize the prose");
     expect(portuguese_denied.execution_path == "none",
            "#2599: pt-BR denylisted .NET interop should preserve execution-path values");
@@ -895,7 +895,7 @@ void test_default_database_profile() {
     expect(
         !spanish_profile.guardrails.empty() &&
             spanish_profile.guardrails[0] ==
-                "Los traductores deterministas van primero para los backends relacionales y otros mapeos directos.",
+                "Los traductores deterministas tienen prioridad para los sistemas relacionales y otras correspondencias directas.",
         "#2598: es-419 database guardrail prose should localize without falling back to English");
 
     const auto portuguese_mongodb = copperfin::platform::database_connector_by_id(portuguese_profile, "mongodb");
@@ -903,7 +903,7 @@ void test_default_database_profile() {
     if (portuguese_mongodb != nullptr) {
         expect(
             portuguese_mongodb->translation_story ==
-                "Armazenamentos de documentos exigem traducao de projecoes e predicados de consultas no estilo FoxPro para pipelines dinamicos de documentos.",
+                "Armazenamentos de documentos exigem a tradução de projeções e predicados de consultas no estilo FoxPro para pipelines dinâmicos de documentos.",
             "#2598: pt-BR MongoDB connector story should localize the prose");
         expect(
             portuguese_mongodb->family == "document",
@@ -926,7 +926,7 @@ void test_default_database_profile() {
     expect(portuguese_polyglot_path != nullptr, "#2598: pt-BR database profile should still expose xbase-polyglot");
     if (portuguese_polyglot_path != nullptr) {
         expect(
-            portuguese_polyglot_path->source_shape == "intencao SEEK/BROWSE/SCAN/REPORT",
+            portuguese_polyglot_path->source_shape == "intenção de SEEK/BROWSE/SCAN/REPORT",
             "#2598: pt-BR xbase-polyglot source shape should localize prose while preserving command tokens");
         expect(
             portuguese_polyglot_path->id == "xbase-polyglot",

@@ -48,7 +48,9 @@ def main() -> None:
         ledger["entries"]["Token"]["translationStatus"] = "intentional-source-text"
         evidence = {"date": "2026-11-03", "reviewerType": "independent AI",
                     "model": "test-reviewer", "sessions": ["test-session"],
-                    "scope": "Three synthetic review-gate strings", "entries": []}
+                    "scope": "Three synthetic review-gate strings",
+                    "residualUncertainty": "Synthetic review does not assess rendered UI or human suitability.",
+                    "entries": []}
         for key in source:
             record = ledger["entries"][key]
             record["reviewStatus"] = "ai-reviewed"

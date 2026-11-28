@@ -6,11 +6,10 @@
 #include "copperfin/platform/path.h"
 
 #include "copperfin/localization/localization.h"
+#include "dbf_regular_file_reader.h"
 
 #include <filesystem>
-#include <fstream>
 #include <mutex>
-#include <sstream>
 #include <string_view>
 
 namespace copperfin::vfp {
@@ -418,20 +417,18 @@ AccessDesignParseResult parse_access_saveastext_design(const std::string& text) 
 }
 
 AccessDesignParseResult parse_access_saveastext_design_from_file(const std::string& path) {
-    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
-    if (!input) {
+    const detail::RegularFileReadResult input = detail::read_regular_file(
+        platform::path_from_utf8_string(path));
+    if (!input.ok) {
         AccessDesignParseResult result;
-        result.error = access_saveastext_design_text("Vfp.AccessDesign.Error.OpenFileFailed");
+        const std::string_view error_key =
+            input.failure == detail::RegularFileReadResult::Failure::open_failed
+                ? "Vfp.AccessDesign.Error.OpenFileFailed"
+                : "Vfp.AccessDesign.Error.ReadFileFailed";
+        result.error = access_saveastext_design_text(error_key);
         return result;
     }
-    std::ostringstream buffer;
-    buffer << input.rdbuf();
-    if (input.bad()) {
-        AccessDesignParseResult result;
-        result.error = access_saveastext_design_text("Vfp.AccessDesign.Error.ReadFileFailed");
-        return result;
-    }
-    return parse_access_saveastext_design(buffer.str());
+    return parse_access_saveastext_design(std::string(input.bytes.begin(), input.bytes.end()));
 }
 
 }  // namespace copperfin::vfp

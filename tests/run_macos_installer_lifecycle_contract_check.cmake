@@ -93,6 +93,11 @@ require_text("${script}" "RUNNER_ENVIRONMENT"
     "GitHub-hosted runner confinement")
 require_text("${script}" "--allow-system-mutation"
     "explicit system-mutation acknowledgement")
+require_text("${script}" "--source-directory"
+    "locale contract source-directory input")
+require_text("${script}"
+    [=[run_bounded cmake "-DINSTALL_ROOT=/Applications" "-DSOURCE_DIR=$source_directory"]=]
+    "installed productbuild locale inventory contract")
 require_text("${script}" "entry == \"Applications\" or entry.startswith(\"Applications/\")"
     "payload-root confinement")
 require_text("${script}"
@@ -133,6 +138,8 @@ require_text("${workflow}" "CopperfinProductBuildIdentifier.txt"
     "generated product identifier handoff")
 require_text("${workflow}" "--allow-system-mutation"
     "explicit hosted system-mutation acknowledgement")
+require_text("${workflow}" [=[--source-directory "$PWD"]=]
+    "hosted locale contract source directory")
 require_text("${workflow}" "\"GITHUB_ACTIONS=$GITHUB_ACTIONS\""
     "root-process GitHub Actions identity forwarding")
 require_text("${workflow}" "\"RUNNER_ENVIRONMENT=$RUNNER_ENVIRONMENT\""

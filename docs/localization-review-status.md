@@ -5,6 +5,18 @@ and partial independent AI text review. Neither pack is production-ready.
 `docs/localization-reviews/<locale>.json`
 records, for every key, the SHA-256 of the en-US source and current translation,
 source status, translation status, and independent review status/provenance. Hashes detect stale source or translation text; metadata in a repository file does not authenticate that a model session occurred.
+Ledgers and referenced evidence must be direct regular files in the managed
+`docs/localization-reviews` directory resolving inside the selected project.
+The checker rejects symbolic links, FIFOs, and other nonregular files before
+reading them.
+`--write` replaces only a validated managed ledger entry and does not follow a
+linked destination outside the project; the checked-in managed directory must
+already exist. On hosts with POSIX directory-descriptor operations, every
+managed directory component is opened without following
+links, and reads and replacements remain anchored to that directory if a
+concurrent checkout mutation changes its path. Other hosts receive static
+link/nonregular checks; this contract does not claim Windows reparse-point race
+protection.
 `scripts/check_locale_review_status.py` validates those snapshots in normal
 CTest. Its explicit `--release` mode fails while unchanged values are untriaged or any
 entry, including a justified invariant, lacks independent review; it is currently expected to fail. The normal CTest uses the `review-status` label and is not a production-readiness verdict. A source or
@@ -50,9 +62,11 @@ technical formatting guidance treats code keywords as invariant. These sources
 support the process and token boundary; they do not certify the wording of
 individual Copperfin sentences or regional cultural suitability.
 
-The corrected examples have local managed IntelliSense completion and Quick
-Info tests. Claude Sonnet 5.5 independently reviewed all eight corrected
-entries in three read-only passes; the third accepted clearer
+The corrected `USE` example has local managed IntelliSense completion and Quick
+Info coverage; catalog/compiled parity covers all eight corrected entries.
+Claude Sonnet 5.5 independently reviewed all eight corrected entries across
+three self-attested read-only sessions; per-entry session attribution was not
+retained. The third session accepted clearer
 CreateObject wording after review feedback. Exact source/translation hashes, session provenance,
 decisions and residual uncertainty are retained in
 `docs/localization-reviews/2026-11-03-intellisense-claude.json`. The 44 function

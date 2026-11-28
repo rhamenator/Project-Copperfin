@@ -97,11 +97,11 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
         "#2392: unsupported executable xAsset diagnostic should resolve through the en-US catalog");
     expect(
         spanish_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") ==
-            "El asset no tiene una vista previa de tabla.",
+            "El recurso no tiene una vista previa de tabla.",
         "#2604: xAsset missing-preview diagnostics should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate("Runtime.XAsset.Error.UnsupportedExecutableFamily") ==
-            "A familia do asset nao e um xAsset executavel suportado.",
+            "A família do recurso não é um xAsset executável compatível.",
         "#2604: xAsset unsupported-family diagnostics should resolve through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") !=
@@ -146,7 +146,7 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
         copperfin::runtime::build_xasset_executable_model(missing_preview);
     expect(
         !spanish_missing_preview_model.ok &&
-            spanish_missing_preview_model.error == "El asset no tiene una vista previa de tabla.",
+            spanish_missing_preview_model.error == "El recurso no tiene una vista previa de tabla.",
         "#2604: xAsset runtime diagnostics should refresh to es-419 when the runtime locale changes in-process");
 
     set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
@@ -155,7 +155,7 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
     expect(
         !portuguese_unsupported_family_model.ok &&
             portuguese_unsupported_family_model.error ==
-                "A familia do asset nao e um xAsset executavel suportado.",
+                "A família do recurso não é um xAsset executável compatível.",
         "#2604: xAsset runtime diagnostics should refresh to pt-BR when the runtime locale changes in-process");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);

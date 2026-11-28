@@ -790,6 +790,24 @@ void test_parse_launch_arguments_rejects_form_set_class_object_invalid_inputs() 
     });
     expect(!missing_targets_result.ok,
         "#1136: launch contract should reject form-set-class-object requests without target selectors");
+
+    const auto empty_object_name_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class-object",
+        "--form-set-class", "SaveFormSet",
+        "--form-set-class-target-object-name", ""
+    });
+    expect(!empty_object_name_result.ok,
+        "#7335: launch contract should reject empty form-set-class object-name selectors");
+
+    const auto whitespace_unique_id_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class-object",
+        "--form-set-class", "SaveFormSet",
+        "--form-set-class-target-unique-id", " \t "
+    });
+    expect(!whitespace_unique_id_result.ok,
+        "#7335: launch contract should reject blank form-set-class unique-ID selectors");
 }
 
 void test_parse_launch_arguments_rejects_form_set_class_object_ambiguity() {

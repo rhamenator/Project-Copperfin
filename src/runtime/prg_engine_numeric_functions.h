@@ -13,6 +13,11 @@
 
 namespace copperfin::runtime {
 
+// Shared checked decimal quantization used by recovered Numeric consumers.
+// The implementation is the same shortest-decimal, half-away-from-zero
+// primitive used by ROUND().
+std::optional<double> round_decimal_value_checked(double value, int decimal_places);
+
 std::optional<PrgValue> evaluate_numeric_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,

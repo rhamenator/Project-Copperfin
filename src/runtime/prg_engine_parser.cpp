@@ -2875,8 +2875,9 @@ Program parse_program_impl(
                 const std::string update_tail = trim_copy(body.substr(set_position + 3U));
                 const std::size_t tail_start = find_first_keyword_top_level(update_tail, {"WHERE", "FOR", "WHILE"});
                 statement.expression = tail_start == std::string::npos ? update_tail : trim_copy(update_tail.substr(0U, tail_start));
+                statement.where_clause_present = find_keyword_top_level(update_tail, "WHERE") != std::string::npos;
                 statement.tertiary_expression = extract_command_clause(update_tail, "WHERE", {"FOR", "WHILE"});
-                if (statement.tertiary_expression.empty()) {
+                if (!statement.where_clause_present) {
                     statement.tertiary_expression = extract_command_clause(update_tail, "FOR", {"WHERE", "WHILE"});
                 }
                 statement.quaternary_expression = extract_command_clause(update_tail, "WHILE", {"WHERE", "FOR"});
@@ -2886,8 +2887,9 @@ Program parse_program_impl(
             const std::string body = trim_copy(line.substr(12U));
             const std::size_t tail_start = find_first_keyword_top_level(body, {"WHERE", "FOR", "WHILE"});
             statement.identifier = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.where_clause_present = find_keyword_top_level(body, "WHERE") != std::string::npos;
             statement.expression = extract_command_clause(body, "WHERE", {"FOR", "WHILE"});
-            if (statement.expression.empty()) {
+            if (!statement.where_clause_present) {
                 statement.expression = extract_command_clause(body, "FOR", {"WHERE", "WHILE"});
             }
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"WHERE", "FOR"});
