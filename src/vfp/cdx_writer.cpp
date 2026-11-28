@@ -258,6 +258,11 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
         return result;
     }
 
+    if (key_expression.empty()) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.EmptyKeyExpression");
+        return result;
+    }
+
     // cdx_header.cpp's own reader treats key_length == 0 or > page_size
     // as unparseable (it can't locate a tag directory at all in that
     // case), so a file built with such a value would be silently

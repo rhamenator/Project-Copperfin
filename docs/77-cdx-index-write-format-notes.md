@@ -159,6 +159,9 @@ starting at byte 0, NUL-padded:
 [0:N) key expression text, e.g. "cKey" for `INDEX ON cKey TAG cKeyTag`
 [N:512) zero
 ```
+The Copperfin writer requires a non-empty expression; it rejects an empty
+value before creating the CDX or changing the DBF production-index flag, so
+every file it reports as written remains readable by the profile-aware parser.
 
 ### Leaf data page (page 5, single-leaf-page case only)
 
