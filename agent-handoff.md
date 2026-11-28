@@ -26,14 +26,35 @@ in runs `46117753773` and `46117753611`; new CI must establish final-head
 results. The source/test/changelog patch SHA-256 before the handoff update was
 `e9aeeb758f1671741aef1ed14635229353b9987604f7c534e829ccb4f98e5544`.
 
-NEXT: push this handoff checkpoint, then request Codex review on the resulting
-exact PR head, reply to and resolve the addressed thread, and block on all fresh
-required hosted checks. Merge only after a clean exact-head authorized review,
-all required checks green, and zero unresolved conversations. PR #7248 remains
-stacked on #7247 and `DIRTY`; do not retarget or rebase it until #7247 merges.
-Then update #7248, obtain fresh review/checks, and afterward resume queued VFP9
-order/SEEK #6334 and print-expression #6413. The correction/build/CTest/commit
-stage took about 17 minutes on 2026-11-28.
+## Current PR checkpoint — 2026-11-28
+
+PR #7247 remains open at exact head `0eec7f5bc10e89f882e57bf2ca8224dc217ca825`.
+Its latest observed required checks include failures in sanitizer, Linux GCC,
+Windows MSVC shard 1/3, and macOS Clang; do not merge it. The
+`locale-full-review` worktree also retains two uncommitted test-only edits in
+`tests/test_prg_engine_cast_byte_numeric.cpp` and
+`tests/test_prg_engine_cast_uint64_numeric.cpp`; preserve them while diagnosing
+those results.
+
+PR #7248 remains stacked on #7247. The prior child head
+`6bf135e3108aef99af31b0b8851b758efc3bc0d5` was updated by merging parent head
+`0eec7f5bc10e89f882e57bf2ca8224dc217ca825`; signed+DCO merge commit
+`f4332b4483b7e447e3959f6d66210236f9509af6` is pushed as its exact head. This
+resolves the GitHub conflict state; GitHub now reports `UNSTABLE`, with fresh
+checks in progress and no review decision yet. Local verification on that head
+passed the localization generator build and synthetic inventory tests, locale
+review gate and negative-path tests, 16 post-v1 registry tests, CMake install
+contract, managed Language Service tests, agent-channel verification, and
+`git diff --check`. The C++ localization CTest target was not run locally.
+
+NEXT: keep #7248 based on #7247; do not retarget or rebase it. Let fresh hosted
+checks finish, then obtain a Codex review on the exact final head and resolve any
+open conversations. Diagnose #7247's failing checks without discarding its two
+local test edits; refresh its exact-head review and required checks before
+merging either PR. Once both localization PRs are complete, resume the queued
+VFP9 order/SEEK #6334 and print-expression #6413 work. This conflict-resolution,
+focused-validation, and priority-review stage took about 21 minutes on
+2026-11-28.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 
