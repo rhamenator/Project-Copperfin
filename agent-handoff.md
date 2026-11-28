@@ -1,25 +1,46 @@
 # Agent Handoff
 
-## Active bounded slice — VFP9 CDX tag and order evidence (#7353)
+## Active slice — compound CDX metadata containment (#5620, PR #7354)
 
-PR #7353 is open from branch `docs/vfp9-index-order-evidence`, based on
-`origin/main` `b569a70d1957fc9a326039d74feed9ee0aca0a97`. Evidence commit
-`dfd7c54ccb2ae4fac270ca9ba4113a5d3a6ab64e` preserves a synthetic
-three-record DBF and structural CDX written with real VFP9, the capture PRG,
-native `ORDER()`/scan/`SEEK()` results, hashes, and a changelog fragment. Native
-VFP9 selects `DESCTAG`, scans `CHARLIE`, `BRAVO`, `ALPHA`, and seeks CHARLIE;
-`ASCTAG` scans from ALPHA. The owner reports the video build decodes different
-tag names and mishandles order selection/navigation; Copperfin has not yet been
-replayed against this exact fixture. Evidence is linked to admitted issues
-#5618 and #6334; #5619 remains related but this capture does not establish its
-expression-binding failure. Claude-first review was requested for evidence
-commit `dfd7c54`; CI then had 9 successes, one accepted neutral, and 21 checks
-in progress. This handoff update changes the PR tree, so the PR head shown by
-live GitHub metadata is authoritative for the new full-tree SHA; refresh Claude
-review and CI after pushing it. NEXT: address any actionable result, require an
-actual clean authorized review on the final head, all required checks green and
-zero unresolved conversations, then merge and clean up. The VFP9 VM is shut
-down.
+Continue in /home/rich/.codex/worktrees/cdx-compound-fail-closed-5620/Project-Copperfin
+on fix/cdx-compound-fail-closed-5620, now updated from base
+b569a70d1957fc9a326039d74feed9ee0aca0a97 to
+origin/main merge f13f960e863ea3c1860b564d057827b214864b72. Owner-prioritized
+#5620 is first, followed by order/SEEK #6334 and print-expression #6413.
+Against the retained real VFP9 fixture
+tests/fixtures/vfp9-descending-observation-output/ (CDX SHA-256
+6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520,
+DBF SHA-256
+fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab), the
+bounded fix rejects an unbound multi-entry root directory, localizes its
+diagnostic, and keeps DBF reading available while omitting the untrusted index
+descriptor. It does not decode the tag directory or resolve ordered scans/SEEK.
+Focused GNU 15.2 Debug test_vfp_assets and test_localization pass; four
+locale catalogs parse. PR #7354's prior head
+7772af86c1cb7efc2c83c800a7821c079271e584 had all hosted checks green and a
+clean exact-head Codex review. The owner-authorized PR #7353 evidence change
+merged as f13f960e863ea3c1860b564d057827b214864b72; this update resolves the
+resulting agent-handoff.md conflict. That merge changes the PR #7354 head, so
+prior review and CI evidence do not qualify the new head. NEXT: push this
+conflict resolution, request Codex review on the exact new head, require all
+hosted checks green and zero unresolved conversations, then merge. Keep issue
+#5620 open and do not claim a promo-video baseline until structural compound-
+tag decoding is implemented and replayed; #6334 and #6413 remain queued.
+
+## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
+
+PR #7353 merged at f13f960e863ea3c1860b564d057827b214864b72 from exact head
+d5bb564e9e877b774da0e021b5a4caec58689d05; required checks passed, Codex
+reviewed that head cleanly, and no review conversations remained. Its fixture
+tests/fixtures/vfp9-index-order-recovery/ preserves a real VFP9 three-record
+DBF/CDX capture, capture PRG, native ORDER()/scan/SEEK() results, hashes, and
+changelog evidence. It is linked to #5618 and #6334; #5619 remains related
+but this capture does not establish its expression-binding failure. The
+captured VFP9 ordering is CHARLIE, BRAVO, ALPHA for DESCTAG and starts at ALPHA
+for ASCTAG. Copperfin still needs a replay against this exact fixture after the
+bounded #5620 descriptor-containment fix and later #6334 ordering/navigation
+work. The VFP9 VM is shut down.
+
 
 The following older slice records are retained as historical evidence; verify
 their live issue/PR state before treating any as active work.

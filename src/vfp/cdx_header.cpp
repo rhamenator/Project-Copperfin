@@ -401,6 +401,44 @@ bool looks_like_tag_page_offset(
            (offset % page_size) == 0U;
 }
 
+bool has_unbound_compound_root_directory_tags(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t root_page_offset,
+    std::size_t page_size) {
+    if (page_size == 0U || root_page_offset > bytes.size() ||
+        page_size > bytes.size() - root_page_offset || root_page_offset + 4U > bytes.size()) {
+        return false;
+    }
+
+    const std::uint16_t flags = read_le_u16(bytes, root_page_offset);
+    const std::uint16_t entry_count = read_le_u16(bytes, root_page_offset + 2U);
+    if ((flags & (cdx_leaf_flag | cdx_directory_flag)) != (cdx_leaf_flag | cdx_directory_flag) ||
+        entry_count < 2U) {
+        return false;
+    }
+
+    const std::size_t entry_bytes = static_cast<std::size_t>(entry_count) * 4U;
+    if (entry_bytes > (page_size - 4U)) {
+        // The declared root-directory pointer array cannot fit within this
+        // page after its four-byte header. Do not let the later whole-file
+        // heuristics reinterpret the malformed compound page as authoritative
+        // tag metadata.
+        return true;
+    }
+
+    std::set<std::uint32_t> tag_pages;
+    for (std::size_t index = 0U; index < entry_count; ++index) {
+        const std::size_t pointer_offset = root_page_offset + 4U + (index * 4U);
+        const std::uint32_t tag_page = read_le_u32(bytes, pointer_offset);
+        if (!looks_like_tag_page_offset(tag_page, page_size, bytes.size()) ||
+            !tag_pages.insert(tag_page).second) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool looks_like_tag_name_candidate(const std::string& text) {
     if (text.size() < 4U || text.size() > 10U) {
         return false;
@@ -881,6 +919,24 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
             .header = header,
             .tags = {},
             .error = cdx_header_text("Vfp.CdxHeader.Error.InvalidValues")
+        };
+    }
+
+    // A VFP9 compound root directory can contain multiple names while all
+    // per-entry page pointers are the invalid sentinel. The variable-length
+    // name tail is not enough to bind each tag to its own header page, so the
+    // existing fixed-slot/expression-run heuristics must not escape as
+    // authoritative metadata. Reject this narrowly scoped shape until the
+    // root-directory packing and tag associations are structurally decoded.
+    if (has_unbound_compound_root_directory_tags(
+            bytes,
+            static_cast<std::size_t>(header.root_node_offset),
+            header.page_size)) {
+        return {
+            .ok = false,
+            .header = header,
+            .tags = {},
+            .error = cdx_header_text("Vfp.CdxHeader.Error.IncompleteCompoundTagMetadata")
         };
     }
 
