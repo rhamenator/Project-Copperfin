@@ -35,10 +35,15 @@ parses. The page-fit check now describes only its proven page-boundary limit;
 the unknown tag-name tail layout is not inferred. This review repair also
 strengthens the fixture test to assert the exact localized error, derives the
 root offset from the CDX file header, and restores alphabetical catalog-key
-order. After these local edits, constrained GNU 15.2 Debug build and focused
-`test_vfp_assets` pass 1/1 (3.33s); all four locale JSON files parse and
-`git diff --check` is clean. The hosted inventory-coverage job is still
-running on the prior PR head, so it is not final evidence for this new head.
+order. Signed+DCO review-correction commit
+`fb2efdd61aa796dbd28a78f9f958685dcb5c1089` is pushed as the latest product and
+test head. Constrained GNU 15.2 Debug build and focused `test_vfp_assets` pass
+1/1 (3.31s); `test_localization` passes 1/1 (14.56s); all four locale JSON
+files parse and `git diff --check` is clean. GitHub confirms PR #7354 is at
+`fb2efdd61aa796dbd28a78f9f958685dcb5c1089`; its new hosted checks are in
+progress. The owner-authorized `@codex review` trigger was posted as comment
+`7231336882`; no exact-head review is recorded yet. The earlier checks on
+`1601897c4bff90e3af373ff52d5ff690179fd244` do not qualify this updated head.
 PR #7353's failing Windows test is under separate diagnosis:
 `test_access_saveastext_export` failed three assertions around its
 missing-database subprocess; the inventory-coverage failure is downstream of
@@ -49,12 +54,11 @@ and merge before splitting off a bounded #7353 failure investigation; owner
 also queued PRs #7247 and #7248 after #7353–#7354 merge.
 Local build/test evidence is in this worktree's `build/` and
 `build/Testing/Temporary/LastTest.log`; fixture hashes are retained above.
-This work stage took approximately 25 minutes. NEXT: commit the verified local
-review corrections with signature and DCO, push them to #7354, request the
-owner-authorized Codex exact-head review, then monitor its result and fresh
-hosted checks. Resolve all actual review threads and merge only after a clean
-exact-head authorized review, all required checks green, and all conversations
-resolved. Keep issue #5620 open and prioritize structural compound-tag
+This work stage took approximately 25 minutes. NEXT: preserve this status at
+the next checkpoint; obtain the clean Codex review and green hosted checks for
+the then-current exact head, resolve all actual review threads, and merge only
+after those gates pass. Keep issue #5620 open and prioritize structural
+compound-tag
 decoding before claiming a promo-video baseline; #6334 ordered
 `SET ORDER`/scan/SEEK and #6413 print-expression remain queued. Preserve the
 PR #7353 checkout.
