@@ -1,0 +1,330 @@
+{
+  "session": "/root/review_pt_revisions; Codex separate author instance",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewStatus": "unreviewed; independent review pending",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.Error.UnexpectedExtraPositionalArgument",
+      "source": "Unexpected extra positional argument: {argument}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnknownArgument",
+      "source": "Unknown argument: {argument}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnsignedIntegerValueRequired",
+      "source": "The {option} value must be an unsigned integer."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.BooleanValueRequired",
+      "source": "The {option} value must be {trueValue} or {falseValue}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName",
+      "source": "Visual property clear batch item options require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.CopyBatchItemRequiresPropertyName",
+      "source": "Visual property copy batch item options require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MissingValue",
+      "source": "Missing value for {option}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MoveBatchItemRequiresPropertyName",
+      "source": "Visual property move batch item options require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoAssetPath",
+      "source": "No asset path was provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyCopies",
+      "source": "No property copies were provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyChanges",
+      "source": "No property changes were provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyClears",
+      "source": "No property clears were provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyMoves",
+      "source": "No property moves were provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyName",
+      "source": "No property name was provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyPlacement",
+      "source": "No property placement was provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyRenames",
+      "source": "No property renames were provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyReorders",
+      "source": "No property reorders were provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
+      "source": "No target property name was provided."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName",
+      "source": "Visual property rename batch item options require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ReorderBatchItemRequiresPropertyName",
+      "source": "Visual property reorder batch item options require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName",
+      "source": "Visual property update batch item options require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.MissingValue",
+      "source": "Missing value for {option}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoAssetPath",
+      "source": "No asset path was provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoDuplicateOperations",
+      "source": "No visual object duplicates were provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoObjectPlacement",
+      "source": "No visual object placement was provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReparentOperations",
+      "source": "No visual object reparent operations were provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRenameOperations",
+      "source": "No visual object renames were provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReorderOperations",
+      "source": "No visual object reorders were provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
+      "source": "No root object selector was provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
+      "source": "No subtree replacement identities were provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoUpdateOperations",
+      "source": "No visual object edits were provided."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject",
+      "source": "Visual object duplicate batch item options require a preceding selected-object selector."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject",
+      "source": "Visual object reparent batch item options require a preceding selected-object selector."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+      "source": "Visual object rename batch item options require a preceding selected-object selector."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+      "source": "Visual object reorder batch item options require a preceding selected-object selector."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+      "source": "Subtree duplicate replacement options require a preceding {replacementSourceUniqueIdOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+      "source": "Visual object update batch property options require a preceding selected-object selector."
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.Error.UnexpectedExtraPositionalArgument",
+      "translation": "Unerwartetes zusätzliches Positionsargument: {argument}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnknownArgument",
+      "translation": "Unbekanntes Argument: {argument}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnsignedIntegerValueRequired",
+      "translation": "Der Wert für {option} muss eine vorzeichenlose ganze Zahl sein."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.BooleanValueRequired",
+      "translation": "Der Wert für {option} muss {trueValue} oder {falseValue} sein."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName",
+      "translation": "Optionen für das stapelweise Leeren visueller Eigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.CopyBatchItemRequiresPropertyName",
+      "translation": "Optionen für das stapelweise Kopieren visueller Eigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MissingValue",
+      "translation": "Wert für {option} fehlt."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MoveBatchItemRequiresPropertyName",
+      "translation": "Optionen für das stapelweise Verschieben visueller Eigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoAssetPath",
+      "translation": "Es wurde kein Asset-Pfad angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyCopies",
+      "translation": "Es wurden keine Eigenschaften zum Kopieren angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyChanges",
+      "translation": "Es wurden keine Eigenschaftsänderungen angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyClears",
+      "translation": "Es wurden keine Eigenschaften zum Leeren angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyMoves",
+      "translation": "Es wurden keine Eigenschaften zum Verschieben angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyName",
+      "translation": "Es wurde kein Eigenschaftsname angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyPlacement",
+      "translation": "Es wurde keine Position für die Eigenschaft angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyRenames",
+      "translation": "Es wurden keine Eigenschaften zum Umbenennen angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyReorders",
+      "translation": "Es wurden keine Eigenschaften zum Umordnen angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
+      "translation": "Es wurde kein Name der Zieleigenschaft angegeben."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+      "translation": "Der Wert für {option} muss eine nicht negative ganze Zahl sein."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName",
+      "translation": "Optionen für das stapelweise Umbenennen visueller Eigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ReorderBatchItemRequiresPropertyName",
+      "translation": "Optionen für das stapelweise Umordnen visueller Eigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UnknownOption",
+      "translation": "Unbekannte Option für {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName",
+      "translation": "Optionen für das stapelweise Aktualisieren visueller Eigenschaften erfordern zuvor {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.MissingValue",
+      "translation": "Wert für {option} fehlt."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoAssetPath",
+      "translation": "Es wurde kein Asset-Pfad angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoDuplicateOperations",
+      "translation": "Es wurden keine Duplizierungen visueller Objekte angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoObjectPlacement",
+      "translation": "Es wurde keine Position für das visuelle Objekt angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReparentOperations",
+      "translation": "Es wurden keine Vorgänge zum Ändern des übergeordneten visuellen Objekts angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRenameOperations",
+      "translation": "Es wurden keine Umbenennungen visueller Objekte angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReorderOperations",
+      "translation": "Es wurden keine Umordnungen visueller Objekte angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
+      "translation": "Es wurde kein Selektor für das Stammobjekt angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
+      "translation": "Es wurden keine Ersatzidentitäten für Teilbäume angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoUpdateOperations",
+      "translation": "Es wurden keine Änderungen visueller Objekte angegeben."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+      "translation": "Der Wert für {option} muss eine nicht negative ganze Zahl sein."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject",
+      "translation": "Optionen für das stapelweise Duplizieren visueller Objekte erfordern zuvor einen Selektor für das ausgewählte Objekt."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject",
+      "translation": "Optionen für das stapelweise Ändern des übergeordneten visuellen Objekts erfordern zuvor einen Selektor für das ausgewählte Objekt."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+      "translation": "Optionen für das stapelweise Umbenennen visueller Objekte erfordern zuvor einen Selektor für das ausgewählte Objekt."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+      "translation": "Optionen für das stapelweise Umordnen visueller Objekte erfordern zuvor einen Selektor für das ausgewählte Objekt."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+      "translation": "Optionen zum Ersetzen duplizierter Teilbäume erfordern zuvor {replacementSourceUniqueIdOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+      "translation": "Optionen zum stapelweisen Aktualisieren visueller Objekteigenschaften erfordern zuvor einen Selektor für das ausgewählte Objekt."
+    }
+  ]
+}

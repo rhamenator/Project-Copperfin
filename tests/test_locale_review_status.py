@@ -396,7 +396,7 @@ def main() -> int:
                 "w", encoding="utf-8", newline="\n") as stream:
             stream.write("version 1\nmalformed inventory entry with extra fields\n")
         try:
-            module.review_locales()
+            module.reviewed_locales()
         except ValueError:
             pass
         else:

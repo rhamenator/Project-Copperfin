@@ -1,0 +1,1325 @@
+{
+  "locale": "de-DE",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-de-DE-015.json",
+      "/tmp/copperfin-de-DE-016.json",
+      "/tmp/copperfin-de-DE-017.json",
+      "/tmp/copperfin-de-DE-018.json"
+    ],
+    "entryCount": 160
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_es_revisions",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewedAtUtc": "2026-11-03T07:59:31.386120+00:00",
+  "uncertainty": "Text and source-context review only. No native German speaker sign-off or rendered UI/runtime validation. Specialized VFP terms and long German diagnostics may need domain review or UI layout checks. Verdicts apply only to exact hashed values.",
+  "counts": {
+    "accept": 149,
+    "revise": 11
+  },
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.Error.UnexpectedExtraPositionalArgument",
+      "batch": 15,
+      "sourceSha256": "1cbe2040f9996909f3b5dfa2e418553683ee6a3dd2553d8280728a8f7257b35f",
+      "translationSha256": "6082d42e798565301ecd0a1045578a25504a2763fdf5491f96b62f99406f38da",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnknownArgument",
+      "batch": 15,
+      "sourceSha256": "503e4bca64d33f07d3879c3b7a2ae3c5dba953e82e853eac9f5e008438df863a",
+      "translationSha256": "40b3dd1d6c605ab53938edd1392d37677fa97093b20b5fa49af2bfdd6d623eb1",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnsignedIntegerValueRequired",
+      "batch": 15,
+      "sourceSha256": "10e420746ed852110133bcc009344708d9b9dd2539f1c840c78e844768883fb6",
+      "translationSha256": "2e1d3a82ec25c823f2dcf2123e61deb186190e961136e39cc66d69aa93b557a3",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.BooleanValueRequired",
+      "batch": 15,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "881cb1aa1afd6eb9beeb77d8635714c4d2c55016c10c80e456a3364bc203c399",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "96a1247ef1b2329090944a9258c14780a5a7b4e4be062c3ddffa14f23227f6cb",
+      "translationSha256": "73a845b4a4166d67458657fbe953d2a3ea2b564cb0186593c4b5542931174121",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.CopyBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "d37942d2eb2d4296fca35d680799e3e4343e751860f57a4ca24bbfd259ad3703",
+      "translationSha256": "2dd6b5bbc3d556b71c51d2cba21083a6c3712fa981587e1217f0d9d2a608e81a",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MissingValue",
+      "batch": 15,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "28d9437a5d924f888aa2160edcffa343419da33ab3a96f101c258e0b349effb1",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MoveBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "f865e5b6ea06cc5ed606092d55e3079d808535892e0652d8857c1aa6f03b17c9",
+      "translationSha256": "a472af140e91d92b4d3fd7d90d8a66196b16abe2dd8e66484411ef06da958e1d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoAssetPath",
+      "batch": 15,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "8c487e91988ed615e042303028e519882cedee63af4cc36be4ec1c813b6d9ec9",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyCopies",
+      "batch": 15,
+      "sourceSha256": "b67ea96839bffd4d5e696ecfd1623c8a7dd8bdd1fcc4f464c729744571279593",
+      "translationSha256": "707f16218ed80211b9c55d1cd8cb5357490864900a12466a76046735e28f1c68",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyChanges",
+      "batch": 15,
+      "sourceSha256": "9a2e98e48e053c3d2a86b966e6cd7c8e92d835f17486071af159d931add14b53",
+      "translationSha256": "e15a2bb15447805490ec11c64677a77447c69857bd45d8a6abc830a07bd88e8f",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyClears",
+      "batch": 15,
+      "sourceSha256": "f17a0c0321c8d6962bae6bf201b34ae4bb96ab73e8d6027ac313f4312c88f257",
+      "translationSha256": "52a572c3e493a0b68b550d48228b0570b3cf1f2be57e1770dfbad664504c609e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyMoves",
+      "batch": 15,
+      "sourceSha256": "16e3b0ce41dd25224c7b218bc2fdfac4885188c72aab809dfb00423da5770661",
+      "translationSha256": "10cc16cb5d0a93c2f06bac7cded19ac1f4fd625a246b53f8cbf19db3491fd22b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyName",
+      "batch": 15,
+      "sourceSha256": "4f5b0a7174fb1e86bb8895dfc65363c68440b38cc764bdaa6e4b232c89aa3664",
+      "translationSha256": "bf4edf922c695e9b795e334c95bff7b2579614ef40ec53334ff902ed25aa152b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyPlacement",
+      "batch": 15,
+      "sourceSha256": "7a966011a3f2b0e4d44104ba461135470e70a9661719a0290164959152a9b8fe",
+      "translationSha256": "a6fff29ae04b6fc55588d4c1660aef3db9059e170151a2ed028a41ffe9c06327",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyRenames",
+      "batch": 15,
+      "sourceSha256": "db546f7c4c32d82f20c808c0c8f1dd3a4767fd58d28ed74b3b58a93b985e910d",
+      "translationSha256": "4cd3cc1d0bf39a2ecac887f29aa2275c36ed8974052ea4d1b9087bfcefe3ac30",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyReorders",
+      "batch": 15,
+      "sourceSha256": "48b94294209cb715c7e28e47e9bca96f9a7a7352ce16433f066985e3a775a215",
+      "translationSha256": "b9e54c2c4963001d1ec70aa0312a09fcdf0dc41acb27e3d1dd5cc656bdea924d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
+      "batch": 15,
+      "sourceSha256": "50cdbbebad0d8904dd71213cff5fd08b5493b6856ea7fcfb9357366b2cf8a5be",
+      "translationSha256": "a65004c2ea94c7e7f1d793196cd9729a3f741cbd450e4c4a6e65bbfec07de046",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+      "batch": 15,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "11ed816b858cfe455681ac561321f384d96f4ff43526d08e885206f539e38480",
+      "translationSha256": "c04b94bf1bf5a4278189351ab64e292f2a453a1ec49abc494fff474bd0c2eb31",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ReorderBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "682ddf3820f2d4d37942ea4957794817ce914b309efb0d5196bdd09581d2bcb8",
+      "translationSha256": "85e10dfd7380a880caea67f339c0880e57733afe974bd8bacef38d91402e0234",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UnknownOption",
+      "batch": 15,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "143a91acc3e2a966ad88ea08dce716416bf2eb8fc88c1cf6cf4fa2d32a5a7c2e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "c2df53e466d8dc12718545c92236fbff7c7a08be11fb97cb7b19193fd785cd01",
+      "translationSha256": "9c5486b8320a61355d3cbcb9759cdfec593ca0e6a29ee3734d4184a81bf36e8a",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.MissingValue",
+      "batch": 15,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "28d9437a5d924f888aa2160edcffa343419da33ab3a96f101c258e0b349effb1",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoAssetPath",
+      "batch": 15,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "8c487e91988ed615e042303028e519882cedee63af4cc36be4ec1c813b6d9ec9",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoDuplicateOperations",
+      "batch": 15,
+      "sourceSha256": "3652154de6350929b524bff7f5a52e6053063cf5d3d6191692c30189fb4f631e",
+      "translationSha256": "878f58dbf4192da8a2765a62138ba2e17509e3d2d1d6ba5be8dfd5f997c39d02",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoObjectPlacement",
+      "batch": 15,
+      "sourceSha256": "4d4faa8c4acaebd5e9d9991e5423fad7091ed99b4d2dab349220ecec01d7bbf1",
+      "translationSha256": "d86f9357dcb89e9d4b0b0e79c3a5f46d0220611bdf91be35839a1ba1427669ec",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReparentOperations",
+      "batch": 15,
+      "sourceSha256": "e1aaeb076e5b0f3296b53d5c070ad36fff3130bcf6765707022c71dfcf885185",
+      "translationSha256": "8f279f6ac75a6e233a1526798adc12685516d1f79842bf6a13514e3755f05ffa",
+      "verdict": "revise",
+      "reason": "„Ändern des übergeordneten visuellen Objekts“ suggests changing the parent object itself, not reparenting the selected visual object.",
+      "proposal": "Es wurden keine Vorgänge zum Neuzuordnen visueller Objekte zu einem übergeordneten Objekt angegeben.",
+      "proposalSha256": "c4d409074f55a5a1105bc2e5a783ded4bb5498d52b489e013c806dc669f377a5"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRenameOperations",
+      "batch": 15,
+      "sourceSha256": "879d97689a652a414ac75e74f1b2ea9733fb62adcd4c92c454d442bc1dc6c20d",
+      "translationSha256": "d80e5ca46c96cf14d7308361eeb13ce90f8576992005481a2767b031d75d7b66",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReorderOperations",
+      "batch": 15,
+      "sourceSha256": "4f96db45b8ee0cdfa49f72cd2fec8cb3007c5848acd23170d15f582eb179d43f",
+      "translationSha256": "2b116de99cce65ab91661350d71f61c47e2a05d81a7ab4cbdc63e767a0e5635e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
+      "batch": 15,
+      "sourceSha256": "7ca227a11f73ec843c2bdd055f49793a0cdc2773a2837125b98926de3f6891d0",
+      "translationSha256": "028578feaf25db0e408f22d406dc3c24ef151224cdf0fe03d8a1f89ccb618727",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
+      "batch": 15,
+      "sourceSha256": "aa1c0660c769c6ebe946164e1740832aaf069b34aadfc7626f220c8b0658f7bc",
+      "translationSha256": "b0a9de8129523c3becbf2b6609abb7a7f753736394519499025c845e1ad85116",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoUpdateOperations",
+      "batch": 15,
+      "sourceSha256": "87c8fbe619e55139dd56f61858d044affa2cf4d2caab3fc892bd542b058b2374",
+      "translationSha256": "8989cfcc7f2017d3440e922a18b9cb56730ac571f804b673a4fe36f281425f17",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+      "batch": 15,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "9a1ee3c7e177637fe94cf32dc6964027bb4cb19c723328f5479fb051ce2aace3",
+      "translationSha256": "fffc3e6361d64665108c3801b7ccc5d1387816b5613084345e54af620a3c7ee8",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "77817e6827c1467aeaf0335ba20f9f093c5e307bb5bc4ba86dfd5a2bd74a6fa6",
+      "translationSha256": "a650a7d7cdedf3b3bad1685a932d246067b465071b3e73622088e4761a5985f2",
+      "verdict": "revise",
+      "reason": "The wording suggests changing the parent object itself; this is a reparent batch item.",
+      "proposal": "Optionen zum stapelweisen Neuzuordnen visueller Objekte zu einem übergeordneten Objekt erfordern zuvor einen Selektor für das ausgewählte Objekt.",
+      "proposalSha256": "17ee99e384785bd4b3ede6bf33191383226d954fee2406588faf6beba801dd1c"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "acc466d62b7f451bd0dca12a613a1cec44e3b47b38fc6a66f6da1b6565805bf8",
+      "translationSha256": "971fc6b2645ea85d00909fd346ff6c6f356c9f3b8d15d993441e27400f22ad73",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "6d87341b1a701d49656366b1a49fb53ed35c9bf884814964e788eb4807851d5f",
+      "translationSha256": "a8387e68c861354193095506ea1c08b161bc41d64fd9cfb9a2381b0e1c42498a",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+      "batch": 15,
+      "sourceSha256": "f3aa5b8d836b69dfa0e847be619de325078fbc9e88e49dce4ff893836d9a4d7f",
+      "translationSha256": "badfa36b10e7df915e1ff9169e436fedab1349ab54a90486d6229f7af7fb731c",
+      "verdict": "revise",
+      "reason": "The source refers to replacement options used while duplicating a subtree, not replacing duplicated subtrees wholesale.",
+      "proposal": "Optionen für Ersetzungen beim Duplizieren eines Teilbaums erfordern zuvor {replacementSourceUniqueIdOption}.",
+      "proposalSha256": "68240ea341f08a23adedba6832c581968653d2dd70ebe89de4a48b7241cc0187"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+      "batch": 15,
+      "sourceSha256": "b6578cda9f0c15e4cd1152ec8f956278da4effa3e6c8b111700d0f2c837d20e3",
+      "translationSha256": "95a26011424bc302d360489231e1b83ad0158bd0ff3ad998f39893af295fb5b1",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+      "batch": 16,
+      "sourceSha256": "52e4dff05544fecb0622592c933876bc072055e4332be4cf946c9765c3959abe",
+      "translationSha256": "38a5d114a59e45a2718c82063f71bc74503bfa40a9f01d499bd17a2b3825aedc",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UnknownOption",
+      "batch": 16,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "143a91acc3e2a966ad88ea08dce716416bf2eb8fc88c1cf6cf4fa2d32a5a7c2e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MissingValue",
+      "batch": 16,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "28d9437a5d924f888aa2160edcffa343419da33ab3a96f101c258e0b349effb1",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.BooleanValue",
+      "batch": 16,
+      "sourceSha256": "d7ecf2c72e42b999788cd29ac4fc79a08d795c379907252a86de5166a77fb9c3",
+      "translationSha256": "aa2e8dc4f5f1736592bcf95abb8a9d4f19bf21099b57f7b584fc5d3e51372c24",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+      "batch": 16,
+      "sourceSha256": "d5851c3e37fb4b22cb8fd9b275d5f70113e1ee2492f999a225e9f7b4c8deb615",
+      "translationSha256": "2cd1c305e1b0a03b4762a753164b855b17ea3ee1f0d0e963884225e872c424c0",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+      "batch": 16,
+      "sourceSha256": "4a2ce574c81707eb8388bb206bcdb8c5499dfa049c5b8ac64e8b102b4bc0e5be",
+      "translationSha256": "f1b4a45e9dad876d6adb48894cabdd2aada5c68005a72d5cbc1ac06ab939a61b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoAssetPath",
+      "batch": 16,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "8c487e91988ed615e042303028e519882cedee63af4cc36be4ec1c813b6d9ec9",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+      "batch": 16,
+      "sourceSha256": "1b0070da06f1e6aacd9a82a9210a26f47ea7104fd3d6f0a5f19abb032ebee28f",
+      "translationSha256": "167015c97229d02819c04e4ad7e607278e6cc978744ef7b2d54cb1ca924c67cd",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+      "batch": 16,
+      "sourceSha256": "64409d073087fa895ed812329ca8054c641a5785b80d9ae24d68c6f9b3e26b3f",
+      "translationSha256": "6a154408ac9874a1cadacbf7ac71e3f4fc440deb0c8a33d825829e5c94fb3b76",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodKind",
+      "batch": 16,
+      "sourceSha256": "01d8afdcf7c4400ec964f496a5432f0c9f8d436bb86f5850add7753485f8fcd9",
+      "translationSha256": "cb7c8143c0cd01d9266dc9d2aec4f9ce980af0f47bcb32ff6c8b1101ff0b324f",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodName",
+      "batch": 16,
+      "sourceSha256": "1bffbaf37651e9a9ef0ab5746118b7d5947009f747153ef6d960eb3959b9495c",
+      "translationSha256": "833596ebd4e6d8d70aa3e831fad1bb9c8d98df1ee2b14accc200e06da9e3df87",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+      "batch": 16,
+      "sourceSha256": "fce240b7737b5791985b45c724bdaa46435202da0760f74e58b972df5705087f",
+      "translationSha256": "846156160d86594e2c354b5380ea7f9e6163e73eb9826c37b2ce90c71e028543",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+      "batch": 16,
+      "sourceSha256": "706474d20917e756acca723f85d81567bae08697ed3939d45dea48dd9bb6bd74",
+      "translationSha256": "2c1b5e9038531c88cf7f5d78f92970547e1151ebeb79fcccb319e1b2e8b0d45e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+      "batch": 16,
+      "sourceSha256": "74aaf42770a6a7e76d0f4fe5628c7d1efc8e0bc6ddf4e2b29c4070a3317280db",
+      "translationSha256": "ae100e20c4fe31fb8525890f89d0a94b207c1af95c4ee2dee51a6cbbd9e35fb5",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+      "batch": 16,
+      "sourceSha256": "0d9cf24ceb278180a4adc1bf393a52d998fdef543e3ba1bc99d8fd663fa4e6cc",
+      "translationSha256": "6a49ba664dc377e01dc3b3b468b2c7e6dde923f8b70d4b75b5df98c8f6139526",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodSource",
+      "batch": 16,
+      "sourceSha256": "97c1631d2a5db2751a63dbdd1416420ce07b039dfc9158c10068bbdb0cd28607",
+      "translationSha256": "48709d0bfb35a3703dd953ea37c5aff9a8831bfb4a6ae8d765041cf69c814ae6",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+      "batch": 16,
+      "sourceSha256": "ae0882d7d1b904a5b3787887307ca1812fbaf3a80a8817a17ffcf40a6b677ae0",
+      "translationSha256": "a651e35d4a6240a11e9ea1e0186a00b8c2def4c3f4ab1e645f9d0e35638e3f0d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+      "batch": 16,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+      "batch": 16,
+      "sourceSha256": "c6519523c0418109cce830491cd9cdaffa5f9d6327989d22eb1e4167020b8461",
+      "translationSha256": "8b401ace4d67e83eb37cc89f8d5c9058f136607a1be16365b5f08188970a144f",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+      "batch": 16,
+      "sourceSha256": "e54f39e1744f0b72d1a10a95c32b11f428c0a1b9b713b3d7d44fb7740cfeb5b3",
+      "translationSha256": "f20f097fee6eeffd2d7aaf38a2ce24507a5f50f7c885f26e771a0bf942de98f4",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+      "batch": 16,
+      "sourceSha256": "c3adcca28c1c6df799501c953914853a32cea5d0748cd90ccd6448fd3a85ce25",
+      "translationSha256": "57ac30eabcfec319e9b1736c2861f2ece627cfb64f372adc7ee1118d51b1eae0",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.UnknownOption",
+      "batch": 16,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "143a91acc3e2a966ad88ea08dce716416bf2eb8fc88c1cf6cf4fa2d32a5a7c2e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ModernEditorDirection",
+      "batch": 16,
+      "sourceSha256": "dfd995b7538ef3e3aafa59dc02cd5ddf0782bcb3e46181ca74282d88aea0e2c3",
+      "translationSha256": "cc73c3ffa93645d32f12057a40c964dd81f4f4628bef855327dd8b244be828ba",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ParityScope",
+      "batch": 16,
+      "sourceSha256": "ac4290efeb4b7683b373addca517cd839e7264b13cab2bb75be89c6bb5167247",
+      "translationSha256": "895be4193b71178cc8901adf7d06c2d0f4abee86b3cf951ae15dfe47e2971b8a",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Title",
+      "batch": 16,
+      "sourceSha256": "58b0ca2d892a8df2c04e15890f93403fbbf95cbe3d3358a9203e17abce3abd69",
+      "translationSha256": "b0ce7c2c199ca04defc2dfacf689bf439b9fdde5a5269236295dfa6f1da490c0",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
+      "batch": 16,
+      "sourceSha256": "f3bd3bd93a572bc884122010aa73b359d55c73fafce2dddeaf8b553991778a03",
+      "translationSha256": "66aa2bd9872573a0758f779a65d564640d473c82da3312930c0e3d7ca4cac6c5",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "batch": 16,
+      "sourceSha256": "b23c5693d3c6ed78924f396314889ed460d877a35bdbcf499d37de1d0827f87a",
+      "translationSha256": "b66fd365bf58bf5e5fc2122c906eec34146c08f07674eb5fa425d4a63a78e87b",
+      "verdict": "revise",
+      "reason": "„bei modernen Elementen von Visual Studio und -Vorlagen“ has a malformed coordination and obscures the item/template UI analogy.",
+      "proposal": "aufgabenorientierte Werkzeugfenster und eigenschaftsgesteuerte Bereiche verwenden, ähnlich den modernen Ansichten für Elemente und Vorlagen in Visual Studio",
+      "proposalSha256": "f67da94ede2a3cfe45f6d7097eaeeb8c9947c819bdee0789bb9371be79b7c02a"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ParityScope",
+      "batch": 16,
+      "sourceSha256": "4678cd2a498b07fa92c8e29733e307b9858855fe5d2331ea9d107a38fed6a643",
+      "translationSha256": "694e94d9576cb5f27e232667a34480cdf2a70510eab44d8c13c2d78acad6c24b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Title",
+      "batch": 16,
+      "sourceSha256": "9102606aaf8fd4768341b30251b44839ca3e800b7f5641aaaea2cacb72dad3d5",
+      "translationSha256": "c7f929fe534f85cb94a06cf9e49e19e3d4e2a8a001c9caf5feff7304a351ef8e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
+      "batch": 16,
+      "sourceSha256": "3d0f7be777a2f06e9c7f7916eab236a516d6c351903a99ac09a821685a4fd897",
+      "translationSha256": "5b7f6ea37cd3663bd3f3111c8f8c8821fe85b53d1f8ec9464a46e94e47b39b75",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
+      "batch": 16,
+      "sourceSha256": "6c6985adad8ad16897b7e6c17d59ec94e8ac57907c4961c445198a9af8143d80",
+      "translationSha256": "dc0ea3b229adabcb54ba2d4e209d4221b4645315841c7e55b8bfad11c23deb97",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ParityScope",
+      "batch": 16,
+      "sourceSha256": "023fff73516ac3f0ff1a7207d95aad0e01d3ec54101663c4407e2b313988da20",
+      "translationSha256": "0c2b6bc3a9c99042ba9c09bc77cae55d44ccda3d250b9b1212fa76046b8ede32",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Title",
+      "batch": 16,
+      "sourceSha256": "28dc08c76281b6fe97ee145f00692123f3b6f0fd552d791cfdb15ae52fbccd6e",
+      "translationSha256": "cfa23b572d70d9424fdacb127664fd0859ce5c05d4d0e6f47dbae8952616f7bf",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
+      "batch": 16,
+      "sourceSha256": "3fec5cd872c3b3e9a9cd71ed5a4731d3e2730199346d48f5a8130964efab3712",
+      "translationSha256": "ba28a2288be4e87a51e32782a5eafabd93bca217b2213d231e99fe2137670c8f",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection",
+      "batch": 16,
+      "sourceSha256": "f5cc0d43024d1b3de6bb20322f59b1a8030f4ab9715f2121a241307d2d1fdbd0",
+      "translationSha256": "f85c68e7e2c67b7095a402e2a64c2dc487fa7650fd793cfddc3e0e729f05b26e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ParityScope",
+      "batch": 16,
+      "sourceSha256": "0326858c1ee3c714b787ef7e8541e31f39ba18d918e04f29879b62e0b92b7a41",
+      "translationSha256": "c74742f5edd0905ff2ec679f6997a1645b0f8b7d93691f1675b85cafb0236783",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Title",
+      "batch": 16,
+      "sourceSha256": "20128f6fd05e08f93b62858732b2ffb3659907e562305e1c63601b476a52564e",
+      "translationSha256": "93eb1d7f473546a640c953937ecb2d36c18f4cbd8970e4ecc1646e470f2cd189",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
+      "batch": 16,
+      "sourceSha256": "a3b3cdc2dab712b33ce1ff4d1eb27c24281e55a0a73dbf124caad70bc19c3392",
+      "translationSha256": "07a844d0c518a5e889b6938cbd37c9abcf78e911d894e74e0afcb5fb5ed8728f",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "batch": 16,
+      "sourceSha256": "24960d25b4213ff02f98ae577305089930d86e84a27fbf0d92cbcb7ce07b9340",
+      "translationSha256": "2c1a6288be4134492d8e59b10b927a4919cf409a1d651065e03127e8cec7b0c0",
+      "verdict": "revise",
+      "reason": "„moderne Debuggerbereichen“ has incorrect case/number agreement.",
+      "proposal": "moderne Debuggerbereiche von Visual Studio und Diagnoselisten nutzen, statt ältere schwebende Werkzeugfenster nachzubilden",
+      "proposalSha256": "f73416c55d0c0a7c075e79a0822bdb1c4936c4ce62360ed2806f0b6213e61d3f"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ParityScope",
+      "batch": 16,
+      "sourceSha256": "045815446805d268ae8913d029da6f71da2d3ab8cda7d089acb42d8ac8a1c5ca",
+      "translationSha256": "1d1e133b9ea44f2108b40f685674f7bbb1148324e61af457ab16bf72b4233bb5",
+      "verdict": "revise",
+      "reason": "„Abdeckung“ is too broad for debugger coverage; „Codeabdeckung“ states the intended technical feature.",
+      "proposal": "Haltepunkte, schrittweise Ausführung, Überwachungsfenster, Aufrufliste, Codeabdeckung, Aufgaben- und Fehleransichten",
+      "proposalSha256": "20d18963ee6c35e29c68dbdfef0382de02c8293554ff18501f337a294d5790ce"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Title",
+      "batch": 17,
+      "sourceSha256": "1e1ee8f223b86a9742a5bc9b41ec6ea1f4608e0659466b5b630a9747ccf2a125",
+      "translationSha256": "1966c292e9d3024a59abc60ca244c54ade79377d6da15bd212efdd7fff733f1b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "de4e60b6c6509c56654f099868f971414a08318e57578e3a0042a672c85125c4",
+      "translationSha256": "36fcace7c3cc885e4ba6fd9f04efb4cd06c0f72936dcee4e2122c25c2256ddbc",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "6e19ce3baf39f3c9cfea9af934785645bd142d4c9bc4a55169e10af48ceee21e",
+      "translationSha256": "27ab4fb617da233594e867998fd9f7747778a90ffa70240c772315e908e9ac1f",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "7caef9e0b4168bee1b7bf857c994abcebfbeb1ca1876badb9c58c80773b96bff",
+      "translationSha256": "5a54f8d0171a25070b3f17ea84516e5387a039466f1d6f15847361d7ed318a0d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "5e808972951bc92dee2a307cd562c8b6d9844a152f39be2914c0698b5d889b44",
+      "translationSha256": "3e8f1c64eb825cf71ce805271d4e2e728ea19f366281765a34cbb307479e7d73",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "20f95ba3650ec183ba9d9aed0f81f60a08e50f374f4ba8700767f9fe496a203e",
+      "translationSha256": "78704b3ab5d627ee76b065cb10ca91d7398830504df8742267edbe1b427b413d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "9f91c0b8e9be857b60b6830bc0b5bde068204ffa48c5e7c5087737ed5603efbb",
+      "translationSha256": "b2bed57c875154e77c859866b27196585e75844b3f8a8e7c991962fbc4922c67",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ParityScope",
+      "batch": 17,
+      "sourceSha256": "8f9d458f78a30e2c239249b418472e9c524268dac3cd6a4e3fe02f529b97de05",
+      "translationSha256": "20433c02dcf239122acb7ce4710e388425a5147c4a9d1ebcf55f305dca7cee94",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Title",
+      "batch": 17,
+      "sourceSha256": "42590a56bac92a82cdcb131e71bdd11808adc7afd878847aef1a64988d898b10",
+      "translationSha256": "dc02d505b0a11b573cd3f943e3341bf743f2cfb1eed7ad72578c8b62c32bfa19",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "25282eeaa73e9ec25ea280758874682e3d5465c1018468ebea0995d431069539",
+      "translationSha256": "6e33efa79bc6523a018572953457083fe4717bd731fccdc9af07c2251d1ef505",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "32c43abf38aeaf9a29875a532ae3b29487ad3a06baed0bae8fca3424f39ed25e",
+      "translationSha256": "8ab2aa84dd2ec8b5aa7beaa4950d2433ca2f46c664024becc72f41627fcb50e4",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "c832efe30d83fb6f2995e30735b162e0f9dc2e9b89961a22159dce0bc9aa8c9c",
+      "translationSha256": "590f6af2f396f11a1bbd3058a1e47139ef7351e071d25668866e7f1876b5cbd8",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "7ebf31e996ddf189fddf1af2f5c022519ceb7c9e1b5a50ce168ac10e13149b4c",
+      "translationSha256": "90e7e0d6c38d84eb23c46d6e8f473659ee282362462a0c3c7c4e7ad5c6ac78b4",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "ef76094c3637f5a23287dc4580850c3fcce73f9112576606fea40fd6a845fb3d",
+      "translationSha256": "0003fb8a27a169abac386da52555bfb0e953ed559ba6e6cbb48b33db2083ee4d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "b43b0e24ba4e7f4ae9b3205c2e695048be8accf312e7e898e57ecb5d7131ae3d",
+      "translationSha256": "5e6ae99e86b333fc92aa49da79e6195c465d9fb7e71f86056da389e353bcffc9",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "ca8a6e89e39707ebf8fae7e52cc4ef1a306e022be2d676c98e8b28a45d17e46c",
+      "translationSha256": "3b0c1dfd9c719af1944f62a684237dd7838ed964213af6b1707e8d4c4df2fd43",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "c3bfbd0513251b9ecff045d39412a77f536b85124fee6184403a60ac33a083d5",
+      "translationSha256": "c1bd8e337410fbb5d8a2a394684d7f00996e2705d159624b9b1e7cc86b11c644",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "3f273f78926aac521a4a06b7bba1ffe373dc8358d05a134c13eacc5125a54374",
+      "translationSha256": "e21a770ca4a992a1c082e7d6152f23812574edacb1f298674636cb8c6a06474d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "b3700317753f1e58c9dfdd453437da8189e36002602ceaef437026d7b3e5beca",
+      "translationSha256": "d47cc998e107e5e69db4f29c4cb5adf904ae8542329bb8d46d9e92d2c356adb3",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ParityScope",
+      "batch": 17,
+      "sourceSha256": "acdf02e6ea6cd5ee0802f1fb3b8001b751262dcbd8695abc9196b3e14e82c015",
+      "translationSha256": "234d385170044cc05c467432584386b9f5e1bdc3dbbd205da75c02748e7f476e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Title",
+      "batch": 17,
+      "sourceSha256": "2f75b00624f20f6572cc1dfdecd518afd73f1ac4445ca9aa22c04b96659b9b9a",
+      "translationSha256": "52675dced0c3f76a76878775e11ebda213a8a3e1e028bdf201a963e4dd4bae98",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "translationSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "d0b5bb0a6dfbc735338985d149cbdb8d62a8c4356c0b2c69d5a161396c1953f0",
+      "translationSha256": "a1360e8883fc8823a353468e5970ff92398209fdd269ee84649f424165203013",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ParityScope",
+      "batch": 17,
+      "sourceSha256": "09f37fa008eec3832b61662b6a69888da768017e3a15e33831b89f90552a8478",
+      "translationSha256": "6f5a870c98d8eab3e0de1b9efa103b99ee63a0b102e5fbf0e359754fd22b23f9",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Title",
+      "batch": 17,
+      "sourceSha256": "0a6f51e8898aea3073805197fb1ca622a908f7fac07e587e0c7c77aab295d86b",
+      "translationSha256": "c3cdf41b2452958ed945f887c9f92f489de13e5e0c58e4814ed350a886f5464e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "252961594053466463df1784d06a495979772a7509f4190fd38a990e0e19f0ff",
+      "translationSha256": "311b3cd871d02443db92c62d188f958cdf99c1faccb52775a3977a54ab99d01b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "9804b701d3ab5e034373390dc093c4188e57dedeb0ad8554faea88b8143051db",
+      "translationSha256": "65d2572c76c9aa233428a1b7c1b2d9901aa33de68632f55670d2ac84adf5dc21",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "9e0d6e49f2c18cc995c868645e5552b857d8e99115185a7ce28aac60c433c682",
+      "translationSha256": "015d05a7f674bfedfa5a02a2a4d19b0e3dcea4dbfbbbacf03f34a334d6fb1227",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "f27e1ad46e3707361967f7167ccc9fb48ac0c33dcad649aecfe67c62e2ae2a87",
+      "translationSha256": "13c2f75b16327d440a3d6a97c0eacd13f5b6bfd0d91f322a074bd6e36914e309",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "2dabfc6cc5700a40224fac76f25b0be620ef4836e7194eb1c2ab3a4b27506f38",
+      "translationSha256": "7869585c137e89709525b6468223a83dfff0fab18393c6f94068973ef188d101",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "54642c2f9fbab8537a7e5ced29c2377821ebc6425979e1fe56abaaabc29bf88e",
+      "translationSha256": "b55ae71fdc0ca6cbb3ba809e9227940b5755b6b98b2accf4f9da51f5c623a692",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ParityScope",
+      "batch": 17,
+      "sourceSha256": "908d9499ecf4802a8509d247fc1093200c846ecc5c63ef63f9e32f356cf28023",
+      "translationSha256": "07f2c9a384cb0b1b3c03a5dea02997e60e60cfd2b50f4c7c6c412bc69143d56c",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Title",
+      "batch": 17,
+      "sourceSha256": "636d4ce4f0f45cd661e259358c6c4f0f4a7691dd757d5c1aaca5dab05f05eb5a",
+      "translationSha256": "2437508cbefa28f1e913058b75f396e30a609e98fb845291a0449ac1e05e9983",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "7d9875022dae157558a7c1b8bec8905652f0c1dda7dc8cd7e7203ae64ce137d1",
+      "translationSha256": "9d7afee83944ceec94174c7abb49b96b17b12071e8caebdd1cc35ab51693e044",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "a2804a5f64150197b974af1367cd2aa7709fbd90993852f66c32bbdb2e0631b8",
+      "translationSha256": "09dbde30b255e75e366a90a3e4930c58cb8848076ca69dd7f47a1c1f7a89ab90",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
+      "batch": 17,
+      "sourceSha256": "226127d056dbb17e13df5f62527b8e610f6b97f5839196872aaea554af890b43",
+      "translationSha256": "a282bdb8825a9f789317e8f71b58261d9469f9f8f31a150083ac3effeea7d262",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+      "batch": 17,
+      "sourceSha256": "daf2aefcbb4a0380c95917607d486f20abb87a79677a9e6aa224e9aa8960a9d5",
+      "translationSha256": "0577e06c5939a40465f2977d79127eb66d1592af672d5d883a8f96d641060b55",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "translationSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+      "batch": 17,
+      "sourceSha256": "1c250ab7269e501cae212d1386320398df4d44a5c2627c69bcfafcdc8fa626c5",
+      "translationSha256": "0345bd38d32ee6181068dc0285f7d68a3ef34618c62452cbb16ef23aa0d6fd14",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.AccessMode",
+      "batch": 17,
+      "sourceSha256": "e0b65ecddeb40d97522f6ceff2f67fcd04b14e53335c98fbbddba51b6bb443f6",
+      "translationSha256": "7e4816da5837cafb529a62c13af220aae7079743bb21ed35f5174f88d0b38b6d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "f9a3b88337bab3c74f1adafaf833f8d1de08e5314a971ea8843e0d4bfd924251",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.Title",
+      "batch": 18,
+      "sourceSha256": "7522a108dbf13f9992389165b8c31d4ed5b47d6375fc79304f0e8e359d520480",
+      "translationSha256": "5b2eda456435b35cc8f37edadf0edf0f7982762e4c099a43e6db927bf10f18f6",
+      "verdict": "revise",
+      "reason": "„Native Speicherung“ is an awkward nominal rendering of the storage subsystem title.",
+      "proposal": "Nativer Speicher für DBF/CDX/FPT",
+      "proposalSha256": "3b0c4d7cdd4addf447c499a872c824f4ed26911a4ca22ee992e7076916f1d46f"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "53b20649598bb350322c286cf5e2bee5f309d688cc529c81a08c8e5fb18ea984",
+      "translationSha256": "52707116a0a0803dd338ab0e635be511c0e42ea4e166d9e5212dda7fa9f84862",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.AccessMode",
+      "batch": 18,
+      "sourceSha256": "4824b03e88c6dc192397977381eb6e06f0c1248365edec447313d3bec82e823e",
+      "translationSha256": "96861649c3328919d8dc2c9c2f60b206a06160fa6763a6c675cfd4ddf27a1c8e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "43cc23fa52b87b4cc1d02b5b114154151d6adddb17c9fddc06b027fa99e24008",
+      "translationSha256": "836ae935629796c14593cc87e3844a861cef5cabf0ef10f0f2695f4cb3e8317b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.Title",
+      "batch": 18,
+      "sourceSha256": "821aed88e23d8f11362903e4aafaa7b9e6655dbf498c317907b90e1f78648f78",
+      "translationSha256": "b35327fd797c0685017552ba1210617fb44c1f30a90c29dd8e2e10aab2fb4f13",
+      "verdict": "revise",
+      "reason": "„datenbasierte HTTP/JSON-APIs“ means data-based APIs rather than data APIs using HTTP/JSON.",
+      "proposal": "HTTP/JSON-Daten-APIs",
+      "proposalSha256": "697020d56b7dfc328ef2c2c11a1adccf03951b7d24631ce8595c6568eb5378cd"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "879b46001d291d27e28f4ac406248265db418202bb43783d1fbb5d05d81138fe",
+      "translationSha256": "9180b845071abf690ef1dbe3759c346750053dc15e42d3d18b72135844d9c2e5",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.AccessMode",
+      "batch": 18,
+      "sourceSha256": "754dab0b1ca26d7d4e5511a66bfe26eee1deb6577c6830e1f86188f785170243",
+      "translationSha256": "bb9d537a5494fe6f24fa46d8b9c14bb4415242a94bbbd80e4126d4e625ad7435",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "43cc23fa52b87b4cc1d02b5b114154151d6adddb17c9fddc06b027fa99e24008",
+      "translationSha256": "836ae935629796c14593cc87e3844a861cef5cabf0ef10f0f2695f4cb3e8317b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.Title",
+      "batch": 18,
+      "sourceSha256": "92a9950945700704949417546946ed374aab7e9ef795665d2436575868814199",
+      "translationSha256": "c165036f59f952e4683a9820d84185a230b381a833113ec629fde2e27542f6cd",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "4c786f674684a1aad8d5841fa7eed1dae6485c7f8551af94e0d0e8d4611d130a",
+      "translationSha256": "76223f5a6054b79a4084aeb5e07f4579acf23406ea4b4755565243814fc4b183",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.AccessMode",
+      "batch": 18,
+      "sourceSha256": "50a35133c1a343d9a44b037b24be7a6b0f9f2f1b7b7f6ecbbd449519c8e926bd",
+      "translationSha256": "e55090d4c9109d409c03f457b9e34145a5dffcdcdb1531ad71c367576a6bc7f0",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "f9a3b88337bab3c74f1adafaf833f8d1de08e5314a971ea8843e0d4bfd924251",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.Title",
+      "batch": 18,
+      "sourceSha256": "dc7620ebfc35d54ef34e32b9eb6f69f1bfe93f294370c2798d91147e34e7ad56",
+      "translationSha256": "dc7620ebfc35d54ef34e32b9eb6f69f1bfe93f294370c2798d91147e34e7ad56",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "2363b8a449ca650ecf6587de2e876913dbc8845023c7df4b1a611edbcaa2b54e",
+      "translationSha256": "1dd7e01dccd4bdbe4b7213de2005c956c276afd150be91989c836ca7e1f1c0fb",
+      "verdict": "revise",
+      "reason": "„relationaler Pfad“ is a literal calque and does not clearly express first-class relational support.",
+      "proposal": "Oracle bleibt ein vollwertig unterstütztes relationales Ziel, auch wenn die Syntax normalisiert werden muss.",
+      "proposalSha256": "e759730f12ed957d004663f9b8e567ecc5e4513ba2561ee401edf98238a4f5d0"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.AccessMode",
+      "batch": 18,
+      "sourceSha256": "50a35133c1a343d9a44b037b24be7a6b0f9f2f1b7b7f6ecbbd449519c8e926bd",
+      "translationSha256": "e55090d4c9109d409c03f457b9e34145a5dffcdcdb1531ad71c367576a6bc7f0",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "f9a3b88337bab3c74f1adafaf833f8d1de08e5314a971ea8843e0d4bfd924251",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.Title",
+      "batch": 18,
+      "sourceSha256": "cc52d03280b7034c8e3653d2748ebd489a873ef4bbc89cb187fbfcabfbbf6873",
+      "translationSha256": "cc52d03280b7034c8e3653d2748ebd489a873ef4bbc89cb187fbfcabfbbf6873",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "f3c0e34d1b23b01666f126adf17754b4837aca547de8968942fade01c7101c9d",
+      "translationSha256": "db5166fc3d2676e8fe5c017b67c5e1a1674649afaddd6154a36e84ea42316efd",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.AccessMode",
+      "batch": 18,
+      "sourceSha256": "94b1cd8c7de00c9d3743d86fd0c5ca0342724eaa43ccb2c594a117b07228cbc0",
+      "translationSha256": "4d3e05dc897834cbda50fbfc4071d1a1ed998b165af77d1331a4cd8d71075a25",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "f9a3b88337bab3c74f1adafaf833f8d1de08e5314a971ea8843e0d4bfd924251",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.Title",
+      "batch": 18,
+      "sourceSha256": "2d2eef3e092af52b5837160fe2e3954907a4bfed1469edd2e6422749a6b16b7a",
+      "translationSha256": "2d2eef3e092af52b5837160fe2e3954907a4bfed1469edd2e6422749a6b16b7a",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "8fadc1660fa85d6f013ace407bdcf4a4cf3d2fcb15aad63d63c99f8bb1e325a7",
+      "translationSha256": "346b2c7b6f3a92fac40624083fb359d0b0b2c952c1ff44332bc901343c02934e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.AccessMode",
+      "batch": 18,
+      "sourceSha256": "50a35133c1a343d9a44b037b24be7a6b0f9f2f1b7b7f6ecbbd449519c8e926bd",
+      "translationSha256": "e55090d4c9109d409c03f457b9e34145a5dffcdcdb1531ad71c367576a6bc7f0",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "f9a3b88337bab3c74f1adafaf833f8d1de08e5314a971ea8843e0d4bfd924251",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.Title",
+      "batch": 18,
+      "sourceSha256": "c8d61c28ed91dffc0e511145863ebfefa0b08273ba54dca78d9bdf9b2e726b52",
+      "translationSha256": "c8d61c28ed91dffc0e511145863ebfefa0b08273ba54dca78d9bdf9b2e726b52",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "d37fd1089a7fef57edf37a48d42afa77bf28783e9795badf6224ef342bffa075",
+      "translationSha256": "f04df67152dc9f3a1723593916acb9c787473c7b289a06e9e91db65560a3f16a",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.AccessMode",
+      "batch": 18,
+      "sourceSha256": "1c477c171df5d88e83d139ec179708500de5710b2a3be2c8e7fd7a7bac7d3155",
+      "translationSha256": "6945ab7ce386bebf11f2853d8a16a59f1380870f6a2b0e93847069a716c5d9da",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "b0d51c58c8b9c1f458fadf16c7d375630ef51da4df81915893b05c0fa4ed8bc6",
+      "translationSha256": "491c0dbd18eed21050e8ed9087d7f3f8aba37a0e696e7c95ce877ec9e2723f4d",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.Title",
+      "batch": 18,
+      "sourceSha256": "5e4d4084edf485c5526dd9269ad8f7ff938d55f59069424074dae07af8f3c8fa",
+      "translationSha256": "0dfdea18fd529f777884637485e7176704cfb8f2bbd89b743264bc12496d5631",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "2ef70127473d2815e6ca9fc0a304cbb54da96fc7cd5ef92f89809314f4da9056",
+      "translationSha256": "001672fbb987b2c772cecfc0a961e75033514fa5d39b15a0b2bc5021f6928d0e",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.AiPlanningOptional",
+      "batch": 18,
+      "sourceSha256": "c408369a30988caf61f9593399cbf82bd2142928b0619905316c0070c989cbd2",
+      "translationSha256": "6a15f66ca70abd442f5166333d94be6f57f3a70913a755e709944d0b03bad745",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.BrowseableSchemaHints",
+      "batch": 18,
+      "sourceSha256": "795f709b68d324b7a33f8ea1e525ca9d2481a0a238cdbe2af4358f54d7079a75",
+      "translationSha256": "2a32fb49b50e5525767ba531e079aa6c87ca207a058447d78b63f516d28a84c0",
+      "verdict": "revise",
+      "reason": "The source asks backends to expose browseable schema hints; the translation instead speaks of hints about browseable schemas, and „spärlich“ is awkward for sparse data.",
+      "proposal": "Dokument- und Vektor-Backends sollten durchsuchbare Schemahinweise bereitstellen, auch wenn die Quelle dynamisch oder dünn besetzt ist.",
+      "proposalSha256": "30dcac9b7fab056251ff293c3f6209f8f835e4ce249b1938dda672bd13f6f373"
+    },
+    {
+      "key": "Platform.Database.Guardrail.DeterministicTranslatorsFirst",
+      "batch": 18,
+      "sourceSha256": "3462236856744a08031677506f4dd624b72b793a6581cd03dc06cd6c7e9170d2",
+      "translationSha256": "c1705596571aa733158c03ad04a38c784e409b29fe6e66d6ad999fa86247b474",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.ExplainableConnectorFailures",
+      "batch": 18,
+      "sourceSha256": "fd232817d87ae56c4119287fd83f670cb1d4bedb94ebef0a585e5c04a61417c0",
+      "translationSha256": "f1c504b694805cd3ea19319cfe30dceb0a722d21fa818a6acf9d48884c7c37d3",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Complexity",
+      "batch": 18,
+      "sourceSha256": "254b1be00be19fefad09cf9e64702c3a315bd51acd079d63dd5e77ad181332f3",
+      "translationSha256": "c0362f21323f9499da2f2e10b4da963b333d1fb9b3ebd1194fa0063e53f7eea2",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.SourceShape",
+      "batch": 18,
+      "sourceSha256": "c67d16a22d313e1ad1c79835bc1bbc24bb61cd6081871390a255a572e330c302",
+      "translationSha256": "a0fffb674873da3c98d69790b62c345ebe1577862f000b51659819b67f02726b",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Strategy",
+      "batch": 18,
+      "sourceSha256": "3563203164d3572758e5f8a341cbcf2203d9c9b2aee523348ee592ce9963ffad",
+      "translationSha256": "cf53acd51c26e718f2a4c373f4b313c6342324b4ca80161817262bad69bb2afc",
+      "verdict": "revise",
+      "reason": "„in eine niedrigere Darstellung überführen“ is a literal compiler calque and does not say the output is a document query pipeline.",
+      "proposal": "Einfache SELECT-Abfragen und Filter deterministisch in eine Dokumentabfrage umsetzen und anschließend optionale KI-Hilfe für mehrdeutige Umformungen verschachtelter Dokumente zulassen.",
+      "proposalSha256": "8c8cb3268e8ea08c2767de3251d891ea5895a97cf753950ccbc9eceb0075f5f0"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.TargetShape",
+      "batch": 18,
+      "sourceSha256": "b2f936ca651af86da00600063b0946b8b7e40ba41abafab9094c880c53a50d38",
+      "translationSha256": "fd55f88fe058f87ed5d349399ae43b19bc1925d9f12e4c3c676e9d03d59a7cc3",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Title",
+      "batch": 18,
+      "sourceSha256": "ff19ec9f5089cea9272657a561877cc191565a80a40ea532589c5e1eeb990a96",
+      "translationSha256": "94cd8f18b2e81e4f3cced8f0d9bae88cb3f7bdb4d84e30901047b12eeb5d6b34",
+      "verdict": "accept",
+      "reason": "German wording conveys the source meaning and preserves protected syntax in this text review."
+    }
+  ]
+}

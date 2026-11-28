@@ -1,0 +1,2278 @@
+{
+  "locale": "de-DE",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-locale-translation-v1/de-DE-000.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-001.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-002.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-003.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-004.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-005.json",
+      "/tmp/copperfin-locale-translation-v1/de-DE-006.json"
+    ],
+    "entryCount": 280,
+    "firstKey": "Runtime.Prg.Database.Error.CompanionMissing",
+    "lastKey": "StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle"
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_pt_revisions",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewedAtUtc": "2026-11-03T06:55:31.023265+00:00",
+  "uncertainty": "Text-only independent review. No native German speaker sign-off or rendered UI/CLI end-to-end test; long labels may still clip, and localized CLI output can affect undocumented consumers. Accept verdicts mean no issue found in this review, not production certification.",
+  "counts": {
+    "accept": 275,
+    "revise": 5
+  },
+  "entries": [
+    {
+      "key": "Runtime.Prg.Database.Error.CompanionMissing",
+      "batch": 0,
+      "sourceSha256": "8148b074ee29dd425cbb9fba1367a5693acff9fe9368e3acfe6461806f1eae9e",
+      "translationSha256": "32fedb8f0f40711832cfb4eb14722fb92fc2ead0d24e18104f476552b9014690",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentMalformed",
+      "batch": 0,
+      "sourceSha256": "5cd52a8e7bce56425e22f9201de688e229cc3818ce8a8471229b8c2e224d3fb4",
+      "translationSha256": "9ef446ee1c28a0e90a65f0790077a7790fc7c50e6ea123a686270c0d9e0ac2b2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentReadFailed",
+      "batch": 0,
+      "sourceSha256": "22a97217a75c6566764aa425a4351b8c19095070719076fb859b4e3127d126ac",
+      "translationSha256": "83eaec11cdb2fac5c4352767517a427a900be84d3100f7d1c37ebbc006dad206",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ContainerMalformed",
+      "batch": 0,
+      "sourceSha256": "33901fdfdacf6071614a928f70d0adbc6e463bb70e97045f06b8e8ef4232d29f",
+      "translationSha256": "9864bfb0b8805a1bb0de235cc9f1047aeb46b4391b9674f1ba5afc886bdefb75",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "batch": 0,
+      "sourceSha256": "488cb42bc114bc54a8ccca503650d707583ee3f019853dea3b7b7939384ac02b",
+      "translationSha256": "7945e7b221995555040f172bc04547c34258f0468766a2630db55634ab95a88c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "batch": 0,
+      "sourceSha256": "084206f6e3a1cf562129c611f30745950ffd6c60d264afb729a9081cab365bf7",
+      "translationSha256": "930ae2d29fc061f5781636ed3ba1ef8e50e85cf80cdebff0c1be08bb0d52558d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "batch": 0,
+      "sourceSha256": "963b4242254182ed4fde007970ef247a26fe3e067eca5351c13a7578a3a1a340",
+      "translationSha256": "66e9f5ecb78b89d28a45f72c15fb388d35513ab0d39f990e1c8d3aafc6794798",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.PathRequired",
+      "batch": 0,
+      "sourceSha256": "d9ef1930743e7f332f9cd246143ec3fca82e6dcedec02b9d9eff84f1eb64725b",
+      "translationSha256": "2c0c526fb7a00aea9093e51ede274c219ea7869d1dae759c522f6ba9ee5e96d0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ValidateUnsupported",
+      "batch": 0,
+      "sourceSha256": "219eaa457a3c39caa788ebce49691e6ce1212f7f2326c3bbb19b6c4ae2f9a594",
+      "translationSha256": "ef4505ecbaa33c8981ca29838664dfba174631564b63f62f0f5fc6481c1ed814",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "batch": 0,
+      "sourceSha256": "f469cecd777a85c1bf5326c5a458da29deb1a997aa39d67634d8f6df9c99f8ad",
+      "translationSha256": "2aa2170fe4389f6a749e49e0e1546cd35398e5f36acc3819bdf38600adc0e73e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "batch": 0,
+      "sourceSha256": "d60f0fc10071425afec7a59a9b2918e8020970ca24ea71a00f415b45a121b643",
+      "translationSha256": "4308ae37178713beaf4959bb33be7fae365c583e0d327ed084745f4e1ea7876d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "batch": 0,
+      "sourceSha256": "59457083cef5d3449d8c010dfbc82c5684fce2e6e943f03051d7caa9eae9f9eb",
+      "translationSha256": "022d6cc48b5f326ceacd3f719c779ffdc8763ae0e4dd271e037357757c8dd21a",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceSizeUnknown",
+      "batch": 0,
+      "sourceSha256": "929a72ed316e72c8308bc413e41079756ca5b6dbf7bc9eab0ffcb5340498fece",
+      "translationSha256": "8a71708280a61d52f73b0468661435d085778e5ec4406e0ceef5904d6d8f509a",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceTooLarge",
+      "batch": 0,
+      "sourceSha256": "51abc825cdcc1f75b58ceea128b8ba57e91ab1bc94b4ab19404bcd47204cda81",
+      "translationSha256": "c5eb51224bb92a0d8b1455397d1f0264d25bb33b3259885c4dd9ad5bf14b3ad0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+      "batch": 0,
+      "sourceSha256": "328b901497ee5ab8e22548da3a2a2c9e9149a72b43be8e5215413371f2f74a20",
+      "translationSha256": "aee4d276a731186133cfff9b5bd492b947eef8000f6fb3af137bb1d73dc2d5c8",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+      "batch": 0,
+      "sourceSha256": "d6ff5d0811fa57aacc707f4e1cb9ca82485672e80b75dcbf450bb7fbee80435d",
+      "translationSha256": "dbfa304b1cd67555a133b34848704eec37a40aee3ccb71c5ddc229bcefde381d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManySourceLines",
+      "batch": 0,
+      "sourceSha256": "fd4805bd80ef6f8620eceb6fd1c9e9501af241fcce2a9966d0e70b08e41ea9a1",
+      "translationSha256": "889112283ac8a824631eb5670669da01e09d0abe656229478a3f4230c94d7d3b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+      "batch": 0,
+      "sourceSha256": "1f3ebdde58806603a18fcc10ca7758472740eda73d42a47c5bae67bb0c009bc8",
+      "translationSha256": "57a51edd703c6dc6f8d897a211824a6190c6a4532e8418cf25c1302b5d106a01",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "batch": 0,
+      "sourceSha256": "70d82b245b4560e052516a530ee95c4a9b4a55c37887666ac916ae77923f14f2",
+      "translationSha256": "450e41607b87ebb3a4d5cdcee9ea2b19c6bc308aec3365df64021ab17d80329c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "batch": 0,
+      "sourceSha256": "040bf8e633ef6d1354ecf03a253c85c95551c23142f9ad585e57aeeead32412b",
+      "translationSha256": "c9492b7f91ea875726f9083c870e54d97fb16078b20c15a3698a70c874cfb0f8",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "batch": 0,
+      "sourceSha256": "9f0c1674dc0eafee81d64e94b18603fc86600ea6de27ee1200ab04309ae59696",
+      "translationSha256": "704bdfa2dce4e91b9df304f4f94a46ebb969e2b5bd3ec12355597ad329cd2d35",
+      "verdict": "revise",
+      "reason": "The original German sentence is awkward and obscures that no matching conditional block was opened in this file.",
+      "proposal": "Fehlerhafte #IF/#ELSE/#ENDIF-Verschachtelung: Für {directive} in {path}, Zeile {line} wurde in dieser Datei kein bedingter Block geöffnet.",
+      "proposalSha256": "cb93d7139cf7b0e30344dceca4f3d36dd82d5498f0f67e3a0ae1ff26e5c4081f"
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.DuplicateElse",
+      "batch": 0,
+      "sourceSha256": "32697eacb6b3ded740f3536445e2faec95a07d6110ac10628d2490e6ae8b6033",
+      "translationSha256": "a88d9f9c50f2f0f5112bae6e3694d4638f2a9284c7060045286e083d58b8a4b1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "batch": 0,
+      "sourceSha256": "a6a6284239cf042409fb6fb9abc78056bda3beda86c438bbc66d66ead93a4b93",
+      "translationSha256": "98317f030dd1946adb315583be109f2a3992068a66e899beeb15f653252cfd4e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Command.Build",
+      "batch": 0,
+      "sourceSha256": "bdd254b65baac169f6ac50e8175ce6d930c1fcb086dec59808d3e0170ae2291d",
+      "translationSha256": "5ca419548155adf202543d8d3663a633bf3ad721864ef1db8f11d6cea575cb15",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.Command.OpenInStudio",
+      "batch": 0,
+      "sourceSha256": "b4e8381a95a13bc7704ff290b4c6c72bdb6cc4b8df6cb65e1cf3bea49a3474c8",
+      "translationSha256": "2507ccf253b52592a7a6ff35cd8744dd8e1d8b186a8252d7dcdc6bd36c08f025",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.Command.BuildProject",
+      "batch": 0,
+      "sourceSha256": "ba34cc7ae6f596ebcc6eabf6e7a137fde6861b1e5505a2d55953fed687c14dee",
+      "translationSha256": "937a0a1794259b749f61fc3c01a6a6ae6595ee42380b6cdbd555bdb197577871",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.Command.RunProject",
+      "batch": 0,
+      "sourceSha256": "36fc412e4b4d1d7be109568ef7fed2c517b9585399c43764a542c7e27a261b77",
+      "translationSha256": "428b666ba7344db4ddd34582924131ddb662f3a16684199f219a505471e3f80d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.Command.DebugProject",
+      "batch": 0,
+      "sourceSha256": "9aabfddbcc7b7f5b19d834e9a26e0c0f217dce57d51f09ae41f622b124463fa6",
+      "translationSha256": "870722038981188514cb26b006f20c68aff5a4d5b98da22baec1be3bc2ced7a5",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.CommandWindow.Title",
+      "batch": 0,
+      "sourceSha256": "60b3687da026a54e208bf196e39d43b4c3b5a331c109c3f14b5b760d3f349f0c",
+      "translationSha256": "e73ffbb07ca079f561c5090d66195ff8062ccbea35ae55e29f9996ec9489d473",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.CommandWindow.Ready",
+      "batch": 0,
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "3fd371040d281296a495289eab931bcbea177156e48e48fb6a4df1e12137b92c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unavailable",
+      "batch": 0,
+      "sourceSha256": "09cfc5e1e84e3a96def219129ff43c03e2fff63e6904810a7c3703a421e04b50",
+      "translationSha256": "01de2c71d209b823b17432640d38b2cd3b529b64cb008f32c1d49656420a5d6b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.CommandWindow.SendTooltip",
+      "batch": 0,
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "258c02d992cd39b194030a7b6ca3bbf53b34c9c5bf8ec33280783dbd6a72695e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.CommandWindow.NoActiveSession",
+      "batch": 0,
+      "sourceSha256": "e1e951822e5ca70f9a189746919608668e97ecf70ce7ec542bf76f7150e4ed4b",
+      "translationSha256": "542c87f7d23b8b431ea33cd62c645c93828556b70e0bf1d184e2351d38b301e3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unsupported",
+      "batch": 0,
+      "sourceSha256": "404fc37220f000238c196f804a6e77d72626b03b0500658c617675c71a7d3b07",
+      "translationSha256": "4c77291da1f3fcf9a856279c63e421084b7b751a4dc0a2c515a21aeffee0fd8d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Title",
+      "batch": 0,
+      "sourceSha256": "9a380e6c3e2802d1c80db452c055f848f6ba40835f4c144123d694b9d857742d",
+      "translationSha256": "e7d798b4935b98f57eee2a530914716bf59299e5b4b4774787c11c005b33debc",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Ready",
+      "batch": 0,
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "3fd371040d281296a495289eab931bcbea177156e48e48fb6a4df1e12137b92c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.TerminalWindow.SendTooltip",
+      "batch": 0,
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "258c02d992cd39b194030a7b6ca3bbf53b34c9c5bf8ec33280783dbd6a72695e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Unavailable",
+      "batch": 0,
+      "sourceSha256": "886c3b9c5c49652e1d5760e16acc1e29111432044384b7fab8b0686ea0fc43fb",
+      "translationSha256": "b960507e9f67dfd2a76be5cdeaee8086ad68c3771cf8f63e7cd5a4b16d8baf1b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Exited",
+      "batch": 0,
+      "sourceSha256": "f4b09df85ba493f94976c9ede225bc876f5aed678a2899ed5c4c1df0c93d7ddd",
+      "translationSha256": "aac851645d66bd1f63ae5f350fb5f5881c37613e5b375f2b8619bd6f3ee2817b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.Package.Name",
+      "batch": 0,
+      "sourceSha256": "abfd26c0bf4f1406af85c2a5d4eefd32987c6aa8c07a2ee390ec04243dea6cfd",
+      "translationSha256": "24b0c826f706ee00763cd4fb67e9351ec0b1c1e4873ad2c09144f5c15198c563",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "VSIX.Package.Description",
+      "batch": 1,
+      "sourceSha256": "eceaf968cd64706a76c655b025e91703842dc75e4229ec5e60f575104eff663f",
+      "translationSha256": "6a6a197984b36f810ac74ec59e0bca2ae60e674efa239c066f981b00de5062f2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "batch": 1,
+      "sourceSha256": "ae2adef0015e6509d0a2ee8269f04560b58786c25505236797964736a4b0aed1",
+      "translationSha256": "4c315b082557e6a36fe6ccf41c0a79d0f3db30f9d8e0cd26d31d5dc1ca113a8f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "batch": 1,
+      "sourceSha256": "ad8e7cd43832135a54fb9bbe7fabab95f466f64423b33d5e0b8c8a597243b155",
+      "translationSha256": "c8af598c41868c1d2d7d41679c71f59edea145b940005f73d2776cc761e98ef7",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "batch": 1,
+      "sourceSha256": "9bb6c6ec8edab1b7ae8451e7e899ee6deae5cc8c6a7057e1b182d7c041311e47",
+      "translationSha256": "0ebca3c54244583c6e7d57f4a2b6e9c8dffc09ec2ad3346959fcde95f2104885",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailed",
+      "batch": 1,
+      "sourceSha256": "a02dd70dd7e1fd29ea6aafb4b57ff3438507822b4427a98423a809132b525071",
+      "translationSha256": "39931054eb3cd44b52c221577739c5043798b61e415fbb587c82445c96c26ce1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailedToStart",
+      "batch": 1,
+      "sourceSha256": "0f5e15bb7d2c0f955bb9f652cba994db3e6572495858120daaff00e2b76ca1c6",
+      "translationSha256": "925c602944633cacb579e291c2cd547408fe41a032aba80da1b978b47cb7e6ad",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.GeneratedLauncherMissing",
+      "batch": 1,
+      "sourceSha256": "8bcf1c6015021cacc3896372aff7c8fe725479175f345670ae7ad0ad2ddb17af",
+      "translationSha256": "9a55483a27d741ce3aa1775d49c8df61279c4b9e67035254851d026a5397cbf7",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "batch": 1,
+      "sourceSha256": "bd7fc377d5dd860e0aa45479e0f6be5f425593da0b9b8d0ef389c7b442ff44b2",
+      "translationSha256": "3c5d128f78b336f02f30566fea5de0ee46c00a379f7d9b5c78dc1e30d00cdc8f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.RequiredProjectAndOutput",
+      "batch": 1,
+      "sourceSha256": "fe079aa1d54cdbc8ed88526cd6c33440d2255acd5a98ed91d2825425994c184d",
+      "translationSha256": "59bf75c01577e8007d877f0e19581173d5c6c85c36a03482556c221807cb9d79",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "batch": 1,
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "0d60367c21b65a7f7503f93b99b04732a92a8c4568636dcc3a434c034810114b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "batch": 1,
+      "sourceSha256": "fb1c277d77b7923edb1b8378be8572b152bdfa7d189fd9a84129d123fb521c73",
+      "translationSha256": "a55807854e921c9863f05f533ad09a0b3b2f7b81bef739a86b8739cfbbbc99f0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Error.UnknownOrIncompleteArgument",
+      "batch": 1,
+      "sourceSha256": "8b370ef9cd50342d7b436f2a478b943657be6b7393db4a5eaae62819c53fc06b",
+      "translationSha256": "76ce02aa6302be386c91a021ed6e9db2b7b80ab78a546b31139a6f9bb9a3f0d7",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Prefix.Error",
+      "batch": 1,
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "60efe70adb51304947beebbe4628500d524286ae6afa944e0c354ecb247669e3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Prefix.Warning",
+      "batch": 1,
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "7f46739793d7b016fe96cd84cf4c9c5bc871567bbc07421b547a57166ef6f02d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Usage",
+      "batch": 1,
+      "sourceSha256": "ee3860f2be195de47151fd0381a3e9daf1313afae2443e5bbe5a72af47287fcd",
+      "translationSha256": "5ea9e73ca9e7bc0e8e3d6fc5a370fa0c8257bcaf87f1a311ee9dec4a451f39ae",
+      "verdict": "revise",
+      "reason": "The CLI metavariable <directory> was changed to <Verzeichnis>; preserve the literal usage syntax.",
+      "proposal": "Verwendung: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{externalIncludeRootOption} <directory>] [{runtimeHostOption} {runtimeHostValue}]",
+      "proposalSha256": "1132db0b33635819968eaeeae6c2508a4b5d6b1cb5a22b3e32c7098d4ef51c18"
+    },
+    {
+      "key": "BuildHost.Usage.LicenseStatus",
+      "batch": 1,
+      "sourceSha256": "fd59122d1fdcea893bf363dad3d4578ecc545a9984fdd52a63eac4fa7060c096",
+      "translationSha256": "c2f3dcc634cd144f7bee4bd968e7fff045fa7ec4fc98f9a98e575aef180bdfd9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "BuildHost.Warning.ProcessHardening",
+      "batch": 1,
+      "sourceSha256": "673ec2b8cad0641a57f892ca18d5796a77e7af4ccbd64ec75e7a7073abc3cb8d",
+      "translationSha256": "c5cb52f0db464708c4c59eb9df0470d1f5bde1d377c11b56b6ce9f627ac00a74",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.ExpectedTopLevelObject",
+      "batch": 1,
+      "sourceSha256": "5e616b695f54ba0b216ac716fa3cd6ceaf329a0fbc3d3eb6bbdf97973dd55995",
+      "translationSha256": "87a846daf6ae0916dc844eb2fc335054a5a9e1bb6486067e4376ccdb65338fde",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.NoFields",
+      "batch": 1,
+      "sourceSha256": "01a271cdc095c201255e8a61b776896a06485decae18e39fb77f5f62160cb144",
+      "translationSha256": "cb660568b81b4779510ad96588433327437ae8a1575100ed010160383503b95e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.ExpectedJsonKey",
+      "batch": 1,
+      "sourceSha256": "9b2c5051753c257e438e0e8b3c3d655f6e3470478527d4a0d85dec8ba614d282",
+      "translationSha256": "8390720450029f0b27b6ce883942308e86fb22fadc701c672c26863ae84fb372",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.ExpectedColonAfterKey",
+      "batch": 1,
+      "sourceSha256": "70b91277d985b3da51988328ac28128ba016809f6620c665491dbd9f7940b2d7",
+      "translationSha256": "17f6ddefd80ce486d21b009c1b40c2f023c9ff77a6069860832532f85abc86f2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "batch": 1,
+      "sourceSha256": "f6781ca59c75dfbf71a74c9f6e057dcbcb3142e03faf24c5f5041beaa636dee0",
+      "translationSha256": "dab7bfebb6b2d3550903c59c80bd15f90d7e4a65e97c1fa45b553428e1e95b84",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureAlgorithmField",
+      "batch": 1,
+      "sourceSha256": "e8f00cd530b6206ae8aa0b848ca4263b7b3d7925e87f00f04697ac6db338a8d5",
+      "translationSha256": "0f521f1419c86af1778cffe09a5310bb67c802753d9d6dd033c79841c14ce8e9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureField",
+      "batch": 1,
+      "sourceSha256": "5819903702358c7ba15fb3513f3d99a9b80e7ace55734db8288dcb0c86da1384",
+      "translationSha256": "8feb75f2e329a56b439c35a01ab885e35e802741ce17130d7c57819f3b656d28",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.UnexpectedTopLevelKey",
+      "batch": 1,
+      "sourceSha256": "85f85e20acc52cf879c42220a80ed57023c8056e470a2e0639fe59d563e3b778",
+      "translationSha256": "31d4e363871da807d77825c7e6df8cba4410b52bf07c78207a79b0e8d74c7ac2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.ExpectedCommaOrObjectEnd",
+      "batch": 1,
+      "sourceSha256": "ab4531502cfc53360467809b796ef3926ac7b1a9d277bce89a03469624eb8684",
+      "translationSha256": "af0150f564896971528fffb03f2b8c2ac6890505babc9d518cca9efd2c3f03c4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.MissingRequiredField",
+      "batch": 1,
+      "sourceSha256": "06480546c7e299a0ae4f3e2889aa7c3c367c68e9b94555ea5fcc40228d2505d8",
+      "translationSha256": "dc50440972e275a563a348cf425531d05a317e85c4d197e973b5fabd9d183d2c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.FileNotFoundAtConfiguredPath",
+      "batch": 1,
+      "sourceSha256": "5c5e58df366d6cd3c8432b69457e1601291c4b4490df946f7c6c33e96d1d9f80",
+      "translationSha256": "7476dc1420304b4220ceb7ba211cdc5095109e9cdb560a7c68644528fd33b77c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.FileOpenFailed",
+      "batch": 1,
+      "sourceSha256": "275d3eae5e31592e90ff0a51fd8f6ff81c67d6599eae146eaa350a571d887aa8",
+      "translationSha256": "41f6e51a30524796dfaa540f97ffdc0f02ad6a52fd69c2be4874c680cf2e6017",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.UnsupportedSignatureAlgorithm",
+      "batch": 1,
+      "sourceSha256": "6a548bfb133eff8938aca51366cd1510c46baaca55d5746355250552371202e4",
+      "translationSha256": "c468b728fb27c93f81d116b1279aecb41a7dff9ffd9d2aaa0f1a82232466479f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidSignerKeyId",
+      "batch": 1,
+      "sourceSha256": "bee7f28df5a898a8020854ee3d2adf0b1f70057d47cac0b29be22595d0332a71",
+      "translationSha256": "12ee10f122204d43c7aaa942e7aeb0a020865d71e97c5f4373156305379debe1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.UnknownSignerKeyId",
+      "batch": 1,
+      "sourceSha256": "b8c5056c698f24d4830fc8467ad8fa6b2a05f1eb2e8ae82dcc8bd8799bce92ca",
+      "translationSha256": "c8ff2c04972743c3621d0c52f7373c1aac3d91f16057dd02c2ccbb3d64317b76",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.InvalidSignatureEncoding",
+      "batch": 1,
+      "sourceSha256": "c1bfba92f5d063d1abfe269eb42724e2a0a5705b0a8224eb91db1ae64507b85a",
+      "translationSha256": "186f4795ece90aa66c88ce806383dd87933edad505d98ebe9ad424c1a17752d4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.SignatureVerificationFailed",
+      "batch": 1,
+      "sourceSha256": "494e718ca5cbd103100a9a1be4812b2f6650dbaac44aead78a76d3bf5431bfef",
+      "translationSha256": "7ad55832d3cbe764f8fd09c8e2a12a36d68244c2c4eb5f4b2b56ef14dc21e183",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidLicenseType",
+      "batch": 1,
+      "sourceSha256": "ec6d7c0e8dbf6db8a9ee35bc59e045c5c72089f26526760c41a3f7a7b81c3529",
+      "translationSha256": "8850cc191beed2bca98253fe932b5c357b2800d54e1585d172fabf36364e8425",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.IntegerFieldOutOfRange",
+      "batch": 1,
+      "sourceSha256": "41905c8ac282a7bae0af3af936b90e41acd6a3f5fd3ec5ff9bf9f007be6afee3",
+      "translationSha256": "432ddf5551b1922d83aa5f3ac02bd724d684841fa634e5e6dae6e3b37d1cd1d0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.PerpetualVersionMissing",
+      "batch": 1,
+      "sourceSha256": "247b6fe0f06bf34e54882a98010c78fcdc1e990942333b11a4e12fd06cde0ae0",
+      "translationSha256": "4a5367c2b54dcef439ab759bd3f5cd433ca32d34af558e9d45d65a8472036a33",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryMissing",
+      "batch": 1,
+      "sourceSha256": "d21b00fdd05e6cc48a9be73af37f6f3cc5dd74459717cddbe0f82e8cebf30611",
+      "translationSha256": "00ebbe1f79d2859ca327fd126846056d62e05aaeed7b11c50c1effaa2363705d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryInvalid",
+      "batch": 1,
+      "sourceSha256": "03cccd05f1d333829be9cda78cb7e56869ec45fd9211d80155865f023ee85381",
+      "translationSha256": "fed6526e13d076fb0b3aa63889f8ef9d9a792bbe633cf184ba166aefe0ae420a",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.CurrentDateInvalid",
+      "batch": 1,
+      "sourceSha256": "755f118e60217bdd7cd447da97be4f3bd05d552124dcdf98dd2c2ed994a375a1",
+      "translationSha256": "ff92b8ed141f63b0d1eee393504b297c1e0953f9d51d1e86c0bc4788a93a4b09",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "batch": 2,
+      "sourceSha256": "f945c91176a8221f9dec4b63dd4e11e8bcf53b04076c3dee13a452379e07d241",
+      "translationSha256": "bc1208713d81327c8bc2c31f372d17abf881f3d031fc19df52ac8e1371e2e215",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "batch": 2,
+      "sourceSha256": "7fe4c39414a343616a7191a0fd32843913d4ff2a17ea827385da982a0f7c4175",
+      "translationSha256": "592ad3ab594410afed606b7d24ee4cf84335ba203b6ef4a208ac97fc3cf320f5",
+      "verdict": "revise",
+      "reason": "„quellseitige Startressource“ is an unnatural calque; the proposal keeps the source-side distinction.",
+      "proposal": "Für das Debuggen konnte keine Startressource aus den Quelldateien ermittelt werden.",
+      "proposalSha256": "bf268979c1ff37be29d2fd9bfc9a755e4a798023eb50f830063e4c1904b6a03c"
+    },
+    {
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "batch": 2,
+      "sourceSha256": "40f1b61a38d2ce7a6a61a2a005247b8d8291e57f54c3f8399803639ed4542c20",
+      "translationSha256": "f63fb4caebb03d8a240c486857c0a2f8f3e54a6918e54341a53824c84d316ce8",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "batch": 2,
+      "sourceSha256": "b8d1583e429e993067556de1ffe48a70ccc342616775a4c1b08f9b7fb55e1fc9",
+      "translationSha256": "d5674cfe97b1cb41e7e474e9583c9a2e41909bffd05e37c4890af9a41f410051",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "batch": 2,
+      "sourceSha256": "83b0b479c5582dcd1697d264ca5ac4be98ca5d87e0a6e92cdf299705e8a86ff5",
+      "translationSha256": "fe9202dd0d20e033a834213ccb75b906290b7a85e6b135ca96a8952de9cf65a4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "batch": 2,
+      "sourceSha256": "b7587669692751b82c0238b6fbb8dd1a6db0131885eeaa3c21fe758411fd2e0c",
+      "translationSha256": "20807d27b52c9704500b0f70a4a382a92a4b360b8a455c394583b79af164b749",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "batch": 2,
+      "sourceSha256": "9617bd539e95b27f60ab060b21499c8aa262a3334f449de074e6ec53b1b71309",
+      "translationSha256": "74f1cb42eabdc02caec5eaf338f8da8c2e65396e07c4a29703e24dd2938d8dc3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "batch": 2,
+      "sourceSha256": "cad3420b513dd0929e053396d3c8cecbcfc8b36a47161403841a385627264a71",
+      "translationSha256": "c5c2ae50e564b1dae6a32f489ff86b0f6465e22a9eccedce252f579f13220b0f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "batch": 2,
+      "sourceSha256": "28eb8e9bcc290e65bee9382ab0667495b5de04f23d88dc1073e706915f865557",
+      "translationSha256": "092dc55af6589592fb8900d56ab8fece0f1e7b68c699de6f271d754d7a3c882b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "batch": 2,
+      "sourceSha256": "f5b88f5c8b3750cc3a5127cc3a0ec97c75ef76d3f4eb422c1f97a26fefbb7d1a",
+      "translationSha256": "3505e33c3bec4f51e23e63dfb488821edb9686528d3def34aca4bc7a7ef93c62",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "batch": 2,
+      "sourceSha256": "c183c8df926651b3a72f6013e1b83736a9e7f126603c7f7ff27b069c209ac69d",
+      "translationSha256": "1914c7cc93edd3691300fe60434abc8fc0464fb2834a9aec8c349bed89183369",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "batch": 2,
+      "sourceSha256": "661c47e4feef123d1956f798bee209eede18d8a975ee510eb029ce37822a0318",
+      "translationSha256": "8344b07193e9836117ab85acbc0e2895bb5ca2824c76f8c667bd3bb77501fe77",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "batch": 2,
+      "sourceSha256": "324c92c1e02faf4bc9fa5227a3ca4268222ff9cf45cd5b8c9deab341dd9914c0",
+      "translationSha256": "edb58da71c815e2cdba64d99da80ac29be6c7c0a225c0d68721cb01e8afb8b0c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "batch": 2,
+      "sourceSha256": "fa93818644dffd2ce0621487cecf087974c3e301d202188e934d1449d8e248e2",
+      "translationSha256": "9c408f8d3ef3ab3b0222fa58e4074ed8f273d5d89113ce65ad06a6a2bb854eae",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "batch": 2,
+      "sourceSha256": "c7e382f15ba33660823f33fc571099e8ad70fde94964b870981779d500bb7c28",
+      "translationSha256": "a1fe9e7f49cf3a9db4089db8c2e92399e04cafbb73621b6b09477026d05e2302",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "batch": 2,
+      "sourceSha256": "cf6d7691e46827977a9c4cb6021d489402ce2fca21e73731b0b7af0fec7553a6",
+      "translationSha256": "ee5930e36357eaf7d803c546a75db2f691a7a59e486654c94f7c50ce0e8779cd",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "batch": 2,
+      "sourceSha256": "101311655bfb8ee6fc3d28e0ad12345c67a804374dd49abcc35aa3b9c1fc3c6d",
+      "translationSha256": "c70fef65511d7da83db08ca1fd5a910c44ad3aca4494468fef12797bb96df84e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "batch": 2,
+      "sourceSha256": "221d7f567e91648ef1788f95ec4c49b52a599f596483647baf53e19a4da7f785",
+      "translationSha256": "21e23b06028583bbaf8bceb9b446ddbfd18234a13227162baa548a81e27ac8bc",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "batch": 2,
+      "sourceSha256": "eae9ee1086559b066b0911f05273a786ac8dc13db831711dced3752078869aa9",
+      "translationSha256": "98d31e142e3d1c371d6d9902bdace755d022be8820e4c032839765c68ef4add1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "batch": 2,
+      "sourceSha256": "5a3045cf7b16e37e20695bfadc73e04712a2a472793492cfc85b3dc53ffec7f7",
+      "translationSha256": "efd4fdce04395c1a88eae8aab76c83c064670ad0e508e22c7f799082c520360d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "batch": 2,
+      "sourceSha256": "6c98204f89441c133b73ffe2d3af2dc94762260aecbd084f7d652bbc137ad2dd",
+      "translationSha256": "d456e4ea2ba2e6b23788d4b01bb62fbf9ff41502ec0043592890fd5e218c4e5a",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "batch": 2,
+      "sourceSha256": "8aaa1e2274d4ba763886ad0a22bd9ce1a7f2b9ccba1605a7e0e858c7fbfbc18a",
+      "translationSha256": "45ddf8678c7c8832252c556ce83cbd6a54419aca50c9c75f5b2be31c035089ef",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Command.Inspect",
+      "batch": 2,
+      "sourceSha256": "e0723a86a5b9408aee9113031785d3d15d9702892f31a46e5fe927c0c8552675",
+      "translationSha256": "a3f12cd935aa9615ab6a24aba2fd5d5cd4dd993348ef8b23b0d7fda4d391ab03",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Inspect.Prefix.Error",
+      "batch": 2,
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "60efe70adb51304947beebbe4628500d524286ae6afa944e0c354ecb247669e3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Inspect.Prefix.Warning",
+      "batch": 2,
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "7f46739793d7b016fe96cd84cf4c9c5bc871567bbc07421b547a57166ef6f02d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "RuntimeHost.Prefix.Error",
+      "batch": 2,
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "60efe70adb51304947beebbe4628500d524286ae6afa944e0c354ecb247669e3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "RuntimeHost.Prefix.Warning",
+      "batch": 2,
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "7f46739793d7b016fe96cd84cf4c9c5bc871567bbc07421b547a57166ef6f02d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.Prefix.Error",
+      "batch": 2,
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "60efe70adb51304947beebbe4628500d524286ae6afa944e0c354ecb247669e3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.Prefix.Warning",
+      "batch": 2,
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "7f46739793d7b016fe96cd84cf4c9c5bc871567bbc07421b547a57166ef6f02d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "batch": 2,
+      "sourceSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "translationSha256": "27aac15d4f4d054ba485755561f27ec553ea99c1f784e7df90836259ca23f64a",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "batch": 2,
+      "sourceSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "translationSha256": "6c71d8935e0e4c0b4ec80b6ecdfc8098b2c395be5ad61d9f7ba5b31663761b7b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "batch": 2,
+      "sourceSha256": "656f344fddb7111826d8788218c52bda3d1a41ce3e6d9086dbd20899b246cf3d",
+      "translationSha256": "656f344fddb7111826d8788218c52bda3d1a41ce3e6d9086dbd20899b246cf3d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "batch": 2,
+      "sourceSha256": "f961ab825952fa116e3042f7d2848dfda0561dd92f9e8928f106fcc892130477",
+      "translationSha256": "f961ab825952fa116e3042f7d2848dfda0561dd92f9e8928f106fcc892130477",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "batch": 2,
+      "sourceSha256": "cab1b019c37f6c86981c360357a2bb8470ac02f52d4474f851be9ac45a198077",
+      "translationSha256": "cab1b019c37f6c86981c360357a2bb8470ac02f52d4474f851be9ac45a198077",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "batch": 2,
+      "sourceSha256": "15eb556bd79aa22c389c78d1785a1c2da00bb62bf3d4de4f1471cf171ceda02f",
+      "translationSha256": "15eb556bd79aa22c389c78d1785a1c2da00bb62bf3d4de4f1471cf171ceda02f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "batch": 2,
+      "sourceSha256": "64610c8166d3bc8623e4b98a88a5e8db0b23325f7225041456d21dfac5868665",
+      "translationSha256": "64610c8166d3bc8623e4b98a88a5e8db0b23325f7225041456d21dfac5868665",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "batch": 2,
+      "sourceSha256": "32a9d8e563f5e25b0d10078a5cac3c1791beef69e1b76f235522fa2ff414aff4",
+      "translationSha256": "32a9d8e563f5e25b0d10078a5cac3c1791beef69e1b76f235522fa2ff414aff4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "batch": 2,
+      "sourceSha256": "9837f3e911e68437e1d96f79358a109f45b06f1ab8d1c8e71546985dd9e95e24",
+      "translationSha256": "9837f3e911e68437e1d96f79358a109f45b06f1ab8d1c8e71546985dd9e95e24",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "batch": 2,
+      "sourceSha256": "4a33eacd5fa65f2b2e2871cd131286b53c415b131666d71173bb6e3fe59361b3",
+      "translationSha256": "4a33eacd5fa65f2b2e2871cd131286b53c415b131666d71173bb6e3fe59361b3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "batch": 2,
+      "sourceSha256": "fe67c9af419399b149f266c17dcbccbe3a0332d7da6d5fca3a19f478534bf719",
+      "translationSha256": "fe67c9af419399b149f266c17dcbccbe3a0332d7da6d5fca3a19f478534bf719",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.LaunchPlanCount",
+      "batch": 3,
+      "sourceSha256": "c037e436457bfddb41a951ef05e59654b60d559e0665b1cb0961abe76d618456",
+      "translationSha256": "c037e436457bfddb41a951ef05e59654b60d559e0665b1cb0961abe76d618456",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ErrorCount",
+      "batch": 3,
+      "sourceSha256": "d394af78a21f8f29bdd31648d48de560f9faeed4ad0c1fa29f7e6a12efdf6f13",
+      "translationSha256": "d394af78a21f8f29bdd31648d48de560f9faeed4ad0c1fa29f7e6a12efdf6f13",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.DryRun",
+      "batch": 3,
+      "sourceSha256": "08d41f0253bb0ecddca5238f78cff16fe4c0249735c00e41b591380f0c5e5bac",
+      "translationSha256": "08d41f0253bb0ecddca5238f78cff16fe4c0249735c00e41b591380f0c5e5bac",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.MutatesAsset",
+      "batch": 3,
+      "sourceSha256": "96259b6f510be06c1bb7068578fcff457f6869095c7cda466920a9875a0f1a97",
+      "translationSha256": "96259b6f510be06c1bb7068578fcff457f6869095c7cda466920a9875a0f1a97",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntrySelectionContext",
+      "batch": 3,
+      "sourceSha256": "17923d0aa85f0299e88d074c1d0ce63073c28678a5140e880ea09b5f57606be0",
+      "translationSha256": "17923d0aa85f0299e88d074c1d0ce63073c28678a5140e880ea09b5f57606be0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryToolboxAvailable",
+      "batch": 3,
+      "sourceSha256": "b4d3a29a39b51c78ef6854c93cad0aa543720fee78b7602fbe1aa40d02642a98",
+      "translationSha256": "b4d3a29a39b51c78ef6854c93cad0aa543720fee78b7602fbe1aa40d02642a98",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryItemCount",
+      "batch": 3,
+      "sourceSha256": "033c16a32232293109d6a0141e3f5c4d252c4e6c861d1e7f008a0081365c6b46",
+      "translationSha256": "033c16a32232293109d6a0141e3f5c4d252c4e6c861d1e7f008a0081365c6b46",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryError",
+      "batch": 3,
+      "sourceSha256": "569b4757147c3e9ed26155b2aa572090a24842f1cf384e0c824e10a8bdc24f1e",
+      "translationSha256": "569b4757147c3e9ed26155b2aa572090a24842f1cf384e0c824e10a8bdc24f1e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SearchText",
+      "batch": 3,
+      "sourceSha256": "85ea57ff09cf0747e3ad7438202cbf97150ec948be890f342857ab7a8600b6f5",
+      "translationSha256": "85ea57ff09cf0747e3ad7438202cbf97150ec948be890f342857ab7a8600b6f5",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Category",
+      "batch": 3,
+      "sourceSha256": "edb2cd3b74c999af70f0b7054990f2072dc6e10a847af6ed05954b8994b730fe",
+      "translationSha256": "edb2cd3b74c999af70f0b7054990f2072dc6e10a847af6ed05954b8994b730fe",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Title",
+      "batch": 3,
+      "sourceSha256": "24165cfefd395978e88617d829808f84ab3ad070babb2172fed41b859c9b0c4b",
+      "translationSha256": "54553d87a96c87d8c7b659b29247e626131a9b9b488e7f4bba1d84a3930cead3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Ok",
+      "batch": 3,
+      "sourceSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "translationSha256": "27aac15d4f4d054ba485755561f27ec553ea99c1f784e7df90836259ca23f64a",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Error",
+      "batch": 3,
+      "sourceSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "translationSha256": "6c71d8935e0e4c0b4ec80b6ecdfc8098b2c395be5ad61d9f7ba5b31663761b7b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Cursor",
+      "batch": 3,
+      "sourceSha256": "46a4eebd20d881ecfc0ecb54f6d8346524fadb143726d256b1a045303fc67717",
+      "translationSha256": "2c014f8f8986f1b274dbfa182498444da048b8caa48e5335d5cdf778352d7e6b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Expression",
+      "batch": 3,
+      "sourceSha256": "b8bc0e4f01a0ebdbfe99180d4ea3cb49092d268fecd0789d2e9372fa616e9542",
+      "translationSha256": "bffed431df37bcca6bd51ea6d1e91f2a406df8615b745a6ad8017c7f29e36163",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Selected",
+      "batch": 3,
+      "sourceSha256": "d7cbbb688b2e506c022e95cef8c4f629a29b9b36a6e50324e70dff466dbb95af",
+      "translationSha256": "a5534a65429f7dfdde9c6ec6b35986dc4ebbde81ae15d8bbf4f8c5f9b36617a1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Fallback",
+      "batch": 3,
+      "sourceSha256": "5c7ee2074b65853f71fc5a01ce194ff26deedf6daacdb715c6beefdfd3f31b35",
+      "translationSha256": "08079181bcbdff2f02a72c8eeda4c511adcd0a91c80033b5093f529e436ee7f1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.MissingValue",
+      "batch": 3,
+      "sourceSha256": "327992075416d8ed43958355b72b5e477104f4082a0739d5dc794ac85a5a39fa",
+      "translationSha256": "a28e0a499760193d7cea0634d855e6e0c78e52ebd2dbda6779954f5ae25204a3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnsignedInteger",
+      "batch": 3,
+      "sourceSha256": "5df52a109b25d65cf455cc8fe22dcbecd6a3d389de2963d5a3c58a70137f6896",
+      "translationSha256": "bc49710ec6148bd4b5448b7d53cf0eb81926d9fdd7cd3964da4ecd7bacddb30c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.BooleanValue",
+      "batch": 3,
+      "sourceSha256": "b1f41adc4e8ec869ac9e04d386cf935212923e55585014d5227a6cc37443dbe5",
+      "translationSha256": "054d1a809215dfeafe3e07bee1c57401c6eccb1ea3f370c3f632e413fbe6af60",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidPlanKind",
+      "batch": 3,
+      "sourceSha256": "29170e567c1fcfc8c4c1b965d32371cc246db5576fa446f880dc5b4042b0d335",
+      "translationSha256": "c00c664fef8b1606cd46bc5a2f956f68058b2c077f785cac3c1f2e9208e487f9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidFallbackReason",
+      "batch": 3,
+      "sourceSha256": "5546faacfa2f6a23d829494e8e51a787c5fddb67749a48f0c70a418bbceebe48",
+      "translationSha256": "8c88e36ababc1c91b58a3682da2726dad98ba244abed0da1d01b95cd6310af65",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidStatisticsState",
+      "batch": 3,
+      "sourceSha256": "013bb9cbc21a650f9bf6c3be8b64588b9e76a139b63f5877528f778506e8f4f7",
+      "translationSha256": "79c5cc6abe121dda5889476a73ec4a60e510b7bfae21270aa66bc5d9cdd451b1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnknownOption",
+      "batch": 3,
+      "sourceSha256": "0151d6245c5c52129aab74e10d22549ccd8519e7a441ee68e6bbd7aa2984aa65",
+      "translationSha256": "634f73a21f1731cddd61cd4b859e4fcaa2a2c7937724106987176465bc762503",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Command.Run",
+      "batch": 3,
+      "sourceSha256": "00d60e31a4e6b8344d4201f25a6a7dee770713107f6d097abb01559d32b17f26",
+      "translationSha256": "e8a9c7dd73bc93235f9ac13e6588c1e843ade66e659da82088f69b379eccaeff",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Diagnostic.ExpectedTokenBeforeToken",
+      "batch": 3,
+      "sourceSha256": "8c5ec17ef4a477950bbb2ca65991f70f3016ec3e1e1302a2e8a70cf7f4b04621",
+      "translationSha256": "a283c598bb43e88c5bd89341145876fa37a26628a24277ccc73db7a63dde3724",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Diagnostic.UnterminatedString",
+      "batch": 3,
+      "sourceSha256": "4485f10bfc4b0132810e5419138b9d4aa18b1e65370142c22bb678b884c13729",
+      "translationSha256": "a5b32bad5191a4c3722db6982949c2b5afb5009886fa1d56371fbfd201e9e7ca",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Error.CatalogMissing",
+      "batch": 3,
+      "sourceSha256": "c8c15400c0e2b81baf61506e7fe0120cb13e6fbe50795130dfb8f3dc918f4f67",
+      "translationSha256": "434df0cee1a0500a702619a9574ab9d79fedc41ce14be9c26f95750d9aa2e4d8",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Error.UnknownLocale",
+      "batch": 3,
+      "sourceSha256": "2d03b917a03667ced597af4b44bc6fbe833c9190a7864471dda2bce391062f68",
+      "translationSha256": "b08fec17a788230ac75d26bf9c76cc3320fe7748a50c6a25a1babe77f4d3730d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Help.LocaleOption",
+      "batch": 3,
+      "sourceSha256": "8f3d93adaf45b7387a4f50f7c8da048423e487442c3fd40251c8d7166a1b2824",
+      "translationSha256": "9b9597fb384486e66670314be384471d19b3238313d60062318d08bb360eea8b",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "Inspect.Usage",
+      "batch": 3,
+      "sourceSha256": "062291f6308f187bb995c4d4b0770f32839ea0ef9bc2a94a1bc98710688b8c88",
+      "translationSha256": "109a6356b2ba83726a1a1530a96d1575c2f512d2888331344a79c3afe9ddee04",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.Usage.Alternate",
+      "batch": 3,
+      "sourceSha256": "9e42d01811094feb497ece1a5eb9e3890f36f7ec0ec01df3a4805d5970bc5141",
+      "translationSha256": "dbff0212b8d392f1dd82d3f696bf1858aa0201cccecf6b420f87d9a2a51437da",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.Usage.ObjectEntry",
+      "batch": 3,
+      "sourceSha256": "7c01424aefe8f8b66c1f2c3b56224c5f0fbd7dd8cba269f943eac06727fee08a",
+      "translationSha256": "f7e6158209172c19ae544198ff9d2b9445808ba74fd2568b29e2033a4b74bc28",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.Usage.Primary",
+      "batch": 3,
+      "sourceSha256": "3ca5332dd77af375721ea31a6bc973fb648ea42cf3f87386bd7eef9948da3bac",
+      "translationSha256": "77e5dc3e511e3fabc96ee2085b2f152e6ffe1d7a7ee424667284d5556212fadb",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.Usage.SelectionContextTokens",
+      "batch": 3,
+      "sourceSha256": "3b6dbfaa303a5ab004611694dbe51479d6f6985bdf324a491a50874c9df08962",
+      "translationSha256": "e96b549b475b86f80cf1d86c4e62a23df761e5472517fc0f4eae5cc356963e64",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.TablePreview.RecordDeleted",
+      "batch": 3,
+      "sourceSha256": "1185f37d33b0f89e331f101a51bb8e51165c7efda15950b86a3ebcbb363f898e",
+      "translationSha256": "f076d3384928ef2cd4e886a2292d97afda9a22c62e2d044a592965027a20095f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.BooleanValueRequired",
+      "batch": 3,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "abb8d2828f86e0cd837effbabd5d33504806ad3b0191ad43a70e0d186310d8b9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.ContextConflict",
+      "batch": 3,
+      "sourceSha256": "4115eb25ae74d112501e0096033fd8f18d57f1fd25dfef6e48cbe55f310352c0",
+      "translationSha256": "609f68d32d2dd13d62502c5739fcaeb02363b99f683bbc2ea57dc0a2ffb8d8d2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Dispatch",
+      "batch": 3,
+      "sourceSha256": "64d2cde0727cd59554c888720bd0982a6b2aed3ae058b8fbd26896e790d36542",
+      "translationSha256": "1bd77350bfc6f99d36431bfb54bc5e35eb6ca09a5e57105e4231cf127b8b53c6",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "batch": 3,
+      "sourceSha256": "e30fc60ace85df044b30e643285e271ee1c6dba0ff34b4f14db440f22b49b558",
+      "translationSha256": "598456a1551c9941ed5b09de34176df27a12d9be93d8df48a01f418dacae3522",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "batch": 4,
+      "sourceSha256": "3fb5bae2ea65a5b33c6aad4cbf375400519cfd2051709c7279abd077ef96e033",
+      "translationSha256": "51da9c3cbcf9e15393a0342dcb617c39cdcecead9dfb9f25c95ee8e58f5e8810",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "batch": 4,
+      "sourceSha256": "9e7c3f2caa927522d09aeae0d7017f373644f2ab37dae502195dc113e357dfd2",
+      "translationSha256": "93ddd91c4367e1a41da26973dae5254a8118f9385a13388e78d25b49cc089216",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "f91cf244e141b274d7bd88fba743c3b5d9a6d6f291b69b13b26d56fa4c7e08e4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "batch": 4,
+      "sourceSha256": "a5a7102a5643c448b38b43b3d15320fef81a21937810c57b0b55323e143b30ac",
+      "translationSha256": "1b9d45aa44ef57d26c92e5ebfdb0abaccf415a3632c458ca0a61b1cc35d54648",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "batch": 4,
+      "sourceSha256": "414a602a00c1442909cedb4dcf007b582339d7b6e37dd87b0ca132d377aab51c",
+      "translationSha256": "8e573b83831b2217945e5f666019876f8ddd6788001f73a81d0a81282f115c10",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "dc95fafe996fcb864232ede1cbf243cd3d220185d06c10040dad52f9d7ce3035",
+      "translationSha256": "f25bded49062eede5cede4ef020432fa5c4e71dbd82dceb2256d136faa05d233",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "batch": 4,
+      "sourceSha256": "7fc053db44bc509d4177281b0b63a3f2cc565331df82c87d6700fa3ccf6dc7b8",
+      "translationSha256": "de2850d843a462db4f65c011693f9fe23189c9b5b3f305d9203326c6813f2b9e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "f6839e8a5d58214d16cc06876ed96bfab3d963783746f560fdd8aa1a4c7b1e5c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "batch": 4,
+      "sourceSha256": "b35d39bc7d28d92e471842ca8102fee0f7163618921d948cce1cf9aeac33f672",
+      "translationSha256": "ac69e509fc702e30232f14e46acd39560674c9c74521ec971b2473570774b1f0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "b1fb2c50b4e977cb46690c18fc7d4df2bc7f6cc298ca94f3d18ea9c84ddba046",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "65b7769aed7844a33e807bfaef242c2ad74d25b77414459e6ed8f3b3d91ced6d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.BooleanValueRequired",
+      "batch": 4,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "881cb1aa1afd6eb9beeb77d8635714c4d2c55016c10c80e456a3364bc203c399",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "f91cf244e141b274d7bd88fba743c3b5d9a6d6f291b69b13b26d56fa4c7e08e4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "811ebf65b1097f596a7cfa4d19957c083a95affe046d0c5c61dd6b9284a81f4c",
+      "translationSha256": "70ea1f194667b3af30ce3792bd0f8803c92e54853cc6800528a02da58412b390",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "f0d44b836f4e181c34060746aa432d25f3c79687c66a391db8fe52744afd2c45",
+      "translationSha256": "9a10be5ddbf4be12d7e8278e6d42157529b12911010ee07f132897fc63fe3a8e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "b1bd07d1db8cb0a0c7cf72d4a8f56fa805b3c7249128b27359f8d35ddab2573b",
+      "translationSha256": "f5006ef2b821621260a71114c5c9a010a1675cfb04c50e4aa88004af28faf0ab",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "f6839e8a5d58214d16cc06876ed96bfab3d963783746f560fdd8aa1a4c7b1e5c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "b1fb2c50b4e977cb46690c18fc7d4df2bc7f6cc298ca94f3d18ea9c84ddba046",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "65b7769aed7844a33e807bfaef242c2ad74d25b77414459e6ed8f3b3d91ced6d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+      "batch": 4,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "881cb1aa1afd6eb9beeb77d8635714c4d2c55016c10c80e456a3364bc203c399",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "f91cf244e141b274d7bd88fba743c3b5d9a6d6f291b69b13b26d56fa4c7e08e4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "batch": 4,
+      "sourceSha256": "a206d7b676c0db7f387f2b05d56a234ea5834aaee89a67207b651d18fbe64ad1",
+      "translationSha256": "fac15633bdde623c4908d7eab28080aa1da11324a60eefb8c24cc67e189d97b0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "batch": 4,
+      "sourceSha256": "10a75a9207b35688660dd7b86adce5dd77b025792d36e3cc916815013b501b1f",
+      "translationSha256": "8f83a97fde6d13390094b3a39fa343930470ed64f5391c004f950f8a67a7b0ab",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "f6839e8a5d58214d16cc06876ed96bfab3d963783746f560fdd8aa1a4c7b1e5c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "b1fb2c50b4e977cb46690c18fc7d4df2bc7f6cc298ca94f3d18ea9c84ddba046",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "65b7769aed7844a33e807bfaef242c2ad74d25b77414459e6ed8f3b3d91ced6d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "f91cf244e141b274d7bd88fba743c3b5d9a6d6f291b69b13b26d56fa4c7e08e4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "batch": 4,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "f6839e8a5d58214d16cc06876ed96bfab3d963783746f560fdd8aa1a4c7b1e5c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "batch": 4,
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "493b27f227befb12c00da94d0fa3450a8c33175c925581afd2bf9644b992631d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "batch": 4,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0352207ccf08aa88b4e21828894459a0a5d32e38c891e79f4e949bc97f146850",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "batch": 4,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "b1fb2c50b4e977cb46690c18fc7d4df2bc7f6cc298ca94f3d18ea9c84ddba046",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "batch": 4,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "65b7769aed7844a33e807bfaef242c2ad74d25b77414459e6ed8f3b3d91ced6d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "batch": 4,
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "7290986222f5be05c7ea3d5a7d24fc1574048833b6291a06dab7bb4634323c40",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BatchItemRequiresToolboxItem",
+      "batch": 4,
+      "sourceSha256": "0ef478552c8822d14178bbcda47867a7a63f4ad5d1c66ada1868bce5cde17be1",
+      "translationSha256": "ab443d88a4a2f7359a3b856da088907c2eea0efd4ec2941e3fbec3b62c4703ab",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "batch": 4,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "881cb1aa1afd6eb9beeb77d8635714c4d2c55016c10c80e456a3364bc203c399",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "batch": 4,
+      "sourceSha256": "0081be3546939e08397453ba775a755e6cffa1e180015c0a088cc624f378016b",
+      "translationSha256": "08d51cc88e4b51ff958c636161842953c6b4b58ff94d142f6d6bcf0277ff641d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "batch": 4,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "f91cf244e141b274d7bd88fba743c3b5d9a6d6f291b69b13b26d56fa4c7e08e4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoAssetPath",
+      "batch": 5,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "8c487e91988ed615e042303028e519882cedee63af4cc36be4ec1c813b6d9ec9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoSelectionContext",
+      "batch": 5,
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "f6839e8a5d58214d16cc06876ed96bfab3d963783746f560fdd8aa1a4c7b1e5c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxContext",
+      "batch": 5,
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "493b27f227befb12c00da94d0fa3450a8c33175c925581afd2bf9644b992631d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemId",
+      "batch": 5,
+      "sourceSha256": "74e91dfeb093813f9defae2f605e9ab5ffe26c8036081c3fbca70085f320baf0",
+      "translationSha256": "c0977eb635dc827c267275e806877d4318393d73f6569bf625916465aa3ae4c0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemIds",
+      "batch": 5,
+      "sourceSha256": "77bfed1e57eedb29b515573b1eb702d77c7c77b6e59450a70eab2642140c867c",
+      "translationSha256": "095a7385e0b27501cd61f2e8e28f3965633976704b321f8229a1851999295fdf",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand",
+      "batch": 5,
+      "sourceSha256": "5cd016267197a654a7fb6f3c4aadc31450138105d83e7c77bf3beba6d6c318fc",
+      "translationSha256": "6716121fbd8b26be098c083b58ed041ef3b91483600b4173e659a64a817714b6",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+      "batch": 5,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "0f41980ac1cbab36a9b3473551191b751ef48da2994f72dae44b8cf506a8266f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchCreateItemRequiresToolboxItem",
+      "batch": 5,
+      "sourceSha256": "a07a5d68d2c7437af70d67dfdb6072b2494dcdb796550ddbb3251107f9013b09",
+      "translationSha256": "6c590fe93e60b2a51a0cd4c476d5a851c4c5b745d9500ffd3f7a5c938eedf906",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchDispatchItemRequiresToolboxItem",
+      "batch": 5,
+      "sourceSha256": "1958d901797eeaec22e745f62f9d0d2e83476c4f2e12e0c863ec810623c27b23",
+      "translationSha256": "0b42527be5186def7c66bed6de6348a40e5008ee8415eb7d0072b12a6fa1e46d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchItemRequiresToolboxItem",
+      "batch": 5,
+      "sourceSha256": "ab6923ae856a0057df18f04b001f7a260328d70e4e7edc7b7f462245c5d60e87",
+      "translationSha256": "44198df95e927f6c3e0a2c23deacc137966f4b622e08c3ab2ee5b5771ad5b4a0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownOption",
+      "batch": 5,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "143a91acc3e2a966ad88ea08dce716416bf2eb8fc88c1cf6cf4fa2d32a5a7c2e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+      "batch": 5,
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "65b7769aed7844a33e807bfaef242c2ad74d25b77414459e6ed8f3b3d91ced6d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+      "batch": 5,
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "7290986222f5be05c7ea3d5a7d24fc1574048833b6291a06dab7bb4634323c40",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+      "batch": 5,
+      "sourceSha256": "833d2117ecf3525899726d8829ed408f510bb46ffe9c4d0e47b57dfb48b26559",
+      "translationSha256": "2cb24fa8b4247b6635585efae8fa7e9fbd3c4c2149bb2141a0e353864889f447",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+      "batch": 5,
+      "sourceSha256": "0acd50c6b42819311788349146a40b3167bc420a968f37ef1c7bb32b267959e8",
+      "translationSha256": "76bd40c8272de8f26fbfa15e2d7ce0f0dfe58c83b443bf8d5e74169f5f1ebd4e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.IntegerValueRequired",
+      "batch": 5,
+      "sourceSha256": "01f541b3418c3ac3c88f3bf0360a709e186962f31d36ca10ff080a3ed816b428",
+      "translationSha256": "daa9337c3405499666847e0c07aee2e19af6145d16da65c69e33ea1584ef5cd6",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.LogicalValueRequired",
+      "batch": 5,
+      "sourceSha256": "d71ebd603923bf9e9f466067a62ecccdada59b78ead603610433d978f0b2214b",
+      "translationSha256": "f974ebcfb8ef6b413d979f600102592b96cec50375a538c8ae5b518f047d240d",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+      "batch": 5,
+      "sourceSha256": "be5a625d879b6615012a09bac1ccf153ddf8409c181eed0b81f86b1a5e5dcaaf",
+      "translationSha256": "69dd1d2a5e43ebb4539ba925869ca5732e111988a6083517072b24126d07d86f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+      "batch": 5,
+      "sourceSha256": "81971cb33158b376795acd21f9b21c77d4aeea471867de35474cbf974a759908",
+      "translationSha256": "0bcd17573b8accc90aaedd3fc186d6c8f2e680aa743db50c522a5cdc5e5d1cfc",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+      "batch": 5,
+      "sourceSha256": "c480152db555d2015dce726e0ece872539c5b556839b715e0c36e66e2c139dea",
+      "translationSha256": "228eb37ab3bafd30b96659db440412807e2fff633d59d084f86c37e825917299",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+      "batch": 5,
+      "sourceSha256": "83c954478358996b2b30550a80211d7be65563638227a12fbdf25590c13a5d43",
+      "translationSha256": "228eb37ab3bafd30b96659db440412807e2fff633d59d084f86c37e825917299",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NumericValueRequired",
+      "batch": 5,
+      "sourceSha256": "7e8c761919d91f3291f023f55e91291fd1534a2db64e658f7db58f46d3db1a33",
+      "translationSha256": "ed034532c0bbb5c5e4d89b74513df46c349c3488d6e6927230b7202529835385",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+      "batch": 5,
+      "sourceSha256": "1ee93375b852a42de2cb18f5f3914275409bae34a3e07ac156c81ee9406b7cd3",
+      "translationSha256": "b0e044c1498ae2b7dc84cea694171ac7e3aa18d9f2f4afc382dddcbc3f298607",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+      "batch": 5,
+      "sourceSha256": "25219856d5fc21c43e9e8fddff39c004c5bc7104b70e7bdad6fd420e3592c22b",
+      "translationSha256": "cabea37b4ab2d8b2cfd8ab914d0702e31190bc7fcba5c21373ea94513aed6afb",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+      "batch": 5,
+      "sourceSha256": "cf76e09779f514cc4bc5c828cfaaf83037813f4bdca482e96f9ae6942e384efa",
+      "translationSha256": "260db8709cd9a4a29c04cb026fff8025988807b0f5bf610ff7adab70435dfaa0",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+      "batch": 5,
+      "sourceSha256": "fd802d9299d0ec18b7db7713ec154bd93973cdfa661d0798dcc1434e14c31e2f",
+      "translationSha256": "51d5d55382edd618c900d212310bd23a7b6072c813e5a0414bc0767efae2b27f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+      "batch": 5,
+      "sourceSha256": "b2ab7cddae5b1d5f98490e4a512f70a8746dc99d8e35aff8066c870d444c7951",
+      "translationSha256": "e5943e1c383399e154e112faba1d84210a650a0ebcf6830ffe5344504af0acec",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Alignment",
+      "batch": 5,
+      "sourceSha256": "47ccb97a79f5a2bff2713968c83bbbea9cd53d2edf6b0a47439910e111c95fe9",
+      "translationSha256": "6ac5c56f9fc47c288a3a0333129d317140f345fa5862f5190496c88200a703d4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.AlignmentTitle",
+      "batch": 5,
+      "sourceSha256": "9d597870c4b3f76d88d9f88411effb8f957b507e68be43af0b001e537bee0338",
+      "translationSha256": "6ac5c56f9fc47c288a3a0333129d317140f345fa5862f5190496c88200a703d4",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Distribution",
+      "batch": 5,
+      "sourceSha256": "93354845030274cd4bf1686abd60ab28ec52e1a792fa6f7ccb9cbd0ddff53d12",
+      "translationSha256": "495c955318824797de62dbc210834e34d0dd7ed6280ae4d52d5342b8c6686bcd",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+      "batch": 5,
+      "sourceSha256": "72a23e549d099bbd49b9266bb96afba35da89e5a93a91b056a61c9326c16266f",
+      "translationSha256": "495c955318824797de62dbc210834e34d0dd7ed6280ae4d52d5342b8c6686bcd",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Nudge",
+      "batch": 5,
+      "sourceSha256": "88884f55ac1e09aca9ad89873997508adbeedb19f7af283b54da05d996f50da1",
+      "translationSha256": "22f50c5a8ee454ec74c5c503a3e4fadd7406cfedf9dedd2dc80538aca64da464",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.NudgeTitle",
+      "batch": 5,
+      "sourceSha256": "a5239b85e5fb77d569e75b736dcc3ccc341dd3e6d5b8064d2f433178da0b05a7",
+      "translationSha256": "22f50c5a8ee454ec74c5c503a3e4fadd7406cfedf9dedd2dc80538aca64da464",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Resize",
+      "batch": 5,
+      "sourceSha256": "acd532d8913e66d436b38de9acba750f92f20e16c49dafb78b69363127a38c60",
+      "translationSha256": "d097cf6ff2ba312f4b89a4ae4465b38943726c36b26a2b92fed8b0092b1f8684",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
+      "batch": 5,
+      "sourceSha256": "2956e06ac0651084bbd5558dfe469615e9a5fc3072f60a09a9cb3c597a19324c",
+      "translationSha256": "d097cf6ff2ba312f4b89a4ae4465b38943726c36b26a2b92fed8b0092b1f8684",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Snap",
+      "batch": 5,
+      "sourceSha256": "1c27324f013705cbf0c49f3d3bb103c7069ed5988889d426c10cfc25684f0a31",
+      "translationSha256": "673245ea63c73fd7e06b896b3b888a1f28db3857c653bc3f82773fb4dfdc3f27",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.SnapTitle",
+      "batch": 5,
+      "sourceSha256": "98df9a59f0641d0c4409c495b8f890581d4fa8a5b180e3358a691097c8ba8af7",
+      "translationSha256": "673245ea63c73fd7e06b896b3b888a1f28db3857c653bc3f82773fb4dfdc3f27",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+      "batch": 5,
+      "sourceSha256": "41a9b9617b14b5187a571c8d23e30f0f26ae35651e84ad9e55c512ab3c110895",
+      "translationSha256": "e85d528bf9df4a858cc556d9332a8f8588527e92bc6fe3eb977c99d602430303",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+      "batch": 5,
+      "sourceSha256": "4b8924b2b128cea574b5733bb8366bded84ca6f22328842c5b7a82a670475c64",
+      "translationSha256": "d13b60afd738cbd0b552d1c1e339d09364c8cd20df2712cf439c12cbee46ab01",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+      "batch": 5,
+      "sourceSha256": "02cc23f77334821507668e07b6daf01933f202c10aae4918a3412fe609c4d738",
+      "translationSha256": "cac8742ce1c9fd653085336a8e7bfb188c2d30a304a0d2cf724f74bdf1b1c6ab",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+      "batch": 6,
+      "sourceSha256": "9ac12acb21ffc3755f17a470170583f12243fb4ebffea1209b13eee3eea37a44",
+      "translationSha256": "dcba56f1b5e211219267c5bf692895e5cabc75fe78cf7eacc21acc7f3b54fe10",
+      "verdict": "revise",
+      "reason": "The original yields ungrammatical diagnostics such as „Ein Objekt umbenennen erfordert ...“ because {commandName} is a verb phrase.",
+      "proposal": "Der Objektbefehl {commandName} erfordert {options}.",
+      "proposalSha256": "7dc5fa9da7f43f3d55b9f2b13f93c642a2041ad8ff20e1b31388ef8be4aeca27"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+      "batch": 6,
+      "sourceSha256": "156a1fabae7f679109536eeb5cad9af62867cb3e7613524792725534a41239b2",
+      "translationSha256": "5bcb634ebc39a02c291afee6fd351e15d06066afcf6bfe956a5b1af571886b82",
+      "verdict": "revise",
+      "reason": "The original inserts the literal CLI flag --field-value after „eine“, producing an awkward sentence and making the option look like a noun.",
+      "proposal": "Für eine Objektgruppe muss {option} mindestens einmal angegeben werden.",
+      "proposalSha256": "2e1ce2d14aaf862a4ab358468a8f35cdbc3a4c4a0de5d14d4bd351148e174d64"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector",
+      "batch": 6,
+      "sourceSha256": "8abe8859625bb8d15c90fd7596cd89e7a1fbe6e6714604bb5026497343756c51",
+      "translationSha256": "3dde840630909270f91a10e66d3e466e787d7cb26b13ac6f7bc4ed8c3d316aa9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Rename",
+      "batch": 6,
+      "sourceSha256": "9e84869d369b2a5336f6aa599b6e91116cc3d761827ef5f4b90841b8848ec35e",
+      "translationSha256": "aa3a11974f81b48ccee9166e7c9d78dbce9005f00281f0b52ad0ed9c20317d84",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "batch": 6,
+      "sourceSha256": "b66fed63ca35a4c464467c946b19922154ca76747ae4e3cf24b0a06dacc686d8",
+      "translationSha256": "6265634e9b42b056ef9e2c95514ea778090d3464cd4d1c4f7e73562ab126502c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reorder",
+      "batch": 6,
+      "sourceSha256": "625dbdd35aabb2660d888511e35dd11bb111f6ca9fc68258e31b7c1fedc230d9",
+      "translationSha256": "395df8561470525a7a8ceb56f5d643089d1d6b4a92ae8f6701aaf2b73e4ff2f1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reparent",
+      "batch": 6,
+      "sourceSha256": "ee83ae2c50e6d0179b0f155f6f6a4218c6b46875b57e90e3b1efb4531b37d9f4",
+      "translationSha256": "59d5b564070e35f7ed4aaf4cc799245955c7e41a37dfdf79548cf1e9202ad04c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "batch": 6,
+      "sourceSha256": "8dbe7a160983b88d75fb5007ef674a7524d6112cba73f17d7810fcc66454d717",
+      "translationSha256": "152217123115ad493bef74d2ce2d8455a4176655bcbbb3b4070519b22e2743b1",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Format",
+      "batch": 6,
+      "sourceSha256": "e904c9ccfa425ff0b055d2c533462314d35a529b055e8abe41d49bb46d827427",
+      "translationSha256": "2f343666aaa88c44430b12e6ab8a29591a069de76541125e83ff1b5acc367bf2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormatTitle",
+      "batch": 6,
+      "sourceSha256": "2f343666aaa88c44430b12e6ab8a29591a069de76541125e83ff1b5acc367bf2",
+      "translationSha256": "2f343666aaa88c44430b12e6ab8a29591a069de76541125e83ff1b5acc367bf2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferMode",
+      "batch": 6,
+      "sourceSha256": "16793a65e0cfda0414031efc214e4dca811321f75354f4d54a00439a161be866",
+      "translationSha256": "96a557b3fca47f2f4c92d03b2d8e3a607ffc7fc7be2b5cf92006e536a336a86c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+      "batch": 6,
+      "sourceSha256": "1ac66255ec1e880ef991858ad3e977f57fdf25c15aee7836ccf081d35c2ded96",
+      "translationSha256": "86806751bd6f682943d3d65dbaf6cdb00e501ec083b099fedf2637d6cdb6ac68",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle",
+      "batch": 6,
+      "sourceSha256": "f253db6df3bb434d13354d8b74eb7e6cd309309389d0ea0a59e42b9e4dff93ed",
+      "translationSha256": "86806751bd6f682943d3d65dbaf6cdb00e501ec083b099fedf2637d6cdb6ac68",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeTitle",
+      "batch": 6,
+      "sourceSha256": "30c00a3eca297b689c889c80304cd671e352570c9490b07edd62bec32cf8c1f6",
+      "translationSha256": "96a557b3fca47f2f4c92d03b2d8e3a607ffc7fc7be2b5cf92006e536a336a86c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCount",
+      "batch": 6,
+      "sourceSha256": "fcc8421ffbc9967aacdaccd8b7776ff659a8f58be25eadf62575edb50d677e00",
+      "translationSha256": "0edcad891c99d0c4e4bf8c0a4de4b69c010031ecfaf11f1d0ec7f25f6203d3b5",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle",
+      "batch": 6,
+      "sourceSha256": "a7f418d7b962d085b71ae806cb0b3618d15ec685ee87c87b38f4ea7644126b4e",
+      "translationSha256": "0edcad891c99d0c4e4bf8c0a4de4b69c010031ecfaf11f1d0ec7f25f6203d3b5",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath",
+      "batch": 6,
+      "sourceSha256": "d32bf6f762c73939521d33dd4d7cd43617d676d8567e14df86494c82f707b472",
+      "translationSha256": "519221867cccb883eb15896f75ad96a988139d48cf08ee3e86a124034208e42c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle",
+      "batch": 6,
+      "sourceSha256": "3692d2226bc00d145561967b562c21f9bd7ca8cb398deed61a837805293572b7",
+      "translationSha256": "519221867cccb883eb15896f75ad96a988139d48cf08ee3e86a124034208e42c",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientation",
+      "batch": 6,
+      "sourceSha256": "0e25b0d2b1fa3111050bb796698ae509620302b287299ec60a883a3f91b05633",
+      "translationSha256": "e73e62471f682de085d9e1811ca8a55099bc3202ece90681f566a1376c921816",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle",
+      "batch": 6,
+      "sourceSha256": "708226b8659c9150211e133219739f90e2d8acf42ab1ff5968eacdbd20a8f89b",
+      "translationSha256": "e73e62471f682de085d9e1811ca8a55099bc3202ece90681f566a1376c921816",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Caption",
+      "batch": 6,
+      "sourceSha256": "176ca52906b001daa816562988464d2af4e18590a85bc7090e28ad3faccb7f8c",
+      "translationSha256": "30988b745948dbb9a2bfe310c1b6949c79c0990e4449ed5a9e3f10d5f007e0e9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CaptionTitle",
+      "batch": 6,
+      "sourceSha256": "87d296ec94898c86baf805dbcc47af48e618ec25df0441f7471c60a7d6b05b4e",
+      "translationSha256": "30988b745948dbb9a2bfe310c1b6949c79c0990e4449ed5a9e3f10d5f007e0e9",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrder",
+      "batch": 6,
+      "sourceSha256": "f4e758aa396881d1861e4ce75adcff7a0fa9b14b1b2f19fb7b37e33cbcd1ab87",
+      "translationSha256": "6eef3ea6f22eb5e3f643988bafbf20a229edd9ffefb76cd6214607aec834bf76",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle",
+      "batch": 6,
+      "sourceSha256": "5b349f43f0c4abc9e0a4126b9813a10fe83b26b45af49b5b0d635b2aa35c9423",
+      "translationSha256": "6eef3ea6f22eb5e3f643988bafbf20a229edd9ffefb76cd6214607aec834bf76",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrder",
+      "batch": 6,
+      "sourceSha256": "9af5b34f260e3973c0b87c6e78aefbc83ffdaa4bb39561688b74baef6577c986",
+      "translationSha256": "6fa538bdbec1bf3f48f1d0aff9391c9b04770b731ac62d1594e072a95a5783a2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle",
+      "batch": 6,
+      "sourceSha256": "4b00f973063be3ccfafd98ee848355dd3da513d6e0bf51e91958a3acf083a3ad",
+      "translationSha256": "6fa538bdbec1bf3f48f1d0aff9391c9b04770b731ac62d1594e072a95a5783a2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSource",
+      "batch": 6,
+      "sourceSha256": "7703ab882568c5f5a7a6f6e20d5126012d56df90f0c912dfff45de3caf3cb95e",
+      "translationSha256": "fd0003a804a24601f4e485a58f014e54ac4a37a2fb19241eab0c585f15fb413e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle",
+      "batch": 6,
+      "sourceSha256": "5d41a6e569d0d7778c6b032e08319d6ccd02bbc5837a90fb54a6e23ecdaeeec6",
+      "translationSha256": "fd0003a804a24601f4e485a58f014e54ac4a37a2fb19241eab0c585f15fb413e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControl",
+      "batch": 6,
+      "sourceSha256": "b7ec5dd9a3d4db3d3c2a232cc458147ed6b63847147eacfef305cdb8d8a854df",
+      "translationSha256": "a565fea714d1a673bb5ac8ce965971ef1551a46dc769536772ed1788c00721e2",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle",
+      "batch": 6,
+      "sourceSha256": "21cc702a231c0b1cd25d8f9975cfcd3be4833b008e7ae51e2400b4182f01dcc4",
+      "translationSha256": "51dbdd828ad752b26638dbcac088a00012c1d1243e72132e347fb85119769585",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPicture",
+      "batch": 6,
+      "sourceSha256": "d0c6e4b30eb31a07e7ed1d52bacf99b8e245617f0612dc52bf8d27676c29019b",
+      "translationSha256": "b58f07ec2f37464af627bdf39bb0205cac26a5172a7e54d6e247e7bdb8fcff7f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle",
+      "batch": 6,
+      "sourceSha256": "727f83363c85075489beb638922c51998889587a816f51e30d05a17f01dd1a3f",
+      "translationSha256": "b58f07ec2f37464af627bdf39bb0205cac26a5172a7e54d6e247e7bdb8fcff7f",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPicture",
+      "batch": 6,
+      "sourceSha256": "01413d021e746c95e435f5ed20bd56ecfacd32f3834f7ccae7b2bf6c5acbd1b1",
+      "translationSha256": "b487b826aa25eb348780eaa57ee74ce59160a9c701c88ecf4c354f644734bfd3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPictureTitle",
+      "batch": 6,
+      "sourceSha256": "5649b5adb190b985b1719990e07f217e01d3be1d15bf7cbd66acddbc131458cb",
+      "translationSha256": "b487b826aa25eb348780eaa57ee74ce59160a9c701c88ecf4c354f644734bfd3",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIcon",
+      "batch": 6,
+      "sourceSha256": "463f3645e5c70ba65244e120dca974bf2d62db84a57e3d74b5c4b6a5810ae314",
+      "translationSha256": "cc5061b1cdd756e681a2359451cc082df8d22a62e25d49dfb2bce953068e5503",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIconTitle",
+      "batch": 6,
+      "sourceSha256": "e197a5b9e1987f824b3da6e1002c8cc0dc901698476bf9ddce7aad85256fbd64",
+      "translationSha256": "cc5061b1cdd756e681a2359451cc082df8d22a62e25d49dfb2bce953068e5503",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragMode",
+      "batch": 6,
+      "sourceSha256": "b7e5d0033079baa78b199b347b23ea9e80f6a7264659693fed26870d726c1259",
+      "translationSha256": "09b1e45ce659037822914059acd082ec15f1c6c29faaae233f65539d198a8419",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragModeTitle",
+      "batch": 6,
+      "sourceSha256": "96d0e0c214c50f3010f7620984c02ce61cf7388dccfc7b99e2ff5139738c21d3",
+      "translationSha256": "09b1e45ce659037822914059acd082ec15f1c6c29faaae233f65539d198a8419",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Curvature",
+      "batch": 6,
+      "sourceSha256": "ce97e449f49f6dfbe3f9acdb172fac5489099bf62b908d501cb466f359d91508",
+      "translationSha256": "dde10456d4f58d5f606211c7888678fcfbdf7610277de3b874753d3776f5890e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle",
+      "batch": 6,
+      "sourceSha256": "30baef7d32d360583543842ffce89ce2ab483152c5c57d864b7df09d60cfe9ca",
+      "translationSha256": "dde10456d4f58d5f606211c7888678fcfbdf7610277de3b874753d3776f5890e",
+      "verdict": "accept",
+      "reason": "Meaning and German wording acceptable in text review; protected syntax retained."
+    }
+  ]
+}

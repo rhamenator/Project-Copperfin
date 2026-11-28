@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_en_gb_revisions/fr-FR-first-pass-007-2026-11-03",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "source": "data-session"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "source": "Data-session"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "source": "draw-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "source": "Draw-mode"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "source": "draw-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "source": "Draw-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "source": "draw-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "source": "Draw-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "source": "enabled"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "source": "Enabled"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "source": "fill-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "source": "Fill-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "source": "fill-color"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "source": "Fill-color"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "source": "form set class"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "source": "Form-set-class"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "source": "grid-line-color"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "source": "Grid-line-color"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "source": "grid-lines"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "source": "Grid-lines"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "source": "grid-line-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "source": "Grid-line-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "source": "header-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "source": "Header-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "source": "help context ID"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "source": "Help-context-id"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "source": "highlight-row-line-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "source": "Highlight-row-line-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "source": "highlight-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "source": "Highlight-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "source": "initial selected alias"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "source": "Initial-selected-alias"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "source": "input-mask"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "source": "Input-mask"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "source": "link-master"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "source": "Link-master"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "source": "lock-columns"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "source": "lock-columns-left"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "source": "Lock-columns-left"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "source": "Lock-columns"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "translation": "session de données"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "translation": "Session de données"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "translation": "mode de dessin"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "translation": "Mode de dessin"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "translation": "style de dessin"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "translation": "Style de dessin"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "translation": "largeur de trait"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "translation": "Largeur de trait"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "translation": "activé"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "translation": "Activé"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "translation": "style de remplissage"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "translation": "Style de remplissage"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "translation": "couleur de remplissage"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "translation": "Couleur de remplissage"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "translation": "classe FormSet"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "translation": "Classe FormSet"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "translation": "couleur des lignes de grille"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "translation": "Couleur des lignes de grille"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "translation": "lignes de grille"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "translation": "Lignes de grille"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "translation": "largeur des lignes de grille"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "translation": "Largeur des lignes de grille"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "translation": "hauteur de l'en-tête"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "translation": "Hauteur de l'en-tête"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "translation": "ID de contexte d'aide"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "translation": "ID de contexte d'aide"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "translation": "largeur de ligne de la ligne en surbrillance"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "translation": "Largeur de ligne de la ligne en surbrillance"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "translation": "style de surbrillance"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "translation": "Style de surbrillance"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "translation": "alias initialement sélectionné"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "translation": "Alias initialement sélectionné"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "translation": "masque de saisie"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "translation": "Masque de saisie"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "translation": "liaison principale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "translation": "Liaison principale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "translation": "verrouillage des colonnes"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "translation": "verrouillage des colonnes de gauche"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "translation": "Verrouillage des colonnes de gauche"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "translation": "Verrouillage des colonnes"
+    }
+  ]
+}

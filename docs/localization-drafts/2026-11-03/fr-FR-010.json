@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-010-2026-11-03-3cc86f1f-5c84-40a5-9fd5-75dc1c9a792d",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+      "source": "control-box"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+      "source": "Control-box"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+      "source": "allow-output"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+      "source": "Allow-output"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+      "source": "bind-controls"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle",
+      "source": "Bind-controls"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu",
+      "source": "auto-verb-menu"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle",
+      "source": "Auto-verb-menu"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+      "source": "desktop"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DesktopTitle",
+      "source": "Desktop"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreview",
+      "source": "key-preview"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle",
+      "source": "Key-preview"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+      "source": "mac-desktop"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle",
+      "source": "Mac-desktop"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "source": "max-button"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "source": "Max-button"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "source": "min-button"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "source": "Min-button"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+      "source": "min-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle",
+      "source": "Min-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+      "source": "min-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle",
+      "source": "Min-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "source": "max-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "source": "Max-height"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Movable",
+      "source": "movable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MovableTitle",
+      "source": "Movable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption",
+      "source": "half-height-caption"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle",
+      "source": "Half-height-caption"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+      "source": "MDI-form"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle",
+      "source": "MDI-form"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+      "source": "back-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle",
+      "source": "Back-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+      "source": "border-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle",
+      "source": "Border-style"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+      "source": "border-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle",
+      "source": "Border-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "source": "border-color"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "source": "Border-color"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+      "source": "special-effect"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffectTitle",
+      "source": "Special-effect"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+      "translation": "zone de contrôle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+      "translation": "Zone de contrôle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+      "translation": "sortie autorisée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+      "translation": "Sortie autorisée"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+      "translation": "lier les contrôles"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle",
+      "translation": "Lier les contrôles"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu",
+      "translation": "menu d’actions automatique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle",
+      "translation": "Menu d’actions automatique"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+      "translation": "bureau"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DesktopTitle",
+      "translation": "Bureau"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreview",
+      "translation": "aperçu des touches"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle",
+      "translation": "Aperçu des touches"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+      "translation": "bureau Mac"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle",
+      "translation": "Bureau Mac"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "translation": "bouton Agrandir"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "translation": "Bouton Agrandir"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "translation": "bouton Réduire"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "translation": "Bouton Réduire"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+      "translation": "hauteur minimale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle",
+      "translation": "Hauteur minimale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+      "translation": "largeur minimale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle",
+      "translation": "Largeur minimale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "translation": "hauteur maximale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "translation": "Hauteur maximale"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Movable",
+      "translation": "déplaçable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MovableTitle",
+      "translation": "Déplaçable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption",
+      "translation": "barre de titre à mi-hauteur"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle",
+      "translation": "Barre de titre à mi-hauteur"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+      "translation": "formulaire MDI"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle",
+      "translation": "Formulaire MDI"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+      "translation": "style de fond"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle",
+      "translation": "Style de fond"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+      "translation": "style de bordure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle",
+      "translation": "Style de bordure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+      "translation": "largeur de bordure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle",
+      "translation": "Largeur de bordure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "translation": "couleur de bordure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "translation": "Couleur de bordure"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+      "translation": "effet spécial"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffectTitle",
+      "translation": "Effet spécial"
+    }
+  ]
+}

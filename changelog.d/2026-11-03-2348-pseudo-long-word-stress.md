@@ -1,0 +1,1 @@
+- 2026-11-03: Stretch unbroken words in native and managed `qps-ploc` output while preserving placeholders, so pseudo-localized UI exercises long-label layout before German catalog rendering tests (#2348).

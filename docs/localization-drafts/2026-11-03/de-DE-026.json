@@ -1,0 +1,328 @@
+{
+  "session": "3da7aa5a-b48c-4af0-ad21-0cac126b3403",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression",
+      "source": "CALCULATE requires aggregate expressions like COUNT() or SUM(field)"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments",
+      "source": "CALCULATE requires one or more aggregate TO/INTO assignments"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CountToSingleTarget",
+      "source": "COUNT TO only accepts a single variable target"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.RequiresExpressions",
+      "source": "{function} requires one or more expressions"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea",
+      "source": "{function} requires a selected work area"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound",
+      "source": "{function} target work area not found"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName",
+      "source": "{function} {toKeyword} {arrayKeyword} requires a target array name"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly",
+      "source": "{function} {toKeyword} {arrayKeyword} accepts exactly one array target"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+      "source": "{function} {toKeyword} requires one variable per aggregate expression"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.BackupCreateFailed",
+      "source": "Unable to create command undo backup for: {path}"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalInitializeFailed",
+      "source": "Unable to initialize command undo journal"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalPersistFailed",
+      "source": "Unable to persist command undo journal"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalReplayFailed",
+      "source": "Failed to replay command undo journal"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.NoCommand",
+      "source": "No command to UNDO"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.BlockingOperation",
+      "source": "Blocking operation {operation} is not allowed while holding CRITICAL section {section}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.EnterAscendingOrder",
+      "source": "Critical sections must be entered in ascending normalized name order: held {heldSection} before {requestedSection}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.ExitLifoOrder",
+      "source": "Critical sections must be exited in LIFO order: held {heldSection} before {requestedSection}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.MutexNotFound",
+      "source": "Critical section mutex not found: {section}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.UnknownSection",
+      "source": "Unknown critical section: {section}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.AsyncTaskCancelled",
+      "source": "Async task cancelled."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded",
+      "source": "Runtime guardrail: maximum call depth ({limit}) exceeded."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded",
+      "source": "Runtime guardrail: maximum executed statements ({limit}) exceeded."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded",
+      "source": "Runtime guardrail: maximum loop iterations ({limit}) exceeded."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
+      "source": "Visual class library support is not implemented for NEWOBJECT: {classLibraryPath}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+      "source": "Class {className} was not found in visual class library: {classLibraryPath}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+      "source": "Visual class library could not be opened for NEWOBJECT: {classLibraryPath} ({errorMessage})"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.FileNotFound",
+      "source": "file not found"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.InvalidRootBaseClass",
+      "source": "root BASECLASS is not a valid identifier"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.GeneratedClassSourceWriteFailed",
+      "source": "generated class source could not be written"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberAccessDenied",
+      "source": "Access denied for native PRG member: {memberIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+      "source": "OLE member not found for method invocation: {memberIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+      "source": "OLE member not found for property read: {memberIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Native.Error.UnknownMember",
+      "source": "Unknown member {memberIdentifier}."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+      "source": "OLE object not found for method invocation: {targetIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+      "source": "OLE object not found for property read: {propertyPath}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
+      "source": "Runtime resource fault: filesystem failure: {detail}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceOutOfMemory",
+      "source": "Runtime resource fault: out of memory. Execution paused safely."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceSystemError",
+      "source": "Runtime resource fault: system error: {detail}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.RuntimeFault",
+      "source": "Runtime fault: {detail}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.UserThrown",
+      "source": "User Thrown Error."
+    }
+  ],
+  "entries": [
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression",
+      "translation": "CALCULATE erfordert Aggregatausdrücke wie COUNT() oder SUM(field)"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments",
+      "translation": "CALCULATE erfordert eine oder mehrere aggregierte TO/INTO-Zuweisungen"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CountToSingleTarget",
+      "translation": "COUNT TO akzeptiert nur ein einzelnes Variablenziel"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.RequiresExpressions",
+      "translation": "{function} erfordert einen oder mehrere Ausdrücke"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea",
+      "translation": "{function} erfordert einen ausgewählten Arbeitsbereich"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound",
+      "translation": "Ziel-Arbeitsbereich für {function} nicht gefunden"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName",
+      "translation": "{function} {toKeyword} {arrayKeyword} erfordert einen Zielarraynamen"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly",
+      "translation": "{function} {toKeyword} {arrayKeyword} akzeptiert genau ein Array als Ziel"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+      "translation": "{function} {toKeyword} erfordert eine Variable pro Aggregatausdruck"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.BackupCreateFailed",
+      "translation": "Die Sicherung für das Rückgängigmachen des Befehls konnte nicht erstellt werden für: {path}"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalInitializeFailed",
+      "translation": "Das Journal zum Rückgängigmachen von Befehlen konnte nicht initialisiert werden"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalPersistFailed",
+      "translation": "Das Journal zum Rückgängigmachen von Befehlen konnte nicht gespeichert werden"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalReplayFailed",
+      "translation": "Das Journal zum Rückgängigmachen von Befehlen konnte nicht erneut abgespielt werden"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.NoCommand",
+      "translation": "Kein Befehl für UNDO vorhanden"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.BlockingOperation",
+      "translation": "Die blockierende Operation {operation} ist nicht zulässig, solange der CRITICAL-Abschnitt {section} gehalten wird"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.EnterAscendingOrder",
+      "translation": "Kritische Abschnitte müssen in aufsteigender Reihenfolge der normalisierten Namen betreten werden: {heldSection} gehalten vor {requestedSection}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.ExitLifoOrder",
+      "translation": "Kritische Abschnitte müssen in LIFO-Reihenfolge verlassen werden: {heldSection} gehalten vor {requestedSection}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.MutexNotFound",
+      "translation": "Mutex des kritischen Abschnitts nicht gefunden: {section}"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.UnknownSection",
+      "translation": "Unbekannter kritischer Abschnitt: {section}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.AsyncTaskCancelled",
+      "translation": "Asynchrone Aufgabe abgebrochen."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded",
+      "translation": "Laufzeitschutz: Maximale Aufruftiefe ({limit}) überschritten."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded",
+      "translation": "Laufzeitschutz: Maximale Anzahl ausgeführter Anweisungen ({limit}) überschritten."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded",
+      "translation": "Laufzeitschutz: Maximale Anzahl an Schleifendurchläufen ({limit}) überschritten."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
+      "translation": "Die Unterstützung für visuelle Klassenbibliotheken ist für NEWOBJECT nicht implementiert: {classLibraryPath}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+      "translation": "Die Klasse {className} wurde in der visuellen Klassenbibliothek nicht gefunden: {classLibraryPath}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+      "translation": "Die visuelle Klassenbibliothek konnte für NEWOBJECT nicht geöffnet werden: {classLibraryPath} ({errorMessage})"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.FileNotFound",
+      "translation": "Datei nicht gefunden"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.InvalidRootBaseClass",
+      "translation": "Root-BASECLASS ist kein gültiger Bezeichner"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.GeneratedClassSourceWriteFailed",
+      "translation": "Der generierte Klassenquelltext konnte nicht geschrieben werden"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberAccessDenied",
+      "translation": "Zugriff auf natives PRG-Member verweigert: {memberIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+      "translation": "OLE-Member für Methodenaufruf nicht gefunden: {memberIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+      "translation": "OLE-Member für Eigenschaftslesezugriff nicht gefunden: {memberIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Native.Error.UnknownMember",
+      "translation": "Unbekanntes Member {memberIdentifier}."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+      "translation": "OLE-Objekt für Methodenaufruf nicht gefunden: {targetIdentifier}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+      "translation": "OLE-Objekt für Eigenschaftslesezugriff nicht gefunden: {propertyPath}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
+      "translation": "Laufzeitressourcenfehler: Dateisystemfehler: {detail}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceOutOfMemory",
+      "translation": "Laufzeitressourcenfehler: Nicht genügend Arbeitsspeicher. Die Ausführung wurde sicher angehalten."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceSystemError",
+      "translation": "Laufzeitressourcenfehler: Systemfehler: {detail}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.RuntimeFault",
+      "translation": "Laufzeitfehler: {detail}"
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.UserThrown",
+      "translation": "Vom Benutzer ausgelöster Fehler."
+    }
+  ]
+}

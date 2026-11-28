@@ -1,0 +1,1153 @@
+{
+  "locale": "es-ES",
+  "reviewer": "independent Codex instance /root/review_es_revisions",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "session": "codex:/root/review_es_revisions/es-ES-independent-review-004-007-2026-11-03-c11d543b-f443-46ab-9eb1-8b2441a4e78f",
+  "status": "proposal review only; repository unchanged",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-es-ES-004.json",
+      "/tmp/copperfin-es-ES-005.json",
+      "/tmp/copperfin-es-ES-006.json",
+      "/tmp/copperfin-es-ES-007.json"
+    ],
+    "entryCount": 160
+  },
+  "counts": {
+    "accept": 155,
+    "revise": 5
+  },
+  "residualUncertainty": "AI text review cannot certify native-speaker regional suitability; rendered UI and full catalog review remain separate. VFP-specific property labels still merit domain review. Exact-hash verdicts apply only to these values.",
+  "entries": [
+    {
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "sourceSha256": "3fb5bae2ea65a5b33c6aad4cbf375400519cfd2051709c7279abd077ef96e033",
+      "translationSha256": "a6324eb7405c80c787a4afaa69ae18a74238f22bda4b57b29d8eb6424f409323",
+      "verdict": "revise",
+      "reason": "«Comprobación de admisión de la invocación» is an awkward literal phrase for the Builder admission check.",
+      "proposal": "comprobación de admisibilidad de la invocación del Builder",
+      "proposalSha256": "d4c8db1bb61fca845ba2eacb92d52ac5833052c25d64f56869d3f0af5f0ddcf1"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "sourceSha256": "9e7c3f2caa927522d09aeae0d7017f373644f2ab37dae502195dc113e357dfd2",
+      "translationSha256": "6c330244d180c9b1d046bf8e22be538761244d56f307481e28c9b3f1dd4af9cb",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "e7f6073e7d3b6e1db0f782c6e15d06a304db70730a8c3b7efa58ec256328dd2a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "sourceSha256": "a5a7102a5643c448b38b43b3d15320fef81a21937810c57b0b55323e143b30ac",
+      "translationSha256": "ba58e70a8eef314b71e86e0e5a278dbee5192440c2f71d2d5c24f487e6550570",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "sourceSha256": "414a602a00c1442909cedb4dcf007b582339d7b6e37dd87b0ca132d377aab51c",
+      "translationSha256": "533df28dedde2cc15ff3b6d9288807ffb0817955d6af064b35cfd955a15cd4f5",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "sourceSha256": "dc95fafe996fcb864232ede1cbf243cd3d220185d06c10040dad52f9d7ce3035",
+      "translationSha256": "311584862138430e054b2ad56867b12126cfd32110c6b409d8776c71667faf11",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "sourceSha256": "7fc053db44bc509d4177281b0b63a3f2cc565331df82c87d6700fa3ccf6dc7b8",
+      "translationSha256": "ab1a9d28c63af7c07169b5b4f953307c1a1b5ef5d8178bf6e6147af32f4a0be1",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "2720f0a97bdd86c42d6095b314e3453bf350331baa09242e166ab1bba7656925",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "bc9bd940e4c8ba670ec2e0ea89b2a697925e809db6052a65bc6bf5d5c7878c0c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "sourceSha256": "b35d39bc7d28d92e471842ca8102fee0f7163618921d948cce1cf9aeac33f672",
+      "translationSha256": "15a387c6d0c54e699ba206c57b891d380a7904762cbfa3c7865d325e3cedd37b",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "e15cedbc08148c2cbe91bb72050eca2ef4246d9eac4c888374ec0eafab8c2de9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "3a42d8f9a5714926b85392d05d66aa26f37792dcc6ad464f9ed62b523514fd6e",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "0f714bd9575e524c34b1859120176957abec19dee977ab39e235495acdca8b42",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "e7f6073e7d3b6e1db0f782c6e15d06a304db70730a8c3b7efa58ec256328dd2a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "sourceSha256": "811ebf65b1097f596a7cfa4d19957c083a95affe046d0c5c61dd6b9284a81f4c",
+      "translationSha256": "cea0990c03cefae075e3304244b3fd2155538b3d8a78fea1d0cc92dc739280ce",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "sourceSha256": "f0d44b836f4e181c34060746aa432d25f3c79687c66a391db8fe52744afd2c45",
+      "translationSha256": "2f7833c8c9a89001bcf5fc20b404ca7135db400301ea31ea1ee901e7e565bf81",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "sourceSha256": "b1bd07d1db8cb0a0c7cf72d4a8f56fa805b3c7249128b27359f8d35ddab2573b",
+      "translationSha256": "8a9bc21a42a8601b454df59199d80a88efc0f058bb5e6ec6dd481a71cfb66a45",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "2720f0a97bdd86c42d6095b314e3453bf350331baa09242e166ab1bba7656925",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "bc9bd940e4c8ba670ec2e0ea89b2a697925e809db6052a65bc6bf5d5c7878c0c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "e15cedbc08148c2cbe91bb72050eca2ef4246d9eac4c888374ec0eafab8c2de9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "3a42d8f9a5714926b85392d05d66aa26f37792dcc6ad464f9ed62b523514fd6e",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "0f714bd9575e524c34b1859120176957abec19dee977ab39e235495acdca8b42",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "e7f6073e7d3b6e1db0f782c6e15d06a304db70730a8c3b7efa58ec256328dd2a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "sourceSha256": "a206d7b676c0db7f387f2b05d56a234ea5834aaee89a67207b651d18fbe64ad1",
+      "translationSha256": "42cc55a8489b61f1d42e7124e237d0c07ad53c57b0d190e3fb1be60753f349ed",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "sourceSha256": "10a75a9207b35688660dd7b86adce5dd77b025792d36e3cc916815013b501b1f",
+      "translationSha256": "4d4a42228ec893541f31178ccf5e20b4b35f9e778425c509f632e67c602d0040",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "2720f0a97bdd86c42d6095b314e3453bf350331baa09242e166ab1bba7656925",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "bc9bd940e4c8ba670ec2e0ea89b2a697925e809db6052a65bc6bf5d5c7878c0c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "e15cedbc08148c2cbe91bb72050eca2ef4246d9eac4c888374ec0eafab8c2de9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "3a42d8f9a5714926b85392d05d66aa26f37792dcc6ad464f9ed62b523514fd6e",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "e7f6073e7d3b6e1db0f782c6e15d06a304db70730a8c3b7efa58ec256328dd2a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "2720f0a97bdd86c42d6095b314e3453bf350331baa09242e166ab1bba7656925",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "40ab3199e3f4b4c6679f196ae8779a00d1ad7b015ff967d2a80a522e9ebd24e7",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "bc9bd940e4c8ba670ec2e0ea89b2a697925e809db6052a65bc6bf5d5c7878c0c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "e15cedbc08148c2cbe91bb72050eca2ef4246d9eac4c888374ec0eafab8c2de9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "3a42d8f9a5714926b85392d05d66aa26f37792dcc6ad464f9ed62b523514fd6e",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "daf9a723e9c32e534881de35da4c4fd548488b462d863b84f412cf69fb3bd11c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BatchItemRequiresToolboxItem",
+      "sourceSha256": "0ef478552c8822d14178bbcda47867a7a63f4ad5d1c66ada1868bce5cde17be1",
+      "translationSha256": "8ad8e936595991bc3f39c51b12f4f5b37befce511880e1f782bcd408148ce76d",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "0f714bd9575e524c34b1859120176957abec19dee977ab39e235495acdca8b42",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "sourceSha256": "0081be3546939e08397453ba775a755e6cffa1e180015c0a088cc624f378016b",
+      "translationSha256": "e98c74a6b0e07975e95da991037bcc4408777026e78cdb9d5f6e381147f0a3e3",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "e7f6073e7d3b6e1db0f782c6e15d06a304db70730a8c3b7efa58ec256328dd2a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoAssetPath",
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "d8d224b05f91cc274029c8d8e1f6719caa1dff03fc82a7ff196028a771817484",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoSelectionContext",
+      "sourceSha256": "cce989b7b713a710f7cd71fee1b43e77039532388eee571b71282ba668ecea99",
+      "translationSha256": "2720f0a97bdd86c42d6095b314e3453bf350331baa09242e166ab1bba7656925",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxContext",
+      "sourceSha256": "cc864d8a55e2dbfb842a8ccf066dfe30ab8c1a32c261c167962af8104b8e7717",
+      "translationSha256": "40ab3199e3f4b4c6679f196ae8779a00d1ad7b015ff967d2a80a522e9ebd24e7",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemId",
+      "sourceSha256": "74e91dfeb093813f9defae2f605e9ab5ffe26c8036081c3fbca70085f320baf0",
+      "translationSha256": "011703e8c447d5fe73ee71fc6490793fd34f732a15fe57b332be124c852dfbf3",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxItemIds",
+      "sourceSha256": "77bfed1e57eedb29b515573b1eb702d77c7c77b6e59450a70eab2642140c867c",
+      "translationSha256": "bccbf58ec3b262cfa5aae42cf1afe3f9f56edc6801b8178f0205deded05590b7",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand",
+      "sourceSha256": "5cd016267197a654a7fb6f3c4aadc31450138105d83e7c77bf3beba6d6c318fc",
+      "translationSha256": "4134ef550b39b74ce164b0f9a2aff6584ccde9c17ee73af2d66ba5d950cae36a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "bc9bd940e4c8ba670ec2e0ea89b2a697925e809db6052a65bc6bf5d5c7878c0c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchCreateItemRequiresToolboxItem",
+      "sourceSha256": "a07a5d68d2c7437af70d67dfdb6072b2494dcdb796550ddbb3251107f9013b09",
+      "translationSha256": "42cc2c71c6d9a2c55e3a587e53114982724eb5d546f0db65c871c570442b862c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchDispatchItemRequiresToolboxItem",
+      "sourceSha256": "1958d901797eeaec22e745f62f9d0d2e83476c4f2e12e0c863ec810623c27b23",
+      "translationSha256": "7248467ad5d88b80ee536c564ff76d61ae1f1ba7693ee12b8b33d244d25b71db",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.SelectionBatchItemRequiresToolboxItem",
+      "sourceSha256": "ab6923ae856a0057df18f04b001f7a260328d70e4e7edc7b7f462245c5d60e87",
+      "translationSha256": "baef2055d2f308cb5d2b21efbc57e6d37ecb10fe414fb950fd386a35cd93a009",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownOption",
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "e15cedbc08148c2cbe91bb72050eca2ef4246d9eac4c888374ec0eafab8c2de9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+      "sourceSha256": "b86f1fde648692ee1fb4d87b112cd9e06c81bb0227a2d3d4ce4dc61d38245947",
+      "translationSha256": "3a42d8f9a5714926b85392d05d66aa26f37792dcc6ad464f9ed62b523514fd6e",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+      "sourceSha256": "8a11d304da398e84cda4c67e321861fb665502c9bde02d11687c6abbc3aaa99a",
+      "translationSha256": "daf9a723e9c32e534881de35da4c4fd548488b462d863b84f412cf69fb3bd11c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+      "sourceSha256": "833d2117ecf3525899726d8829ed408f510bb46ffe9c4d0e47b57dfb48b26559",
+      "translationSha256": "dde617938b62841a83b0c32b80f87704aa971a9bb9082b770ba05f91ece480b2",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+      "sourceSha256": "0acd50c6b42819311788349146a40b3167bc420a968f37ef1c7bb32b267959e8",
+      "translationSha256": "98db6c4bd360a1444408f5ca6b9701b63dc1a79b020aa42382b739dcc141b381",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.IntegerValueRequired",
+      "sourceSha256": "01f541b3418c3ac3c88f3bf0360a709e186962f31d36ca10ff080a3ed816b428",
+      "translationSha256": "0ab57052339a8bdb9785535fb6adc31b763caf85cb2e9cd41fce31ae1de0f983",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.LogicalValueRequired",
+      "sourceSha256": "d71ebd603923bf9e9f466067a62ecccdada59b78ead603610433d978f0b2214b",
+      "translationSha256": "76dc15df3f4870bb4dc67380797c1564ee493176c841d9cdee7e594f61e5fea5",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+      "sourceSha256": "be5a625d879b6615012a09bac1ccf153ddf8409c181eed0b81f86b1a5e5dcaaf",
+      "translationSha256": "5a4aac066f2ae5e81d154ecd2938eb63a7ce757b6ee5dd91f3231134c6432f55",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+      "sourceSha256": "81971cb33158b376795acd21f9b21c77d4aeea471867de35474cbf974a759908",
+      "translationSha256": "854cd18e2083a9220ebf61eb512c3dc984b65f02c476e4ab02076eac5a69a62c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+      "sourceSha256": "c480152db555d2015dce726e0ece872539c5b556839b715e0c36e66e2c139dea",
+      "translationSha256": "5870a32ccc6623d70674018222c1de98a87a5a5f900c1b9e80a8c0417bfebfae",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+      "sourceSha256": "83c954478358996b2b30550a80211d7be65563638227a12fbdf25590c13a5d43",
+      "translationSha256": "86311665febc3a78047b7552b3ad8678f8a419feae1a7cfddf36710b86ceab93",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NumericValueRequired",
+      "sourceSha256": "7e8c761919d91f3291f023f55e91291fd1534a2db64e658f7db58f46d3db1a33",
+      "translationSha256": "1bb5009b424962911d38b08f2c6d5f5a80e390f72eedeb76c17f0ad8c4d750b1",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+      "sourceSha256": "1ee93375b852a42de2cb18f5f3914275409bae34a3e07ac156c81ee9406b7cd3",
+      "translationSha256": "e7ab5ded6c11db2e0adc1a43221ee5138dcf3f851f1d24b707ce24882007ea8b",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+      "sourceSha256": "25219856d5fc21c43e9e8fddff39c004c5bc7104b70e7bdad6fd420e3592c22b",
+      "translationSha256": "d89be05ca4741ec46092ca1bb520a45c1c82790c07c881f8303526744728b194",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+      "sourceSha256": "cf76e09779f514cc4bc5c828cfaaf83037813f4bdca482e96f9ae6942e384efa",
+      "translationSha256": "3b27a1dc9523ed3e4f352235f40c6e30aff8cee9833e421305fb958baa21a129",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+      "sourceSha256": "fd802d9299d0ec18b7db7713ec154bd93973cdfa661d0798dcc1434e14c31e2f",
+      "translationSha256": "23b9dff5366a8fc7be8cf03942d575b56f982e80d8b1508760c47e63531589e8",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+      "sourceSha256": "b2ab7cddae5b1d5f98490e4a512f70a8746dc99d8e35aff8066c870d444c7951",
+      "translationSha256": "d1518efe17387b4dd550894353f02ff265b122f2964775dfc80dcd3d4d748ab4",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Alignment",
+      "sourceSha256": "47ccb97a79f5a2bff2713968c83bbbea9cd53d2edf6b0a47439910e111c95fe9",
+      "translationSha256": "24f97e426bd01e391945c459a4a8420e14c21c4ebd4dc42002e5ec7bd0c7b4cc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.AlignmentTitle",
+      "sourceSha256": "9d597870c4b3f76d88d9f88411effb8f957b507e68be43af0b001e537bee0338",
+      "translationSha256": "3441fa5b5981d7413789cb6c07da5f6f2387a838258610fc7077d5846b90effa",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Distribution",
+      "sourceSha256": "93354845030274cd4bf1686abd60ab28ec52e1a792fa6f7ccb9cbd0ddff53d12",
+      "translationSha256": "cde754bdab1bca8f3094585809ac585a835da833773f8bc67f5e7a3b24aeea3d",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+      "sourceSha256": "72a23e549d099bbd49b9266bb96afba35da89e5a93a91b056a61c9326c16266f",
+      "translationSha256": "4aa394220f8f8e7ea1af03134635846af0557a6dd95f3547be4ecd6d4d56ee91",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Nudge",
+      "sourceSha256": "88884f55ac1e09aca9ad89873997508adbeedb19f7af283b54da05d996f50da1",
+      "translationSha256": "51f2ff8b753e47c7ce4be2e6d1637f683ef8b98ca5a673040c19b559f8268031",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.NudgeTitle",
+      "sourceSha256": "a5239b85e5fb77d569e75b736dcc3ccc341dd3e6d5b8064d2f433178da0b05a7",
+      "translationSha256": "f59304ccfa5462ab2577330d5c5d9bc7a110c88a95320990529c5cbe071a7334",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Resize",
+      "sourceSha256": "acd532d8913e66d436b38de9acba750f92f20e16c49dafb78b69363127a38c60",
+      "translationSha256": "7f27418a2c26aae33bbff75b5774bf13bbdcf37acf45b1786a57a26a03ad360d",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
+      "sourceSha256": "2956e06ac0651084bbd5558dfe469615e9a5fc3072f60a09a9cb3c597a19324c",
+      "translationSha256": "0fcb700c52d5f31ff9a7a650ec1bdc7bacb46c6af970e9066da2ccdd03901445",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.Snap",
+      "sourceSha256": "1c27324f013705cbf0c49f3d3bb103c7069ed5988889d426c10cfc25684f0a31",
+      "translationSha256": "79e2caedb9352a0804e95c41962182f349b19c05e222281d083ca9127d1f69fc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAction.SnapTitle",
+      "sourceSha256": "98df9a59f0641d0c4409c495b8f890581d4fa8a5b180e3358a691097c8ba8af7",
+      "translationSha256": "9d28f461cb7caf50cc0e153a2853f1d936bbdcc53b4a93dc6cd3e002b8663e4d",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+      "sourceSha256": "41a9b9617b14b5187a571c8d23e30f0f26ae35651e84ad9e55c512ab3c110895",
+      "translationSha256": "6d11123ebcd61ff9360fe6ed322080ccf888696a00a79e3f2ed6805c0db73184",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+      "sourceSha256": "4b8924b2b128cea574b5733bb8366bded84ca6f22328842c5b7a82a670475c64",
+      "translationSha256": "9b0fb5a0c288e1b7b67b0fc9e760d60d0c2a7ade07522779a91c14bb9960e0ce",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+      "sourceSha256": "02cc23f77334821507668e07b6daf01933f202c10aae4918a3412fe609c4d738",
+      "translationSha256": "9ea211daa00d536e0f4704f4a9f8675c707901ed49cf58165c4b79d4f5668610",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+      "sourceSha256": "9ac12acb21ffc3755f17a470170583f12243fb4ebffea1209b13eee3eea37a44",
+      "translationSha256": "4178eda9b5029cea1e53f88912110156453de3339495a81addb56a3b30936030",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+      "sourceSha256": "156a1fabae7f679109536eeb5cad9af62867cb3e7613524792725534a41239b2",
+      "translationSha256": "f1bdd1595947bec3962be909c16f9a907a6d1d0afb88ae49f7f06444a687ecbd",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector",
+      "sourceSha256": "8abe8859625bb8d15c90fd7596cd89e7a1fbe6e6714604bb5026497343756c51",
+      "translationSha256": "8045b34e0f04a2efd9c3305b179ec737d22a30f597fff9738d1e0e1eee32e718",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Rename",
+      "sourceSha256": "9e84869d369b2a5336f6aa599b6e91116cc3d761827ef5f4b90841b8848ec35e",
+      "translationSha256": "de563c89c878c097010bc7111ffe1c97c938d2e27253fed93fd844ee854f3f32",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+      "sourceSha256": "b66fed63ca35a4c464467c946b19922154ca76747ae4e3cf24b0a06dacc686d8",
+      "translationSha256": "a0c6d4c295528154ef2e789d56f8ec5a33c6c1d12416d575d0afb324f26b9c80",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reorder",
+      "sourceSha256": "625dbdd35aabb2660d888511e35dd11bb111f6ca9fc68258e31b7c1fedc230d9",
+      "translationSha256": "bb88c4cadbb28968b7c98aeb39e7f6d3c8efb6d4df349c073c6b91ff3ca93581",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.Reparent",
+      "sourceSha256": "ee83ae2c50e6d0179b0f155f6f6a4218c6b46875b57e90e3b1efb4531b37d9f4",
+      "translationSha256": "e8a4acf180f88b361b6afe44f6851d1e1f966307cc713b7bc417564b6be2ddee",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+      "sourceSha256": "8dbe7a160983b88d75fb5007ef674a7524d6112cba73f17d7810fcc66454d717",
+      "translationSha256": "6066b9d69040f05bacdf7635b0f602bbc699262f1c7e4510ad12050d89c5d553",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Format",
+      "sourceSha256": "e904c9ccfa425ff0b055d2c533462314d35a529b055e8abe41d49bb46d827427",
+      "translationSha256": "aa32c15eaf920e0f14b773b26807f28e56c4c35af53f036fd56b3f767e9134b1",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormatTitle",
+      "sourceSha256": "2f343666aaa88c44430b12e6ab8a29591a069de76541125e83ff1b5acc367bf2",
+      "translationSha256": "73e1804eb968f73e9a8cb8ec3504c46bac94fa10c948614045bf30d5200e29f5",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferMode",
+      "sourceSha256": "16793a65e0cfda0414031efc214e4dca811321f75354f4d54a00439a161be866",
+      "translationSha256": "216618ea915a6d2034d0db773444dc2a16dec15cc16fe72e4fcf65448eccc215",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+      "sourceSha256": "1ac66255ec1e880ef991858ad3e977f57fdf25c15aee7836ccf081d35c2ded96",
+      "translationSha256": "9dfb4f2b2658278c33e69693fd07c0a7999c973af94386847d1ae9121ce3d0c4",
+      "verdict": "revise",
+      "reason": "«Anulación» suggests cancelling BufferMode; Override means using a value in place of the default mode.",
+      "proposal": "sustitución del modo de almacenamiento en búfer",
+      "proposalSha256": "ca2aeaea370ecfe80ab19467be6048a3cb9baaabb7257a9f132e0d8a0d2674d7"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle",
+      "sourceSha256": "f253db6df3bb434d13354d8b74eb7e6cd309309389d0ea0a59e42b9e4dff93ed",
+      "translationSha256": "ef601deaf8e041dd21a85bc54d9b25295efd693da5da7b9204e1afbeeb757ac6",
+      "verdict": "revise",
+      "reason": "«Anulación» suggests cancelling BufferMode; Override means using a value in place of the default mode.",
+      "proposal": "Sustitución del modo de almacenamiento en búfer",
+      "proposalSha256": "8a7490ab38f16cdbf8dbd57c38ca5c5f258767217a960b0b611fa8db9d6c71ae"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BufferModeTitle",
+      "sourceSha256": "30c00a3eca297b689c889c80304cd671e352570c9490b07edd62bec32cf8c1f6",
+      "translationSha256": "afce0f441487064da657dc8e8d5106145283b7baf0b6d6f7bdecb77e691daa2a",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCount",
+      "sourceSha256": "fcc8421ffbc9967aacdaccd8b7776ff659a8f58be25eadf62575edb50d677e00",
+      "translationSha256": "7de79cf91f975899e5eb94ebe715f34502ff60c6ba51ae7ac89a24ce796684e9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle",
+      "sourceSha256": "a7f418d7b962d085b71ae806cb0b3618d15ec685ee87c87b38f4ea7644126b4e",
+      "translationSha256": "add0d4b96220be8f2770fd6f25cb3514488ba8b5ca7c4f1a3cdb7570e171096e",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath",
+      "sourceSha256": "d32bf6f762c73939521d33dd4d7cd43617d676d8567e14df86494c82f707b472",
+      "translationSha256": "927918b7c459baad7b8f6f262d9de70d26299d2ae0618269ff63e7e387ed310c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle",
+      "sourceSha256": "3692d2226bc00d145561967b562c21f9bd7ca8cb398deed61a837805293572b7",
+      "translationSha256": "31fa4545ceb55911d7ae3a984ae0873ecbb845c11dd358ad5768e2de43f5c521",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientation",
+      "sourceSha256": "0e25b0d2b1fa3111050bb796698ae509620302b287299ec60a883a3f91b05633",
+      "translationSha256": "13be3a8ad6adff853060e81be12c29f79efd3ea219181be8dd1df78ab65400ad",
+      "verdict": "revise",
+      "reason": "DisplayOrientation is a VFP display property; «pantalla» narrows it to the physical screen, which the source does not specify.",
+      "proposal": "orientación de visualización",
+      "proposalSha256": "edbedd3d0b480d53eb2785aa478cdec6f030e9f324b8756c4834be5d5b0cf2e4"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle",
+      "sourceSha256": "708226b8659c9150211e133219739f90e2d8acf42ab1ff5968eacdbd20a8f89b",
+      "translationSha256": "e9da4de4cea5b2c683117222aed801182c2c0567c2e153620823744b921dad34",
+      "verdict": "revise",
+      "reason": "DisplayOrientation is a VFP display property; «pantalla» narrows it to the physical screen, which the source does not specify.",
+      "proposal": "Orientación de visualización",
+      "proposalSha256": "4c99517eb9bbb25cf172a026be1a2a780346836894bfe400d1701bc99396679a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Caption",
+      "sourceSha256": "176ca52906b001daa816562988464d2af4e18590a85bc7090e28ad3faccb7f8c",
+      "translationSha256": "7f4c09cf463d85d48bc4edcad4b324f3a73cdaec8899dbd01551365617ba51cc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CaptionTitle",
+      "sourceSha256": "87d296ec94898c86baf805dbcc47af48e618ec25df0441f7471c60a7d6b05b4e",
+      "translationSha256": "8886ab5db9ad5a7ec527c9ba98bbcc606e485b2ac0d29375922200c642292496",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrder",
+      "sourceSha256": "f4e758aa396881d1861e4ce75adcff7a0fa9b14b1b2f19fb7b37e33cbcd1ab87",
+      "translationSha256": "72528bc46bf08ade1099e3cde3a40d5c694b555ef1c5b396566ad0cee76a0db3",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle",
+      "sourceSha256": "5b349f43f0c4abc9e0a4126b9813a10fe83b26b45af49b5b0d635b2aa35c9423",
+      "translationSha256": "a3cedbefcb8f9a73999b04e04d49e80cac2a517eb108cdd705aef1d5a9d311f5",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrder",
+      "sourceSha256": "9af5b34f260e3973c0b87c6e78aefbc83ffdaa4bb39561688b74baef6577c986",
+      "translationSha256": "1cb4d8af20f39b1a5f80d381f703d6d2b2adfa27d40faa218b1b77ba3f589b07",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle",
+      "sourceSha256": "4b00f973063be3ccfafd98ee848355dd3da513d6e0bf51e91958a3acf083a3ad",
+      "translationSha256": "be760ebd73db10ff11731fff811f60bcaa394c518a98adef52f0bdf8a05c570b",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSource",
+      "sourceSha256": "7703ab882568c5f5a7a6f6e20d5126012d56df90f0c912dfff45de3caf3cb95e",
+      "translationSha256": "3076499c79a4848eccd62d8331690e697c6143e0a4bae7d149efec114314fec3",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle",
+      "sourceSha256": "5d41a6e569d0d7778c6b032e08319d6ccd02bbc5837a90fb54a6e23ecdaeeec6",
+      "translationSha256": "844bba09b9a9458daad11b22f27f48b3d44d6e2d9e69be85c87adce716ec7d43",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControl",
+      "sourceSha256": "b7ec5dd9a3d4db3d3c2a232cc458147ed6b63847147eacfef305cdb8d8a854df",
+      "translationSha256": "80104c3e1d350164aeca67e327ef7496e735f87d6f025ceb57e7eba2d3ebe7d8",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle",
+      "sourceSha256": "21cc702a231c0b1cd25d8f9975cfcd3be4833b008e7ae51e2400b4182f01dcc4",
+      "translationSha256": "ee107d95814b066f7b00d521262096de4987a01dd845f3d033e14e957bc4365b",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPicture",
+      "sourceSha256": "d0c6e4b30eb31a07e7ed1d52bacf99b8e245617f0612dc52bf8d27676c29019b",
+      "translationSha256": "797ff70b9d1f76942661dd3bc3b0bd4e53d7be669e94d95630b66c0fedfc209c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle",
+      "sourceSha256": "727f83363c85075489beb638922c51998889587a816f51e30d05a17f01dd1a3f",
+      "translationSha256": "d59d966ff514ecbed3d84cf5df5695a28651944da2aaccdaeb6c32018b132fb5",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPicture",
+      "sourceSha256": "01413d021e746c95e435f5ed20bd56ecfacd32f3834f7ccae7b2bf6c5acbd1b1",
+      "translationSha256": "ee419e56aa2f5b43d212149821d9071087bb280ae98d6ddc6936ee1f2fb87b39",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DownPictureTitle",
+      "sourceSha256": "5649b5adb190b985b1719990e07f217e01d3be1d15bf7cbd66acddbc131458cb",
+      "translationSha256": "612816ddd3bfc4b1d7153367a4ce948133b6d7739fe14d511025e5caa2270d5c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIcon",
+      "sourceSha256": "463f3645e5c70ba65244e120dca974bf2d62db84a57e3d74b5c4b6a5810ae314",
+      "translationSha256": "a2d133127fc31fc066025c143ef91a205c032fe109a80caf965b4a0bf9b0833d",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragIconTitle",
+      "sourceSha256": "e197a5b9e1987f824b3da6e1002c8cc0dc901698476bf9ddce7aad85256fbd64",
+      "translationSha256": "a0a76f6fe5e76d478fc543f24703e9c7f68798da74453094073f206e2ca286e1",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragMode",
+      "sourceSha256": "b7e5d0033079baa78b199b347b23ea9e80f6a7264659693fed26870d726c1259",
+      "translationSha256": "075a9493cdb89ab1aa5d446302c5bf3cfaf656840881df144ddfc5899c0ee9ed",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DragModeTitle",
+      "sourceSha256": "96d0e0c214c50f3010f7620984c02ce61cf7388dccfc7b99e2ff5139738c21d3",
+      "translationSha256": "1452c7e7ef2d7ee22db6c5fd19bcbd3de0ca7ba9ca06adcc6b613ea2c2291c78",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Curvature",
+      "sourceSha256": "ce97e449f49f6dfbe3f9acdb172fac5489099bf62b908d501cb466f359d91508",
+      "translationSha256": "12b9dde2af70a08507a90a4f862442c3f76f0798c555470478f4b66f91cd392c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle",
+      "sourceSha256": "30baef7d32d360583543842ffce89ce2ab483152c5c57d864b7df09d60cfe9ca",
+      "translationSha256": "9c935b891a9388c7d3f9b0d6a7d3b54de30373da785a4cadf09a6d9fe3604915",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "sourceSha256": "ebf9c4d8baa6158bd4d501fcd47e0e76e6d00d4d6e6cf1405bf1debbfe53593d",
+      "translationSha256": "0820bc584f99837c88e1599d057230f8012973ced80cc1cb10dfa0d66923ed8c",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "sourceSha256": "dbbd5c3ee7bdfe1d033da310bc3442bf362503572e0451c62a30c50e1c64ba4a",
+      "translationSha256": "0e5ce4614d4454b7d1d7b86bf228938b7553edd9b80d845958a05acdf313c425",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "sourceSha256": "2b3668b473e5231961b0cf44549b27d0c5f9e2305cc9f209b96e1e55ae61337f",
+      "translationSha256": "70f041379fdaed9823a51c4e83a11eb2c6b1291b99aa419496351899ba995e87",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "sourceSha256": "2f971a2183cc9f7244a443e32f02c98bbf72cfc40ac34d1f582830c5dc7d74bc",
+      "translationSha256": "5f76e26fdb5698e94edeedb13a5a7dd08ebd1d015e802db36da49bb1884abdfc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "sourceSha256": "3cd2b8b9dcc3bb69e413892aa74c0d121cb77bbb526985e5157375d4a232d51c",
+      "translationSha256": "2356c3b78ea5c00067bf07737cad0e10d1d5579f3f95e4c73c174fa19241e5d9",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "sourceSha256": "7f229e19e9810d3e92fc8c9c1cd90acf8d088733b3cbe0f85d1d65083566fc54",
+      "translationSha256": "ae13f991d8bec266ded3f1b5aab893724ba4f2b8b7a3e65de15123590b2b0395",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "sourceSha256": "08fe70d46780dd5b07d65e003da881999dc4ead0fb2113a47110ca691b305b20",
+      "translationSha256": "e68f7f5c1088a8debf37fc6b653aa33502640dda5123f14119b7da353807e160",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "sourceSha256": "3f55cec09c359f9b6db6ee133828dacc70516083f44e5e936fa40743854ddd7d",
+      "translationSha256": "79dd0430377d77c42f970893025d5025dc53dc807d48b5a4c981ffb9388ef264",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "sourceSha256": "fb9cf75606b4070dd6a9705810906bba28d0e2ea74ff301b999a91dbb68c7d98",
+      "translationSha256": "56f90b9199cea3b0e090b313dcc1041c11e5a45deb6e77d02de8201bf1b37654",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "sourceSha256": "92c1cdfdf4cb9cf6fcca962f206de36fd5d60db1178bc9461052f8de703a0e06",
+      "translationSha256": "ba5f3324ec361d56c1fa675747006b8d9028872848c0d94a13470bf24268f479",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "sourceSha256": "3e53aca5eac738d4893cd18cf4204872394356d3b7f20f064bcb41365095e035",
+      "translationSha256": "74b568e0d7fe361d2b039ad5e5136fb6a74f4afa6d4be634b7e0374901fbdfec",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "sourceSha256": "2c8239a80d0d0666036fbfbf62fe390192a92ee20838b50b4e5752d2ad196420",
+      "translationSha256": "719886180d839d1f727014b489bbb8851b5a6e94ed7831bfb253199de8b35d65",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "sourceSha256": "0a478489ed18fc4b37ffd58474d3fe95ee7680fccead96d1ebc566dc1173e47f",
+      "translationSha256": "8052ab727f505e5f86ed1f5660aa3da024efcfac4cd947af3b83494f9225eaed",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "sourceSha256": "cad419e6012bae9a0c8bfbca2fbb539c7a1dd98eb20bb0caccad751d0dff5c57",
+      "translationSha256": "0f98d36867c8dff31fad96957dc14d292dda0364deb976e2b3b29410807ed3e2",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "sourceSha256": "690b0a0757b17f430d9ca223ad81bf3a890b02204a566ab05ed8138fc0f74bb3",
+      "translationSha256": "9ed36ed7b15572ae1599191d1cf550790dbd95e81e88aed777daf191dfaf9beb",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "sourceSha256": "7fb5073d6d798d43d03c716eb48737ca3534464b368748f2aa70bb1eda65ff78",
+      "translationSha256": "8652ebbb88e56327361c4188b5e824c2448701736ef2b62a54850585b33f93fd",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "sourceSha256": "3bb3553355d8c145747dad9434c0c82f76334c793b8a46a3677a5918e788c779",
+      "translationSha256": "36c5bbef28f6189ae92f5012e11befcf1e9d88c284afb1cd55b40f0551f2b3e7",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "sourceSha256": "ccdaa4598fb12369c40d81a64a71512d4ce91141647491603f3cfdd5c465a423",
+      "translationSha256": "726993a7b2805009887695192b2bbecdd437d9342d11df73420d361d1009e597",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "sourceSha256": "d0983396b0ae41f455674fb7cd47eab3d3c8f8edeb94e8c7cef823c1040a4cd8",
+      "translationSha256": "90750f9ada98f4ee4eb7e9b31544f50fb38650856f1b7d438c37aa30657548f4",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "sourceSha256": "dde547a01ee4f782d9f10af7226ce67c595e1d2057318aea18c1516705fe4666",
+      "translationSha256": "655f6baa18757f5e44cd59635982a620e57b0e6c6f233d64b9acce5a82f1f323",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "sourceSha256": "303a9a98a85189558fd6b44d9cc969a98701f5f19457732f82c34957a9e9fef3",
+      "translationSha256": "390d52fe8a1556f3ab2ab5e94952adabad5e1e68d09b3f6700a45a12615c1824",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "sourceSha256": "73e6b7582f527c93af5a3200d796e57223062c6547f5f2c3e4763e52b7bf6301",
+      "translationSha256": "555e9d76aa9f0b1f5842ef11bfbc5d12ba4cba795529263eda1ecb6ef845240b",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "sourceSha256": "6d712f77078adffd528fa500c8681402f2aee7b88e21b108c38cbbe569f9f4d4",
+      "translationSha256": "c2ef9b5d96e0325b68e821ec1f5dc6da0d7769734aa7c2c8bc47aa78b088f7d7",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "sourceSha256": "84c501fe54b91debcfd8b81425d7af927c3a2ddd9d2f3b009dc66a2fd1ca2809",
+      "translationSha256": "e6958809e43dbe4c93cb86c0c4279302bea70df6f774335b773849ac7c9b1697",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "sourceSha256": "386856983b660a78e8fdd86cad5dd3ad7d637174268e7d5fbbfcd2fb8b6389b8",
+      "translationSha256": "775d03c4028107dcaa0c201bb69a6adadb97a4dc546e5c4fd2f22eb45402ecbc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "sourceSha256": "4c42fdf2b758ba93854c1863730c93bc4bf10f9aa658f0cf27752b137b60478a",
+      "translationSha256": "775d03c4028107dcaa0c201bb69a6adadb97a4dc546e5c4fd2f22eb45402ecbc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "sourceSha256": "76982be7250a5f93f4200ba3eeae6da2b6c3b2944547ca8c6512727f104cdf8c",
+      "translationSha256": "e7215a0dc1650f0ecf28f18270c30b2e093b4f932a84749453e39484b3e91c54",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "sourceSha256": "2e7cd478f3aa209e9e3b688b2028245b09a55c170627bfa769c8d5412df81fa2",
+      "translationSha256": "9e44cfdb9d52b2cdf155d08eb0709d00c144dbc44abb0154fbf8714c7d8268fc",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "sourceSha256": "c954ca80c7f519b8cba113c09c3183a0c983501dcaad63f78dab077c9d0f67ea",
+      "translationSha256": "6db0de30900af6b39fbbc78e6896e034238dbf737a920fd3687514293d263ffa",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "sourceSha256": "addf5c6f7a3692de6bbf6b2e55dd502c92a417682e4ef07abdc68ab79808000b",
+      "translationSha256": "98dd420cc97ff1bf26e7b34b7de1a98636922b10067504dd93d49c05126d74fa",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "sourceSha256": "29020223b5d7f9f45068188ca29780b08a70257aab2d0e8dcea6eadda3d12642",
+      "translationSha256": "20e7d014896b7d695cf8d12c3254c81eb94750682068e1c7af95c6fecf1d6f12",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "sourceSha256": "4624637b09d6df32ab8e2e91cb2c324328a8a772887744378fb93ee2e717e0c5",
+      "translationSha256": "873d2b4d5a39a4f0f0bf5e916497c941d4ebd679711cb1e48ef544e2c6890918",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "sourceSha256": "a722d56c62dc4ceae6f59a36a3620805736765c3e995bb5d6a4a53d2fddf9f98",
+      "translationSha256": "670b2b651560d32ca2e815a9217b17b78f60b216422f4deabb0a219fa23029b0",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "sourceSha256": "36c546aa7afbdf8f4879bc79a18d3485319053e65a338fa63804d2a810dd6e12",
+      "translationSha256": "d705ac489e3b115afaefccbb2f5ce08f7f0b3bc099bdc7a172ac1366adae1a18",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "sourceSha256": "760724f89727cbc2ed58c3f2ab7a7fb6f4e88e45332e653b00fd80af053f1241",
+      "translationSha256": "e04faeada978ba2da6deebace64e962d1f8d9661631cb039970fbf9fe53eb00b",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "sourceSha256": "e0fdf2c7e6d53a8539d08f9e41ff36c7c5449400e94f9ab27bde41b133609bdc",
+      "translationSha256": "758717037925537fdd458fec4046d607760da6a6e23c180d10cc61bea6089393",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "sourceSha256": "bb074b6be1df481bd77d0415c542310d7c6f0cbf51b492b251b7fad552b2640f",
+      "translationSha256": "121e366f7aa8b42062525d030c4c4db37f8fe7b5bd90357d940e9c0781755420",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "sourceSha256": "68ee7e89c7510010b29932074fc280ca6fa422cc78025ee04bd9ad8edb19dae9",
+      "translationSha256": "e06238017ee0af75d5c8596ba68a70c595fe4649ddeca3eb45217469e5f7ea21",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "sourceSha256": "8d6ca2e7b451efb01e96a70c48ebe9580a74ff0f5a9d62a004a4a0d0aaa12b54",
+      "translationSha256": "f24f4a60767e8b414c3bb6bc80a18639dec675a67a29c3ac67161884831c5b51",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "sourceSha256": "f909a8a9cce0bc94e3b82bc8c4d795f710419947e277e5a9149d8c58866d2f6b",
+      "translationSha256": "45361f5cf2d610e0182e63482a493e98f5de2de63db3bc408f33c9e0b6ab7ca7",
+      "verdict": "accept",
+      "reason": "Natural Spain Spanish wording preserves the source meaning, placeholders, and technical identifiers in this text review."
+    }
+  ]
+}

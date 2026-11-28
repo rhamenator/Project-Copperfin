@@ -19,29 +19,39 @@ share/copperfin/locales/
 Each `strings.json` file is a UTF-8 JSON object with stable semantic keys and localized string values. Use keys such as `Command.Build`, `Diagnostic.ExpectedTokenBeforeToken`, or `Inspect.Usage`; do not use English prose as lookup keys.
 
 `resources/locales/inventory.txt` is the versioned list of every packaged
-catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`.
+catalog. Its first line is `version 1`; each remaining line is `<locale> <role>`
+or `<locale> overlay <parent>`.
 The roles are `source` (only `en-US`), `unreviewed` (a production-targeted
 catalog awaiting the separate per-entry release gate), and `pseudo`
-(only test-only `qps-ploc`). Adding a locale requires a complete catalog and
-an inventory entry in the same change. The catalog generator, native parity
-test, and installer contract reject undeclared directories or unexpected
-per-locale artifacts. The generator additionally rejects invalid UTF-8; the
-generator and native parity test reject missing keys, blank values, and changed
-placeholders; and the installer contract rejects missing or changed installed
-artifacts. The generator admits the inventory, managed catalog source, and each
-`strings.json` only as regular files: links, FIFOs, directories, and other
-nonregular inputs fail in both check and synchronization modes. Catalog updates
-use a same-directory temporary file and replace the admitted catalog entry
-without following a linked final target. These checks fail closed for links
-already present in the selected checkout; callers must retain exclusive control
-of the checkout during generation because concurrent catalog edits or
-parent-directory rebinding are outside this host tool's contract. `unreviewed`
-reports review status, not content completeness; equal key counts do not
-establish translation quality.
-
-The source-of-truth locale is `en-US`. Populated but not yet release-ready
+(only test-only qps-ploc). Adding a locale requires a complete catalog and
+an inventory entry in the same change. An overlay contains only keys that
+differ from its previously declared full parent, which must be the nearest
+packaged catalog in the shared native/managed fallback chain (for example,
+de-DE overlay de or es-MX overlay es-419; de-Latn-AT must use a packaged
+de-Latn catalog when one exists). Neutral pt cannot overlay pt-BR because
+native hosts forward it as pt-BR. Neutral es tries the full es-419 catalog
+before English; non-Latin-American Spanish tags such as es-ES do not inherit
+it. The catalog generator, native parity test, and installer contract reject
+undeclared directories or unexpected per-locale artifacts. The generator
+additionally rejects invalid UTF-8; the generator and native parity test
+reject missing keys, blank values, and changed placeholders; the installer
+contract rejects missing or changed installed artifacts. The generator admits
+the inventory, managed catalog source, and each strings.json only as regular
+files: links, FIFOs, directories, and other nonregular inputs fail in both
+check and synchronization modes. Catalog updates use a same-directory
+temporary file and replace the admitted catalog entry without following a
+linked final target. These checks fail closed for links already present in
+the selected checkout; callers must retain exclusive control of the checkout
+during generation because concurrent catalog edits or parent-directory
+rebinding are outside this host tool's contract. Unreviewed reports review
+status, not content completeness; equal key counts do not establish
+translation quality. An overlay requires exact parent/overlay hashes and
+independent regional review evidence before the strict release gate can pass,
+including when the overlay has no changed strings.`. Populated but not yet release-ready
 catalogs exist for `en-GB`, `es-419`, and `pt-BR`; `qps-ploc` is test-only.
 A complete catalog and inventory entry do not by themselves make a language pack ready.
+The planned global left-to-right regional scope and deferred UI work are
+recorded in `docs/localization-target-scope.md` and its pinned CLDR manifest.
 
 ## Locale Selection
 
@@ -111,7 +121,10 @@ Only the human-facing prose is localizable. `ENDSCAN` and `ENDIF` are language t
 
 ## Pseudo-Localization
 
-The pseudo-locale is `qps-ploc`. It decorates and expands localized prose while preserving placeholders so tests can catch hard-coded strings, ASCII assumptions, and layout-length problems.
+The pseudo-locale is `qps-ploc`. It decorates prose and doubles vowels within
+words while preserving placeholders, so tests can catch hard-coded strings,
+ASCII assumptions, and long-label layout problems. German compound labels
+still need real rendered UI checks.
 
 Pseudo-localization is a test tool, not a production language pack.
 

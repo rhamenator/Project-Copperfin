@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_en_gb_revisions/de-DE-first-pass-021-2026-11-03",
+  "model": "GPT-6 Codex independent author instance",
+  "reviewStatus": "unreviewed; independent review pending",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "Platform.Extensibility.Language.DotNet.OutputStory",
+      "source": "Managed assemblies can be called from Copperfin and Copperfin logic can be surfaced as .NET-consumable outputs."
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.Title",
+      "source": ".NET Managed Components"
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.TrustBoundary",
+      "source": "policy-managed interop"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.IntegrationMode",
+      "source": "out-of-process sidecar"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.OutputStory",
+      "source": "Python support is positioned as a sidecar or job facility for data science and automation, not the trusted core."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.Title",
+      "source": "Python Sidecar And Analytics Jobs"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.TrustBoundary",
+      "source": "restricted external process boundary"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.IntegrationMode",
+      "source": "out-of-process sidecar"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.OutputStory",
+      "source": "R support is positioned as a sidecar or job facility for statistical computing, reporting, and reproducible data-science workflows."
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.Title",
+      "source": "R Analytics And Statistical Jobs"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.TrustBoundary",
+      "source": "restricted external process boundary"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.IntegrationMode",
+      "source": "native library"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.OutputStory",
+      "source": "Rust is acceptable for safety-sensitive helpers behind stable native interfaces."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.Title",
+      "source": "Rust Native Components"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.TrustBoundary",
+      "source": "signed plugin boundary"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.IntegrationMode",
+      "source": "native"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.OutputStory",
+      "source": "Primary runtime and build target for FoxPro-style applications."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.Title",
+      "source": "Native Copperfin/xBase Runtime"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.TrustBoundary",
+      "source": "trusted core"
+    },
+    {
+      "key": "Platform.QueryTranslator.Error.SelectFromOnly",
+      "source": "Only first-pass SELECT...FROM SQL translation is supported."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed",
+      "source": "Unable to create bridge response directory."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.PrgStartupRequired",
+      "source": "Bridge invocation currently requires a PRG startup source."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestArtifactNotFound",
+      "source": "Bridge request artifact not found."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestDescriptorMismatch",
+      "source": "Bridge request descriptor mismatch."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch",
+      "source": "Bridge request media type mismatch."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestParameterCountMismatch",
+      "source": "Bridge request parameter count mismatch."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestParameterNameMismatch",
+      "source": "Bridge request parameter name mismatch."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch",
+      "source": "Bridge request schema version mismatch."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequiredArguments",
+      "source": "Bridge invocation requires request/response path, media type, and schema version arguments."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.SourceArtifactNotFound",
+      "source": "Bridge routine source artifact not found."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.SourceMissingFromPackage",
+      "source": "Bridge routine source is missing from the package: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.UnsupportedRoutineExportName",
+      "source": "Bridge routine export name is not a supported PRG identifier."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed",
+      "source": "Unable to write bridge response artifact."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed",
+      "source": "Unable to write bridge routine bootstrap."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+      "source": "Unable to dispatch xAsset action: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+      "source": "Invalid breakpoint command: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.InvalidCommand",
+      "source": "Invalid debug command: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed",
+      "source": "Unable to materialize xAsset bootstrap."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound",
+      "source": "No runnable startup methods were found in asset."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpoint",
+      "source": "Unknown breakpoint: {path}:{line}"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Platform.Extensibility.Language.DotNet.OutputStory",
+      "translation": "Verwaltete Assemblies können aus Copperfin aufgerufen werden, und Copperfin-Logik kann als für .NET nutzbare Ausgabe bereitgestellt werden."
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.Title",
+      "translation": "Verwaltete .NET-Komponenten"
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.TrustBoundary",
+      "translation": "richtliniengesteuerte Interoperabilität"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.IntegrationMode",
+      "translation": "Sidecar in einem separaten Prozess"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.OutputStory",
+      "translation": "Python-Unterstützung ist als Sidecar oder Auftragsfunktion für Data Science und Automatisierung vorgesehen, nicht als Teil des vertrauenswürdigen Kerns."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.Title",
+      "translation": "Python-Sidecar und Analyseaufträge"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Python.TrustBoundary",
+      "translation": "eingeschränkte Grenze für externe Prozesse"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.IntegrationMode",
+      "translation": "Sidecar in einem separaten Prozess"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.OutputStory",
+      "translation": "R-Unterstützung ist als Sidecar oder Auftragsfunktion für statistische Berechnungen, Berichterstellung und reproduzierbare Data-Science-Abläufe vorgesehen."
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.Title",
+      "translation": "R-Analyse und Statistikaufträge"
+    },
+    {
+      "key": "Platform.Extensibility.Language.R.TrustBoundary",
+      "translation": "eingeschränkte Grenze für externe Prozesse"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.IntegrationMode",
+      "translation": "native Bibliothek"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.OutputStory",
+      "translation": "Rust eignet sich für sicherheitskritische Hilfsfunktionen hinter stabilen nativen Schnittstellen."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.Title",
+      "translation": "Native Rust-Komponenten"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Rust.TrustBoundary",
+      "translation": "Grenze für signierte Plug-ins"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.IntegrationMode",
+      "translation": "nativ"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.OutputStory",
+      "translation": "Primäre Laufzeit und Build-Ziel für Anwendungen im FoxPro-Stil."
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.Title",
+      "translation": "Native Copperfin/xBase-Laufzeit"
+    },
+    {
+      "key": "Platform.Extensibility.Language.Xbase.TrustBoundary",
+      "translation": "vertrauenswürdiger Kern"
+    },
+    {
+      "key": "Platform.QueryTranslator.Error.SelectFromOnly",
+      "translation": "Es wird nur die erste Ausbaustufe der SQL-Übersetzung für SELECT...FROM unterstützt."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed",
+      "translation": "Das Bridge-Antwortverzeichnis konnte nicht erstellt werden."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.PrgStartupRequired",
+      "translation": "Der Bridge-Aufruf erfordert derzeit eine PRG-Startquelle."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestArtifactNotFound",
+      "translation": "Das Bridge-Anfrageartefakt wurde nicht gefunden."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestDescriptorMismatch",
+      "translation": "Der Deskriptor der Bridge-Anfrage stimmt nicht überein."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch",
+      "translation": "Der Medientyp der Bridge-Anfrage stimmt nicht überein."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestParameterCountMismatch",
+      "translation": "Die Anzahl der Parameter der Bridge-Anfrage stimmt nicht überein."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestParameterNameMismatch",
+      "translation": "Der Name eines Parameters der Bridge-Anfrage stimmt nicht überein."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch",
+      "translation": "Die Schemaversion der Bridge-Anfrage stimmt nicht überein."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.RequiredArguments",
+      "translation": "Der Bridge-Aufruf erfordert Argumente für den Anfrage-/Antwortpfad, den Medientyp und die Schemaversion."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.SourceArtifactNotFound",
+      "translation": "Das Quellartefakt der Bridge-Routine wurde nicht gefunden."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.SourceMissingFromPackage",
+      "translation": "Die Quelle der Bridge-Routine fehlt im Paket: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.UnsupportedRoutineExportName",
+      "translation": "Der Exportname der Bridge-Routine ist kein unterstützter PRG-Bezeichner."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed",
+      "translation": "Das Bridge-Antwortartefakt konnte nicht geschrieben werden."
+    },
+    {
+      "key": "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed",
+      "translation": "Der Bootstrap der Bridge-Routine konnte nicht geschrieben werden."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+      "translation": "Die xAsset-Aktion konnte nicht weitergeleitet werden: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+      "translation": "Ungültiger Haltepunktbefehl: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.InvalidCommand",
+      "translation": "Ungültiger Debug-Befehl: {command}"
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed",
+      "translation": "Der xAsset-Bootstrap konnte nicht materialisiert werden."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound",
+      "translation": "Im Asset wurden keine ausführbaren Startmethoden gefunden."
+    },
+    {
+      "key": "RuntimeHost.Debug.Error.UnknownBreakpoint",
+      "translation": "Unbekannter Haltepunkt: {path}:{line}"
+    }
+  ]
+}

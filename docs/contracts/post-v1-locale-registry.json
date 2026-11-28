@@ -60,7 +60,7 @@
       "script": "Latn",
       "direction": "ltr",
       "preferredParent": "en-US",
-      "catalogStatus": "not-created",
+      "catalogStatus": "present-unqualified",
       "releaseStatus": "not-qualified",
       "entryEvidence": "required-per-key",
       "prerequisites": [

@@ -2857,9 +2857,8 @@ internal sealed class CopperfinLocalization
                 chain.Add(candidate);
             }
         }
-        // The compiled `en` catalog is the final source-text fallback.  Do not
-        // let that alias precede an installed en-US catalog for neutral or
-        // regional English requests.
+        // The compiled en catalog is the final source-text fallback. Do not
+        // let that alias precede an installed en-US catalog for English requests.
         if (!string.Equals(locale, DefaultLocale, StringComparison.Ordinal))
         {
             Add(locale);
@@ -2997,7 +2996,12 @@ internal sealed class CopperfinLocalization
                 }
             }
 
-            builder.Append(PseudoCharacter(current));
+            var decorated = PseudoCharacter(current);
+            builder.Append(decorated);
+            if ("AEIOUaeiou".IndexOf(current) >= 0)
+            {
+                builder.Append(decorated);
+            }
         }
 
         builder.Append(" !!]");

@@ -265,6 +265,7 @@ std::string pseudo_localize_segment(std::string_view segment) {
     std::string result;
     result.reserve(segment.size() * 2U);
     for (const char ch : segment) {
+        const std::size_t character_start = result.size();
         switch (ch) {
             case 'A':
                 result += "\xC3\x85";
@@ -323,6 +324,9 @@ std::string pseudo_localize_segment(std::string_view segment) {
             default:
                 result.push_back(ch);
                 break;
+        }
+        if (std::string_view("AEIOUaeiou").find(ch) != std::string_view::npos) {
+            result += result.substr(character_start);
         }
     }
     return result;

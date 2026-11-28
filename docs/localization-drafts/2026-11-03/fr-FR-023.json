@@ -1,0 +1,328 @@
+{
+  "session": "2f191576-dc80-4a76-9982-9c213a3c4dd5",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "RuntimeHost.Error.StartupAssetDigestMissing",
+      "source": "Security-enabled startup is missing a verified package digest: {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownArgument",
+      "source": "Unknown argument: {argument}"
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownFederationBackend",
+      "source": "Unknown federation backend: {backend}"
+    },
+    {
+      "key": "RuntimeHost.Error.UnhandledFault",
+      "source": "Runtime host fault was contained: {detail}"
+    },
+    {
+      "key": "RuntimeHost.Prompt.QuitConfirm",
+      "source": "Do you want to quit this application? [{yesToken}/{defaultNoToken}]: "
+    },
+    {
+      "key": "Runtime.IndexSeek.Field.Compound",
+      "source": "compound"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch",
+      "source": "high-confidence Rushmore match"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch",
+      "source": "moderate-confidence Rushmore match"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.NoMatch",
+      "source": "no match"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch",
+      "source": "possible Rushmore match"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+      "source": "Expression is empty or boolean constant"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.FieldBetweenRangeComparison",
+      "source": "Field BETWEEN lower AND upper range comparison"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+      "source": "Simple field comparison with runtime-evaluated right side"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+      "source": "Simple field-to-literal comparison"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+      "source": "Top-level AND chain with recognized sub-patterns"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelNotPattern",
+      "source": "Top-level NOT pattern"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "source": "Expression does not match recognized optimization patterns"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+      "source": "No indexes available that match pattern fields"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.CostModelRejected",
+      "source": "Cost model selected the fallback scan"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelSelected",
+      "source": "Cost model selected the SEEK plan"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelRejected",
+      "source": "Cost model selected the fallback SEEK path"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
+      "source": "SEEK cost model skipped because index metadata is insufficient"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.None",
+      "source": "No fallback was selected"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled",
+      "source": "Rushmore planning is disabled"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression",
+      "source": "The expression is not supported for Rushmore planning"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression",
+      "source": "The expression maps to multiple possible plans"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex",
+      "source": "No matching index was available"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
+      "source": "Index metadata is insufficient for a plan"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.CostRejected",
+      "source": "The cost model rejected the candidate plan"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+      "source": "Execution fell back after plan selection"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.TableScan",
+      "source": "Table scan"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexSeek",
+      "source": "Index seek"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan",
+      "source": "Index range scan"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Absent",
+      "source": "Statistics are absent"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Fresh",
+      "source": "Statistics are fresh"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Stale",
+      "source": "Statistics are stale"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Corrupted",
+      "source": "Statistics are corrupted"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.None",
+      "source": "No remote planning fallback was selected"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+      "source": "The cursor is local, so remote pushdown is not applicable"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
+      "source": "The provider capabilities are unknown; predicates remain local"
+    }
+  ],
+  "entries": [
+    {
+      "key": "RuntimeHost.Error.StartupAssetDigestMissing",
+      "translation": "Le démarrage avec sécurité activée n'a pas de condensat de package vérifié : {fileName}"
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownArgument",
+      "translation": "Argument inconnu : {argument}"
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownFederationBackend",
+      "translation": "Backend de fédération inconnu : {backend}"
+    },
+    {
+      "key": "RuntimeHost.Error.UnhandledFault",
+      "translation": "Une erreur de l'hôte d'exécution a été contenue : {detail}"
+    },
+    {
+      "key": "RuntimeHost.Prompt.QuitConfirm",
+      "translation": "Voulez-vous quitter cette application ? [{yesToken}/{defaultNoToken}] : "
+    },
+    {
+      "key": "Runtime.IndexSeek.Field.Compound",
+      "translation": "composé"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch",
+      "translation": "correspondance Rushmore à confiance élevée"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch",
+      "translation": "correspondance Rushmore à confiance modérée"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.NoMatch",
+      "translation": "aucune correspondance"
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch",
+      "translation": "correspondance Rushmore possible"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+      "translation": "L'expression est vide ou constitue une constante booléenne"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.FieldBetweenRangeComparison",
+      "translation": "Comparaison de plage de champ BETWEEN borne inférieure AND borne supérieure"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+      "translation": "Comparaison simple de champ avec un côté droit évalué à l'exécution"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+      "translation": "Comparaison simple entre un champ et un littéral"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+      "translation": "Chaîne AND de niveau supérieur avec des sous-motifs reconnus"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelNotPattern",
+      "translation": "Motif NOT de niveau supérieur"
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "translation": "L'expression ne correspond à aucun motif d'optimisation reconnu"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+      "translation": "Aucun index disponible ne correspond aux champs du motif"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.CostModelRejected",
+      "translation": "Le modèle de coût a sélectionné l'analyse de repli"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelSelected",
+      "translation": "Le modèle de coût a sélectionné le plan SEEK"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelRejected",
+      "translation": "Le modèle de coût a sélectionné le chemin SEEK de repli"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
+      "translation": "Modèle de coût SEEK ignoré car les métadonnées de l'index sont insuffisantes"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.None",
+      "translation": "Aucun repli n'a été sélectionné"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled",
+      "translation": "La planification Rushmore est désactivée"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression",
+      "translation": "L'expression n'est pas prise en charge pour la planification Rushmore"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression",
+      "translation": "L'expression correspond à plusieurs plans possibles"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex",
+      "translation": "Aucun index correspondant n'était disponible"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
+      "translation": "Les métadonnées de l'index sont insuffisantes pour établir un plan"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.CostRejected",
+      "translation": "Le modèle de coût a rejeté le plan candidat"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+      "translation": "L'exécution a basculé sur un repli après la sélection du plan"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.TableScan",
+      "translation": "Analyse de table"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexSeek",
+      "translation": "Recherche d'index"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan",
+      "translation": "Analyse de plage d'index"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Absent",
+      "translation": "Les statistiques sont absentes"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Fresh",
+      "translation": "Les statistiques sont à jour"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Stale",
+      "translation": "Les statistiques sont obsolètes"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Corrupted",
+      "translation": "Les statistiques sont corrompues"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.None",
+      "translation": "Aucun repli de planification distante n'a été sélectionné"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+      "translation": "Le curseur est local, la délégation distante n'est donc pas applicable"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
+      "translation": "Les capacités du fournisseur sont inconnues ; les prédicats restent locaux"
+    }
+  ]
+}

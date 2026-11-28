@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/de-DE-first-pass-012-2026-11-03-420c3783-5e5e-46f4-9229-898e941189fa",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow",
+      "source": "dynamic-font-shadow"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadowTitle",
+      "source": "Dynamic-font-shadow"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontName",
+      "source": "font-name"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontNameTitle",
+      "source": "Font-name"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSize",
+      "source": "font-size"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSizeTitle",
+      "source": "Font-size"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBold",
+      "source": "font-bold"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBoldTitle",
+      "source": "Font-bold"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalic",
+      "source": "font-italic"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalicTitle",
+      "source": "Font-italic"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderline",
+      "source": "font-underline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderlineTitle",
+      "source": "Font-underline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethru",
+      "source": "font-strikethru"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethruTitle",
+      "source": "Font-strikethru"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutline",
+      "source": "font-outline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutlineTitle",
+      "source": "Font-outline"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadow",
+      "source": "font-shadow"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadowTitle",
+      "source": "Font-shadow"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidth",
+      "source": "max-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidthTitle",
+      "source": "Max-width"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeft",
+      "source": "max-left"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeftTitle",
+      "source": "Max-left"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTop",
+      "source": "max-top"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTopTitle",
+      "source": "Max-top"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenter",
+      "source": "auto-center"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenterTitle",
+      "source": "Auto-center"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSize",
+      "source": "auto-size"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSizeTitle",
+      "source": "Auto-size"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoRelease",
+      "source": "auto-release"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoReleaseTitle",
+      "source": "Auto-release"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScroll",
+      "source": "continuous-scroll"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScrollTitle",
+      "source": "Continuous-scroll"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Dockable",
+      "source": "dockable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DockableTitle",
+      "source": "Dockable"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControls",
+      "source": "clip-controls"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControlsTitle",
+      "source": "Clip-controls"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Sparse",
+      "source": "sparse"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SparseTitle",
+      "source": "Sparse"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreen",
+      "source": "lock-screen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreenTitle",
+      "source": "Lock-screen"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow",
+      "translation": "Dynamischer Schriftschatten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadowTitle",
+      "translation": "Dynamischer Schriftschatten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontName",
+      "translation": "Schriftname"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontNameTitle",
+      "translation": "Schriftname"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSize",
+      "translation": "Schriftgröße"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSizeTitle",
+      "translation": "Schriftgröße"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBold",
+      "translation": "Fett"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBoldTitle",
+      "translation": "Fett"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalic",
+      "translation": "Kursiv"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalicTitle",
+      "translation": "Kursiv"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderline",
+      "translation": "Unterstrichen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderlineTitle",
+      "translation": "Unterstrichen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethru",
+      "translation": "Durchgestrichen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethruTitle",
+      "translation": "Durchgestrichen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutline",
+      "translation": "Schriftkontur"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutlineTitle",
+      "translation": "Schriftkontur"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadow",
+      "translation": "Schriftschatten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadowTitle",
+      "translation": "Schriftschatten"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidth",
+      "translation": "Maximale Breite"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidthTitle",
+      "translation": "Maximale Breite"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeft",
+      "translation": "Maximale linke Position"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeftTitle",
+      "translation": "Maximale linke Position"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTop",
+      "translation": "Maximale obere Position"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTopTitle",
+      "translation": "Maximale obere Position"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenter",
+      "translation": "Automatisch zentrieren"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenterTitle",
+      "translation": "Automatisch zentrieren"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSize",
+      "translation": "Automatische Größe"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSizeTitle",
+      "translation": "Automatische Größe"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoRelease",
+      "translation": "Automatisch freigeben"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoReleaseTitle",
+      "translation": "Automatisch freigeben"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScroll",
+      "translation": "Kontinuierliches Scrollen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScrollTitle",
+      "translation": "Kontinuierliches Scrollen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Dockable",
+      "translation": "Andockbar"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DockableTitle",
+      "translation": "Andockbar"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControls",
+      "translation": "Steuerelemente zuschneiden"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControlsTitle",
+      "translation": "Steuerelemente zuschneiden"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Sparse",
+      "translation": "Spärliche Darstellung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SparseTitle",
+      "translation": "Spärliche Darstellung"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreen",
+      "translation": "Bildschirm sperren"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreenTitle",
+      "translation": "Bildschirm sperren"
+    }
+  ]
+}

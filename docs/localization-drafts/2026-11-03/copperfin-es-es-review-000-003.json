@@ -1,0 +1,1138 @@
+{
+  "locale": "es-ES",
+  "reviewer": "independent Codex instance /root/review_en_gb_revisions",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "session": "codex:/root/review_en_gb_revisions/es-ES-independent-review-000-003-2026-11-03",
+  "status": "proposal review only; repository unchanged",
+  "residualUncertainty": "AI review cannot certify native-speaker regional suitability; rendered UI and full catalog review remain separate.",
+  "entries": [
+    {
+      "key": "Runtime.Prg.Database.Error.CompanionMissing",
+      "sourceSha256": "8148b074ee29dd425cbb9fba1367a5693acff9fe9368e3acfe6461806f1eae9e",
+      "translationSha256": "f8ceeb80ea5feee5ac9fd40c604f50e8add085e98bb9d2ea7013e28d8d2cd79b",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentMalformed",
+      "sourceSha256": "5cd52a8e7bce56425e22f9201de688e229cc3818ce8a8471229b8c2e224d3fb4",
+      "translationSha256": "aaa10bb6df2aa374eb2b97108743572a9f9a8c5f8b09bafb64a23f513b166ddb",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ComponentReadFailed",
+      "sourceSha256": "22a97217a75c6566764aa425a4351b8c19095070719076fb859b4e3127d126ac",
+      "translationSha256": "5462d7022c1186c8ee78135823ad97fbc67dc0e0fb0a0664771032420f8bec62",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ContainerMalformed",
+      "sourceSha256": "33901fdfdacf6071614a928f70d0adbc6e463bb70e97045f06b8e8ef4232d29f",
+      "translationSha256": "1c2f2b790b3c95a776766fc3689481f5a407c0d85f29056f0205c837700be701",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ExclusiveConflict",
+      "sourceSha256": "488cb42bc114bc54a8ccca503650d707583ee3f019853dea3b7b7939384ac02b",
+      "translationSha256": "6c766d85b6e3b81dcd402ecbc2f9ebaf60549fbae64375c268512cb5fed45566",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotFound",
+      "sourceSha256": "084206f6e3a1cf562129c611f30745950ffd6c60d264afb729a9081cab365bf7",
+      "translationSha256": "81ce7916fe02509c94edbf353c2947aedaaf985fc38afcf4e300f7cd992410ba",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.NotOpen",
+      "sourceSha256": "963b4242254182ed4fde007970ef247a26fe3e067eca5351c13a7578a3a1a340",
+      "translationSha256": "5ea71ce9d24e325d75129f55c04fa1cd11806714d7c4fa19b57ff5be2a2996c5",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.PathRequired",
+      "sourceSha256": "d9ef1930743e7f332f9cd246143ec3fca82e6dcedec02b9d9eff84f1eb64725b",
+      "translationSha256": "69b88b0d28bf47f43d9929dca104b0cc4591626e2f1ab6434f0c275f66df2db6",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.ValidateUnsupported",
+      "sourceSha256": "219eaa457a3c39caa788ebce49691e6ce1212f7f2326c3bbb19b6c4ae2f9a594",
+      "translationSha256": "ab908c1a09352ab6f98ffc36e1ca20eaf328a4ce7201ff4b09a58c96d00d0acc",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+      "sourceSha256": "f469cecd777a85c1bf5326c5a458da29deb1a997aa39d67634d8f6df9c99f8ad",
+      "translationSha256": "48bcd25be501cc494218dae30c401b1c75875e63fbe1463ffba68cc1082f4225",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+      "sourceSha256": "d60f0fc10071425afec7a59a9b2918e8020970ca24ea71a00f415b45a121b643",
+      "translationSha256": "5a6ee986bb09df9011cc2f116caf93f8b171f6c2f441562a989487afaa423070",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+      "sourceSha256": "59457083cef5d3449d8c010dfbc82c5684fce2e6e943f03051d7caa9eae9f9eb",
+      "translationSha256": "efed8bf2ee90445d5dcf6b1650d5c9af12c249adb38742245b919a0fc358ca20",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceSizeUnknown",
+      "sourceSha256": "929a72ed316e72c8308bc413e41079756ca5b6dbf7bc9eab0ffcb5340498fece",
+      "translationSha256": "41ebb1a40c5160f197f1e036eeccce815ed035c0d2bbd7198e87677fa49d344b",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.SourceTooLarge",
+      "sourceSha256": "51abc825cdcc1f75b58ceea128b8ba57e91ab1bc94b4ab19404bcd47204cda81",
+      "translationSha256": "b2f97f92e4cce12668ef786bc095d78649d570af551eb906a34d35faff6fa243",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.AggregateSourceTooLarge",
+      "sourceSha256": "328b901497ee5ab8e22548da3a2a2c9e9149a72b43be8e5215413371f2f74a20",
+      "translationSha256": "413487d093f79a9a67cb8db1942022ad90e3102224c52697aa79f558484b29a3",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.LogicalLineTooLong",
+      "sourceSha256": "d6ff5d0811fa57aacc707f4e1cb9ca82485672e80b75dcbf450bb7fbee80435d",
+      "translationSha256": "427b1262cf37b2ea597214e47cd3bd2aca8ba648324ed0f5e2e8061b8124e606",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManySourceLines",
+      "sourceSha256": "fd4805bd80ef6f8620eceb6fd1c9e9501af241fcce2a9966d0e70b08e41ea9a1",
+      "translationSha256": "080c114be39c312c45774a9a2df9aa977f1d8966c7eea3768e9e8cb242c9cbe9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.TooManyIncludeFiles",
+      "sourceSha256": "1f3ebdde58806603a18fcc10ca7758472740eda73d42a47c5bae67bb0c009bc8",
+      "translationSha256": "f2355837319952cb0f90906d58bd3aa0386064bf85924dabf0ab4846e4ae9edb",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileNotFound",
+      "sourceSha256": "70d82b245b4560e052516a530ee95c4a9b4a55c37887666ac916ae77923f14f2",
+      "translationSha256": "47cf9f9979b6a1f758ca79a44c28bf448fb637e0e8f9385877f73474480138cc",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.IncludeFileUnreadable",
+      "sourceSha256": "040bf8e633ef6d1354ecf03a253c85c95551c23142f9ad585e57aeeead32412b",
+      "translationSha256": "ecdc6d7badea91cc309cf283ea77e41d89bf3bc78eb02baab743b82319f56a60",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.MismatchedConditional",
+      "sourceSha256": "9f0c1674dc0eafee81d64e94b18603fc86600ea6de27ee1200ab04309ae59696",
+      "translationSha256": "ceb3fe9901c669c1db705234240eb82c75908227538c18c56c1914a9d6f5e526",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.DuplicateElse",
+      "sourceSha256": "32697eacb6b3ded740f3536445e2faec95a07d6110ac10628d2490e6ae8b6033",
+      "translationSha256": "71bef9d6312f9385ccdddb9ebb07f641e23f8db177ceb12397dc4aa118c11be9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Prg.Parser.Error.UnterminatedConditional",
+      "sourceSha256": "a6a6284239cf042409fb6fb9abc78056bda3beda86c438bbc66d66ead93a4b93",
+      "translationSha256": "9f0cc6eb9676c84ae4b8c4818f4b654b79d3d73b4c130207d8f78e4c3ce43a5a",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Command.Build",
+      "sourceSha256": "bdd254b65baac169f6ac50e8175ce6d930c1fcb086dec59808d3e0170ae2291d",
+      "translationSha256": "ba1ffd4fb382c270acb2ba9aceabb89d9f29b1a33b016d02904ddd0e93c2cd74",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.Command.OpenInStudio",
+      "sourceSha256": "b4e8381a95a13bc7704ff290b4c6c72bdb6cc4b8df6cb65e1cf3bea49a3474c8",
+      "translationSha256": "7bcfb26ad790f4445780a1a03ade8736f63889db6ac8fd8960a6f6fe8dfa0128",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.Command.BuildProject",
+      "sourceSha256": "ba34cc7ae6f596ebcc6eabf6e7a137fde6861b1e5505a2d55953fed687c14dee",
+      "translationSha256": "e88c8c778084b1b1ad3f3abf42ab10170213cfe5a039ff1ff7c8d666148537f2",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.Command.RunProject",
+      "sourceSha256": "36fc412e4b4d1d7be109568ef7fed2c517b9585399c43764a542c7e27a261b77",
+      "translationSha256": "7f548c641db218fa128ef11b0067261c390d5d460c8ea870ed93168b52aee284",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.Command.DebugProject",
+      "sourceSha256": "9aabfddbcc7b7f5b19d834e9a26e0c0f217dce57d51f09ae41f622b124463fa6",
+      "translationSha256": "208bb8417b13c9d3f50c5cbfff2c88d78552ac9382f3c0f3c80d694c583e5642",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.CommandWindow.Title",
+      "sourceSha256": "60b3687da026a54e208bf196e39d43b4c3b5a331c109c3f14b5b760d3f349f0c",
+      "translationSha256": "61e1dd11a17ad0567b87f89f7e3b1a633c7ca879d2bc13fb771443431e9887db",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.CommandWindow.Ready",
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "53da567089bec8daf13992736c1e11db085942fe5a8aca328e3e58fc5edec841",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unavailable",
+      "sourceSha256": "09cfc5e1e84e3a96def219129ff43c03e2fff63e6904810a7c3703a421e04b50",
+      "translationSha256": "b3ab23f5d05765de3dabaf6f9ceaf7e9136fa3a1e78fc8903064c517eb7d22f9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.CommandWindow.SendTooltip",
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "66b72e684ff6bfb29148cffe8aa60a1f75836f4788438366d19dcede9e7d9cd1",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.CommandWindow.NoActiveSession",
+      "sourceSha256": "e1e951822e5ca70f9a189746919608668e97ecf70ce7ec542bf76f7150e4ed4b",
+      "translationSha256": "acea28f9e1412a095c0813ad5382d0157eb236feb0bd35912eb7f5f6c1caaa98",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.CommandWindow.Unsupported",
+      "sourceSha256": "404fc37220f000238c196f804a6e77d72626b03b0500658c617675c71a7d3b07",
+      "translationSha256": "b8ee3aae6f7531051a2743b2714a6765e0329ce032f1f2711b5cbe3c33458b89",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Title",
+      "sourceSha256": "9a380e6c3e2802d1c80db452c055f848f6ba40835f4c144123d694b9d857742d",
+      "translationSha256": "2a3e641210bbbc0957b1668be24367328ee54bbfc348a1131db4105934559ce2",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Ready",
+      "sourceSha256": "e20846d20bcd60f0f57708fb7e0afdc584cfac4711ea4bb636dfce053ad50136",
+      "translationSha256": "53da567089bec8daf13992736c1e11db085942fe5a8aca328e3e58fc5edec841",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.TerminalWindow.SendTooltip",
+      "sourceSha256": "763a2ee8c51a9e19abe4ae185d27fda42052c58e20dfec268d7ade802a6f8bb0",
+      "translationSha256": "66b72e684ff6bfb29148cffe8aa60a1f75836f4788438366d19dcede9e7d9cd1",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Unavailable",
+      "sourceSha256": "886c3b9c5c49652e1d5760e16acc1e29111432044384b7fab8b0686ea0fc43fb",
+      "translationSha256": "ce44b9af4f9b3bab7ab43779204d5df8978f671917e8593243bd28c983ec119d",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.TerminalWindow.Exited",
+      "sourceSha256": "f4b09df85ba493f94976c9ede225bc876f5aed678a2899ed5c4c1df0c93d7ddd",
+      "translationSha256": "e0f2d7f99edab6de6b42ce5968e2e45183c090f730e87ff2058d86b21b8fe52f",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.Package.Name",
+      "sourceSha256": "abfd26c0bf4f1406af85c2a5d4eefd32987c6aa8c07a2ee390ec04243dea6cfd",
+      "translationSha256": "b05092b4b837c18e0d2d5d9f343f764e171a781671257b70c5b1237a686fc05f",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "VSIX.Package.Description",
+      "sourceSha256": "eceaf968cd64706a76c655b025e91703842dc75e4229ec5e60f575104eff663f",
+      "translationSha256": "c4c7ea134b866c2bb6afec80472fa8e2b33c806d213aa3de7328b0545dac08d4",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "sourceSha256": "ae2adef0015e6509d0a2ee8269f04560b58786c25505236797964736a4b0aed1",
+      "translationSha256": "f317727cd9d228fb721e992e07c57e6909784ea8869325a5ed706736f7cbd2c3",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "sourceSha256": "ad8e7cd43832135a54fb9bbe7fabab95f466f64423b33d5e0b8c8a597243b155",
+      "translationSha256": "e2ff44fa18e8474f0522a2269d5240a831d7f28c5fb15050433b78df44868627",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "sourceSha256": "9bb6c6ec8edab1b7ae8451e7e899ee6deae5cc8c6a7057e1b182d7c041311e47",
+      "translationSha256": "c6661002a6d97e95ff5e446c8d0b04208c1c34c3df6e1fecc3e6ad03e2170731",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailed",
+      "sourceSha256": "a02dd70dd7e1fd29ea6aafb4b57ff3438507822b4427a98423a809132b525071",
+      "translationSha256": "c5c84eb7a1459a5363b0a934ebcfb4c5184af521c427f5b4401a17577e10bae4",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailedToStart",
+      "sourceSha256": "0f5e15bb7d2c0f955bb9f652cba994db3e6572495858120daaff00e2b76ca1c6",
+      "translationSha256": "9d77bf31ac79535d6c1ed82766c854711540a611c0693181ecc32ffcfd181f9b",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.GeneratedLauncherMissing",
+      "sourceSha256": "8bcf1c6015021cacc3896372aff7c8fe725479175f345670ae7ad0ad2ddb17af",
+      "translationSha256": "845ec5fe98b732cad3e7e0a03968e9a9c37cecabf331407d07b4db0adfe3e81e",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "sourceSha256": "bd7fc377d5dd860e0aa45479e0f6be5f425593da0b9b8d0ef389c7b442ff44b2",
+      "translationSha256": "e51083f9105b8878a6ce6a042475fc2a5bdbe14642cb40317d4f222036db57eb",
+      "verdict": "revise",
+      "reason": "“release” is the actual build-configuration value also shown beside “debug”; “versión final” obscures that technical value.",
+      "proposal": "Las compilaciones release con la seguridad activada requieren {environmentVariable} ({environmentValue}).",
+      "proposalSha256": "9f251171e597052e07f22c6a0b6dcc35157bc29bc2f41720317b6321d701bce4"
+    },
+    {
+      "key": "BuildHost.Error.RequiredProjectAndOutput",
+      "sourceSha256": "fe079aa1d54cdbc8ed88526cd6c33440d2255acd5a98ed91d2825425994c184d",
+      "translationSha256": "4ac3dd47eb971e8eae1c2a405ba29a1d4f9ab2946b720f2f9e040855d63dd382",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "sourceSha256": "5482f4f1e0784b27bbe1f1ad95899c4199f2f3b7911d6f6ef94e418478284dcf",
+      "translationSha256": "aed847047dcbd7c86ef1e20ddcace48065b7576ebdb6287856d6b91a94a6a9a7",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "sourceSha256": "fb1c277d77b7923edb1b8378be8572b152bdfa7d189fd9a84129d123fb521c73",
+      "translationSha256": "31d8870cd7283288ad8196f7c3b2093c5ffc257f02e36ca65fd8ffe8dd0ce7a8",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Error.UnknownOrIncompleteArgument",
+      "sourceSha256": "8b370ef9cd50342d7b436f2a478b943657be6b7393db4a5eaae62819c53fc06b",
+      "translationSha256": "90810c7da3036e209ed64310317d31afda67b75ede58a40241335d0429ac26fb",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "BuildHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "4395daed73d1aa4220ddc450681164769ccab03e7930dcf90e3eb97f0d86dca9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Usage",
+      "sourceSha256": "ee3860f2be195de47151fd0381a3e9daf1313afae2443e5bbe5a72af47287fcd",
+      "translationSha256": "55745184f4a2deae4a3cbe0004de204baa0b9e8d7a103e339bea9fef713eb510",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Usage.LicenseStatus",
+      "sourceSha256": "fd59122d1fdcea893bf363dad3d4578ecc545a9984fdd52a63eac4fa7060c096",
+      "translationSha256": "984dc6fd1a0bd7b37e1b87396deaf10e2abd269f10861959887c6f1ffd0a552c",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "BuildHost.Warning.ProcessHardening",
+      "sourceSha256": "673ec2b8cad0641a57f892ca18d5796a77e7af4ccbd64ec75e7a7073abc3cb8d",
+      "translationSha256": "e2dbf37e56c83ee3cbb9d72200542e7653d23624d6ccd7a5b778578d6863e609",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.ExpectedTopLevelObject",
+      "sourceSha256": "5e616b695f54ba0b216ac716fa3cd6ceaf329a0fbc3d3eb6bbdf97973dd55995",
+      "translationSha256": "1e9433e8965fc96c893f4c404a1af890e27114b3df2f58705a1550adb4146676",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.NoFields",
+      "sourceSha256": "01a271cdc095c201255e8a61b776896a06485decae18e39fb77f5f62160cb144",
+      "translationSha256": "8b6112eff1494122dceb586f7fe226d7d7b44610e0e551ff10be5c1cb949554b",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.ExpectedJsonKey",
+      "sourceSha256": "9b2c5051753c257e438e0e8b3c3d655f6e3470478527d4a0d85dec8ba614d282",
+      "translationSha256": "050691d3c14fe11604a44123a4f6ff59d6a7ebb20e693c470eac3274220c87ab",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.ExpectedColonAfterKey",
+      "sourceSha256": "70b91277d985b3da51988328ac28128ba016809f6620c665491dbd9f7940b2d7",
+      "translationSha256": "10a74ba1af996c638d3d6beb9613a70717a5f9a35a1b49a1c6765bf4d7531c6f",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "sourceSha256": "f6781ca59c75dfbf71a74c9f6e057dcbcb3142e03faf24c5f5041beaa636dee0",
+      "translationSha256": "58f24aea4058038b7195f37176d1b9a676d8c440824219bc6d5be66dfc360af5",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureAlgorithmField",
+      "sourceSha256": "e8f00cd530b6206ae8aa0b848ca4263b7b3d7925e87f00f04697ac6db338a8d5",
+      "translationSha256": "d81d8d47072af98a0ae9873ac8909666b3a125c73e835ffb125869207d25f98c",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureField",
+      "sourceSha256": "5819903702358c7ba15fb3513f3d99a9b80e7ace55734db8288dcb0c86da1384",
+      "translationSha256": "8fff9c9ee507310e443ffdac6bc9b8627c11168c63147204f53f9854a65ad561",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.UnexpectedTopLevelKey",
+      "sourceSha256": "85f85e20acc52cf879c42220a80ed57023c8056e470a2e0639fe59d563e3b778",
+      "translationSha256": "eaeb1373eaa0cc57b87371bca02c64fdb788f77b7157f8df01a133ce8de1ccf4",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.ExpectedCommaOrObjectEnd",
+      "sourceSha256": "ab4531502cfc53360467809b796ef3926ac7b1a9d277bce89a03469624eb8684",
+      "translationSha256": "cab208c164405cc0a1ef097ea3df6cd22bbc5454744d742619727a94ee0ae5ec",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.MissingRequiredField",
+      "sourceSha256": "06480546c7e299a0ae4f3e2889aa7c3c367c68e9b94555ea5fcc40228d2505d8",
+      "translationSha256": "3a73c4cdfb97f1959c30b2ed125586cf72a921e1baedb95206c5774f1305b05c",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.FileNotFoundAtConfiguredPath",
+      "sourceSha256": "5c5e58df366d6cd3c8432b69457e1601291c4b4490df946f7c6c33e96d1d9f80",
+      "translationSha256": "3681fbcf86c0f906a2c7b00bd107937ff0a6c1574d000f19f03c16770fd27bec",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.FileOpenFailed",
+      "sourceSha256": "275d3eae5e31592e90ff0a51fd8f6ff81c67d6599eae146eaa350a571d887aa8",
+      "translationSha256": "bc466b9c96a058aad6965870397d55f1089705708100eede2e6b80ad392585b3",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.UnsupportedSignatureAlgorithm",
+      "sourceSha256": "6a548bfb133eff8938aca51366cd1510c46baaca55d5746355250552371202e4",
+      "translationSha256": "70f1b7e9277c6246d2a66040c00b95d5220b87a82e5a0bf5c88a60268665d987",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidSignerKeyId",
+      "sourceSha256": "bee7f28df5a898a8020854ee3d2adf0b1f70057d47cac0b29be22595d0332a71",
+      "translationSha256": "cdd222dc79faef156a8e6329cbcd15d7fdb1371f96d7aad0d9823eaeaa96cabf",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.UnknownSignerKeyId",
+      "sourceSha256": "b8c5056c698f24d4830fc8467ad8fa6b2a05f1eb2e8ae82dcc8bd8799bce92ca",
+      "translationSha256": "28f3698b79f735023c9a056a2d8e8c200603053e9f5cbd67354846003ac18845",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.InvalidSignatureEncoding",
+      "sourceSha256": "c1bfba92f5d063d1abfe269eb42724e2a0a5705b0a8224eb91db1ae64507b85a",
+      "translationSha256": "45dc403f7096e92e8a65bc41c597b9ac72d58e1b79b90899ddd8722f595e712a",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.SignatureVerificationFailed",
+      "sourceSha256": "494e718ca5cbd103100a9a1be4812b2f6650dbaac44aead78a76d3bf5431bfef",
+      "translationSha256": "055fb7215d45015064f4067628dca8fd552518231e41c3bc44fe0cc6c84bfa68",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidLicenseType",
+      "sourceSha256": "ec6d7c0e8dbf6db8a9ee35bc59e045c5c72089f26526760c41a3f7a7b81c3529",
+      "translationSha256": "51fc13fb309678afda19a280cc90d5a6064e9c39302d91158cc83ef370ebb794",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.IntegerFieldOutOfRange",
+      "sourceSha256": "41905c8ac282a7bae0af3af936b90e41acd6a3f5fd3ec5ff9bf9f007be6afee3",
+      "translationSha256": "ce86538623e3ad3010dd30115ca5a5758027e09c44768754d2df5252a9dd84cc",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.PerpetualVersionMissing",
+      "sourceSha256": "247b6fe0f06bf34e54882a98010c78fcdc1e990942333b11a4e12fd06cde0ae0",
+      "translationSha256": "5e819fd23aa24b76f606983b734fb11cd41af5f83ff6d78f77d2909ca9ab0ce7",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryMissing",
+      "sourceSha256": "d21b00fdd05e6cc48a9be73af37f6f3cc5dd74459717cddbe0f82e8cebf30611",
+      "translationSha256": "abebc2af8289a4bc9f1c13c5b0c0f934a6d5ef5839ac6db18ddc59626695db81",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryInvalid",
+      "sourceSha256": "03cccd05f1d333829be9cda78cb7e56869ec45fd9211d80155865f023ee85381",
+      "translationSha256": "b769b4d4b790f40d4539c257b41650c1d134aa4e7ae981d8a2b486ae7ff8da24",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.CurrentDateInvalid",
+      "sourceSha256": "755f118e60217bdd7cd447da97be4f3bd05d552124dcdf98dd2c2ed994a375a1",
+      "translationSha256": "ae73eb13dccfbd704883194122d41aff4af60b1e4da052ca913365b5c92ae590",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "sourceSha256": "f945c91176a8221f9dec4b63dd4e11e8bcf53b04076c3dee13a452379e07d241",
+      "translationSha256": "db46f1d144ebcf7530eab8ca580c03624b0b3ae2f7266115c6353eafb5992141",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "sourceSha256": "7fe4c39414a343616a7191a0fd32843913d4ff2a17ea827385da982a0f7c4175",
+      "translationSha256": "e3a1c63e5e9e6f64c00ccf54b514e817afa68cf4b948bd160d57627fc20aec4a",
+      "verdict": "revise",
+      "reason": "“source-side” distinguishes source assets from packaged output; “en el código fuente” wrongly narrows the asset to code content.",
+      "proposal": "No se pudo localizar ningún recurso de inicio entre los archivos de origen para la depuración.",
+      "proposalSha256": "da3b592d65e4d5edb469384e82969bf70c6fb6ae84bf7315edd912ed67294c69"
+    },
+    {
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "sourceSha256": "40f1b61a38d2ce7a6a61a2a005247b8d8291e57f54c3f8399803639ed4542c20",
+      "translationSha256": "22780314e3afdc833c4971591c2e0428b2e0ad1cd7dd07294e0faa36653ebff6",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "sourceSha256": "b8d1583e429e993067556de1ffe48a70ccc342616775a4c1b08f9b7fb55e1fc9",
+      "translationSha256": "11f061b064f37f4a1a775afe0df0e96d658c4385aee698e313339be00f765df0",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "sourceSha256": "83b0b479c5582dcd1697d264ca5ac4be98ca5d87e0a6e92cdf299705e8a86ff5",
+      "translationSha256": "101ccb3800522ad1d19bea18ca62056ec4b1ced8d3a4a28124c13f53147b87f0",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "sourceSha256": "b7587669692751b82c0238b6fbb8dd1a6db0131885eeaa3c21fe758411fd2e0c",
+      "translationSha256": "dbcb67ebac930736c8662b6057f39cf69ccd3c410fefca62235252698737efda",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "sourceSha256": "9617bd539e95b27f60ab060b21499c8aa262a3334f449de074e6ec53b1b71309",
+      "translationSha256": "2d887793958f97cecaf3a16cd019c6957b5f2b75dbcb3e354959cac022b9e34e",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "sourceSha256": "cad3420b513dd0929e053396d3c8cecbcfc8b36a47161403841a385627264a71",
+      "translationSha256": "a2efa36e100337948ce0e3967ace89f070742f45c9feceac97d22d31e10ae196",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "sourceSha256": "28eb8e9bcc290e65bee9382ab0667495b5de04f23d88dc1073e706915f865557",
+      "translationSha256": "795b30e74213cc4dc215356f3c1b1f43632de063886b98f11847d108447fec0a",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "sourceSha256": "f5b88f5c8b3750cc3a5127cc3a0ec97c75ef76d3f4eb422c1f97a26fefbb7d1a",
+      "translationSha256": "279bd0dc11900901391a84642dd29ab3de65fc9a4231074f5b974902e48d5dee",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "sourceSha256": "c183c8df926651b3a72f6013e1b83736a9e7f126603c7f7ff27b069c209ac69d",
+      "translationSha256": "1468299efbe69e65b42deff16d6993a2872495bf9fc1760b9c38d7ce05c8d5df",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "sourceSha256": "661c47e4feef123d1956f798bee209eede18d8a975ee510eb029ce37822a0318",
+      "translationSha256": "7b53eaacf654a35023350982f269a2d315a94d7af9399d2557a90108ba231d1a",
+      "verdict": "revise",
+      "reason": "A startup source asset may be a project asset rather than code; “en el código fuente” narrows the meaning.",
+      "proposal": "No se pudo localizar ningún recurso de inicio entre los archivos de origen.",
+      "proposalSha256": "2499ecb8c7d703b9fdf7c878891c33ede48b718bd9253f865c0db979a939ab64"
+    },
+    {
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "sourceSha256": "324c92c1e02faf4bc9fa5227a3ca4268222ff9cf45cd5b8c9deab341dd9914c0",
+      "translationSha256": "420ee27109006a535ed8e35f0660bdb87b58f4ab96c3fcfe568a6eb226a29db9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "sourceSha256": "fa93818644dffd2ce0621487cecf087974c3e301d202188e934d1449d8e248e2",
+      "translationSha256": "a860394c3ff5670d538aef71b49b417551fe6c842878117689b960ba1a412627",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "sourceSha256": "c7e382f15ba33660823f33fc571099e8ad70fde94964b870981779d500bb7c28",
+      "translationSha256": "731e1a82ac42fd09d57a5428402a98043c0e9057913c35b2e894eef29750ebef",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "cf6d7691e46827977a9c4cb6021d489402ce2fca21e73731b0b7af0fec7553a6",
+      "translationSha256": "d827f41715c4503ae083813e638ab735d93c363ffb27f1de53af331f2513c94a",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "sourceSha256": "101311655bfb8ee6fc3d28e0ad12345c67a804374dd49abcc35aa3b9c1fc3c6d",
+      "translationSha256": "bdf2595950741bf38b558ffeb669d5c55c0e70bf713b50fffc40cb7857cef924",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "sourceSha256": "221d7f567e91648ef1788f95ec4c49b52a599f596483647baf53e19a4da7f785",
+      "translationSha256": "33aee05dc6b86e5d30c7d03004cb9f961326c37d60b933cd64f05be40cf52711",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "sourceSha256": "eae9ee1086559b066b0911f05273a786ac8dc13db831711dced3752078869aa9",
+      "translationSha256": "eb6ada80557fcce487020f15b9742661cfba5dd3f57915be3c180953e20ca2af",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "sourceSha256": "5a3045cf7b16e37e20695bfadc73e04712a2a472793492cfc85b3dc53ffec7f7",
+      "translationSha256": "4ca9fbcfd0b6cd0bd68596c8c09b53b9c602f6fda2371c4f0caea321e335b51d",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "6c98204f89441c133b73ffe2d3af2dc94762260aecbd084f7d652bbc137ad2dd",
+      "translationSha256": "0fb963c9df594ff84500c0263b0de2ab5abeadba4803d5d8f97f42c39d343292",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "sourceSha256": "8aaa1e2274d4ba763886ad0a22bd9ce1a7f2b9ccba1605a7e0e858c7fbfbc18a",
+      "translationSha256": "1093c6798966eeb8a514c8d2d657e144ec5495c2e6e26f61a58e09e9b58e05b0",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Command.Inspect",
+      "sourceSha256": "e0723a86a5b9408aee9113031785d3d15d9702892f31a46e5fe927c0c8552675",
+      "translationSha256": "236708bfdb3d98b86484e9837a48daec1bcb2e7a6ba9eb1b97f2030875267c95",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Inspect.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "Inspect.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "4395daed73d1aa4220ddc450681164769ccab03e7930dcf90e3eb97f0d86dca9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "RuntimeHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "RuntimeHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "4395daed73d1aa4220ddc450681164769ccab03e7930dcf90e3eb97f0d86dca9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.Prefix.Error",
+      "sourceSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "translationSha256": "842bc6e20dfa4ae50c3dae53a47ebf411b2ab3e88aac767217952adabc1ecf32",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.Prefix.Warning",
+      "sourceSha256": "c1859ad9bea3b0b4b265c1a2bf6527b3a22e3769e98d75e8d48b5445ce91af75",
+      "translationSha256": "4395daed73d1aa4220ddc450681164769ccab03e7930dcf90e3eb97f0d86dca9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "sourceSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "translationSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "sourceSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "translationSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "sourceSha256": "656f344fddb7111826d8788218c52bda3d1a41ce3e6d9086dbd20899b246cf3d",
+      "translationSha256": "656f344fddb7111826d8788218c52bda3d1a41ce3e6d9086dbd20899b246cf3d",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "sourceSha256": "f961ab825952fa116e3042f7d2848dfda0561dd92f9e8928f106fcc892130477",
+      "translationSha256": "f961ab825952fa116e3042f7d2848dfda0561dd92f9e8928f106fcc892130477",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "sourceSha256": "cab1b019c37f6c86981c360357a2bb8470ac02f52d4474f851be9ac45a198077",
+      "translationSha256": "cab1b019c37f6c86981c360357a2bb8470ac02f52d4474f851be9ac45a198077",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "sourceSha256": "15eb556bd79aa22c389c78d1785a1c2da00bb62bf3d4de4f1471cf171ceda02f",
+      "translationSha256": "15eb556bd79aa22c389c78d1785a1c2da00bb62bf3d4de4f1471cf171ceda02f",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "sourceSha256": "64610c8166d3bc8623e4b98a88a5e8db0b23325f7225041456d21dfac5868665",
+      "translationSha256": "64610c8166d3bc8623e4b98a88a5e8db0b23325f7225041456d21dfac5868665",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "sourceSha256": "32a9d8e563f5e25b0d10078a5cac3c1791beef69e1b76f235522fa2ff414aff4",
+      "translationSha256": "32a9d8e563f5e25b0d10078a5cac3c1791beef69e1b76f235522fa2ff414aff4",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "sourceSha256": "9837f3e911e68437e1d96f79358a109f45b06f1ab8d1c8e71546985dd9e95e24",
+      "translationSha256": "9837f3e911e68437e1d96f79358a109f45b06f1ab8d1c8e71546985dd9e95e24",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "sourceSha256": "4a33eacd5fa65f2b2e2871cd131286b53c415b131666d71173bb6e3fe59361b3",
+      "translationSha256": "4a33eacd5fa65f2b2e2871cd131286b53c415b131666d71173bb6e3fe59361b3",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "sourceSha256": "fe67c9af419399b149f266c17dcbccbe3a0332d7da6d5fca3a19f478534bf719",
+      "translationSha256": "fe67c9af419399b149f266c17dcbccbe3a0332d7da6d5fca3a19f478534bf719",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.LaunchPlanCount",
+      "sourceSha256": "c037e436457bfddb41a951ef05e59654b60d559e0665b1cb0961abe76d618456",
+      "translationSha256": "c037e436457bfddb41a951ef05e59654b60d559e0665b1cb0961abe76d618456",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ErrorCount",
+      "sourceSha256": "d394af78a21f8f29bdd31648d48de560f9faeed4ad0c1fa29f7e6a12efdf6f13",
+      "translationSha256": "d394af78a21f8f29bdd31648d48de560f9faeed4ad0c1fa29f7e6a12efdf6f13",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.DryRun",
+      "sourceSha256": "08d41f0253bb0ecddca5238f78cff16fe4c0249735c00e41b591380f0c5e5bac",
+      "translationSha256": "08d41f0253bb0ecddca5238f78cff16fe4c0249735c00e41b591380f0c5e5bac",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.MutatesAsset",
+      "sourceSha256": "96259b6f510be06c1bb7068578fcff457f6869095c7cda466920a9875a0f1a97",
+      "translationSha256": "96259b6f510be06c1bb7068578fcff457f6869095c7cda466920a9875a0f1a97",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntrySelectionContext",
+      "sourceSha256": "17923d0aa85f0299e88d074c1d0ce63073c28678a5140e880ea09b5f57606be0",
+      "translationSha256": "17923d0aa85f0299e88d074c1d0ce63073c28678a5140e880ea09b5f57606be0",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryToolboxAvailable",
+      "sourceSha256": "b4d3a29a39b51c78ef6854c93cad0aa543720fee78b7602fbe1aa40d02642a98",
+      "translationSha256": "b4d3a29a39b51c78ef6854c93cad0aa543720fee78b7602fbe1aa40d02642a98",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryItemCount",
+      "sourceSha256": "033c16a32232293109d6a0141e3f5c4d252c4e6c861d1e7f008a0081365c6b46",
+      "translationSha256": "033c16a32232293109d6a0141e3f5c4d252c4e6c861d1e7f008a0081365c6b46",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.EntryError",
+      "sourceSha256": "569b4757147c3e9ed26155b2aa572090a24842f1cf384e0c824e10a8bdc24f1e",
+      "translationSha256": "569b4757147c3e9ed26155b2aa572090a24842f1cf384e0c824e10a8bdc24f1e",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SearchText",
+      "sourceSha256": "85ea57ff09cf0747e3ad7438202cbf97150ec948be890f342857ab7a8600b6f5",
+      "translationSha256": "85ea57ff09cf0747e3ad7438202cbf97150ec948be890f342857ab7a8600b6f5",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Category",
+      "sourceSha256": "edb2cd3b74c999af70f0b7054990f2072dc6e10a847af6ed05954b8994b730fe",
+      "translationSha256": "edb2cd3b74c999af70f0b7054990f2072dc6e10a847af6ed05954b8994b730fe",
+      "verdict": "accept",
+      "reason": "Exact machine-style label or diagnostic prefix is deliberately retained."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Title",
+      "sourceSha256": "24165cfefd395978e88617d829808f84ab3ad070babb2172fed41b859c9b0c4b",
+      "translationSha256": "afbfcf15f60019a1d72949e9f86b76a02f82abc39185b0b80bf89f8b16c11f21",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Ok",
+      "sourceSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "translationSha256": "ab79223d998dd438418d3e3bfd4eaf9a7e49a3ff62dbfba87b907c21426e27a8",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Status.Error",
+      "sourceSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "translationSha256": "554d754659ebf5a0001face4df8e7e63bab17685eae5a0515edb090b9d0e67ad",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Cursor",
+      "sourceSha256": "46a4eebd20d881ecfc0ecb54f6d8346524fadb143726d256b1a045303fc67717",
+      "translationSha256": "46a4eebd20d881ecfc0ecb54f6d8346524fadb143726d256b1a045303fc67717",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Expression",
+      "sourceSha256": "b8bc0e4f01a0ebdbfe99180d4ea3cb49092d268fecd0789d2e9372fa616e9542",
+      "translationSha256": "cd49b4c49bc3e0867a7c6064d36dc5d640b2c68a65007dc2e1238fd93e90ecbf",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Selected",
+      "sourceSha256": "d7cbbb688b2e506c022e95cef8c4f629a29b9b36a6e50324e70dff466dbb95af",
+      "translationSha256": "df9a55ed63d1515b9da206286fc33212793c353395e910f098f896eee86ec408",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Label.Fallback",
+      "sourceSha256": "5c7ee2074b65853f71fc5a01ce194ff26deedf6daacdb715c6beefdfd3f31b35",
+      "translationSha256": "d282ead8a7297e086c31fd3040d77a612ebb174f753d3753d7cbcc56bda58395",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.MissingValue",
+      "sourceSha256": "327992075416d8ed43958355b72b5e477104f4082a0739d5dc794ac85a5a39fa",
+      "translationSha256": "5104b860a33ee5a54ac60afddb947a0144b9e15e100ba2931569380c6c10c176",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnsignedInteger",
+      "sourceSha256": "5df52a109b25d65cf455cc8fe22dcbecd6a3d389de2963d5a3c58a70137f6896",
+      "translationSha256": "9cb8ef8c32219e26af0465c2d2a6da49d0d92ee235428d7309a4d1d1e5a4c280",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.BooleanValue",
+      "sourceSha256": "b1f41adc4e8ec869ac9e04d386cf935212923e55585014d5227a6cc37443dbe5",
+      "translationSha256": "d62e7832581b7dee5744fd4b8e028abb1a7951bd8f86817d70d391816c84beb1",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidPlanKind",
+      "sourceSha256": "29170e567c1fcfc8c4c1b965d32371cc246db5576fa446f880dc5b4042b0d335",
+      "translationSha256": "e3d5d526296c12e3cbf2c816cff25488b391a133c095034a5f08a71a8c8d56d9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidFallbackReason",
+      "sourceSha256": "5546faacfa2f6a23d829494e8e51a787c5fddb67749a48f0c70a418bbceebe48",
+      "translationSha256": "9ab755ad76f86d26c921d7f008ab5afcb8cfa8e08c90b700257c6c9c964cb643",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.InvalidStatisticsState",
+      "sourceSha256": "013bb9cbc21a650f9bf6c3be8b64588b9e76a139b63f5877528f778506e8f4f7",
+      "translationSha256": "648ca60f4d0ab3422fd1e1d23ffd8f8897cb66fcb6abfb2bfb1c3f4640b310e3",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.RushmoreExplain.Error.UnknownOption",
+      "sourceSha256": "0151d6245c5c52129aab74e10d22549ccd8519e7a441ee68e6bbd7aa2984aa65",
+      "translationSha256": "2a9cc258e98c81deb34d052254088bb72ebb5cab760c650c9aa9dff26e1c9eb7",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Command.Run",
+      "sourceSha256": "00d60e31a4e6b8344d4201f25a6a7dee770713107f6d097abb01559d32b17f26",
+      "translationSha256": "5db3899bd4ca4505cb3de0a6c56912fe15ea2a6fabaa67f415e66778607e63f9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Diagnostic.ExpectedTokenBeforeToken",
+      "sourceSha256": "8c5ec17ef4a477950bbb2ca65991f70f3016ec3e1e1302a2e8a70cf7f4b04621",
+      "translationSha256": "a4095cd8ca4c7d5c8aa932ae1965b238447ecb69b88633120717d0a565ed450f",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Diagnostic.UnterminatedString",
+      "sourceSha256": "4485f10bfc4b0132810e5419138b9d4aa18b1e65370142c22bb678b884c13729",
+      "translationSha256": "5d39693d30fde5d58ed157feb5b64ce40bfb78498e837a9566a85cb44dd1f5cb",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Error.CatalogMissing",
+      "sourceSha256": "c8c15400c0e2b81baf61506e7fe0120cb13e6fbe50795130dfb8f3dc918f4f67",
+      "translationSha256": "2ff1bb52726553936cfa62e0a1756616e83b118596ad3ec2d7f98941f944ffc0",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Error.UnknownLocale",
+      "sourceSha256": "2d03b917a03667ced597af4b44bc6fbe833c9190a7864471dda2bce391062f68",
+      "translationSha256": "a0fd0be3ffb68f62979f9b2a95527c67193aec7842577db05337f82891d3a9ae",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Help.LocaleOption",
+      "sourceSha256": "8f3d93adaf45b7387a4f50f7c8da048423e487442c3fd40251c8d7166a1b2824",
+      "translationSha256": "ffd6bdf1acb59d2fdb00ee3f20c7ce6676436747ad19a05350745933c04d62e1",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "Inspect.Usage",
+      "sourceSha256": "062291f6308f187bb995c4d4b0770f32839ea0ef9bc2a94a1bc98710688b8c88",
+      "translationSha256": "ccfc3f3647d39f16ec9e1220ede30a6195b39c34024b5bb26e50ece049a9a05c",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.Usage.Alternate",
+      "sourceSha256": "9e42d01811094feb497ece1a5eb9e3890f36f7ec0ec01df3a4805d5970bc5141",
+      "translationSha256": "e5e24fbe73011f9d573f5c9ac09134fa2bebceca4f91e34fd95ac2f760740e63",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.Usage.ObjectEntry",
+      "sourceSha256": "7c01424aefe8f8b66c1f2c3b56224c5f0fbd7dd8cba269f943eac06727fee08a",
+      "translationSha256": "ad7fc7946d1c87fef4cdd5c969f74d6fbbaff695ad7d77928a3c223fd0779b77",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.Usage.Primary",
+      "sourceSha256": "3ca5332dd77af375721ea31a6bc973fb648ea42cf3f87386bd7eef9948da3bac",
+      "translationSha256": "746b55fcde10c5b77e65fc750b237d4e27f4437094c0ced91e9601281ff709c9",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.Usage.SelectionContextTokens",
+      "sourceSha256": "3b6dbfaa303a5ab004611694dbe51479d6f6985bdf324a491a50874c9df08962",
+      "translationSha256": "874624fbdf9bb6ba683d2bdb25d2c1ce3dae885c0f20b140eb3fdffc142c75b1",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.TablePreview.RecordDeleted",
+      "sourceSha256": "1185f37d33b0f89e331f101a51bb8e51165c7efda15950b86a3ebcbb363f898e",
+      "translationSha256": "8133b28f315f32c7a724d890ed836e0b18e9d21ec3156be90954206c95796c74",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.BooleanValueRequired",
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "0f714bd9575e524c34b1859120176957abec19dee977ab39e235495acdca8b42",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.ContextConflict",
+      "sourceSha256": "4115eb25ae74d112501e0096033fd8f18d57f1fd25dfef6e48cbe55f310352c0",
+      "translationSha256": "42e4b704a2f0461409e35bd07f3e8e689bb34819b38d51db47706ead8ee7f31c",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Dispatch",
+      "sourceSha256": "64d2cde0727cd59554c888720bd0982a6b2aed3ae058b8fbd26896e790d36542",
+      "translationSha256": "4933e806be1df658b7595ede91c77e74e2686401a34d05d6317d7e054b88f6d7",
+      "verdict": "revise",
+      "reason": "“Builder dispatch” names the dispatch operation; “Envío al Builder” reverses the direction by implying a request sent to it.",
+      "proposal": "Despacho del Builder",
+      "proposalSha256": "b19611c9d0ac483f20a7223f1a6d2b425ddbf0d37a13269cb3230e6e1cc824c4"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.Execute",
+      "sourceSha256": "e30fc60ace85df044b30e643285e271ee1c6dba0ff34b4f14db440f22b49b558",
+      "translationSha256": "8f40c2eb01cfb4f8105aa9773374d64de7357899a8be4a26b6c2c2a054bbc709",
+      "verdict": "accept",
+      "reason": "Meaning, Spain Spanish usage, placeholders, and technical syntax are acceptable in context."
+    }
+  ]
+}

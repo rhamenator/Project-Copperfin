@@ -1,0 +1,371 @@
+{
+  "session": "27b894d6-8f44-4889-b0ae-85e86d9d08ba",
+  "model": "gpt-6.1-sol",
+  "reviewer": "Codex /root/review_es_revisions",
+  "reviewStatus": "unreviewed_first_pass",
+  "locale": "pt-PT",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "source": "data-session",
+      "seed": "sessão de dados"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "source": "Data-session",
+      "seed": "Sessão de dados"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "source": "draw-mode",
+      "seed": "modo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "source": "Draw-mode",
+      "seed": "Modo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "source": "draw-style",
+      "seed": "estilo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "source": "Draw-style",
+      "seed": "Estilo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "source": "draw-width",
+      "seed": "largura de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "source": "Draw-width",
+      "seed": "Largura de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "source": "enabled",
+      "seed": "habilitado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "source": "Enabled",
+      "seed": "Habilitado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "source": "fill-style",
+      "seed": "estilo de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "source": "Fill-style",
+      "seed": "Estilo de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "source": "fill-color",
+      "seed": "cor de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "source": "Fill-color",
+      "seed": "Cor de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "source": "form set class",
+      "seed": "classe do conjunto de formulários"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "source": "Form-set-class",
+      "seed": "Classe do conjunto de formulários"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "source": "grid-line-color",
+      "seed": "cor da linha da grade"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "source": "Grid-line-color",
+      "seed": "Cor da linha da grade"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "source": "grid-lines",
+      "seed": "linhas da grade"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "source": "Grid-lines",
+      "seed": "Linhas da grade"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "source": "grid-line-width",
+      "seed": "largura da linha da grade"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "source": "Grid-line-width",
+      "seed": "Largura da linha da grade"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "source": "header-height",
+      "seed": "altura do cabeçalho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "source": "Header-height",
+      "seed": "Altura do cabeçalho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "source": "help context ID",
+      "seed": "ID do contexto de ajuda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "source": "Help-context-id",
+      "seed": "ID de contexto de ajuda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "source": "highlight-row-line-width",
+      "seed": "largura da linha da fila destacada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "source": "Highlight-row-line-width",
+      "seed": "Largura da linha da fila destacada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "source": "highlight-style",
+      "seed": "estilo de realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "source": "Highlight-style",
+      "seed": "Estilo de destaque"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "source": "initial selected alias",
+      "seed": "alias inicial selecionado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "source": "Initial-selected-alias",
+      "seed": "Alias selecionado inicial"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "source": "input-mask",
+      "seed": "máscara de entrada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "source": "Input-mask",
+      "seed": "Máscara de entrada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "source": "link-master",
+      "seed": "vínculo mestre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "source": "Link-master",
+      "seed": "Vínculo mestre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "source": "lock-columns",
+      "seed": "bloquear colunas"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "source": "lock-columns-left",
+      "seed": "bloquear colunas a esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "source": "Lock-columns-left",
+      "seed": "Bloquear colunas a esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "source": "Lock-columns",
+      "seed": "Bloquear colunas"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+      "translation": "sessão de dados"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle",
+      "translation": "Sessão de dados"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+      "translation": "modo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle",
+      "translation": "Modo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+      "translation": "estilo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle",
+      "translation": "Estilo de desenho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+      "translation": "largura do traço"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle",
+      "translation": "Largura do traço"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+      "translation": "ativado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+      "translation": "Ativado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+      "translation": "estilo de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle",
+      "translation": "Estilo de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+      "translation": "cor de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle",
+      "translation": "Cor de preenchimento"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+      "translation": "classe do conjunto de formulários"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle",
+      "translation": "Classe do conjunto de formulários"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+      "translation": "cor das linhas da grelha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineColorTitle",
+      "translation": "Cor das linhas da grelha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLines",
+      "translation": "linhas da grelha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLinesTitle",
+      "translation": "Linhas da grelha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+      "translation": "largura das linhas da grelha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle",
+      "translation": "Largura das linhas da grelha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeight",
+      "translation": "altura do cabeçalho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle",
+      "translation": "Altura do cabeçalho"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextId",
+      "translation": "ID de contexto da ajuda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle",
+      "translation": "ID de contexto da ajuda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidth",
+      "translation": "largura do traço de realce da linha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowLineWidthTitle",
+      "translation": "Largura do traço de realce da linha"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyle",
+      "translation": "estilo de realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle",
+      "translation": "Estilo de realce"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAlias",
+      "translation": "alias selecionado inicialmente"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle",
+      "translation": "Alias selecionado inicialmente"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMask",
+      "translation": "máscara de introdução"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle",
+      "translation": "Máscara de introdução"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
+      "translation": "ligação principal"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle",
+      "translation": "Ligação principal"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+      "translation": "bloquear colunas"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+      "translation": "bloquear colunas à esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeftTitle",
+      "translation": "Bloquear colunas à esquerda"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockColumnsTitle",
+      "translation": "Bloquear colunas"
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-014-2026-11-03-74d0f4e2-f40f-4080-867b-5b3d8da05604",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrientationTitle",
+      "source": "Tab-orientation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabStop",
+      "source": "tab-stop"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabStopTitle",
+      "source": "Tab-stop"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarText",
+      "source": "status-bar text"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle",
+      "source": "Status-bar text"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipText",
+      "source": "tooltip text"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle",
+      "source": "Tooltip text"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Visibility",
+      "source": "visibility"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.VisibilityTitle",
+      "source": "Visibility"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButton",
+      "source": "WhatsThis button"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButtonTitle",
+      "source": "Whats-this-button"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelp",
+      "source": "WhatsThis help"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId",
+      "source": "WhatsThis help ID"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpIdTitle",
+      "source": "Whats-this-help-id"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpTitle",
+      "source": "Whats-this-help"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Clear",
+      "source": "clear"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Rename",
+      "source": "rename"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Update",
+      "source": "update"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueOnlyWithGroupObject",
+      "source": "{option} can only be used with {commandOption}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.GroupedChildSelectorsOnlyWithGroupObject",
+      "source": "Grouped child selectors can only be used with {commandOption}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NoAssetPathProvided",
+      "source": "No asset path was provided."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.PropertyCommandRequiresOption",
+      "source": "A property {commandName} requires {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode",
+      "source": "{requestName} arguments can only be used with {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector",
+      "source": "A deleted-state value requires a preceding deleted-state target selector."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
+      "source": "A {itemName} item requires {option} after its {selectorName} selector."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestRequiresOption",
+      "source": "A {requestName} request requires {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestRequiresSelector",
+      "source": "A {requestName} request requires at least one {selectorName} selector."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.DeletedStates",
+      "source": "deleted-states"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.DeletedStateTargetTitle",
+      "source": "Deleted-state target"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedState",
+      "source": "subtree deleted-state"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle",
+      "source": "Subtree deleted-state"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Selector.Target",
+      "source": "target"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Selector.Root",
+      "source": "root"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Value.Value",
+      "source": "value"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SelectionContextValueRequired",
+      "source": "The {option} value must be {allowedValues}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.SelectionContextAllowedValues",
+      "source": "{visualObject}, {visualMethod}, {containerObject}, {classDesigner}, {reportExpression}, {labelExpression}, {menuItem}, {projectItem}, or {dataEnvironment}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SingleObjectCommand",
+      "source": "Only one object command can be used at a time."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SinglePropertyCommand",
+      "source": "Only one property command can be used at a time."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.TrueFalseValueRequired",
+      "source": "The {option} value must be {trueValue} or {falseValue}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UndoModeValueRequired",
+      "source": "The {option} value must be {firstValue} or {secondValue}."
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrientationTitle",
+      "translation": "Orientation des onglets"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabStop",
+      "translation": "arrêt de tabulation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabStopTitle",
+      "translation": "Arrêt de tabulation"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarText",
+      "translation": "texte de la barre d’état"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle",
+      "translation": "Texte de la barre d’état"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipText",
+      "translation": "texte de l’info-bulle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle",
+      "translation": "Texte de l’info-bulle"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Visibility",
+      "translation": "visibilité"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.VisibilityTitle",
+      "translation": "Visibilité"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButton",
+      "translation": "bouton WhatsThis"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButtonTitle",
+      "translation": "Bouton WhatsThis"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelp",
+      "translation": "aide WhatsThis"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId",
+      "translation": "ID d’aide WhatsThis"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpIdTitle",
+      "translation": "ID d’aide WhatsThis"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpTitle",
+      "translation": "Aide WhatsThis"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Clear",
+      "translation": "effacer"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Rename",
+      "translation": "renommer"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Update",
+      "translation": "mettre à jour"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueOnlyWithGroupObject",
+      "translation": "{option} ne peut être utilisé qu’avec {commandOption}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.GroupedChildSelectorsOnlyWithGroupObject",
+      "translation": "Les sélecteurs d’enfants groupés ne peuvent être utilisés qu’avec {commandOption}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NoAssetPathProvided",
+      "translation": "Aucun chemin de ressource n’a été fourni."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.PropertyCommandRequiresOption",
+      "translation": "Une commande de propriété {commandName} nécessite {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode",
+      "translation": "Les arguments de {requestName} ne peuvent être utilisés qu’avec {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector",
+      "translation": "Une valeur d’état de suppression nécessite un sélecteur de cible d’état de suppression préalable."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
+      "translation": "Un élément {itemName} nécessite {option} après son sélecteur {selectorName}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestRequiresOption",
+      "translation": "Une requête {requestName} nécessite {option}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestRequiresSelector",
+      "translation": "Une requête {requestName} nécessite au moins un sélecteur {selectorName}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.DeletedStates",
+      "translation": "états de suppression"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.DeletedStateTargetTitle",
+      "translation": "Cible de l’état de suppression"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedState",
+      "translation": "état de suppression du sous-arbre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle",
+      "translation": "État de suppression du sous-arbre"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Selector.Target",
+      "translation": "cible"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Selector.Root",
+      "translation": "racine"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Value.Value",
+      "translation": "valeur"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SelectionContextValueRequired",
+      "translation": "La valeur de {option} doit être {allowedValues}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.SelectionContextAllowedValues",
+      "translation": "{visualObject}, {visualMethod}, {containerObject}, {classDesigner}, {reportExpression}, {labelExpression}, {menuItem}, {projectItem} ou {dataEnvironment}"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SingleObjectCommand",
+      "translation": "Une seule commande d’objet peut être utilisée à la fois."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SinglePropertyCommand",
+      "translation": "Une seule commande de propriété peut être utilisée à la fois."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.TrueFalseValueRequired",
+      "translation": "La valeur de {option} doit être {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UndoModeValueRequired",
+      "translation": "La valeur de {option} doit être {firstValue} ou {secondValue}."
+    }
+  ]
+}

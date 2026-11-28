@@ -1,0 +1,1350 @@
+{
+  "locale": "de-DE",
+  "scope": "Independent review of Claude Sonnet draft batches 023–026, exact 160 en-US source keys. No repository changes.",
+  "reviewerType": "independent_ai",
+  "reviewer": "Codex /root/review_en_gb_revisions",
+  "model": "GPT-6 Codex",
+  "reviewedAtUtc": "2026-11-03T08:43:23.875576+00:00",
+  "sourceBatches": [
+    {
+      "batch": 23,
+      "file": "/tmp/copperfin-locale-translation-v1/de-DE-023.json",
+      "fileSha256": "729c308b1c464939c43a208bdc8213632486c9adf39965943a60c851396ffb82"
+    },
+    {
+      "batch": 24,
+      "file": "/tmp/copperfin-locale-translation-v1/de-DE-024.json",
+      "fileSha256": "eb33c0eb0bb0c8a63309dfa672a950f8b989ebd0c060a28f299938e7fdc714a1"
+    },
+    {
+      "batch": 25,
+      "file": "/tmp/copperfin-locale-translation-v1/de-DE-025.json",
+      "fileSha256": "a7fbc5e864d5725e2566c6843699e1d6c4b150bda0dae95b53db78eb6f868e47"
+    },
+    {
+      "batch": 26,
+      "file": "/tmp/copperfin-locale-translation-v1/de-DE-026.json",
+      "fileSha256": "98b5df6ede2b96bbd1db18af67d7a9c51c9558f3afc6da734ce30766a9e2e265"
+    }
+  ],
+  "uncertainty": "AI-only linguistic and static technical review. No qualified German human review or in-product UI/CLI run. VFP index-order and package terminology may require domain glossary confirmation; accepted entries are not a guarantee of perfect localization.",
+  "counts": {
+    "total": 160,
+    "accept": 144,
+    "revise": 16
+  },
+  "entries": [
+    {
+      "key": "RuntimeHost.Error.StartupAssetDigestMissing",
+      "batch": 23,
+      "sourceSha256": "dba29a3f86590aa80aa34e5f6e095d90436eb7cef90891c95bb99b6a07438cc3",
+      "translationSha256": "c3cc884101a4ac5aa4a23e0ad36e67cdc407bee2a72c83fbfbeba0dda177c6cf",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownArgument",
+      "batch": 23,
+      "sourceSha256": "503e4bca64d33f07d3879c3b7a2ae3c5dba953e82e853eac9f5e008438df863a",
+      "translationSha256": "40b3dd1d6c605ab53938edd1392d37677fa97093b20b5fa49af2bfdd6d623eb1",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "RuntimeHost.Error.UnknownFederationBackend",
+      "batch": 23,
+      "sourceSha256": "8b9c041b5a03d25a55de13818760ae0a6da02cf324df14f8b784943db392a6e6",
+      "translationSha256": "e1a8efdae96f32f09000f7b38ea5fa4808eeebf7f5ac18fd4ce6f330b0a33d65",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "RuntimeHost.Error.UnhandledFault",
+      "batch": 23,
+      "sourceSha256": "452b06be5933c947872765b36c27416922d46112d475a418e081097511e9061c",
+      "translationSha256": "aaafd82b10370a3476195a2d7bf07fa317f8d9cd7dbf16d4d41766686be12779",
+      "verdict": "revise",
+      "reason": "„contained“ bedeutet hier, dass der Host den Fehler abgefangen/eingegrenzt hat, nicht bloß seine Ursache eingegrenzt.",
+      "proposal": "Ein Fehler im Laufzeithost wurde abgefangen: {detail}",
+      "proposalSha256": "7c688f32398e55d3a0112a51ff584776a6bf253d9734a579d3f9f06a667b6517"
+    },
+    {
+      "key": "RuntimeHost.Prompt.QuitConfirm",
+      "batch": 23,
+      "sourceSha256": "c7f7fc0798738df2ff0ae394786dfa8a9717afb43f5616b3f1b3f81c1c207b05",
+      "translationSha256": "d0e830782d868cc8a2869c90d903fbc5df5684b39f1c32f84b2da28726e369fc",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Field.Compound",
+      "batch": 23,
+      "sourceSha256": "ee0df97cece494b174c6844cfd00255723152d5555215073611b8ad673c4e749",
+      "translationSha256": "b9bccd8409671e6e9385bd175457dc7c77ed0aa719211b80a2c9419eb0c98fe0",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch",
+      "batch": 23,
+      "sourceSha256": "4515327a45dfd53cf3235edab2478a94378fa6bb1bb1a591305e4e2dad3b99e8",
+      "translationSha256": "75fe85cb419dd140bbd29f241ccfb9f4f58a36520c1ad92e2ec80d94869e2cef",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch",
+      "batch": 23,
+      "sourceSha256": "cd00fa0bfe1f8d2153d56e2490f8167a91525eda3f6c5bfea61bd4f7333e0f0b",
+      "translationSha256": "5ab882d1ba4cbf1825b7fef2a1313cb31a497cae5a760b4c35ba629ce66fa85d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.NoMatch",
+      "batch": 23,
+      "sourceSha256": "9bc94ab9b39bfff44297d99f66b2d1dc08ba96658be582098c879d223aa84283",
+      "translationSha256": "661a269b1acd08cf3b2b52b41b4a2813380a318b3dda9f003afd038d0e5f9f81",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch",
+      "batch": 23,
+      "sourceSha256": "5dcded1f8645796d4d249052182087eb722563fab71d7d64c831a7ac2fe80334",
+      "translationSha256": "0e0d40cfc46a2f9cd72b33afa8b5bbe476aa35921a93d311bc371d5e61e514f4",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+      "batch": 23,
+      "sourceSha256": "aa51bee5de893b99cda296700bcc1e4a2351fe65fd80f3f65eb6994ecd38ef57",
+      "translationSha256": "b6342e11c98a63983c8310b7bbb8d47e7c3b89fe342d16f65a64df3521814e31",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.FieldBetweenRangeComparison",
+      "batch": 23,
+      "sourceSha256": "7c970c15627359a814d26e420c3b9c7e2f38f14eb040c9096c8cbf30b9718408",
+      "translationSha256": "4688e06d6073261b712af5f25c1bfe177a3dafbeb644a24942fa5afc5005dfab",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+      "batch": 23,
+      "sourceSha256": "5a93ab3ebd1c482673180281af0865cfd97e57a51ea2aeff7c950fb28a7db0ee",
+      "translationSha256": "b67d42fc8fff6158d6d1633a340673b06b176806d8b0ef55dbc64e594de5c123",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+      "batch": 23,
+      "sourceSha256": "5d69bd95b04a1f5bb7508fe7b950b1b9981342c32315b15d73fe11b9dcdc67ce",
+      "translationSha256": "8f3561628a8a8225d0398caa472ac566914bc4e3682a4e73c68e8e31fc7bc502",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+      "batch": 23,
+      "sourceSha256": "994f62d938abb72fc3e729293a666b816ad89a1769ac8feb1dd37f085484cc08",
+      "translationSha256": "0cb686d2da2cb572d4f5ad833e8c3f1bf4a1105bde635b5576b53edc8b01ab25",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.TopLevelNotPattern",
+      "batch": 23,
+      "sourceSha256": "4275ff6fca26bdbb14e52feb138eb71a2c4e2899b8a70293c4106df07558ba14",
+      "translationSha256": "4ba6f42032c76f68383fb0db2c353953dff177c93501488167a2094ec33e2ade",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+      "batch": 23,
+      "sourceSha256": "45a350b8b8d6ce38a78f7cf4141e7fcab230621622214fe28810e37192ae5004",
+      "translationSha256": "54679d586536609279e26b737d9ad17afb4253b491da4842791fe09fa407e09a",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+      "batch": 23,
+      "sourceSha256": "c8557f482d09e01c21f2b7cbfced361adea3c21bc416d411704e5b90b2f60b08",
+      "translationSha256": "19e73f0018babfb2a9d0014a8092fdb20816c65cbeac6e810b762482235a1ada",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.CostModelRejected",
+      "batch": 23,
+      "sourceSha256": "e534f0f2f1eae1cbe97bf287a5d07d34e9f020ddf56a01796d2689107c91de3a",
+      "translationSha256": "ae3829e2cffeee732d6016cf290675edfe3bbfaefa340798c796dfeb909b20cb",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelSelected",
+      "batch": 23,
+      "sourceSha256": "3aae14f5a3cc25d31bdedd4901aabba343a59d732c03d4ef29a89954a8236485",
+      "translationSha256": "78179fba341c2f4deee5b51f295de4fab6bb2bad99d1abdecb1a4b3f106018f6",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekCostModelRejected",
+      "batch": 23,
+      "sourceSha256": "4ddf6bc124b2795a963216250846f191b6fb78647872fd3cfdce683d11fd69a8",
+      "translationSha256": "55876c861ed9f80a864b862ada6a055a3f469c786a9c850f203aa027b436d32c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
+      "batch": 23,
+      "sourceSha256": "46cc0310b859fff80b5341282379c244c1869640f3a8f8e88d15434f3fa4d44e",
+      "translationSha256": "33e1f4780d7abfc28b3835ed0c89bc0af0ce4f6ea0e50384a2d1c9dc84b57c57",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.None",
+      "batch": 23,
+      "sourceSha256": "9e63a101f4139e1556c40073ae3f7d1df300300bdd3fea0ff011c64c3e7c26ee",
+      "translationSha256": "c3b50e6d1f2a2cf1dbec31d54d7c9ede4242f6295c6285593a444f59236a88c0",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled",
+      "batch": 23,
+      "sourceSha256": "f5f6d1337f02a45d0bae34d67af2c8fb61e883b697a81c681911afa300478bcc",
+      "translationSha256": "e602619b900267d1de5f17fa19573484ea33a00e6275b69aac8f55f6ad69c02a",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression",
+      "batch": 23,
+      "sourceSha256": "3dc07732cb7c36fe2ff64b0c80caf69d27d37d742085132afd343b26b3c0b2ce",
+      "translationSha256": "3505e1c3d36b3bdbbac0d74926c9e3dd482ac0a400287798596da096d45d92e3",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression",
+      "batch": 23,
+      "sourceSha256": "856dab1420dc8f4bad8b485797af1e152bd804ab7e9423086be9c145d57d2452",
+      "translationSha256": "95c4ee1398e20e4bd23aeb0829508f51075e810866381f08b3808eeced005784",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex",
+      "batch": 23,
+      "sourceSha256": "dafc963d6338d1b1709f1c46cd15195720ffe38de969ff326437b76ba98f9bbf",
+      "translationSha256": "0093b8828ceb0bd51f3136968970ab5beb8aaffc8f56df25202b0a0de4bbc56a",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
+      "batch": 23,
+      "sourceSha256": "d04591985cad4f2afad7718f31d0ed238fbc0ca4c1dfc3d4ad6ffdad04edbb41",
+      "translationSha256": "550db66d788dc1ac31656b9d0e085b97de9b6371a095c76cee6120309406c001",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.CostRejected",
+      "batch": 23,
+      "sourceSha256": "995d62c357515147d123d895239bd0fb3ba9656bfb33ed5d0e725497d1ee1cef",
+      "translationSha256": "d6f38174b932e6edf669d2b9a13d4df3a63fa3c18232cca7a7331aacba058eb8",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+      "batch": 23,
+      "sourceSha256": "e8280bad48ef6f5a2301b03e32b2ac95d70ff216cd45de0ebdf7ba6afd749f40",
+      "translationSha256": "27a38772188afb2f8fd75740eca65a08bacbb60ab4d721202d62bf1f9da38661",
+      "verdict": "revise",
+      "reason": "„auf einen Fallback zurückgefallen“ ist eine unnatürliche Doppelung; die Ausführung wechselte zum Ersatzpfad.",
+      "proposal": "Die Ausführung wechselte nach der Planauswahl auf einen Ersatzpfad",
+      "proposalSha256": "7e9cb11511c0cf638284a2d565609fc32d8780c7cae0111264c20c6a17ac6268"
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.TableScan",
+      "batch": 23,
+      "sourceSha256": "e3a2ef3c5b0c4f8403d2b2820712de5bf0feb55760ed65f7cffd4e31cd8b85a7",
+      "translationSha256": "b7318cb28a8cdc8442fcbdae733b8825ee5d1a701901845a7691b0941a4d530b",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexSeek",
+      "batch": 23,
+      "sourceSha256": "4f532b5ca9b0239296332b8fe9123974a739664a794197b508f80f431d2ab1a3",
+      "translationSha256": "919939952e1cc8a0d631a2d27d9c8c2264bca84075f1d5e8969e1d30b9e4628d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan",
+      "batch": 23,
+      "sourceSha256": "568b1d4fd99ce3638550ed36cdb349e4d09bc9a3052e7f47ec25b1da2989f180",
+      "translationSha256": "d6fc0d70a328a6f36e77b3285080ecb6ea8bd75fb02d8186f4f0a3b3d447a829",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Absent",
+      "batch": 23,
+      "sourceSha256": "540ce21f8b331a40eb6f0714ea928263fd66d2c467764823639f3c158f51cf63",
+      "translationSha256": "bf9f4af34bb00506cd68d782a69e4af1348acf609182e5352deb8c30f0a3fed1",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Fresh",
+      "batch": 23,
+      "sourceSha256": "28db10779dd33f428f8da9cb288168a76666fb665bfbbac71623a7fd1d5dcc78",
+      "translationSha256": "1b68e1731542dd1d6139fc1a3e57bc6032cb26cb40fc61eb0bcb362ed8b52f63",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Stale",
+      "batch": 23,
+      "sourceSha256": "e6f61b4ecd233e274e612d9606d64c7e2d8fdf31a78e295c2224408896297998",
+      "translationSha256": "6b84c6060f0dcb4db8056dbe83a68327c0a45a9b910599d6466a4cbb3aea082d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Explain.Statistics.Corrupted",
+      "batch": 23,
+      "sourceSha256": "1bd6247672af9889cfd33f95325d6e4550e05d223200bd0e6a47080326f9ad04",
+      "translationSha256": "573233841f50461aeea8f22ccc582ba57cd5fa6d90bc32b9bf499b1b64b3cb47",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.None",
+      "batch": 23,
+      "sourceSha256": "619050cfd3dd7806e7e57e92a4d6372bd1c367eac1e349e792a6ff38431f2b31",
+      "translationSha256": "4df28394610b1275636417a6c1aaafbecb08d8756958fbf3f0991a5964cd65a4",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+      "batch": 23,
+      "sourceSha256": "2dc2b642a9164e744dedde61de79db94a7fc86207986a7d7091c33bb3080cd42",
+      "translationSha256": "87dfc955af57deb7c46ea68535df1d416bc0347b3a058b15aa196a4dcda5163a",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
+      "batch": 23,
+      "sourceSha256": "81c054f4f98c74f3503a5580d8c8d722eacb59349a864b411483710ac22ccfd9",
+      "translationSha256": "3459f4e238c87a08c869b2dc5e0d590d22e4c3909257c93a22745ff463b0dea8",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+      "batch": 24,
+      "sourceSha256": "4ad3cc20d38b5d205e992fc36549c6452c99b801f2d5b001f1381a319480c051",
+      "translationSha256": "25cb00b2c07242fab407ed7151330424582704aec713e4a2d5cfe290edb39f12",
+      "verdict": "revise",
+      "reason": "„weitergeben“ verschweigt den Datenbank-Pushdown an die entfernte Datenquelle.",
+      "proposal": "Der Anbieter kann diese Prädikate nicht sicher an die entfernte Datenquelle weitergeben",
+      "proposalSha256": "aabfad86607bd47d30688c6d833e0e5b6006d516288148443cb11d31770d6160"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+      "batch": 24,
+      "sourceSha256": "fc29d8663a74fb2978d5911965a5b9a7a5c1c42b343100738939cfd7e1f367f7",
+      "translationSha256": "28fb579cc36d691e6cbd930f422737f3ced1f0c696d8b16b3cafbb852a58707f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.None",
+      "batch": 24,
+      "sourceSha256": "b38447fcc06acc32c247e630062c8d3c7ba83715e31b70e4a7d2e1f232389f67",
+      "translationSha256": "cd5d8613854344f395ea267b05b77c45dff499e51a5697c9c4a987732ad2ea4e",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+      "batch": 24,
+      "sourceSha256": "18fae6c6835fce31f37ec26caa2acd56e94231480502fd9626dd3e07da60dd55",
+      "translationSha256": "3055226dcaf55d4f837a730ba66f7223e81c396e17552c417c1b6e25930ea62e",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate",
+      "batch": 24,
+      "sourceSha256": "053828abddc483e0a3bb57389692390d23ced79af50ff824b7962568f3a4f759",
+      "translationSha256": "d706736d510eeffd554ed27ea285995be999abb9ed242062625fd4877ca0c18f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.DuplicateOrder",
+      "batch": 24,
+      "sourceSha256": "b350aa7182088dfc7cd4ffb6233fdac65e091334259a5499dc2889cc8c578215",
+      "translationSha256": "9b1ef2a50733d149657b7f2e50eac3d02c4b9d3f0325a4626bdc01e1c8da074f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+      "batch": 24,
+      "sourceSha256": "b58d0766f5b4499696feb488d7064612700fa712a45361edb841cde45932becd",
+      "translationSha256": "997f3ffed77977811733f112da9ef48a13ca43390f6ab0b4484a08082f3986ff",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown",
+      "batch": 24,
+      "sourceSha256": "9b1f7d55f971b9c51bd5098effac155233e2f18456fe245c79665c896ac6688f",
+      "translationSha256": "df2a8063e535c7a98edf89a12c83ba145006721349ce10d2b235188c09ee0e8c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
+      "batch": 24,
+      "sourceSha256": "32ac907508f228def4151c2b528aa5cf64d60d72af0a4d9e6e39812b66632c7d",
+      "translationSha256": "d9e1a35b05a827dc219a06ea4b27ac02383f9900347ce5e90223847e03492b37",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+      "batch": 24,
+      "sourceSha256": "d782f3220ab46cc09c2eb908f7599a192f1ceee2dc35056bddd66cf5172e63aa",
+      "translationSha256": "b6ce69f565eaa50311f6d51f878809c400ab0b4b8ba57e28ecc685842858ee9c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "batch": 24,
+      "sourceSha256": "3ad5c53ef61b0449babb078fb99da39aa6911fb5f67e77a544262d3bae702ad8",
+      "translationSha256": "4cff04ca051f1092dd1a33378729f13f64df90a6ec9482cbf0cf0242d0a22210",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.ManifestMissing",
+      "batch": 24,
+      "sourceSha256": "4d009bbde02aeddd44e57cc799eccef1211f157aa9ec8665fce96e2c36565181",
+      "translationSha256": "ed127db33a736d41942422893d44544fdc4a19b3d4f595d3666ab977366c5d75",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+      "batch": 24,
+      "sourceSha256": "1c5a006f5e2d43094d93dc8bb909c2bb491ca5b856f2081e5a0a63c816bdd9b8",
+      "translationSha256": "68df80914a811d8841da69cebcc4451d83830898d5634df376e1b66d16977b68",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
+      "batch": 24,
+      "sourceSha256": "9179461f5608ea70fe432d5453f050f568b33e345e1780a369364d054a6451b3",
+      "translationSha256": "b987ea1d0ba7a5eb8cd4c153eb900858cba897a196c39432688bed41d2ff17df",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ManifestMissing",
+      "batch": 24,
+      "sourceSha256": "7d1e6d438fb9e46c330a6ede2c03bbce6bb8b7f3ceb11ee72e8e9bf1f6d59f5c",
+      "translationSha256": "b3d19200db19866279d23bb3497a252d6fe545a4a86594c4eed75d5f457d1095",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryMissing",
+      "batch": 24,
+      "sourceSha256": "882ea3b8867b6bd39056f682b19dee27bbb53fd345201f4c945f048f71b14e81",
+      "translationSha256": "e37cc1283e9c767b12c076d80369b27c50f539d63aebcf244ae53076c5069949",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryInvalid",
+      "batch": 24,
+      "sourceSha256": "c3ca050c9fb93f0f79f28a89a77ad2913959027d42bd8486b6f6b63f5d93a9de",
+      "translationSha256": "cf313c6f8324425772f18b362d24ce3006a4c62570b2a7ea6d6ebab679e8d17f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryIncomplete",
+      "batch": 24,
+      "sourceSha256": "25c655634a98548f2c51dbf27c5cdce2a74982b6663134ec7a925f39882345f7",
+      "translationSha256": "241bf348baf5a9f8a2dc845ee29ecf4c72ffe18d043d3e5254953f5ff0313ccf",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ArtifactRejected",
+      "batch": 24,
+      "sourceSha256": "9b5d01eb1fce74606c1e3ae6b61b11f8daa7131aca815913647dcb3632069805",
+      "translationSha256": "db35221fb7099f8f5463ffe16143b002b7055f97c3a16b9f428d98ca2d556a9f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.DigestMismatch",
+      "batch": 24,
+      "sourceSha256": "550669022d5d15a19d39f4600c47603fc8afff7a99f85d88c0e25e23aa1e0da4",
+      "translationSha256": "b12bec330c87f92627634867bba5ab1dba1277336458e5bb391ba4c6d02b032f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.PublicIdentityMismatch",
+      "batch": 24,
+      "sourceSha256": "d65b64689b362af130a8521fce3dd5020a4915ee1bf9ad66155ece47b25cc402",
+      "translationSha256": "06c178c20455bdf18bf61aba06e2c41f5431627059543a4d942ce95c1ef3c3c0",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustRequired",
+      "batch": 24,
+      "sourceSha256": "b88cd6b5275b90a2c8344326d44f2d988badf5cffb0a42533c09a1f92e64543d",
+      "translationSha256": "7e80a2bbc24e7cd31c606687dfe14785b3307a85b2c3926f7f64a1a0edd8254e",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+      "batch": 24,
+      "sourceSha256": "751190d706e9461fcdfc13cf6f1f65279dee3d9c47942d9292f3ff8d4426fae1",
+      "translationSha256": "bb64d3d1278e87ed1784302da8de352154878e7b50106ed7cb826ecd3fb0895f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner",
+      "batch": 24,
+      "sourceSha256": "45296cced3459ce8ac11421e15650b39d84c02117912b5014f3912278859c08b",
+      "translationSha256": "9c01f0028305718ebbe413c2a806cf24726067d56a7b891834ded4e61656163d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustInvalid",
+      "batch": 24,
+      "sourceSha256": "44b0f2f1551fd9a8b468c3a9571fffd8dc06c65d6ad1f6320a511b909198b21c",
+      "translationSha256": "7e2e821f9dd7ee2a61f6d095ae4e71ed43d97b40282e26ae2e4ee6cd9457a1e2",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+      "batch": 24,
+      "sourceSha256": "db5cdb7135ce5acde24ccfc5785a4fd6bb5a63bc77503cfc9566e2916c8120ec",
+      "translationSha256": "018240a4480296921f80972d69e5bad69e3376059a749ecbc0d6331f819f00c5",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+      "batch": 24,
+      "sourceSha256": "9a3e31f6165f0786bbde4c04f0240e99fecbfbaa487168bc235a557a44f3b8f0",
+      "translationSha256": "7b20c7320f50f574c7143743de6a65231bba278727473642c6299de070eaf288",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CopyFileFailed",
+      "batch": 24,
+      "sourceSha256": "fbb3c6c977db29b3834082ca067b87faa9c21dea1ca6261d3cc71338e586d92e",
+      "translationSha256": "49a452538283605dbea3b009abe01fc9c14e70b70e90d9e718e9427f1df2cc14",
+      "verdict": "revise",
+      "reason": "Die Wortstellung „kopiert werden nach“ ist im Deutschen ungrammatisch.",
+      "proposal": "Die Datei konnte nicht nach {path} kopiert werden.",
+      "proposalSha256": "65ed4624b8c66df329bf1cc3b2960cc7a2b7d9988299e60b1592f76296a8f9a7"
+    },
+    {
+      "key": "Runtime.Package.Error.ContentDestinationRejected",
+      "batch": 24,
+      "sourceSha256": "09df47f78071c11030c7dc55c4413d5496302fc15cb94edd20a80e422cc50e11",
+      "translationSha256": "442589a13aa5a204438849b6103277bb8e519a53f16caaf1bb84e9e9da972dde",
+      "verdict": "revise",
+      "reason": "„asset“ bezeichnet hier eine Paketressource/Datei, nicht ein beliebiges Objekt.",
+      "proposal": "Das Ziel der Paketressource muss ein direkter Pfad innerhalb des Inhaltsstamms sein: {path}",
+      "proposalSha256": "feaa3d0f4d4aa4617ca9ab1fe54ca3ba87856b269d429a4c803ed65258b2e12d"
+    },
+    {
+      "key": "Runtime.Package.Error.ContentRootRejected",
+      "batch": 24,
+      "sourceSha256": "270fe439c9e18ca0d76e37464028fabaac85ddf5f1768026de3be9e08943b608",
+      "translationSha256": "2372cfb03974821976e78e9c9cc09e58d7ce42dbdb8899bc40bf41e58b663793",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousProjectAssetPath",
+      "batch": 24,
+      "sourceSha256": "f7eecbcbe616df1b5addfff95390c4906e6b503fffc7c4ebc27569210c31b487",
+      "translationSha256": "dd69ff858b7d8e2942d981c39024cf22aec5ac0581ad4b97bacc40513e9655f6",
+      "verdict": "revise",
+      "reason": "„Projektobjektpfade“ kann VFP-Objekte meinen; es geht um Pfade von Projektressourcen.",
+      "proposal": "Mehrere Pfade von Projektressourcen stimmen ohne Beachtung der Groß-/Kleinschreibung überein: {path}",
+      "proposalSha256": "b83a3a50fda6534eb3ba2183b4c76140e805bfcada4cf3eba9f4f50ae985d021"
+    },
+    {
+      "key": "Runtime.Package.Error.DuplicateStagedAssetPath",
+      "batch": 24,
+      "sourceSha256": "e1e111727ccebac71b9ed494e718aa61876def61f78510fa77ed86bda7de7677",
+      "translationSha256": "d8a0e729021afb3fd87caeb576f7f9d9560f2d394474f36c804e2617960206bc",
+      "verdict": "revise",
+      "reason": "„Projektobjekte“ kann VFP-Objekte meinen; die paketierten Assets sind Projektressourcen.",
+      "proposal": "Mehrere Projektressourcen werden demselben Paketziel zugeordnet: {path}",
+      "proposalSha256": "b701ab3d221feaf6345167a1aadf2440fd348e693d60cfd88867144a8e039aa0"
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousCompanionPath",
+      "batch": 24,
+      "sourceSha256": "232237bdeefacbd421dac6edf2a4e9bea5de5c85c0cdc7f3989bb36298acc8e9",
+      "translationSha256": "46a396a716a7944c79ed8a60e476eba27c17e6fb2d9ed3530b59e51899fb582a",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateContentRootFailed",
+      "batch": 24,
+      "sourceSha256": "d32fa2739f50ffb4c9b86fa43d76563f48aee0d8f6c7183b3edc446ed3b19d3b",
+      "translationSha256": "6535d25c7ddd400e99b7204a5d0e1fed2d2d83cf70101a831088acd6bb6addd7",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateDirectoryFailed",
+      "batch": 24,
+      "sourceSha256": "79fd8c565f032346c6d3d3f7d18ea5f008ce92a3fac30ddb99a2adac32b885be",
+      "translationSha256": "c8c80926cb3b7475ccc14fdca744638f5831737b808ba55d7aa8344d9d8965cc",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateFileFailed",
+      "batch": 24,
+      "sourceSha256": "e7649c76efa6c9d5c4532d8f720c5f8ec1a94be45d4b5fe622524f132e95cb78",
+      "translationSha256": "1c1ddac2e390687ed92f502509f8c619595bce20206eb2a0398e9a47948e7687",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateLauncherDirectoryFailed",
+      "batch": 24,
+      "sourceSha256": "1b8f302ca9ece86e5bb162ca378f862671a57452028c643e85c9ff0295692750",
+      "translationSha256": "7848b9ee0a642b3523e3bbab5a57d03cdbe90c29496c15a351672e78f816c42f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+      "batch": 24,
+      "sourceSha256": "3b9cc924bbc7f34cd0468777539a7fae13134f7e2981a97d33cb189001265d31",
+      "translationSha256": "16258caa75cffa1bc21d255d87072f7bbfc6fea1fe5673ac678118361c832147",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+      "batch": 24,
+      "sourceSha256": "271ac9bd38bc8ab2a5d2ded01e21af0b1918dc7499917e438196f94f8772bf4c",
+      "translationSha256": "e4ced090b00103d58e77266e722218c197130385d404877d304ba59caffa1900",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.CreatePackageRootFailed",
+      "batch": 24,
+      "sourceSha256": "c5669fd0d0aae6e8dbe510ca9a419dc5b00e4265d48d168b4ad84c2b427a5111",
+      "translationSha256": "39b03b74d20e677e05eb98756620ef653b7cdf2620f11eb84ab1ea912424f165",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperCMakeMissing",
+      "batch": 25,
+      "sourceSha256": "08b8c013bf11d764214b998d36b3d6d7e15af0eef5c1a7d0a6a63ba7b5baa1c3",
+      "translationSha256": "e32b6faca956e863d1f7412412c6722387b1b8544c7aafeee18244110789a955",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
+      "batch": 25,
+      "sourceSha256": "d1a55ca136cf96cad969d74a0dbaad6fca367ec9d58953477be7f204922c20ee",
+      "translationSha256": "d4cf94d5c0e7ed3dbcb0273c0113b936d74981a1063ace1852a7a1ad231547d9",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
+      "batch": 25,
+      "sourceSha256": "3d7629353de7946c749c4f1876a135229c602704c16e84c7c92408cfac6605d2",
+      "translationSha256": "3232f4eb2f25eebca72a95005e937b7a5f9ad9f7658a5c6a6bb22e4e5db596fc",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing",
+      "batch": 25,
+      "sourceSha256": "4545f6e4adf883e82b0542534383b77f70fb6d260bbd73d283db3a4ce217c1c4",
+      "translationSha256": "116809ce50e0af1658496a36c50407008316d774da9555b340bcb218f74fa225",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.OpenFileFailed",
+      "batch": 25,
+      "sourceSha256": "8a288c3ec85c10b1067f35c80ea63efdabe7cefbab5002be030fe5723a8aaa1a",
+      "translationSha256": "33ace070c5480ce855e1337262aa6e2011b4462488c53f0ef1db19a51e5e330e",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.PackageRollbackFailed",
+      "batch": 25,
+      "sourceSha256": "4d536cce98bedefda520e30d5c53973456b26fb58164dfe92efbb5c86ea5b335",
+      "translationSha256": "ed603f104765b6ee6b02796a6bc47ba06c7a16643a7579b9ed71417b36e5e82c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.PackageTransactionStartFailed",
+      "batch": 25,
+      "sourceSha256": "56c5cc0c73ffafa8b8ec7c4a290ed0095174f6ae8961ebe599df8a2466cabea1",
+      "translationSha256": "72188538473e4172baf111c469cd84828e349f2d85ca7e5222017162554e4840",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.PlanInvalid",
+      "batch": 25,
+      "sourceSha256": "2f189ce70fdbef0a80d9bc7e8b2721bbcbc6fe9e030abc4f37e87ca7d57b05e6",
+      "translationSha256": "999abf825b2bcc98d3e0f06393ffae673e87b16324a6b118aaa44fe516835505",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactAmbiguous",
+      "batch": 25,
+      "sourceSha256": "a5dc1d9b6b4ed255c17dec58a6d83d7e831ece61a5cf03398c94a56f38ba9e66",
+      "translationSha256": "5497e56e5cdbed712b3f9bccc5c6eff8877394a3c4cf7e1a188ae711f514db30",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactMissing",
+      "batch": 25,
+      "sourceSha256": "28e8f10aa0582767972124091670f207c845ee6fa0644b102044360d86f2f723",
+      "translationSha256": "286c3ad414a0ab246e24a66f65ef03b317e6caf40bae4b1ef3e386a46ee7edd8",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+      "batch": 25,
+      "sourceSha256": "4abb80205ff671fb59bb1c938b8e9991f7232975009c5c9d6d4612df400f96b1",
+      "translationSha256": "6ee467bb564e95d157f4bb09f24e8456b39976001460957db5a009c0a50317a9",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactRenamedDuringRead",
+      "batch": 25,
+      "sourceSha256": "872e695098bceb99989642e4da981307bf5c9d5867dffb0875bc154c940591fb",
+      "translationSha256": "7bc98954615c156de59c3d43c6a08662691b0770f461015b7916d0874a9503a5",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.LauncherArtifactUnexpected",
+      "batch": 25,
+      "sourceSha256": "c1cb1ff261f1278553f6dd8914a7944098ecb698c9b7a4e2987a07c03bb00681",
+      "translationSha256": "c88d0ca4e80d923b9cccb3ca7f3176fe81d38cd72ab663de8303cd6973076d6b",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.OutputNameReserved",
+      "batch": 25,
+      "sourceSha256": "dc1f1685db4837f4970c1fb537a551869b3dd959ea4ae4cb4b9c96a4afcfd497",
+      "translationSha256": "bad39e52740e193faaafc21c36ec1ac279b7123363561e385f802844151fca56",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairPathRejected",
+      "batch": 25,
+      "sourceSha256": "b9780ad590f7bba44ffd520ce024774abc6f437fe26b86b1bbc89c274a9b4751",
+      "translationSha256": "d76e9ac7fdc29e8b4f1a33ff35187dc96a50937087c2e19adee7582036e6d5e6",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairPublishFailed",
+      "batch": 25,
+      "sourceSha256": "f26e497b39328502dbbea6e707206dc76094b12c6f23b28e2061022713919e71",
+      "translationSha256": "c69bb9f81ef19f83e00524f2c561a1dc02f336427ba992cf47d5aea7e2c90aa2",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairRollbackFailed",
+      "batch": 25,
+      "sourceSha256": "4fae2c9cfa0b5abb251ec3f9c90d2c8f31d514da31b218c32a06453cebbc017a",
+      "translationSha256": "bca35d763e9a3d9f26dd9048dacfcee9a95a1248c98f5e5010ad566074a332f6",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairStageFailed",
+      "batch": 25,
+      "sourceSha256": "73ad6ca77ed52eab9c899a0a9c43e2f6afb2828525a42d2b07be866434f863c4",
+      "translationSha256": "ea8a7500bfe791e1d7b2001748b6514a9cc960311a53c2f9a83712bb41896714",
+      "verdict": "revise",
+      "reason": "„bereitgestellt“ klingt nach Deployment; stage bezeichnet das Vorbereiten des Manifestpaars vor dem atomaren Veröffentlichen.",
+      "proposal": "Das Paket-Manifestpaar konnte nicht für die Veröffentlichung vorbereitet werden: {path}",
+      "proposalSha256": "30edd4b05e29ecb35aa4ddd8d5d9e9682f0b33de231014777f6cdc99c296ab82"
+    },
+    {
+      "key": "Runtime.Package.Error.ManifestPairTransactionCollision",
+      "batch": 25,
+      "sourceSha256": "a337eda20f5b3b76df36a12aba665a7481578c98e3913b05e697fae467cc1de8",
+      "translationSha256": "358205597169c1567c489a351c95f2149725003e0536267a84d33c2d5b17887f",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.PrimaryOutputMissing",
+      "batch": 25,
+      "sourceSha256": "85857eae662cd8159d72123f2af533e532d0ad5b4dc7a7866a234107ac706b35",
+      "translationSha256": "de8685c3526caa5b4f7bf54c94bd8f1dcc0ba17cf664961613f14461b18ca211",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput",
+      "batch": 25,
+      "sourceSha256": "3fab6af12d4764f6bc6d02dcab161d81ac122ca8cba62424badd934604c6fd1a",
+      "translationSha256": "65e6d0b2cc21c47cab3f39e4f15b65ae1be7173746cba371b16b330091f50233",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathEmpty",
+      "batch": 25,
+      "sourceSha256": "16984f62b933434f7104b924aa9193e148e4f1d07adfa866cde062f857c26c9d",
+      "translationSha256": "617de5048fbb1dae6dd416b99c76a736cda71aa889428f2aecf4411dd6585734",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile",
+      "batch": 25,
+      "sourceSha256": "30b3e118e321ddbd2531f3eb23df56ac78e629ff7a6f38a668f703cb761070da",
+      "translationSha256": "2fe845c8a8965e82444d14d2fac414280ead9d5957cfb25a27ff862678f99899",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.RuntimeHostSourcePathResolveFailed",
+      "batch": 25,
+      "sourceSha256": "8f88ee2d9b0c92adab29973ee71d73bdd41859ff4d05d857204066972bee06d2",
+      "translationSha256": "b87c380d63c6bbc4982befc8672d367a4f43df0cc83dfc4b9916cd7c750fac56",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath",
+      "batch": 25,
+      "sourceSha256": "33060955a66b0c674da990b518258e3b35ba0636191e2a055276f41157553314",
+      "translationSha256": "fdad856b9b635bea062702ecb4ab6bd653f269a80483b494cd86a250ebab9a9c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName",
+      "batch": 25,
+      "sourceSha256": "441e7a1a0236c77cb793c2ecde49749544ac0676bbcc719153dca0f7e6868790",
+      "translationSha256": "ffe6b96cee6ceb90b9595cb6cb1b6ca6cf45c94d4bc5a62add64faeeb2b98477",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.SourceFileMissing",
+      "batch": 25,
+      "sourceSha256": "cec937b45fcdcbee8958841b37a23a775928aca59e0f388d084872485174806c",
+      "translationSha256": "12909de6893d07efd4a5ce15b6635009701bf9f7132ed5aaf5583eb9f69ea713",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Package.Error.WriteFileFailed",
+      "batch": 25,
+      "sourceSha256": "ca305db129595286503440d7ade414eb7992cba8872996e6b1e6a2b5cfa125d0",
+      "translationSha256": "2abcd1c7842aa6d5d0f09ff336bcdd03186bfd5a3e4f3f70114e57fb7a303d5d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+      "batch": 25,
+      "sourceSha256": "85f4c52080d037c0f9d9a6c23234846c187be9f06f47dd16b0efadaa316ff7a8",
+      "translationSha256": "5b9b0456a2445351c9259c27dd640c097b0a72fcc461b4e19cb8dd4e99633882",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message",
+      "batch": 25,
+      "sourceSha256": "598c476510052a9ec72428b042deb600a5330d4a2ec09d7768e5d492a583171a",
+      "translationSha256": "d18b11221e30ce29c66fca85780a25634e5e647eeda1cc3a1cbdf35b7d99b577",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message",
+      "batch": 25,
+      "sourceSha256": "75782b06304b9624287050c4d958c51fe12feeb1eae99ac7e2d5c3ad64bafe72",
+      "translationSha256": "a8ef1a7e23da291bbe6802399e4d0d52417cc53658a67de3ebdf1613488e246d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.FieldNotFound",
+      "batch": 25,
+      "sourceSha256": "9ca4b5395f81f2873995bfd6653f4126b5f8f3cdebe7eccbe440290fd2c38fa1",
+      "translationSha256": "55e991a0a909d33d177bb654670187ede73d53d6ea741159bbb8749c538cfd35",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.OnFieldNotFound",
+      "batch": 25,
+      "sourceSha256": "fa05e8b8ade4e3dd5ee4d08224506c77947d5e5bf9c2fc42a5ae049ea4802e4d",
+      "translationSha256": "65ec1647e3b028c607ece40c1ac040fb5fc33752c99829f5fc9e369ccdf65580",
+      "verdict": "revise",
+      "reason": "„TOTAL-ON-Feld“ ist kein idiomatisches Deutsch und verschleiert die VFP-Syntax TOTAL ON.",
+      "proposal": "Das Feld nach TOTAL ON wurde nicht gefunden",
+      "proposalSha256": "b3eef989f172b973558f4526f7e6e54710b24e36808ca7aecba8e88f8fc90f75"
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.OnlyNumericFields",
+      "batch": 25,
+      "sourceSha256": "f89b445356b23055d8df7341f9ccebd75a7f58a7ce4f3256b198bb9a6c31ff6e",
+      "translationSha256": "30f3ec71872b1976788f09c290552617726a55bbd6b48a10b7b8676efad3c3ea",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresLocalTableBackedCursor",
+      "batch": 25,
+      "sourceSha256": "6ae953e6404d9cd4a1e49f562617b4869dd055f9a62af1e00a891fc68278d1d9",
+      "translationSha256": "67478285fd737e3bd4d7d9cedb9bd4273bfd993cf07ccff3c0c0f13a3d40af45",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresNumericField",
+      "batch": 25,
+      "sourceSha256": "b63ae5a6eb8895f29278495df6e4d86dcb8179a9f9d144f0e0ceafea2dabcb68",
+      "translationSha256": "fc336af78f7efb5a3b6b3d21580fc13876c8397defd2b8da4691a5e5bb12dbfa",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresOnField",
+      "batch": 25,
+      "sourceSha256": "6e387a75da152089de345b821f01c45236f1a555e20f1339ee873d10421f238e",
+      "translationSha256": "4d065326511c5672df07ceb9482bb50d1df488ca46279254c6f180c80932b456",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresSelectedWorkArea",
+      "batch": 25,
+      "sourceSha256": "993a75e559ca74e3b181b3fac59f018f556c2e2bfc9579463eda7884a55defd5",
+      "translationSha256": "b818639504295d216bd539658245a981fdb5033a78141dd4d789a57b74930f29",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.RequiresToTarget",
+      "batch": 25,
+      "sourceSha256": "eab69332a0ba2fd7ae5733c51f015c8493cbd030186a7c589f8a615f942f18a2",
+      "translationSha256": "99adbf6c13a3a866b6147aa363737dca1c4b472a0b41ff8eea4b0c83f49b83d6",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Total.Error.TargetWorkAreaNotFound",
+      "batch": 25,
+      "sourceSha256": "71ee1ee7dbee0e0c2c3c8207024c364d0987f2db9eea9cfbc558f45a3f96511f",
+      "translationSha256": "4769841885f516c9459f580f458528fc9dd232ae81dad4c94f36aab9991fb7bc",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression",
+      "batch": 26,
+      "sourceSha256": "54b1adb582d2009cfdd81fb5e324281343198d55d57d6de14ec1f40f6a833b80",
+      "translationSha256": "bf9bf936d557d2ccbd03a1cd20733ff3c55f2bed6a867aad10ce24fa93b9b285",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments",
+      "batch": 26,
+      "sourceSha256": "9f1ae5ac9372fd48853d0f1f76d2e1fc273a79ef248b5829d633a0668304a45d",
+      "translationSha256": "b9d6e1b7e373aa3c6559cbcfde9c352cd9a70d8c0c5ed931a4d1f947aa776d8c",
+      "verdict": "revise",
+      "reason": "„aggregierte TO/INTO-Zuweisungen“ kann nach aggregierten Zielvariablen klingen; gemeint sind Zuweisungen von Aggregatergebnissen.",
+      "proposal": "CALCULATE erfordert mindestens eine TO/INTO-Zuweisung für Aggregatergebnisse",
+      "proposalSha256": "019a187340f76ca7dcc8fcf7300e29c5aa5e796d61009b5e15a631afb3858cb0"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.CountToSingleTarget",
+      "batch": 26,
+      "sourceSha256": "6e5e006376d8abdd5219d6b7d3eab9a284acb9cbc507d75e0bd17dd2ea900257",
+      "translationSha256": "1b29969ce4572ad0f4ccf1cd38f56a6888e6e12400b5a6c35abaf10a26d6e59b",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.RequiresExpressions",
+      "batch": 26,
+      "sourceSha256": "07ccb675a76c5fa2af505c962598bee91dcbc0de01a3a8a7edfddc3f571db9ff",
+      "translationSha256": "d41a03c51fa6bf731d8603aa6a62694b06aac56d2728ba3e40f2c524a9b11e33",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea",
+      "batch": 26,
+      "sourceSha256": "d488f7b24bbc9da97eb3f4b4adc54d126de679379b45d484eb7ded5157e6eafe",
+      "translationSha256": "6216aabcd46b101449dfee286b7672583e1e04a70f686850afbcea163cc1b238",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound",
+      "batch": 26,
+      "sourceSha256": "80590a927ea872d280c3a5deb6df2d5cf7b37b6ecb605549f59892bb2f6c7510",
+      "translationSha256": "353ecc570f87dc86e4c40fe9b1393137dc2f52482bf0b08c306e67b21a6079fb",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName",
+      "batch": 26,
+      "sourceSha256": "5edb1fc37978ade273a49e847f542c8de097c6824e36fb391e79edf78957cf76",
+      "translationSha256": "8e62c449d32bfae48b9d1d94a4c23a1b1f809bdde6106dc29e7126d78580c0d6",
+      "verdict": "revise",
+      "reason": "„Zielarraynamen“ ist schwer lesbar; die Platzhalter/Schlüsselwörter bleiben unverändert.",
+      "proposal": "{function} {toKeyword} {arrayKeyword} erfordert den Namen eines Zielarrays",
+      "proposalSha256": "5060800e3273931b509cf3e84e3e8f118d1974fc0a539954044c72d83021f124"
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly",
+      "batch": 26,
+      "sourceSha256": "3b04c011b7968d25b62d15e5883d2c018edebda7a5b322ddccf572a934537b71",
+      "translationSha256": "a10270985f8622db38643960d52b04a3009eaf68acbe4f14c6c1b2c69adb4952",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+      "batch": 26,
+      "sourceSha256": "a9b03dc1f006a37135d1cc5e0b6b0051407c699514e4bf9ce0ab5899d21e2d41",
+      "translationSha256": "8f6a40ca31a73b0e96c9b99ca84210dcff475b3452a666e6696eaddf265fd85d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.BackupCreateFailed",
+      "batch": 26,
+      "sourceSha256": "efa82a8adcf0216f13b989109125211ea1397e199c571785bc87d0f6bc1eb47d",
+      "translationSha256": "20b2ee2bef8c29aee511c47f59ea15f386811facd7a613e6cb93c77984f3550e",
+      "verdict": "revise",
+      "reason": "Die Stellung „konnte nicht erstellt werden für“ ist ungrammatisch.",
+      "proposal": "Für {path} konnte keine Sicherung zum Rückgängigmachen des Befehls erstellt werden",
+      "proposalSha256": "ef94b3309e3b85122a041cdcccfbe6a897600f6eca286e0165ec2ab76844e39b"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalInitializeFailed",
+      "batch": 26,
+      "sourceSha256": "591f5586333813f1f6318871510538cdeab865489807f549525c5be28fe25f3c",
+      "translationSha256": "93ca9c6b387d60f75cb7c5ccc7d2b9c33ae4a29c02982c0d7ab51524c103bcb1",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalPersistFailed",
+      "batch": 26,
+      "sourceSha256": "05cc5d6aeef205a17a4fc809dc29d1d8132ef223f4206cb345495664a3cedb6a",
+      "translationSha256": "8fde3a9563cb54c249a061394fbf611571c47a21433ed3c0953889bfe99cbfd6",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.JournalReplayFailed",
+      "batch": 26,
+      "sourceSha256": "a051ee58a2a841767a180c16153f4b20c1b56facfbb1574395c7d9f456e369ad",
+      "translationSha256": "c37173217d66ad805463f39cc5bd82a39166089ca1bfcf63aca364a07bcf84c1",
+      "verdict": "revise",
+      "reason": "Ein Journal wird technisch wieder eingespielt, nicht wie Audio/Video „erneut abgespielt“.",
+      "proposal": "Das Journal zum Rückgängigmachen von Befehlen konnte nicht wieder eingespielt werden",
+      "proposalSha256": "f9681f5c3aea867efa40764490da71e73c7b396153a441e8644e3ab5650a4d5c"
+    },
+    {
+      "key": "Runtime.Prg.CommandUndo.Error.NoCommand",
+      "batch": 26,
+      "sourceSha256": "ddc9faff8d4ab03a8283fe8752ce3aa76f19d34782c47cf96045377c4f8b92af",
+      "translationSha256": "21c719fef47b8a8e2ebf7decfe61ca1870639b426f68bfe3de1bda97dbab688b",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.BlockingOperation",
+      "batch": 26,
+      "sourceSha256": "2a4a063a6d60b3c0380c50836f2be43a66f504009ce7c97112fe6d75e3ba6167",
+      "translationSha256": "38f76d649ebc7524822034efc64755db63678b50d7737bcda208e901dc88d795",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.EnterAscendingOrder",
+      "batch": 26,
+      "sourceSha256": "4a33ffb8c78f8320935c98324748515f7698a5d40cac81b9a5f1fe4163cccc4a",
+      "translationSha256": "b572d51f0242eaa6abffbe20ffb82ff092142c4ad023b6eda4f8f9855964f1fa",
+      "verdict": "revise",
+      "reason": "„{heldSection} gehalten vor {requestedSection}“ ist grammatisch unvollständig; die beiden Rollen müssen erkennbar sein.",
+      "proposal": "Kritische Abschnitte müssen in aufsteigender Reihenfolge der normalisierten Namen betreten werden: bereits gehaltener Abschnitt {heldSection}, angeforderter Abschnitt {requestedSection}",
+      "proposalSha256": "f591f294207ce2aa41f695fe191a7ce937ff83f1e02892e9e7b64b94095f321a"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.ExitLifoOrder",
+      "batch": 26,
+      "sourceSha256": "93fa58ee6b78fee05e0b30982b17b8e208b0defb3becf51e2de0e78c1576a9d8",
+      "translationSha256": "2bcbbb80a4fe97768065b2b2d4d89ba377b67f3fd43234ccdbcbf084a4a15dc7",
+      "verdict": "revise",
+      "reason": "„{heldSection} gehalten vor {requestedSection}“ ist grammatisch unvollständig; die beiden Rollen müssen erkennbar sein.",
+      "proposal": "Kritische Abschnitte müssen in LIFO-Reihenfolge verlassen werden: bereits gehaltener Abschnitt {heldSection}, angeforderter Abschnitt {requestedSection}",
+      "proposalSha256": "c77a8cf55704bb3847f45955ce418225658f80d84b95acfda345960f98d63d03"
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.MutexNotFound",
+      "batch": 26,
+      "sourceSha256": "4e2cc0c8501df4a657aac5c5ecbb8d0b5b9a9b1eafd67fcf6228f9c238eb868c",
+      "translationSha256": "3cc7f89d894a7f554549434eb13f4eef01f768e31d7acd68d10934e6dea9f12c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.CriticalSection.Error.UnknownSection",
+      "batch": 26,
+      "sourceSha256": "85bc79c2ebf19817ebe37c5cb3409e7377c4ef4b86f8fcb78271977197974da7",
+      "translationSha256": "7edd34a18e611f8a46da0ff6a53d4fd64d6f3435c408b202687e21ad097b6f34",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.AsyncTaskCancelled",
+      "batch": 26,
+      "sourceSha256": "63fce069eff76810fe70316868a79c33e226fc0bd21bee6e8cc141373da215ec",
+      "translationSha256": "f40647a91e56e207e57be303e0d08ce81f824bcb870bf84d242f1bd6dc0d49c0",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded",
+      "batch": 26,
+      "sourceSha256": "e030318cf86c1d0ae4d3050dd09e34a8b22a74be9e0a136eb200e60b07037292",
+      "translationSha256": "d809abe69c29e08d32bdd130c00f8062d0bcdd11c49e9036161b5306d9ad60f5",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded",
+      "batch": 26,
+      "sourceSha256": "4a41f0c07466c6d6831cdeb426fdc09f9c76ea29808eba4d63622b283831b3da",
+      "translationSha256": "92f0fb2b281696e98a759bd6c14c4edbb752e37bd6b24674286dfc5b4cdc907d",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded",
+      "batch": 26,
+      "sourceSha256": "8029db288d8342baa6b853b8dbc269d8beeac1d3052e621d89246dd2717f31e2",
+      "translationSha256": "615c7653bb328af23b038c1458d1e7cd9b53bd29c09d1578704b6a4740dc18ef",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
+      "batch": 26,
+      "sourceSha256": "4cc246a6ebb072bd4b061b829b8340af5a08566fac9ee8e5a756c27b8643529f",
+      "translationSha256": "4f8a39990105fcf8d18f288547dde6c43c04e1efed2122fdfa24beaf0536102c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+      "batch": 26,
+      "sourceSha256": "f4a5d9accdaf544e2e59d8e6c71017cf5ea5158daa0a42848b090abe731dfe3b",
+      "translationSha256": "7b67d7138f68b5c38a01b50cc4bd08bb5384c16c79ad4c4bf5b863b91cd336ed",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+      "batch": 26,
+      "sourceSha256": "db0d79b2889346ab16a59d5f5bf57a93525090726227992276360e3a17a1dce0",
+      "translationSha256": "7dcb4f3be3594c8f0f6605851a30dd9aba89271df2a24d91686f683bdd8a7e16",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.FileNotFound",
+      "batch": 26,
+      "sourceSha256": "affcf4c8d293c17fcb845deb7f4bb1aff6697426d75bf28a2bf7403067646673",
+      "translationSha256": "d3c68be2908bcc0399d56135d40bae1319b2cd2b6699947a2961daa39210da2c",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.InvalidRootBaseClass",
+      "batch": 26,
+      "sourceSha256": "fbfe4084cfe87a660455cc1b9c2f4781cd140717e7c36f911e2ec61167bc2a13",
+      "translationSha256": "c8e89205545c11224bad4de5ccab7c0bce03bba5c0814b3bde40c1825e0c2130",
+      "verdict": "revise",
+      "reason": "„Root-BASECLASS“ ist ein unklarer Mischbegriff; BASECLASS als VFP-Feldname bleibt geschützt.",
+      "proposal": "Der BASECLASS-Wert des Wurzelobjekts ist kein gültiger Bezeichner",
+      "proposalSha256": "f2700cfdb2b74e59524595505375defdbe5982ba8a9e325c1cfcde67358c102b"
+    },
+    {
+      "key": "Runtime.Prg.Core.Detail.GeneratedClassSourceWriteFailed",
+      "batch": 26,
+      "sourceSha256": "b60c3b9d18967869171c71cff272d0de14034276c11a53a020eb5ea27250106a",
+      "translationSha256": "be03d00e18fe7a3cc7f2f562c05230c680b7be9ad435acfb3ce7d13d83a7d141",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberAccessDenied",
+      "batch": 26,
+      "sourceSha256": "2d3856bb75c14fab692b90b89cef7d6366113666122410d14420f692af5e6c68",
+      "translationSha256": "1c59632484ba34f6630d8f298498aed00ea97ca6966d93359f24bc536188ddea",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+      "batch": 26,
+      "sourceSha256": "86426b23b055de68f89eb931aeeef7b547d3e3dc474412651b0f2597c75da707",
+      "translationSha256": "f27197529632d11587fc2a65865339aa923a25b026c845acccd50dd4cebd5f86",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+      "batch": 26,
+      "sourceSha256": "b54c44f8a38b5360eb617cc5253cbb08e8be1c17bb2fe3a0f00e3f217166b66f",
+      "translationSha256": "41af876764f8d9cdb991c8db48c20f8d1977b919a1449d1ec0d479061f04e687",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Native.Error.UnknownMember",
+      "batch": 26,
+      "sourceSha256": "8bebd3d073162228eef4dbe7e7524b98cab4e18792481d64e9402b6b3b99a321",
+      "translationSha256": "1b5e6dc360d5a15204751ecdec67b8e095b74f48a2aedc4af61d228de82451a8",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+      "batch": 26,
+      "sourceSha256": "686dbf7fa9de5051fb23c2fc0806b6b0463e54140c0cf2a51c4fcd84835eda3b",
+      "translationSha256": "ddf9a43fcc21ea711b9daf3b94d2262d72a0a3a05686137739b0558263b78391",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+      "batch": 26,
+      "sourceSha256": "e5a1d043f5b8d1e10543de8a84cc1589e948ce707fbedd86d04e2005bfb4c4b7",
+      "translationSha256": "8f0460ccf3b703c81e031aa4d3d0a9b0a3e99265becf048c9f3102bfa0ca0672",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
+      "batch": 26,
+      "sourceSha256": "6b8199bfbf361286fa517f377d78b2df85c9d44b5e78b65b99968795899988e3",
+      "translationSha256": "d40981ac51e82cc1d702e05dd23e9e078da3e5a42ce18dee4ed250f4d5ac23fb",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceOutOfMemory",
+      "batch": 26,
+      "sourceSha256": "807356d4db0958215020ae8ab590c4e89cb5e6933966fdb6a9dce181681bdef5",
+      "translationSha256": "5bf11a3edbbe9d3dac53ca2995d5a0d6924538f48c556add09930230506f4f05",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.ResourceSystemError",
+      "batch": 26,
+      "sourceSha256": "4a92a7bf7c1affd6cf73c122bad03dd240808abc0597b6ed8d3dfc6c1edafcde",
+      "translationSha256": "6750eba32efd686663ff793ff6f84fca78a214935837a7a43bf621d676905200",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.RuntimeFault",
+      "batch": 26,
+      "sourceSha256": "c32a6228fdb45075fe34c73b94edf621084c582232f72b4bc85a7a0544ff5f01",
+      "translationSha256": "6bcb7376af684ebaf2318ae7eff391e285df28ebaf6556f977c54184f611348b",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    },
+    {
+      "key": "Runtime.Prg.Core.Error.UserThrown",
+      "batch": 26,
+      "sourceSha256": "019851724721a55b0889b566b5df9c50d1e0a3f1e57d2bd37a18fc69f16c4435",
+      "translationSha256": "a99363a357f53988853007af452eb29088f94adf74dddba8f772aec0723267c5",
+      "verdict": "accept",
+      "reason": "German meaning and idiom are acceptable in context; placeholders and protected source syntax remain intact in this text review."
+    }
+  ]
+}

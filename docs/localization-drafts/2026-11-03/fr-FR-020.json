@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-020-2026-11-03-1dd38b48-3076-449e-b7c4-df6e92ab89f4",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed",
+      "source": "required policy audit event could not be committed"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable",
+      "source": "required policy audit sink is unavailable"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy",
+      "source": "capability denied by policy allowlist/denylist"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired",
+      "source": "capability id is required"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist",
+      "source": "capability not in allowlist"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityOutsideActorScope",
+      "source": "capability is outside the verified actor scope"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable",
+      "source": "dotnet output profile unavailable"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget",
+      "source": "estimated latency exceeds in-process policy budget"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ExternalIoDenied",
+      "source": "external I/O is not authorized for this capability"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.PolicyContextUnverified",
+      "source": "interop policy context could not be verified"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied",
+      "source": "reflection is not authorized for this capability"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.SecretAccessDenied",
+      "source": "secret access is not authorized for this capability"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Rationale",
+      "source": "Use native Collection and Scripting.Dictionary-compatible surfaces instead of managed collection types."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Title",
+      "source": "Collection and dictionary helpers"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Rationale",
+      "source": "Expose bounded exact-byte hashing, HMAC, and Base64 helpers without ambient key management."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Title",
+      "source": "Safe payload crypto helpers"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Rationale",
+      "source": "Rejected due to known unsafe behavior and exploit history."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Title",
+      "source": "Legacy insecure binary deserialization flows"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Rationale",
+      "source": "Provide high-value JSON conversion features while preserving native null/blank semantics."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Title",
+      "source": "JSON projection helpers"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Rationale",
+      "source": "Rejected because emulating retired CAS behavior adds complexity with little user value."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Title",
+      "source": "Code Access Security-era behavior emulation"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Rationale",
+      "source": "Expose bounded non-backtracking pattern matching through FP/VFP-friendly functions."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Title",
+      "source": "Safe regular-expression helpers"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Rationale",
+      "source": "No general HTTP facade is shipped; use a separately reviewed and admitted host adapter when network access is required."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Title",
+      "source": "Safe HTTP helpers"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale",
+      "source": "Expose async/await-style behavior through FP/VFP-friendly command and function facades."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Title",
+      "source": "Task/Async primitives"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Rationale",
+      "source": "Rejected due to trust-boundary and policy-audit risks."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Title",
+      "source": "Arbitrary reflection-based assembly loading"
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.AiToolingOptIn",
+      "source": "MCP and AI tooling are opt-in developer features with audit, provider policy, and user-selected model controls."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.DotNetPolicyControlled",
+      "source": ".NET interop is first-class, but managed loading is policy-controlled and auditable."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.NativeFirstCore",
+      "source": "The trusted execution core stays native-first and security-first."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.ReleaseOutputDotNetStory",
+      "source": "Release outputs must preserve a clear .NET consumption story even when the executable is native."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.SidecarLanguages",
+      "source": "Python and R are supported through sidecars or job runners, not as the product core."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.IntegrationMode",
+      "source": "binary plugin"
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.OutputStory",
+      "source": "Performance-sensitive extensions can be linked or loaded through stable native interfaces."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.Title",
+      "source": "Native C ABI Modules"
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.TrustBoundary",
+      "source": "signed plugin boundary"
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.IntegrationMode",
+      "source": "hosted interop"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed",
+      "translation": "l’événement d’audit obligatoire de la politique n’a pas pu être enregistré"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable",
+      "translation": "le destinataire obligatoire des audits de politique n’est pas disponible"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy",
+      "translation": "capacité refusée par la liste d’autorisation ou d’interdiction de la politique"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired",
+      "translation": "un ID de capacité est requis"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist",
+      "translation": "la capacité ne figure pas dans la liste d’autorisation"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityOutsideActorScope",
+      "translation": "la capacité dépasse le périmètre de l’acteur vérifié"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable",
+      "translation": "le profil de sortie dotnet n’est pas disponible"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget",
+      "translation": "la latence estimée dépasse le budget fixé par la politique pour une exécution dans le processus"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ExternalIoDenied",
+      "translation": "les E/S externes ne sont pas autorisées pour cette capacité"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.PolicyContextUnverified",
+      "translation": "le contexte de la politique d’interopérabilité n’a pas pu être vérifié"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied",
+      "translation": "la réflexion n’est pas autorisée pour cette capacité"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.SecretAccessDenied",
+      "translation": "l’accès aux secrets n’est pas autorisé pour cette capacité"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Rationale",
+      "translation": "Utiliser des interfaces natives compatibles avec Collection et Scripting.Dictionary plutôt que des types de collections managées."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Title",
+      "translation": "Assistants pour les collections et les dictionnaires"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Rationale",
+      "translation": "Exposer des fonctions de hachage bornées sur les octets exacts, ainsi que des assistants HMAC et Base64, sans gestion implicite des clés."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Title",
+      "translation": "Assistants cryptographiques sûrs pour les charges utiles"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Rationale",
+      "translation": "Rejeté en raison de comportements non sûrs connus et d’antécédents d’exploitation."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Title",
+      "translation": "Anciens processus de désérialisation binaire non sûrs"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Rationale",
+      "translation": "Fournir des fonctions utiles de conversion JSON tout en préservant la sémantique native des valeurs nulles et vides."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Title",
+      "translation": "Assistants de projection JSON"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Rationale",
+      "translation": "Rejeté, car l’émulation du comportement CAS abandonné accroît la complexité pour peu de bénéfice utilisateur."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Title",
+      "translation": "Émulation du comportement de l’époque de Code Access Security"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Rationale",
+      "translation": "Exposer des fonctions de correspondance de motifs bornées sans retour arrière au moyen de fonctions adaptées à FP/VFP."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Title",
+      "translation": "Assistants sûrs pour les expressions régulières"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Rationale",
+      "translation": "Aucune interface HTTP générale n’est fournie ; utiliser un adaptateur hôte évalué et admis séparément lorsqu’un accès réseau est nécessaire."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Title",
+      "translation": "Assistants HTTP sûrs"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale",
+      "translation": "Exposer un comportement de type async/await au moyen d’interfaces de commandes et de fonctions adaptées à FP/VFP."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Title",
+      "translation": "Primitives de tâches et d’asynchronisme"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Rationale",
+      "translation": "Rejeté en raison des risques liés aux frontières de confiance et aux audits de politique."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Title",
+      "translation": "Chargement arbitraire d’assemblages par réflexion"
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.AiToolingOptIn",
+      "translation": "Les outils MCP et d’IA sont des fonctions facultatives pour les développeurs, avec audit, politique des fournisseurs et choix du modèle par l’utilisateur."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.DotNetPolicyControlled",
+      "translation": "L’interopérabilité .NET est pleinement prise en charge, mais le chargement managé est régi par une politique et peut être audité."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.NativeFirstCore",
+      "translation": "Le noyau d’exécution de confiance privilégie le code natif et la sécurité."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.ReleaseOutputDotNetStory",
+      "translation": "Les versions publiées doivent rester clairement utilisables par .NET, même lorsque l’exécutable est natif."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.SidecarLanguages",
+      "translation": "Python et R sont pris en charge au moyen de processus auxiliaires ou d’exécuteurs de tâches, sans faire partie du cœur du produit."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.IntegrationMode",
+      "translation": "module d’extension binaire"
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.OutputStory",
+      "translation": "Les extensions sensibles aux performances peuvent être liées ou chargées au moyen d’interfaces natives stables."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.Title",
+      "translation": "Modules natifs à ABI C"
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.TrustBoundary",
+      "translation": "frontière de module d’extension signé"
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.IntegrationMode",
+      "translation": "interopérabilité hébergée"
+    }
+  ]
+}

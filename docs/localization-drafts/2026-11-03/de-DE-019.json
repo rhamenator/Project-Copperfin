@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_en_gb_revisions/de-DE-first-pass-019-2026-11-03",
+  "model": "GPT-6 Codex independent author instance",
+  "reviewStatus": "unreviewed; independent review pending",
+  "locale": "de-DE",
+  "input": [
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Complexity",
+      "source": "low-to-medium"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.SourceShape",
+      "source": "FoxPro-style SQL"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Strategy",
+      "source": "Build a canonical Copperfin query AST and lower it deterministically into each relational backend dialect."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.TargetShape",
+      "source": "relational SQL dialect"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Title",
+      "source": "Fox SQL To Relational SQL"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Complexity",
+      "source": "high"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.SourceShape",
+      "source": "FoxPro-style SQL plus semantic operators"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Strategy",
+      "source": "Use deterministic retrieval templates first, then optionally ask an approved AI model to help synthesize semantic ranking or hybrid-search plans."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.TargetShape",
+      "source": "vector search request"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Title",
+      "source": "Fox SQL To Vector Retrieval Plan"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Complexity",
+      "source": "medium"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.SourceShape",
+      "source": "xBase browse/filter commands"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Strategy",
+      "source": "Translate browse/filter intent into field projection, path navigation, and document predicates."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.TargetShape",
+      "source": "JSON projection and pipeline query"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Title",
+      "source": "xBase Browse To Document Projection"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Complexity",
+      "source": "medium-to-high"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.SourceShape",
+      "source": "SEEK/BROWSE/SCAN/REPORT intent"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Strategy",
+      "source": "Normalize xBase intent into Copperfin commands that each connector can execute or reject with an explainable compatibility result."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.TargetShape",
+      "source": "connector-specific execution plan"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Title",
+      "source": "xBase Commands Across Polyglot Stores"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Description",
+      "source": "Optional vibe-coding and code-intelligence helpers for designers, migration, and diagnostics."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Title",
+      "source": "AI-Assisted Developer Workflow"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.TrustBoundary",
+      "source": "policy-managed external tool boundary"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Description",
+      "source": "Allow developers to send debugger context, stack traces, and runtime telemetry to an approved assistant workflow for optional debugging help."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Title",
+      "source": "AI Debugging Assistance"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.TrustBoundary",
+      "source": "policy-managed external tool boundary"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Description",
+      "source": "Use local or enterprise-approved models rather than forcing one hosted provider."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Title",
+      "source": "Local Or Enterprise AI Backends"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.TrustBoundary",
+      "source": "policy-managed external tool boundary"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.Description",
+      "source": "Expose Copperfin tools through an MCP host so developers can use preferred AI models and assistants."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.Title",
+      "source": "MCP Host Facility"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.TrustBoundary",
+      "source": "policy-managed external tool boundary"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Description",
+      "source": "Let developers choose the model used for AI debugging and assistance instead of hard-coding one provider or model family."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Title",
+      "source": "User-Selected AI Models"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.TrustBoundary",
+      "source": "policy-managed external tool boundary"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetOutput.PrimaryStory",
+      "source": "Copperfin applications should be able to ship as native executables with first-class .NET compatibility, and selected modules should be exposable as managed wrappers or NuGet-consumable SDK outputs."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy",
+      "source": "allowed by policy"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired",
+      "source": "allowed by policy with audit-required path"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired",
+      "source": "verified actor id is required"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied",
+      "source": "assembly loading is not authorized for this capability"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Complexity",
+      "translation": "gering bis mittel"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.SourceShape",
+      "translation": "SQL im FoxPro-Stil"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Strategy",
+      "translation": "Einen kanonischen Copperfin-Abfrage-AST erstellen und ihn deterministisch in den Dialekt jedes relationalen Backends übersetzen."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.TargetShape",
+      "translation": "relationaler SQL-Dialekt"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Title",
+      "translation": "Von Fox SQL zu relationalem SQL"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Complexity",
+      "translation": "hoch"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.SourceShape",
+      "translation": "SQL im FoxPro-Stil mit semantischen Operatoren"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Strategy",
+      "translation": "Zuerst deterministische Abrufvorlagen verwenden und anschließend optional ein zugelassenes KI-Modell bei der Erstellung von Plänen für semantisches Ranking oder hybride Suche einbeziehen."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.TargetShape",
+      "translation": "Vektorsuchanfrage"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Title",
+      "translation": "Von Fox SQL zum Vektorabrufplan"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Complexity",
+      "translation": "mittel"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.SourceShape",
+      "translation": "xBase-Befehle zum Durchsuchen und Filtern"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Strategy",
+      "translation": "Die Absicht hinter Durchsuchen und Filtern in Feldprojektionen, Pfadnavigation und Dokumentprädikate übersetzen."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.TargetShape",
+      "translation": "JSON-Projektion und Pipeline-Abfrage"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Title",
+      "translation": "Von xBase-Browse zur Dokumentprojektion"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Complexity",
+      "translation": "mittel bis hoch"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.SourceShape",
+      "translation": "Absicht hinter SEEK/BROWSE/SCAN/REPORT"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Strategy",
+      "translation": "Die xBase-Absicht in Copperfin-Befehle überführen, die jeder Konnektor ausführen oder mit einer nachvollziehbaren Kompatibilitätsbegründung ablehnen kann."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.TargetShape",
+      "translation": "konnektorspezifischer Ausführungsplan"
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Title",
+      "translation": "xBase-Befehle für unterschiedliche Datenspeicher"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Description",
+      "translation": "Optionale Hilfen für Vibe Coding und Codeanalyse bei Designern, Migration und Diagnose."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Title",
+      "translation": "KI-gestützter Entwicklungsablauf"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.TrustBoundary",
+      "translation": "richtliniengesteuerte Vertrauensgrenze für externe Werkzeuge"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Description",
+      "translation": "Entwicklern ermöglichen, Debugger-Kontext, Stacktraces und Laufzeittelemetrie an einen zugelassenen Assistentenablauf zu senden, um optionale Hilfe bei der Fehlersuche zu erhalten."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Title",
+      "translation": "KI-Unterstützung bei der Fehlersuche"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.TrustBoundary",
+      "translation": "richtliniengesteuerte Vertrauensgrenze für externe Werkzeuge"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Description",
+      "translation": "Lokale oder für Unternehmen zugelassene Modelle verwenden, statt einen bestimmten gehosteten Anbieter vorzuschreiben."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Title",
+      "translation": "Lokale oder unternehmensweite KI-Backends"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.TrustBoundary",
+      "translation": "richtliniengesteuerte Vertrauensgrenze für externe Werkzeuge"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.Description",
+      "translation": "Copperfin-Werkzeuge über einen MCP-Host bereitstellen, damit Entwickler ihre bevorzugten KI-Modelle und Assistenten nutzen können."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.Title",
+      "translation": "MCP-Host-Funktion"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.TrustBoundary",
+      "translation": "richtliniengesteuerte Vertrauensgrenze für externe Werkzeuge"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Description",
+      "translation": "Entwickler das Modell für KI-gestützte Fehlersuche und Unterstützung wählen lassen, statt einen Anbieter oder eine Modellfamilie fest vorzugeben."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Title",
+      "translation": "Vom Benutzer ausgewählte KI-Modelle"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.TrustBoundary",
+      "translation": "richtliniengesteuerte Vertrauensgrenze für externe Werkzeuge"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetOutput.PrimaryStory",
+      "translation": "Copperfin-Anwendungen sollen als native ausführbare Dateien mit vollwertiger .NET-Kompatibilität ausgeliefert werden können. Ausgewählte Module sollen sich außerdem als verwaltete Wrapper oder als über NuGet nutzbare SDK-Ausgaben bereitstellen lassen."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy",
+      "translation": "durch Richtlinie zugelassen"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired",
+      "translation": "durch Richtlinie zugelassen; Audit erforderlich"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired",
+      "translation": "eine verifizierte Akteur-ID ist erforderlich"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied",
+      "translation": "das Laden von Assemblies ist für diese Funktion nicht autorisiert"
+    }
+  ]
+}

@@ -1,0 +1,1396 @@
+{
+  "locale": "es-ES",
+  "reviewer": "Independent Codex /root/review_en_gb_revisions",
+  "model": "GPT-6 Codex",
+  "status": "independent_ai_review",
+  "scope": "Claude Sonnet draft batches 008–011, 160 VFP property diagnostic labels, exact en-US source and protected-syntax review; no repository edits.",
+  "reviewedAtUtc": "2026-11-03T08:47:18.149308+00:00",
+  "sourceBatches": [
+    {
+      "batch": 8,
+      "file": "/tmp/copperfin-locale-translation-v1/es-ES-008.json",
+      "fileSha256": "2409d55e5c3076955a86966c5cc75a38b5ccdff53ff02d2aebc0399350ebf9f7"
+    },
+    {
+      "batch": 9,
+      "file": "/tmp/copperfin-locale-translation-v1/es-ES-009.json",
+      "fileSha256": "d8d5bd088b218fbb58c8207109d15dba2edbf8867a1be07fbf6c5dce0109a1db"
+    },
+    {
+      "batch": 10,
+      "file": "/tmp/copperfin-locale-translation-v1/es-ES-010.json",
+      "fileSha256": "1e32e629f7d8170bd5b9f1ad51b6440b852e4a4c5ac0ad4d4387c190919b7c74"
+    },
+    {
+      "batch": 11,
+      "file": "/tmp/copperfin-locale-translation-v1/es-ES-011.json",
+      "fileSha256": "e7151722b7fe809e3ca24d55497c101f9121f50b74ebac36e1f1f11a42f67b59"
+    }
+  ],
+  "externalEvidence": [
+    {
+      "concept": "KeyPreview receives form KeyPress before active control",
+      "url": "https://www.vfphelp.com/help/_5WN12PKML.htm"
+    },
+    {
+      "concept": "ShowWindow controls in-screen versus top-level form display",
+      "url": "https://www.vfphelp.com/vfp9/html/9eb67555-deb2-4490-9d71-87d60f909bf7.htm"
+    },
+    {
+      "concept": "HalfHeightCaption controls form caption height",
+      "url": "https://www.vfphelp.com/help/_5wn12pk8r.htm"
+    }
+  ],
+  "counts": {
+    "total": 160,
+    "accept": 128,
+    "revise": 32
+  },
+  "residualUncertainty": "AI-only review without qualified Spain Spanish or in-product VFP verification. Some legacy VFP labels (e.g. PictureSelectionDisplay, DynamicFont style properties, ControlBox) remain context-sensitive; accepted labels preserve exact current proposals but do not certify their behavior beyond source/call-site evidence.",
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "batch": 8,
+      "sourceSha256": "14493f5f5470ed48c3f103d917ec52ae9005fa3913128031d0fac2a49ac3cc41",
+      "translationSha256": "1cef461b67c85ed2bbe9cd5e1eb52633286bf8edff69cf8e70a7f12ce118b469",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "batch": 8,
+      "sourceSha256": "a424e33d90931d1ed22f2af37a3f3491a5c9de0dfae079f6f3ff4edf0309e07f",
+      "translationSha256": "d552e8fe732241920230e2ae44d7adeadd09bacedff58505c8ef150ad907ba67",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "batch": 8,
+      "sourceSha256": "a199ab162e587e6965652c321a1d508697f5f456a39a7983d929125e6cbbffbe",
+      "translationSha256": "85077317d017fb8557d899f18989793b2720b1997539f2821e308a417cf24543",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "batch": 8,
+      "sourceSha256": "3b9e7d0cdf802cc344979561cd908c119c8e60afc2ff59384e1ea297672ea0bd",
+      "translationSha256": "a8140454f0b91a8273424a7cbfa5597c26d319503d7feb123d56f58e3a2f4cdc",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "batch": 8,
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "b41a1a61baef6fd9494d6e4ef4c30a00456a0c8ab1bacb326ca300a3a133edde",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "batch": 8,
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "6d3cac4780409bdc260c387ac908de46329594a8b7afb192a6f4dc0cb8b7c73e",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "batch": 8,
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "0ed7b6bd46a7bbeed33a6677251cc0735767b1ad920dba1431d6f2b8ed52d60e",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "batch": 8,
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "d1ed587884c674a2b4c8a0f320d1f62c09345ec66175fddceda0738f9c155b6c",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "batch": 8,
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "571a4eb5e072b4e4fe87b8b906ca49b77c6ac8a906bca512e70b8de188eb15a6",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "batch": 8,
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "4d676ee2083f9a9051a2f8463f2b223329e36afd7fff71d3da8e39ee71842373",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "batch": 8,
+      "sourceSha256": "61a72e3085b7d2ecb4830c402af469e3ce622ee48dd0283402c54431a722a2a8",
+      "translationSha256": "648436e5f761ce1e874c52e2a34289612cee91ce26679e29bb0b1221df167354",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "batch": 8,
+      "sourceSha256": "61a72e3085b7d2ecb4830c402af469e3ce622ee48dd0283402c54431a722a2a8",
+      "translationSha256": "14bbbbb99393339db2bcb9ba563bc8747066717abe7f6ca8704f945051cf8302",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "batch": 8,
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "be9470929bb48092db281fa70e6a081b67e641c845442e734a25cc9d494ee65f",
+      "verdict": "revise",
+      "reason": "«inserción de texto de colocación» es una cadena nominal poco natural; la propiedad trata el texto insertado al soltar/colocar con OLE.",
+      "proposal": "inserción de texto al colocar con OLE",
+      "proposalSha256": "3bc23d6caa8c0fadf3e81cf81c9abfdc7834ce13d39f30f38aa93f59f796b53d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "batch": 8,
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "93b0d6d56084fa09c3770960fb66686219576023365e07329beb37381f194cf7",
+      "verdict": "revise",
+      "reason": "«inserción de texto de colocación» es una cadena nominal poco natural; la propiedad trata el texto insertado al soltar/colocar con OLE.",
+      "proposal": "Inserción de texto al colocar con OLE",
+      "proposalSha256": "ca7a8d8e0f843a19636133484d82a3aa4376c3bc59728603e039e89792b05290"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "batch": 8,
+      "sourceSha256": "2cea274d0bedc39ec4ab6ba9e59ec889e3ed6fb56a1cf088a64d9b383378dc97",
+      "translationSha256": "3559fb35e3328cffef7f38fb08562f74bee14e53c17302479714634ecac7f129",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "batch": 8,
+      "sourceSha256": "9a1c54f55e7cfb1cc2cdad2991525037bc475a509fa37262e123c44e958d2d36",
+      "translationSha256": "58d6f29b0633706939d813a49923fd61c5767cbe0516c948d5d86e810a6d6097",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "batch": 8,
+      "sourceSha256": "c49c0ee674cbe62f769d52c56d8605f1693190a1d181d833065b81eb7a57295d",
+      "translationSha256": "8c2a1348fc04e253c6d8fe82612053f9df77cfed30fedde78987d391030a782a",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "batch": 8,
+      "sourceSha256": "b19746aded0d23ce7ca1aa2e36601f369c634a6905deca4fa6b7cb8b79327156",
+      "translationSha256": "8c2a1348fc04e253c6d8fe82612053f9df77cfed30fedde78987d391030a782a",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "batch": 8,
+      "sourceSha256": "2df962d37ee229c547fb4ebef038a1eaecd0cd6f1c109746f4a9c1fa80329254",
+      "translationSha256": "744c35fe69a80cef6676251da5602452ab19074c202478300c3a4a090dfefdab",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "batch": 8,
+      "sourceSha256": "4dbdd221e957eff27cc47796f3ed8447290f71c7ad8b95e5bd828b31c1858f15",
+      "translationSha256": "aa5f0b4167424ca79955d22a25302f8ea40e905e94f85575d33780de7d430e8b",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "batch": 8,
+      "sourceSha256": "4fed3970dcc0d31dccddbf69ef55b00f32d2ca787f1757894914bc0365ea7aa5",
+      "translationSha256": "64f718032afadbc8e36e47674e88f4320b669f882f84b139160141f8f3b896e5",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "batch": 8,
+      "sourceSha256": "72bb90897ab1eadc924fa1358773c5949372c1f06d8dd53d730bbfa3b0c5b695",
+      "translationSha256": "6e3c2c930b47229412014b8b7b4ff2c365e6249ad1547f31984505fc2d553246",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "batch": 8,
+      "sourceSha256": "bc41763b9c1ab33018029e38603b6712ac13eb956e76645f327116d4ba1bedcc",
+      "translationSha256": "f59af5c8e56ac09ffb2e4cb96298de4a6a4951d9da7c63a46664cfacb8e1cdeb",
+      "verdict": "revise",
+      "reason": "RecordSource es el origen de los registros; el singular «del registro» sugiere un registro individual.",
+      "proposal": "tipo de origen de registros",
+      "proposalSha256": "56a4b83bd470aba038384784765eb27e70e81ee22e55d375d04857405038e1c0"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "batch": 8,
+      "sourceSha256": "2916173840a7130564bf126fb4792b3bbbfb5f9a0aa4298558348bef321535c9",
+      "translationSha256": "73461685219a10f49514c3e87cbd84b7160561be8f66fb3040aab6682c3307bd",
+      "verdict": "revise",
+      "reason": "RecordSource es el origen de los registros; el singular «del registro» sugiere un registro individual.",
+      "proposal": "Tipo de origen de registros",
+      "proposalSha256": "2e4db57c0b36c5f96f8065f50765130ec5239fa554ce1ed11d73a3fdc50c3dd7"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "batch": 8,
+      "sourceSha256": "1ec33b64cb90d817458e2ef31a6a3cb8e690fdb1289e763e4dd94a970cb4e6fc",
+      "translationSha256": "33db6b8faf5fa23af893e5058fc3ca19d1c1fdd2111876106c8c04d5d9749574",
+      "verdict": "revise",
+      "reason": "RecordSource designa un conjunto de registros, no el origen de un solo registro.",
+      "proposal": "origen de registros",
+      "proposalSha256": "045c82824c5e88af119687f0a4d2dca577f136b9abfc7730d6e797ef7d42c581"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "batch": 8,
+      "sourceSha256": "1615f896b9bda5ec622bd3b79326ca7163811206b317c3cf54098d203d8a5e97",
+      "translationSha256": "9aa77d20aff276b0a3d00aba008ed8d3a52c56c9c84cb6eadbcca4b35e8b6668",
+      "verdict": "revise",
+      "reason": "RecordSource designa un conjunto de registros, no el origen de un solo registro.",
+      "proposal": "Origen de registros",
+      "proposalSha256": "0bc6b6f8aa0a9c7f35546e49bd0bc615a7dabf531c3458e960acc686752bd1c6"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "batch": 8,
+      "sourceSha256": "50f01f1d98210e72ad86c6f10314248c5d084a9b0ec3568455f45ee14be412ec",
+      "translationSha256": "18d061ada6dc64fd519c7e8030a66df0cd57ce0e8fa16d9744eca2b65e82e2fe",
+      "verdict": "revise",
+      "reason": "RowSource proporciona las filas de una lista, no una única fila.",
+      "proposal": "origen de filas",
+      "proposalSha256": "c42dfda910f7e73a3d71f9e9d1bf49c9c210d99979e83b6f0d41db50952a3384"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "batch": 8,
+      "sourceSha256": "de3aa297ced2279e4e5389e5ea35670c90a2643d7af2adeddd5d58bf86005757",
+      "translationSha256": "be796692c5d4673444ef69356302c5211b0b3d591d417f0251e4fbb074d77a59",
+      "verdict": "revise",
+      "reason": "RowSource proporciona las filas de una lista, no una única fila.",
+      "proposal": "Origen de filas",
+      "proposalSha256": "5fe6f71afe2877a31b82b90d01d24a06d106c24939cb5c65b598a894fea8dc84"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "batch": 8,
+      "sourceSha256": "d205b025f04a3196ef59e884aaa7a6a91aedded28072e2be092abf8d0a805ea1",
+      "translationSha256": "da003964b8bf5f012c2edc169e5416b39d2c720f0462cf01817de5a5daa28274",
+      "verdict": "revise",
+      "reason": "RowSourceType clasifica el origen de las filas de la lista, no el de una única fila.",
+      "proposal": "tipo de origen de filas",
+      "proposalSha256": "9df90588595f60e5f9ed2b54e0431824ba1f229ed5658e08ea595875386197ec"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "batch": 8,
+      "sourceSha256": "29467b793be1850ddc3d32968cb5aabbf78f7bfcbce0ab9b4f75ec4e75dd1c19",
+      "translationSha256": "498e60f9d79d37bd96592f1acb65065d014b6681f5306a3bd561e5bdb491d016",
+      "verdict": "revise",
+      "reason": "RowSourceType clasifica el origen de las filas de la lista, no el de una única fila.",
+      "proposal": "Tipo de origen de filas",
+      "proposalSha256": "19d54c5ba604e9805acbfea54e6df8de2925ba91016042177623350480e40d35"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "batch": 8,
+      "sourceSha256": "38917df282470a2e2f85b9d86a8cf4b381869264d1ac50130d713dfbb6e12067",
+      "translationSha256": "b8d99c5e4a21b996331fd5839a1a87ed035676d06acb5bc35ae226006924da39",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "batch": 8,
+      "sourceSha256": "654bc12a6cd4d98d84731cce7880aa386ca9c51726f650c634e4f8429cd8e975",
+      "translationSha256": "c0ce6d1b52acba900adde5cc02039e14f62d4541d9e168a23f5234c16d7b55e9",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "batch": 8,
+      "sourceSha256": "12af2b925d300a376adc9506f674814fa94d680a3da65d8635d550e6c9ffcac1",
+      "translationSha256": "297aef8b7fab3d62ff5b0599ef387164d72d8f4d89ae8901585ff5b737873fa2",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "batch": 8,
+      "sourceSha256": "72465770ce2d927adc1d48e3448f6a21df77986fbee3c080af2cb5f26bc18be2",
+      "translationSha256": "c0e14a1b5431243a6bb6219f9117f22c48aac6876e2a70e421db9478dc220004",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "batch": 8,
+      "sourceSha256": "85154c5a81f5cba33c2bc958805fe3d83e7ea923e4de5ec0720d889fab31e6c1",
+      "translationSha256": "73811a24e9c5bf9cf2e2b5c7a7df5f15a8b465d4bfc0a9d65f8fa513014c19c6",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "batch": 8,
+      "sourceSha256": "5626847a3e3afcb5ea6bf0d34b1588814677916a5fef92cf4760a6d1291a17ea",
+      "translationSha256": "12f060e41a6764bb599f536e2b27783ab915be78ba8edae0ae482539710965a4",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "batch": 8,
+      "sourceSha256": "f566c722fb27ed6934fdae56e8e5fe2263022518d9588a9285dded885a247fbe",
+      "translationSha256": "881e4a3dfcffc8a9403e5f40d89a02a2dbf1a61c5b5a845d1abeba87b012e519",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "batch": 8,
+      "sourceSha256": "78d10bf593789a4e0f2a1debba7f22dd2d5d1237b1aa5c2be009ebfb957d573b",
+      "translationSha256": "9190453925ba226295b8c4819cbf287a2d56b18926c96e71c09a47e1f6697042",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "batch": 8,
+      "sourceSha256": "cb86eb2d914d37df6857c3cfe4827b5f770b01a86578120618b0b21572160be8",
+      "translationSha256": "06521aac8158a3c23b6409d198b052dc2fe5ec7939a123869235731c3384867c",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "batch": 8,
+      "sourceSha256": "7e744141b40ea5501412e42c8b40fd0b05f1608aa2e4073944ccccbd82f24ee8",
+      "translationSha256": "ebf8ff724ba19d306d45df08c7929b3148c3fb142ba85230ae9c7ad016faeed1",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
+      "batch": 9,
+      "sourceSha256": "ce27de2de9dd0d5faa12b0ae163a40c9a411e5e0f4b7d0b23c2949f038f51100",
+      "translationSha256": "3d6c2c8624973f7dfc2b18947e13d3937c9a9bfae0ad79ea79684131e645d6e9",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle",
+      "batch": 9,
+      "sourceSha256": "adb88a45814bee08aaac918ace4305333d5acc9f80be049324544ab5e4bf6a36",
+      "translationSha256": "28e8d9e5d6f4841ec5916cd6e4b3d10bc8d402078ed78563296bf3c242e04c94",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumn",
+      "batch": 9,
+      "sourceSha256": "454454bdd567bf09ac659a2c1e6dd3b12db1f1418d5d54317cbe517b5eece322",
+      "translationSha256": "59b2ee25e75661eef1b293f79d8b6855a128382f06af3e0acddb855d350ff9f7",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumnTitle",
+      "batch": 9,
+      "sourceSha256": "702a3da532b910671a5f454697cd1f1c700fd932e8da5b4a9ab880d354230f62",
+      "translationSha256": "733c22de602372b479f478f348c04e89cf20e97444a9d092033626afe4bd607a",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+      "batch": 9,
+      "sourceSha256": "0baeaa6ef801384ff09dbad3b5fe96cab284b83c5d9285ae4c9944f4f1e7eede",
+      "translationSha256": "528fa9767bfc9059aba5dc6cbf365cad4e280fbac76430be488ce8d7961b00bf",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValueTitle",
+      "batch": 9,
+      "sourceSha256": "a53eca16c1a1b17e2e0ff06bf5b894874235d1cbc6ca2e1c142f2f4fd9647c24",
+      "translationSha256": "9b118c7a63cbb270ebc288accb706705820f0bef021db3adf410c96e5b2a8108",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "batch": 9,
+      "sourceSha256": "054bd5dbac7b64512629c317a517cd0d7c568ff32be804e1f0c47f7032453c28",
+      "translationSha256": "cc68338a49b81bc8d7f941e0e1d98176f8325aa81c0412a979fd2d1ccd5d758b",
+      "verdict": "revise",
+      "reason": "«color de fondo seleccionado» puede significar un color elegido; se refiere al fondo del estado seleccionado.",
+      "proposal": "color de fondo de la selección",
+      "proposalSha256": "5c0bf6764093024d57681364cb84911aa0032906e3530e4cda827e8cf65ba10b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "bfde0831a997a43609484c06d20a480baa27e4c7f5721e400a4a0dcbbff89fce",
+      "translationSha256": "214495bfe08ca121915a343a99c1af34410b4213806ef18cb57997dffa960995",
+      "verdict": "revise",
+      "reason": "«color de fondo seleccionado» puede significar un color elegido; se refiere al fondo del estado seleccionado.",
+      "proposal": "Color de fondo de la selección",
+      "proposalSha256": "ecda5974a376294897863571ec3963ba1a0f8c207e7f368c7b82af5b7ed23398"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "batch": 9,
+      "sourceSha256": "e5196af519ac45071921258c9e57337828d7d19c6e7628b64ac5c7a39100c1b9",
+      "translationSha256": "9f516b639a29bfd73ae2137cbebeae8ea1dbf62d0d5599adb9683741477def8e",
+      "verdict": "revise",
+      "reason": "«color de primer plano seleccionado» puede significar un color elegido; se refiere al primer plano del estado seleccionado.",
+      "proposal": "color de primer plano de la selección",
+      "proposalSha256": "d5d272789fd2be09ce63964499d172efca0185d3e072fb15e8fcc9e27c6f404f"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "6b94ee60c81f30b47f56de68a7c5756810dc3f11e12de785b7d5f86d0622c441",
+      "translationSha256": "593da7b44db9619bfbb634a0072a245764941effe3e1f839afff3f5a856e2176",
+      "verdict": "revise",
+      "reason": "«color de primer plano seleccionado» puede significar un color elegido; se refiere al primer plano del estado seleccionado.",
+      "proposal": "Color de primer plano de la selección",
+      "proposalSha256": "82de5232466ea8348b13d89fceae73672bbe1687cc72f8bc29e8d85001e53124"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "batch": 9,
+      "sourceSha256": "4de423619f0df3af761a8a5886e421351d1669c8346c52b5e4a65a12b5d74cc1",
+      "translationSha256": "058376d724e4d9912c384932feb4242b8412da3c8963515b9f67ad6b76d3c7ec",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "0fedcd8a4c644709a892103f8d7aba80e57810123469e7d5fbd9424ac73772f5",
+      "translationSha256": "972cff94f823ff53e14e0499a078a853a9f87c247c84363d39c5720ec8f7387a",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "batch": 9,
+      "sourceSha256": "5c79febe70a68746314c7f1a101f66e59fe13a37ebcff4a8a4dbd82c3556c6e9",
+      "translationSha256": "a447dd8ccadb9ca2f1fc12f6fd8f66c1f7416509d9a83d4fb3308ab86b06179f",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "f1d882ade25b3977a8d6fc68848b423a89e23d14235c94e6e9e3987509d50add",
+      "translationSha256": "474b43c9cfe93d88f18ef57a9bac6941b12de41af760e575ddcb9e8c3aee8ad0",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "batch": 9,
+      "sourceSha256": "835408f4c3598b0104109c58dcd28411df1b87a013f8ff2bce22a327838605fe",
+      "translationSha256": "656add3419f103d3285d22e2e2fb89d0bd78b5cd909aafab8c57f99963180854",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "cc18d014cba048748078dd91d2bf48dc8679fce1acb4f00bab920e98b018b57b",
+      "translationSha256": "1c971417746f0ddea4a5d94794b526c78d5c5172baf05c19ad4bce730f442309",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "batch": 9,
+      "sourceSha256": "b63c87cd1d1975a0d7a56da083e2f22f7d04c9de725dded42cb5a723726473e8",
+      "translationSha256": "11767480bd66dd84a4cabd67bd39909572fde50daf479856d28d550a96b77bb1",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "e32bb3144d721dc8721edf1e65eff4bba61414f21b9e5a7c129eae13cdc58f1e",
+      "translationSha256": "6f119cb7b9e1b0d269409148f5659c5591cde299db6244e5a7e6914d77fb3f22",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "batch": 9,
+      "sourceSha256": "5ecc07c94c4c3b134bfb263f61267bcd9e98a841a407a6fe7a299fd2eeb411b6",
+      "translationSha256": "13cd68affcaec0ff174c46710977be8732c3845823160ef8556990ad29c79e1b",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "41b483a1b287bc5c82255feda67c67a112227142be1b74a594dd2677008ff2dc",
+      "translationSha256": "9d895bffad43d449a77248be26480556e03df01c523c732f8c5a387af4675b43",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "batch": 9,
+      "sourceSha256": "f01f293e34b33fe0563e7cd932cfb9c713730a159146fe8519ca2c9524218fb1",
+      "translationSha256": "e32a657662dc234f020fb8ebe539ce8446d347ff353e89bb05c89b0ec733ae4d",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "dff3d8e2c66a38c0fd441664660442a58921377834317546d261663ff7bb1a5a",
+      "translationSha256": "980ec4cd795986cd1a7328ff99bb02b99fe1c73e9e830b0dd3c096ff2abb05f6",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "batch": 9,
+      "sourceSha256": "38665025eb74534dd5be8301135ce33c2f37c5f9a37e4b013a028da6ffd1f290",
+      "translationSha256": "a38ab0c39283ae8effc5de9630a344c13dbf2d41d1776ecbdf8bf46a3ee427f4",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "27a99894a5440c9c73dbb2b519ee119d7dfc9504e83afc7aaffc77e8cf00cc40",
+      "translationSha256": "a7af4c6f4d8f8f1e84d95fa761f3b442cece87a647e515be24566dc1bf554bb7",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "batch": 9,
+      "sourceSha256": "48a31e8385c4b3e01d1aebd19f1c8b671b1c00b189193f950856d9d4c9e1c774",
+      "translationSha256": "2b2c49dfd0ba02e8e9412912b4dab274f941339dde5450e85a10820f95e239ac",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "8e5c8f9aefee8e94db020fdadb779945be742374bb3accab0ab3a244dfc82d85",
+      "translationSha256": "9f38bef6bc961bddd554a0d5f7d1225a0b160505d7b639d5b8f26b5fa607f436",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "batch": 9,
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "3f012085d15b056ab6972fcfb3e856ce9d786e2da4f17b2721b0027d404df65f",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "batch": 9,
+      "sourceSha256": "d1701cd37ba2b079230b26a3301bb236ae7dc11b36aca0b21568a0b4cb97b766",
+      "translationSha256": "f0aa9f5d3189ebe02ee7c349f89b019c04c8df389f349a68cf0d299b0e20b793",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "batch": 9,
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "52b5316a540b1afeb216ae038b2af10dbaaa65d56e8be3eb4e6f36499fab6d8a",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "39247fc8d9b001be65247c08859d7678db77c6d1e3d645124cbf657dbf97a55a",
+      "translationSha256": "4fb86854433636f6942c0a0458472c15c8457a16dce5da3a18470201773302f2",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "batch": 9,
+      "sourceSha256": "2c295feede12610805a3ca63514f0f730b3e8d0401e71876d78672e3f431183f",
+      "translationSha256": "cb7afa1cf284776282b7a180dda70210a2fe7385c8821121bc57143ddaaa676c",
+      "verdict": "revise",
+      "reason": "«color de fondo deshabilitado» atribuye el estado al color; la propiedad determina el color usado cuando el control está deshabilitado.",
+      "proposal": "color de fondo en estado deshabilitado",
+      "proposalSha256": "c4ba7246ccef5670c41b8797ef853c4259d940aef972aac62a10aeee3bdff682"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "991b3a7b4f4480c84a4df600c975bfa78409e661873865e85a15fca8c0686e03",
+      "translationSha256": "7c303a2a4533b68624d733690540e1a49d9b384d207b29e29ea26c0fb2d51eec",
+      "verdict": "revise",
+      "reason": "«color de fondo deshabilitado» atribuye el estado al color; la propiedad determina el color usado cuando el control está deshabilitado.",
+      "proposal": "Color de fondo en estado deshabilitado",
+      "proposalSha256": "d7915402f70c265a4f26cacffcd4eef09c638285b9d9dff2e889710b96d2701a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "batch": 9,
+      "sourceSha256": "782c06964ce188f0f765f0242dafd9671ca6771f2a9601107f74ba265711cfbc",
+      "translationSha256": "e3ab101c90f182101a36a273cffa160cc0f81b38c929534beaf07e409701f565",
+      "verdict": "revise",
+      "reason": "«color de primer plano deshabilitado» atribuye el estado al color; la propiedad determina el color usado cuando el control está deshabilitado.",
+      "proposal": "color de primer plano en estado deshabilitado",
+      "proposalSha256": "aeb98c3bd3d444a2dc24e1395f4a3717c6541c232d811eda2861b18fb25418f6"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "5db0ad82f9301b5f0215a2d24f618574da4fb48cd2887cd118ef0903ae455c0b",
+      "translationSha256": "17de84330211a9d6aee84617e7b5dff151caa4b5f1a6cde836c451a5cf06975d",
+      "verdict": "revise",
+      "reason": "«color de primer plano deshabilitado» atribuye el estado al color; la propiedad determina el color usado cuando el control está deshabilitado.",
+      "proposal": "Color de primer plano en estado deshabilitado",
+      "proposalSha256": "6f4770f4b06f4b62bd200b849d7f644a909601fdf27d3bcf885f80ce0e4556c8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "batch": 9,
+      "sourceSha256": "0ba497bcaac024b53bb36829fae9e4bb5999a93edf44cb10d9c3eafa0b84dd53",
+      "translationSha256": "15d65379b8493df3ead9429e3eb94491cb5e8ae52732b4f95055048db7c9c560",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "a1935c9fd202318f97f8ff8670382510fe91b8c2c431318cf9b1773c431d12f8",
+      "translationSha256": "ab786e2f82b8ea85c6e67871b1c9d29166a9d22f0d069ea00723d882588e6f74",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "batch": 9,
+      "sourceSha256": "5563a9f02cb5508c682d05175cdcc1a871ef1932d731551249998d7058383b55",
+      "translationSha256": "5ad526758776dfc2c99b54cd8f7b98aa59b4db0ab0aff7e76dc8cd9c108b9ff0",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "41ef944040935aa7de9470ebe42a02902d865033dd6707ca9e83e8655d171581",
+      "translationSha256": "4b8027c8ad2515efe18ed5938d97bcb7ce2f618d4fa3b67c43086e1587e46c4d",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Closable",
+      "batch": 9,
+      "sourceSha256": "b3d815b8871abe0dd22c84176a988b7add186044dcc093d564bbe0abbafb648b",
+      "translationSha256": "76730684a04d54c1ede9c5081d4488ae75ed90e48808c7f70b9e1f7360c90f24",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+      "batch": 9,
+      "sourceSha256": "9e0d84c0b9ee841616fd69ae3f5a49097b805c5ddbe466b0155d213bb95cc500",
+      "translationSha256": "d6e4a40b01d2efabddbde7c301731d1c0c46f473cecc0e7f2e7e799e12e0dbc4",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+      "batch": 10,
+      "sourceSha256": "bf2501139f0afd8187156370051c0101764676fb351043307220f09de7e63d96",
+      "translationSha256": "9a76d97e09844f93651b222407b8e24724b281cc7c6fcec5101296698b8cef1f",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+      "batch": 10,
+      "sourceSha256": "96dad78db84d8830aaebfd64cac0bf4d1c8d382e45f1844a797bf650e7c31338",
+      "translationSha256": "b93f302e9f2e5110ed6b20a0b8de75c8b7c543b6371a80949cc9ecdbd5844bef",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+      "batch": 10,
+      "sourceSha256": "c5a85da91776255cafd61fe57c199adf46e1251917b57fa1b1c5d8e95229c5fe",
+      "translationSha256": "ec247a2305f871dded016e122f22ec5e8b2681da8d39462131bf39195141ae8a",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+      "batch": 10,
+      "sourceSha256": "a6382b2bdeab04ea630cd2e65656e2a56cb597a9e11185c605fe6f3ffc7a13d1",
+      "translationSha256": "5e0fdafaa9a9cb531db4b4ca95e98160b6215c6b099cbc54daf4330120b6a793",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+      "batch": 10,
+      "sourceSha256": "7f603664413d55c8bc9acf02d03a19ae2ec2738a82fb6944efc4bab48bea0a18",
+      "translationSha256": "c7a5620852faa4f9b706f8447057350f5c8fd8e6a90098d59bbf04056a47c99f",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle",
+      "batch": 10,
+      "sourceSha256": "cdbb7fa30ae44aa6453fdb1b2de67d95dd951204f7d10fcce4edc423701f40f1",
+      "translationSha256": "aab296a6d44d05f5923ae477006b8ecc73c90a27dd2f29f104a2d718b6e4a0a1",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu",
+      "batch": 10,
+      "sourceSha256": "46f31934f7a4b2410a882fff50d2bd8bd2830d99e2356183119c17bc55c99f70",
+      "translationSha256": "be2ae08273c495245bc669772c1e6832962b00ea8c375c7c8d668ac326031ccc",
+      "verdict": "revise",
+      "reason": "«verbos» es aquí terminología de OLE; incluir OLE evita leerlo como verbos gramaticales.",
+      "proposal": "menú automático de verbos OLE",
+      "proposalSha256": "60e32b4b3e383e581c22df7192c0e7c36c9dc61f315c387b1025cbd91f2c3831"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle",
+      "batch": 10,
+      "sourceSha256": "c1b138a437b75b3d532934c531815b7e1f0a4dc107c810af2c723dd6b680575e",
+      "translationSha256": "75a4d740600359110d35b4195f07427b16e9ade83ec7c6ac972c338e97704502",
+      "verdict": "revise",
+      "reason": "«verbos» es aquí terminología de OLE; incluir OLE evita leerlo como verbos gramaticales.",
+      "proposal": "Menú automático de verbos OLE",
+      "proposalSha256": "baa4e7fbfda659369d6da5bfe6f864519fc410ce75c84d3a59ffe414dcf3271b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+      "batch": 10,
+      "sourceSha256": "68693d02ab4fbb2331b8cc39915322e48e61f06d4d1b31e7d19913202857bc8a",
+      "translationSha256": "a36b12f40ffe000637da38cbb70449e16897b341aaaffa25701ad706237e5a08",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DesktopTitle",
+      "batch": 10,
+      "sourceSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "translationSha256": "557fb176483405b50884391073f478c5b94aec310621381865b2b817a22b3bfd",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreview",
+      "batch": 10,
+      "sourceSha256": "fed2d82b6738c9c5e6ad021db6941f959c5e78caa00bc805df9f771957c1f81b",
+      "translationSha256": "084783a410c84d7556886c6dc35e2c29fa85c68b83d27cd7592125cfe31932ab",
+      "verdict": "revise",
+      "reason": "KeyPreview permite recibir eventos de teclado antes que el control activo; «vista previa de teclas» sugiere una previsualización visual.",
+      "proposal": "captura previa de teclas",
+      "proposalSha256": "0ad94c6422457606b9f9e8ac4e3e354c7686aec21762cbcc754e7347db4faa7a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle",
+      "batch": 10,
+      "sourceSha256": "d9c8efe6ff9e1e5621863d21db10d6645e19ec5719028cab78ef7671b5633ef9",
+      "translationSha256": "33ff480ccb5fd76cd17805f8c886a2c3b3d5a8ebd999e4a9ba4a6f1a815a2188",
+      "verdict": "revise",
+      "reason": "KeyPreview permite recibir eventos de teclado antes que el control activo; «vista previa de teclas» sugiere una previsualización visual.",
+      "proposal": "Captura previa de teclas",
+      "proposalSha256": "ff3558e43d1a8c3d33e7e92a7d22243aa5197104ea4a321baa8cfa25660ca0a5"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+      "batch": 10,
+      "sourceSha256": "87ca5ee7de4c7947b0162a295bb7d0d6c909d13472e38ba6bd5236ca9cfc116d",
+      "translationSha256": "8b10a0f2f5902418bfefd41328c45bef7e80de2f3fbdded8d32c47904166fe84",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle",
+      "batch": 10,
+      "sourceSha256": "941efb4fd39c1ad0c8496fbff7d56496c89f4a4f543fd220eef3b0f5ec5bf0ce",
+      "translationSha256": "9f1d640662aaf1cc3e56a940b552705f3d1434a8bbccf1dec1d4ab4a2f736e68",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "batch": 10,
+      "sourceSha256": "e232d03abcf3be121743dfdcaee54adc482895179c0fdcbde42f177e97f7192d",
+      "translationSha256": "295b4f172be6a5bbe8e439bff885561a4887debcab663ceaa42d580ff989da52",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "batch": 10,
+      "sourceSha256": "275ffa4ac0448f38dea3e28f404e38d8727b3cde18238559042451a999545d5d",
+      "translationSha256": "b1da992d124112d43e20dcf4ea97970cb474a5189b95c431df23f966b80e9f29",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "batch": 10,
+      "sourceSha256": "331a4a6f28b83963f2342e3a736a0c8125ba087ced05e64e000e26f393a6697f",
+      "translationSha256": "93595a618a7ef908b82a3dd4b0e4b4457d49830946d2ecea97e520a8b6b79990",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "batch": 10,
+      "sourceSha256": "9eaf277597b73df97c83ae90e3b8ef688f0fd67d7170ce7e24b23d74627aa01f",
+      "translationSha256": "8180825f733677cffe999ffa25fa3fd4e92dbd60e7a5e69ba3ddfd4ae51336e5",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+      "batch": 10,
+      "sourceSha256": "2079f071f86b8cafe7e0566e8c2d42cd893720ee4fb8a555d20a2b5c735de42a",
+      "translationSha256": "0761e1b228e1edd84e62db5a80c41021a957c1fedc3dbe2641d2a51b1afb5a08",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle",
+      "batch": 10,
+      "sourceSha256": "595ad9a8aaa03755e38a412f7b873e2e9217c5026b64aef7fd54310fc26bfce2",
+      "translationSha256": "a5b1a270505a747de224c935935785f3047e043737fbd3a54fb73334fff7b6cb",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+      "batch": 10,
+      "sourceSha256": "baacc163cc2ac975a775aab6dc9a659fdac28672a966c23912903c383d18eba1",
+      "translationSha256": "4b0b6985feee569df4eac92cb96a4e5ca21a84eb5aa2930a29237d7ba3eff8fc",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle",
+      "batch": 10,
+      "sourceSha256": "02ba1c127c8f9c7ec64444b6e0dfa6ad6d8022ef655aa2dec224945ee2a7c6d0",
+      "translationSha256": "d80585134fcaaa6b235bd31390aca5d5f15c93312dc569382df08838b2cc080e",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "batch": 10,
+      "sourceSha256": "51f60edc63ca67071914d447b5d8d444b770a00a732cb6c4494daee0af6c713a",
+      "translationSha256": "ad6df632f433b478ccd277fd2e3d4733dc3439daac84259258d4113f8d467bee",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "batch": 10,
+      "sourceSha256": "f6e8b915627e42f1f28aaeaf0541cc7c5321b3d32f327bbcda1e9d429aa67fe1",
+      "translationSha256": "14cd4f66e4f7c4e1652eb232286e398f3d8df9828f36d6656573734f47eeaec7",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Movable",
+      "batch": 10,
+      "sourceSha256": "2b8589fcfcd770884a9bf6cee2495e3a3f6a93c6f366a703454ac750cb0cc79c",
+      "translationSha256": "7198c3b86762deea3963a1c7ec5ad367876118ce6d29d8aa1608c1dbb602e56d",
+      "verdict": "revise",
+      "reason": "En una propiedad de ventana, «desplazable» expresa con más claridad que el usuario puede moverla.",
+      "proposal": "desplazable",
+      "proposalSha256": "f65032004b4536b59590ada0e28f499a06ce5d009e4fe7f662b4f540da7c9fbd"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MovableTitle",
+      "batch": 10,
+      "sourceSha256": "2a233986edba0c589621d8786750a1268848c24aab0d1723fcf2c6271956fad8",
+      "translationSha256": "5d7fbcd8dcbdfd1e975fb9659635cd9f699fa5e3536730c31d696f507aecee82",
+      "verdict": "revise",
+      "reason": "En una propiedad de ventana, «desplazable» expresa con más claridad que el usuario puede moverla.",
+      "proposal": "Desplazable",
+      "proposalSha256": "ac39975446e9dc228698076dc2c9a74e5557d566aa6b1138fe5c5ae98358f482"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption",
+      "batch": 10,
+      "sourceSha256": "7567116a53c573f8f89c25bfc4f95d43510d40915d30e275acdc1b5c1d96b9ed",
+      "translationSha256": "781387daf150d00bcf1ddb3ded01fe6bc889e265d89dece8e29a121373294d9e",
+      "verdict": "revise",
+      "reason": "HalfHeightCaption se refiere a la barra de título, no al texto del título de media altura.",
+      "proposal": "barra de título de media altura",
+      "proposalSha256": "6d9358b4c9bf7d362d4187434416cb6210f5fb46a778aa82ee95438f4b90dbe8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle",
+      "batch": 10,
+      "sourceSha256": "b9d73f354c1269b5b0f931960dc35768b0f93a719ed7f35dfc39b23fa6032434",
+      "translationSha256": "56dc2eaa15dac15476042bdfe451b11faf6d395c83f32d8e81c6120de0b779b7",
+      "verdict": "revise",
+      "reason": "HalfHeightCaption se refiere a la barra de título, no al texto del título de media altura.",
+      "proposal": "Barra de título de media altura",
+      "proposalSha256": "35dfbd757c9a843185c6be46109c4cb305b82ad76782b7240711dc963d7b2227"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "e6fa3767c2a8d585dd2eb49a7b5a79c271147be857ca65a6e4af6ddb1c0fbf15",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "57657c666e88ad45c7d0f2c5c932291100b5a5dceedfb7f3e227399a66fc9cca",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+      "batch": 10,
+      "sourceSha256": "8a7a132e8d5a70abeefd53ce3f9b03ac22b33cc5c52db4df1f86c7715c632988",
+      "translationSha256": "36b724e211577cd3dc1d4ec04b68dffa2ad0e93cd233160d8ab84977070528e7",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle",
+      "batch": 10,
+      "sourceSha256": "ae22ae112f95368b5fe120ceb3fb1065f12c9fc0b388a3ff86b085cfe2ecdc98",
+      "translationSha256": "6e23ecc5c3d3827025c9312906dfbafc98809775aa32db6c61d445df9a59cca2",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+      "batch": 10,
+      "sourceSha256": "852d12ee4870f2267e514c49c11779f30d7e45b5fdfd1e0e886a62e5f4a9ce47",
+      "translationSha256": "eb5c8b969af4f27a1636cd7fe6718330473414eb6e2fa16e8cbbc07b33d68f5b",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle",
+      "batch": 10,
+      "sourceSha256": "aa596267318ae7fc4b12834ccc3b337343fba96332e222a7a8e935100198164c",
+      "translationSha256": "70335cfbb9fbfa35a75601a2aad9d67cf34c938acee00eb0efc3a56c7ca91796",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+      "batch": 10,
+      "sourceSha256": "385a872760e7ab4fcc48da36a57630f0b22dc7de39c0bcc8ebcf3c4c6b9b68ac",
+      "translationSha256": "084ea039da0be104a879b2f41a517519c2bfaa7d0767a494c6af2fe9f081b3a2",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle",
+      "batch": 10,
+      "sourceSha256": "46960bfe393bb7f3525fd96650e1901dfda2b8e3b548674a1c78a53e388e0d5b",
+      "translationSha256": "ea2ce7676ef1020be7b92c6e634d2372b23048a362dca3e9c37dc774686f5739",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "batch": 10,
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "6a6fbb2d09cdeab914721f5925fe584d6db69227ee86bd112317e22a7340ffab",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "batch": 10,
+      "sourceSha256": "5598b8b46f6dee4030996bf7c6d956e707ed4525839897af96f3262894215d0f",
+      "translationSha256": "e4fb462c718968f3dd0c080656fbf38ff65badb44051a26bc4daf17ce75b6e56",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+      "batch": 10,
+      "sourceSha256": "5b159fe91e0009d47abf46665ef7829bc6f74a51335d815b1981829cd4f78b14",
+      "translationSha256": "93ff772f39c2fc4457eaf61b53faeb5c2b0f2d590175c454d8b32e477bbf8d84",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffectTitle",
+      "batch": 10,
+      "sourceSha256": "3588b1d5361ba2cf4f44c64ce38ffb3577b6a330bdee98dfc022e983e7bb742d",
+      "translationSha256": "60956983cd47e40aa3da6898b7d78ddf1cd5f5dc009323a57abba58ff33a59dd",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBars",
+      "batch": 11,
+      "sourceSha256": "9dda07aa660121e91f394cf85a1f6018a8de3868bc7ac9e3b6c57eae4f4602cd",
+      "translationSha256": "ce2c1242c7a56c361b851a1530f300b038477d04e9659c7b452541b50041d437",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBarsTitle",
+      "batch": 11,
+      "sourceSha256": "70bef0cb1f91d7a91b2f9e80853b19ee93d3123da1bdb8063b1883708af7cd93",
+      "translationSha256": "ed530d193bcc9f300c9fe09ce3a6c2a4e35ddae58a4a3e2b74cfbf8411e2624c",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+      "batch": 11,
+      "sourceSha256": "a8ee23732a04abaa28ed119773cb8e624010d3fe33f2de02e45e090f5235a517",
+      "translationSha256": "9d21e20052ae2e18aaddda9c39c9166444746c69c36163407ecc382ba7bd5be3",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowStateTitle",
+      "batch": 11,
+      "sourceSha256": "058de4e9bab5748fc60c4c95e4ca8cccf40191a558cefea72c9a30d7a7bb95ee",
+      "translationSha256": "58fa9ad4c2a47f69b01993ab3fde65787dad5c894281e18a187642ba091e2d40",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindow",
+      "batch": 11,
+      "sourceSha256": "4ee0c5cae7662b168ec5859a29dc9e431960690640f9417fa760c224321e0848",
+      "translationSha256": "005e6d551312ae406f709e209c9c0a429e4c0aac00228b257f9b4d0cbf18e4e0",
+      "verdict": "revise",
+      "reason": "ShowWindow es una propiedad de modo/ubicación de presentación, no la acción imperativa «mostrar ventana».",
+      "proposal": "modo de presentación de la ventana",
+      "proposalSha256": "8770c133f58a367aa36011a13bd118d5538e508eea69cb4736ab82106db24ce2"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindowTitle",
+      "batch": 11,
+      "sourceSha256": "e21a9a6993c71d87eacddb971e234a9dc44072ec1c05ba130f0f392c0ace679d",
+      "translationSha256": "5bb5cc81eda5306946907b01a998f96e8643d9e8b3678403d381c3ae5508445f",
+      "verdict": "revise",
+      "reason": "ShowWindow es una propiedad de modo/ubicación de presentación, no la acción imperativa «mostrar ventana».",
+      "proposal": "Modo de presentación de la ventana",
+      "proposalSha256": "d4479e86e849b3a77d9f29f6ad7cfcfaf6f65b1f44b36966aba6567b3c702cdf"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBar",
+      "batch": 11,
+      "sourceSha256": "29a74ca8939d32319ac698a4c1ca814e0e12985f13319bcfe69ed1effb0d2195",
+      "translationSha256": "cc692d6ae13b37ef38e337253e7d2407909031815f229d689a8fdd260a5f4694",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBarTitle",
+      "batch": 11,
+      "sourceSha256": "de4297574458572ab9687908c7e969cda35dd126088cd929000566e0b118c3e6",
+      "translationSha256": "dec4cc4a854b1baac9ea62eb36fb1f8a9a03ee81d4a000581fe8d6d38c73e6cd",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointer",
+      "batch": 11,
+      "sourceSha256": "a40f00aab9bbce3309b3c77f451820b735029d9777073546a50d5dbedf876595",
+      "translationSha256": "2563b4476391c5f5511a5fd9fb13a0ecb65f46115279bda5ae3db058cecd4404",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointerTitle",
+      "batch": 11,
+      "sourceSha256": "7ca7eac922cb390844243fb541fe1db3045fa8cea8e744210e8dbea69c7ed447",
+      "translationSha256": "7c84c1b4f3737da05d0b210dcf440517564c6844de07b12fc439b2ac930a7558",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMargin",
+      "batch": 11,
+      "sourceSha256": "7192e6e5c5ee8df4698d1c7d321c9c4bee99ddb089607cd312a16068b7210b68",
+      "translationSha256": "352c7e62575c15bf73095d0c37cda5ca840cb33a07ef9303cf23c20c9a36a786",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMarginTitle",
+      "batch": 11,
+      "sourceSha256": "599ae36435a7aef79613bc2b49df8859d3327f3cd5935f84fc8da43fe0d78467",
+      "translationSha256": "06b97513e456a87e485522854a5ab7e6e9b1568e90bac4a95b9eb5812c3cf7a3",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePosition",
+      "batch": 11,
+      "sourceSha256": "98609cf77dff2225941c4954469259983eea2791e6b90dcef7e51c81bd64a90f",
+      "translationSha256": "06a5e7ab77a0c7b0064524302828be4d9e9b9784c15f601e39813e7308b8bb9f",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePositionTitle",
+      "batch": 11,
+      "sourceSha256": "1fb4f389dbd852c691c710271d3ae18b8ec8a278f8d244453896d0288a212beb",
+      "translationSha256": "679e3dea5defeaa7707bbac95a8459bef8c9363f9000005a8cf780be95c69395",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacing",
+      "batch": 11,
+      "sourceSha256": "11420290f455f7ca6da281293529a2c0b7a286491104d0ad3295e79d39b90846",
+      "translationSha256": "ce2af811937428acda2d10eefbc197279e32a3547f5577f820ff60fbe16fa1c7",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacingTitle",
+      "batch": 11,
+      "sourceSha256": "42b71128c004de4cb958bfd4ec3ec20c7e44a3377f6240abaebedec3c77cad90",
+      "translationSha256": "226122dab5c1694a7c76d4ae102295b4b158085f7f2bdbb4ed49ffa217c4476e",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplay",
+      "batch": 11,
+      "sourceSha256": "115ea893c579f7278791868c151b0cc31addc30bb1f59c5e6249a33873253b88",
+      "translationSha256": "2f5ac4f0c98076a74d5d1721fb4ecde5207bebce43970c8c2120893f5149c94d",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle",
+      "batch": 11,
+      "sourceSha256": "a1919037861df6ef1741a6db111abda0e13860daea3b3a0501377a82647ad1bb",
+      "translationSha256": "62f2d38526f25c4e04522091519a52d561e5348d9d94eacdd19a9f9c4c20c2ce",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask",
+      "batch": 11,
+      "sourceSha256": "6f58b47998496f9d1ed24b9fa8c9192bfe23386add2346312bd1aa94712b139e",
+      "translationSha256": "13a372a7eb8346540f6e542a9b7cf3bfffd1c9dbb8983253b99d5e04c14aebb9",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle",
+      "batch": 11,
+      "sourceSha256": "40f670a250d166555e4c537b4b6df74936724e362267af58af241473aa25a64a",
+      "translationSha256": "5f8336e2284f119418182747553f3d50fdb2cb9ed1142fbe2dc0d6ab4560a0be",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight",
+      "batch": 11,
+      "sourceSha256": "26d10b6eec6e252ad2cfdbd7bc4ced1d408afeb0535a84dc0970825d8ecb9da9",
+      "translationSha256": "81a053219c81116f68ae5b15b4fa32d3939f0614ff8851ac399c8e02c55dcc74",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeightTitle",
+      "batch": 11,
+      "sourceSha256": "e0cda22217c83ed0afe05c9fa9ed902905ed8cb09d2415cba6f0f1fa446bbd60",
+      "translationSha256": "61320e0f6cf276db00458fdcd34e9a126323113f11d46b20bd51a03b468b35f1",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment",
+      "batch": 11,
+      "sourceSha256": "1eb2a51156d6e016fe35dbad9b119a40a1c645a24c85e9c342d5794e5945c1e3",
+      "translationSha256": "0da01514d2077e6d48efff0729fd89d665945b1fcb4469b8c1f85ef72e7d9e47",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignmentTitle",
+      "batch": 11,
+      "sourceSha256": "3473046877c0f09d8ff6f961e37fc54005dc6997f8fdda7d7ef56eef63a2fd85",
+      "translationSha256": "653066c44de8e37a94307d2db3b0ad4ba32caaf85e670e1fdd68cbb060199fce",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl",
+      "batch": 11,
+      "sourceSha256": "239574689d99e9d861e8af9c31513d5ed6869c004afc6a54d358bd3e9e6ca851",
+      "translationSha256": "306d179718a2ce441eb9bd8f172719a338c9731133f48ee9da8b171f00a3406f",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle",
+      "batch": 11,
+      "sourceSha256": "c8f2c673af00aa43301cdf5f02c0c95f10083dece6fc01cab7c25b41011cb94f",
+      "translationSha256": "b7c6f3402e988d6b980fab666a5f3079e881e45d8880e2ae195c060b4d0cc2c6",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontName",
+      "batch": 11,
+      "sourceSha256": "2eb5419b7acc68a603f997ed172f5c80e91723038d290de4a6aa467974626696",
+      "translationSha256": "5ff0f5eba5d11264415275a8dd2ada896d3c261c05d2e833a9bcacfd8a284201",
+      "verdict": "revise",
+      "reason": "El valor que varía es FontName; «fuente dinámica» puede leerse como una fuente tipográfica intrínsecamente dinámica.",
+      "proposal": "nombre dinámico de la fuente",
+      "proposalSha256": "799518cffef7b0a00b0e723b69341a9347866f0bf6b9c3e0c0e257628e255ea2"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle",
+      "batch": 11,
+      "sourceSha256": "9cc978f66a5e1c7f5a0d404087f79923feab34c42a4eec244aa10f3fa163221b",
+      "translationSha256": "90d90782b9ec9f89b296b537ec4c8b53eecab970548f305ae77685918ae1d76d",
+      "verdict": "revise",
+      "reason": "El valor que varía es FontName; «fuente dinámica» puede leerse como una fuente tipográfica intrínsecamente dinámica.",
+      "proposal": "Nombre dinámico de la fuente",
+      "proposalSha256": "6edb529a9f470a71648733fef4217aa03239a122193e24055825c4f7acb1d173"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
+      "batch": 11,
+      "sourceSha256": "267375976644ada809c9f29ff32fa5dc9438ef8eeb0d1873f93ff8163f68ecf2",
+      "translationSha256": "46cd083e20a84c0a9bc71cd195e8f8dd8d40b7f53ed51e42bf28a911ed212939",
+      "verdict": "revise",
+      "reason": "El valor que varía es FontSize; «fuente dinámica» puede leerse como una fuente tipográfica intrínsecamente dinámica.",
+      "proposal": "tamaño dinámico de la fuente",
+      "proposalSha256": "1c552dbf72365adc9beb1a638ecc1cded1e08a1ead2150b3e56435e0e56b0739"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
+      "batch": 11,
+      "sourceSha256": "e4882984cb9205050697e1bd188024772b95abd42cfaa39771864d8759f1348f",
+      "translationSha256": "8ce1bd15a46370fac364d8a3b9fd8056317f0ed897146497ed377defbbf2c224",
+      "verdict": "revise",
+      "reason": "El valor que varía es FontSize; «fuente dinámica» puede leerse como una fuente tipográfica intrínsecamente dinámica.",
+      "proposal": "Tamaño dinámico de la fuente",
+      "proposalSha256": "bbe119823e97e86e392bc9c65bbe1d9bb14d9c0cfb3bcb21819c32f377712d18"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold",
+      "batch": 11,
+      "sourceSha256": "144ddcd63948ef47aaafc34d81ea28876d711142efba9f8d02cb08b1164b376b",
+      "translationSha256": "954372a06efa435a8ca3c0d1f965890a48cb4b52671525d229577b892521a366",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle",
+      "batch": 11,
+      "sourceSha256": "3ef55e67dc54885d7819efc52075802d23d41e6e614bc3d4a2c6da95837b9096",
+      "translationSha256": "18987dd7e6d44f71f65e0d2e48aa57533a100c74d17ef3daadc843b62e76095d",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic",
+      "batch": 11,
+      "sourceSha256": "5e6c6387beca686b110e2d8c2539f2362e8475184830f42aec1f529e0d9471ed",
+      "translationSha256": "d563d610e79ad380bc70d13e6331fcca4b60bbc24d4a0ae8e4a5215aed814940",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle",
+      "batch": 11,
+      "sourceSha256": "9706c06f5b2bd7c00ef841a6de3f3c08939b1514edc6b588f32d4bd8aad1d0b7",
+      "translationSha256": "9c9ea5c8b0d0034aeae8c1eda0b8f6cee6b3ac97676d23abc2e747b11b3f9fa9",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline",
+      "batch": 11,
+      "sourceSha256": "4b9b5830ebaeb20173916bc27ac62b077626f09cb04cb5e9c3e8c288b691fc11",
+      "translationSha256": "fa1ad7a32ae8305d366b9e5131e3b50a12acb95d466c86d6729c48457b959370",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle",
+      "batch": 11,
+      "sourceSha256": "e3a8e12efcf97680274877206d249b37e49b6e102367a875f46b5de0bac1624f",
+      "translationSha256": "4981d609569d17a92bc0e6b2db39eab8dbadc4935bfb13b28d35549647ebb38b",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru",
+      "batch": 11,
+      "sourceSha256": "1efc2ff5e3d98653541ab701889ed72c44ec661fd24b215c4ad20159ca65287b",
+      "translationSha256": "5ef0c0301f71f432e2e215da8bc1ec766da419be915c80ef3835ce7a735cbddc",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle",
+      "batch": 11,
+      "sourceSha256": "e164abde9bb4ed371a89223c8760ea4557ab86f4bfdde25514bb8c31e1c34c85",
+      "translationSha256": "a3749c2aa8e035730f620265f84cbb5ed4506950813c3cc38072ad50b0cc5346",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline",
+      "batch": 11,
+      "sourceSha256": "3bdccb833f8773d8aa7b817fac5ca5effa7eec7be54c6bef72724626a561611b",
+      "translationSha256": "5ba8aad48157e4da2820be092cac75de91851bb97145e51ab886c288f4fac18b",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle",
+      "batch": 11,
+      "sourceSha256": "5c4fe0ecb29a43ab8236c2b4af580183da8aa011a3b7fb3d1517d40e252f48f5",
+      "translationSha256": "82fe957f850b18cc9e0012525c4fb4ef4be867b3f45d2e82757871278d9243c1",
+      "verdict": "accept",
+      "reason": "La etiqueta es comprensible en español de España y conserva el sentido de la propiedad; la sintaxis técnica se mantiene separada en el código."
+    }
+  ]
+}

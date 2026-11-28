@@ -1,0 +1,371 @@
+{
+  "session": "279657b7-c9b4-4a50-9cdf-e41f5d9e28b5",
+  "model": "gpt-6.1-sol",
+  "reviewer": "Codex /root/review_es_revisions",
+  "reviewStatus": "unreviewed_first_pass",
+  "locale": "pt-PT",
+  "input": [
+    {
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "source": "Builder invocation-admission",
+      "seed": "admissão de invocação do builder"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "source": "Builder launch-plan",
+      "seed": "plano de lancamento do builder"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.MissingValue",
+      "source": "Missing value for {option}.",
+      "seed": "Falta um valor para {option}."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "source": "No builder context was provided.",
+      "seed": "Nenhum contexto do builder foi fornecido."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "source": "No builder id was provided.",
+      "seed": "Nenhum id do builder foi fornecido."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "source": "No builder launch command was provided.",
+      "seed": "Nenhum comando de lancamento do builder foi fornecido."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "source": "No builder or selection context was provided.",
+      "seed": "Nenhum contexto do builder ou de seleção foi fornecido."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "source": "No selection context was provided.",
+      "seed": "Nenhum contexto de seleção foi fornecido."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer.",
+      "seed": "O valor de {option} deve ser um inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "source": "Unknown builder context token: {token}",
+      "seed": "Token de contexto do builder desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}",
+      "seed": "Opção desconhecida de {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "source": "Unknown selection context token: {token}",
+      "seed": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.BooleanValueRequired",
+      "source": "The {option} value must be {trueValue} or {falseValue}.",
+      "seed": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.MissingValue",
+      "source": "Missing value for {option}.",
+      "seed": "Falta um valor para {option}."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "source": "No designer builder launch command was provided.",
+      "seed": "Nenhum comando de lancamento do builder do designer foi fornecido."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "source": "No designer editor action launch command was provided.",
+      "seed": "Nenhum comando de lancamento da acao do editor do designer foi fornecido."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "source": "No designer toolbox launch command was provided.",
+      "seed": "Nenhum comando de lancamento da caixa de ferramentas do designer foi fornecido."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "source": "No selection context was provided.",
+      "seed": "Nenhum contexto de seleção foi fornecido."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer.",
+      "seed": "O valor de {option} deve ser um inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}",
+      "seed": "Opção desconhecida de {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "source": "Unknown selection context token: {token}",
+      "seed": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+      "source": "The {option} value must be {trueValue} or {falseValue}.",
+      "seed": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.MissingValue",
+      "source": "Missing value for {option}.",
+      "seed": "Falta um valor para {option}."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "source": "No editor action id was provided.",
+      "seed": "Nenhum id de ação do editor foi fornecido."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "source": "No editor action launch command was provided.",
+      "seed": "Nenhum comando de lancamento de acao do editor foi fornecido."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "source": "No selection context was provided.",
+      "seed": "Nenhum contexto de seleção foi fornecido."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer.",
+      "seed": "O valor de {option} deve ser um inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}",
+      "seed": "Opcao desconhecida de {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "source": "Unknown selection context token: {token}",
+      "seed": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "source": "Missing value for {option}.",
+      "seed": "Falta um valor para {option}."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "source": "No selection context was provided.",
+      "seed": "Nenhum contexto de seleção foi fornecido."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "source": "No toolbox context was provided.",
+      "seed": "Nenhum contexto da caixa de ferramentas foi fornecido."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer.",
+      "seed": "O valor de {option} deve ser um inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}",
+      "seed": "Opção desconhecida de {commandName}: {argument}"
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "source": "Unknown selection context token: {token}",
+      "seed": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "source": "Unknown toolbox context token: {token}",
+      "seed": "Token de contexto da caixa de ferramentas desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BatchItemRequiresToolboxItem",
+      "source": "Toolbox batch item options require a preceding {toolboxItemOption}.",
+      "seed": "As opcoes de item em lote da caixa de ferramentas exigem um {toolboxItemOption} anterior."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "source": "The {option} value must be {trueValue} or {falseValue}.",
+      "seed": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "source": "Toolbox field values must use {assignmentSyntax} syntax.",
+      "seed": "Os valores de campo da caixa de ferramentas devem usar a sintaxe {assignmentSyntax}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "source": "Missing value for {option}.",
+      "seed": "Falta um valor para {option}."
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.BuilderParse.RequestName.InvocationAdmission",
+      "translation": "admissão de invocação do Builder"
+    },
+    {
+      "key": "StudioHost.BuilderParse.RequestName.LaunchPlan",
+      "translation": "plano de arranque do Builder"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.MissingValue",
+      "translation": "Falta o valor de {option}."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderContext",
+      "translation": "Não foi fornecido um contexto do Builder."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderId",
+      "translation": "Não foi fornecido um ID do Builder."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+      "translation": "Não foi fornecido um comando de arranque do Builder."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+      "translation": "Não foi fornecido um contexto do Builder nem um contexto de seleção."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.NoSelectionContext",
+      "translation": "Não foi fornecido um contexto de seleção."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+      "translation": "O valor de {option} deve ser um número inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+      "translation": "Token de contexto do Builder desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownOption",
+      "translation": "Opção de {commandName} desconhecida: {argument}"
+    },
+    {
+      "key": "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+      "translation": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.BooleanValueRequired",
+      "translation": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.MissingValue",
+      "translation": "Falta o valor de {option}."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand",
+      "translation": "Não foi fornecido um comando de arranque do Builder do Designer."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand",
+      "translation": "Não foi fornecido um comando de arranque de ação do editor do Designer."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand",
+      "translation": "Não foi fornecido um comando de arranque da caixa de ferramentas do Designer."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NoSelectionContext",
+      "translation": "Não foi fornecido um contexto de seleção."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.NonNegativeInteger",
+      "translation": "O valor de {option} deve ser um número inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownOption",
+      "translation": "Opção de {commandName} desconhecida: {argument}"
+    },
+    {
+      "key": "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+      "translation": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+      "translation": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.MissingValue",
+      "translation": "Falta o valor de {option}."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionId",
+      "translation": "Não foi fornecido um ID da ação do editor."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand",
+      "translation": "Não foi fornecido um comando de arranque da ação do editor."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NoSelectionContext",
+      "translation": "Não foi fornecido um contexto de seleção."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+      "translation": "O valor de {option} deve ser um número inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownOption",
+      "translation": "Opção de {commandName} desconhecida: {argument}"
+    },
+    {
+      "key": "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+      "translation": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+      "translation": "Falta o valor de {option}."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext",
+      "translation": "Não foi fornecido um contexto de seleção."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext",
+      "translation": "Não foi fornecido um contexto da caixa de ferramentas."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+      "translation": "O valor de {option} deve ser um número inteiro não negativo."
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+      "translation": "Opção de {commandName} desconhecida: {argument}"
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+      "translation": "Token de contexto de seleção desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+      "translation": "Token de contexto da caixa de ferramentas desconhecido: {token}"
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BatchItemRequiresToolboxItem",
+      "translation": "As opções de item de lote da caixa de ferramentas exigem que {toolboxItemOption} seja indicado primeiro."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+      "translation": "O valor de {option} deve ser {trueValue} ou {falseValue}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+      "translation": "Os valores dos campos da caixa de ferramentas devem usar a sintaxe {assignmentSyntax}."
+    },
+    {
+      "key": "StudioHost.ToolboxParse.Error.MissingValue",
+      "translation": "Falta o valor de {option}."
+    }
+  ]
+}

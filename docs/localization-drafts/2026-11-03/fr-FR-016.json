@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-016-2026-11-03-237f6b92-3331-473a-b87c-038bc19e6a9d",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+      "source": "Visual object update batch property values require a preceding {propertyNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}"
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MissingValue",
+      "source": "Missing value for {option}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.BooleanValue",
+      "source": "The {option} value must be {trueToken} or {falseToken}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+      "source": "Visual method copy batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+      "source": "Visual method delete batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoAssetPath",
+      "source": "No asset path was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+      "source": "No method copies were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+      "source": "No method deletes were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodKind",
+      "source": "No method kind was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodName",
+      "source": "No method name was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+      "source": "No method moves were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+      "source": "No method placement was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+      "source": "No method renames were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+      "source": "No method reorders were provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodSource",
+      "source": "No method source was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+      "source": "No target method name was provided."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+      "source": "The {option} value must be a non-negative integer."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+      "source": "Visual method move batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+      "source": "Visual method rename batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+      "source": "Visual method reorder batch item options require a preceding {methodNameOption}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.UnknownOption",
+      "source": "Unknown {commandName} option: {argument}"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ModernEditorDirection",
+      "source": "use familiar Visual Studio build output, publish, and configuration surfaces while keeping VFP-compatible build concepts"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ParityScope",
+      "source": "build/run/debug commands, executable packaging, runtime bundling, deployment output"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Title",
+      "source": "Build And Deployment"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
+      "source": "Project build, executable generation, redistributable runtime packaging"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "source": "use task-based tool windows and property-driven panels similar to modern Visual Studio item/template experiences"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ParityScope",
+      "source": "guided configuration, app scaffolding, control/report builders, template-driven generation"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Title",
+      "source": "Builders And Wizards"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
+      "source": "builder.app, wizard.app, Wizards folder"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
+      "source": "blend Visual Studio designer idioms with a class hierarchy explorer and source/designer split views"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ParityScope",
+      "source": "visual class editing, inheritance navigation, method/property browsing, builder actions"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Title",
+      "source": "Class Designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
+      "source": "VCX/VCT designer"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection",
+      "source": "feel like Server Explorer or SQL tooling in Visual Studio while preserving VFP data-session semantics"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ParityScope",
+      "source": "connection browsing, table/query exploration, data session binding, connector-aware inspection"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Title",
+      "source": "Data Explorer And Environment Tools"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
+      "source": "DataExplorer.app, data environment tooling"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "source": "lean into modern Visual Studio debugging panes and diagnostic lists rather than reproducing older floating tool windows"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ParityScope",
+      "source": "breakpoints, stepping, watch windows, call stack, coverage, task and error surfaces"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+      "translation": "Les valeurs de propriété d’une mise à jour d’objets visuels dans un lot nécessitent un {propertyNameOption} préalable."
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UnknownOption",
+      "translation": "Option {commandName} inconnue : {argument}"
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MissingValue",
+      "translation": "Valeur manquante pour {option}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.BooleanValue",
+      "translation": "La valeur de {option} doit être {trueToken} ou {falseToken}."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+      "translation": "Les options de copie d’une méthode visuelle dans un lot nécessitent un {methodNameOption} préalable."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+      "translation": "Les options de suppression d’une méthode visuelle dans un lot nécessitent un {methodNameOption} préalable."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoAssetPath",
+      "translation": "Aucun chemin de ressource n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+      "translation": "Aucune copie de méthode n’a été fournie."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+      "translation": "Aucune suppression de méthode n’a été fournie."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodKind",
+      "translation": "Aucun type de méthode n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodName",
+      "translation": "Aucun nom de méthode n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+      "translation": "Aucun déplacement de méthode n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+      "translation": "Aucun emplacement de méthode n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+      "translation": "Aucun renommage de méthode n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+      "translation": "Aucune réorganisation de méthode n’a été fournie."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoMethodSource",
+      "translation": "Aucun code source de méthode n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+      "translation": "Aucun nom de méthode cible n’a été fourni."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+      "translation": "La valeur de {option} doit être un entier positif ou nul."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+      "translation": "Les options de déplacement d’une méthode visuelle dans un lot nécessitent un {methodNameOption} préalable."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+      "translation": "Les options de renommage d’une méthode visuelle dans un lot nécessitent un {methodNameOption} préalable."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+      "translation": "Les options de réorganisation d’une méthode visuelle dans un lot nécessitent un {methodNameOption} préalable."
+    },
+    {
+      "key": "StudioHost.VisualMethodParse.Error.UnknownOption",
+      "translation": "Option {commandName} inconnue : {argument}"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ModernEditorDirection",
+      "translation": "utiliser les vues familières de Visual Studio pour les résultats de compilation, la publication et la configuration, tout en conservant les concepts de compilation compatibles avec VFP"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.ParityScope",
+      "translation": "commandes de compilation, d’exécution et de débogage ; création de paquets exécutables ; intégration du runtime ; résultats de déploiement"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Title",
+      "translation": "Compilation et déploiement"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
+      "translation": "compilation de projet, génération d’exécutables, création de paquets redistribuables du runtime"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
+      "translation": "utiliser des fenêtres d’outils orientées tâches et des panneaux pilotés par les propriétés, à l’image des outils modernes de Visual Studio pour les éléments et les modèles"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.ParityScope",
+      "translation": "configuration guidée, création de squelettes d’application, assistants de création de contrôles et de rapports, génération à partir de modèles"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Title",
+      "translation": "Assistants de création et assistants pas à pas"
+    },
+    {
+      "key": "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
+      "translation": "builder.app, wizard.app, dossier Wizards"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
+      "translation": "associer les conventions des concepteurs de Visual Studio à un explorateur de hiérarchie des classes et à des vues séparées du code source et du concepteur"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.ParityScope",
+      "translation": "édition visuelle des classes, navigation dans l’héritage, consultation des méthodes et propriétés, actions des assistants de création"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Title",
+      "translation": "Concepteur de classes"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
+      "translation": "concepteur VCX/VCT"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection",
+      "translation": "reprendre l’ergonomie de l’Explorateur de serveurs ou des outils SQL dans Visual Studio, tout en préservant la sémantique des sessions de données VFP"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.ParityScope",
+      "translation": "exploration des connexions, des tables et des requêtes ; liaison aux sessions de données ; inspection adaptée aux connecteurs"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Title",
+      "translation": "Explorateur de données et outils d’environnement"
+    },
+    {
+      "key": "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
+      "translation": "DataExplorer.app, outils d’environnement de données"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
+      "translation": "privilégier les volets de débogage et les listes de diagnostics modernes de Visual Studio plutôt que de reproduire les anciennes fenêtres flottantes"
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.ParityScope",
+      "translation": "points d’arrêt, exécution pas à pas, fenêtres Espion, pile des appels, couverture, vues des tâches et des erreurs"
+    }
+  ]
+}

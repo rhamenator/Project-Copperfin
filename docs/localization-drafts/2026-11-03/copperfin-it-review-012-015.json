@@ -1,0 +1,1624 @@
+{
+  "locale": "it-IT",
+  "scope": "Independent review of Claude Sonnet draft batches 012–015 (160 contiguous en-US source keys).",
+  "reviewerType": "independent_ai",
+  "reviewer": "Codex /root/review_es_revisions",
+  "model": "GPT-6.1 Sol",
+  "reviewedAtUtc": "2026-11-03T08:44:49.393908+00:00",
+  "uncertainty": "AI linguistic/code-context review only. VFP-specific property-label suggestions with medium uncertainty need UI-context inspection; this evidence does not establish in-product rendering or native-speaker certification.",
+  "counts": {
+    "total": 160,
+    "accept": 75,
+    "revise": 85,
+    "sourceStartIndex": 480,
+    "sourceEndIndex": 639
+  },
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow",
+      "batch": 12,
+      "sourceSha256": "02a354b91c72c38f561b93a3d8e091bbca63806d4e5569eeeadaaaa0199d7dd9",
+      "translationSha256": "02a354b91c72c38f561b93a3d8e091bbca63806d4e5569eeeadaaaa0199d7dd9",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ombreggiatura dinamica del carattere",
+      "proposalSha256": "019701d194d5fde3e91ef75c333c52cfe8df90c735caa019fa6c79b60ab89b6b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadowTitle",
+      "batch": 12,
+      "sourceSha256": "bffd801c74a629c3609d10c2de5a3c43175be6a53892537d5d6df8ffb753d547",
+      "translationSha256": "bffd801c74a629c3609d10c2de5a3c43175be6a53892537d5d6df8ffb753d547",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ombreggiatura dinamica del carattere",
+      "proposalSha256": "7c6b17c269a4a3583dc50dac11e49a1e49dd08d5c8f24a50e106df9526b5bbc0"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontName",
+      "batch": 12,
+      "sourceSha256": "553f512bd55f6c9cc2c3638edf37a71181a1a3c2966a0db6555fb5fcb964121d",
+      "translationSha256": "553f512bd55f6c9cc2c3638edf37a71181a1a3c2966a0db6555fb5fcb964121d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "nome del carattere",
+      "proposalSha256": "daecce5f8888ac55fdb33a8246eb8775d2d803d5c50a103f517fc6f716af447d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontNameTitle",
+      "batch": 12,
+      "sourceSha256": "1e05e75682dcd1cc768d4887e4012ee0d3d99508e595c23f8557c482b9cefcb8",
+      "translationSha256": "1e05e75682dcd1cc768d4887e4012ee0d3d99508e595c23f8557c482b9cefcb8",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Nome del carattere",
+      "proposalSha256": "d74a09b31d5a16bba3c27778f17c14d8463baa108e772f58759b091ab024ea0e"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSize",
+      "batch": 12,
+      "sourceSha256": "ed492b22543d1a8f008c7d408db2dd0729d276659a4e89018115904d36f8ef08",
+      "translationSha256": "ed492b22543d1a8f008c7d408db2dd0729d276659a4e89018115904d36f8ef08",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "dimensione del carattere",
+      "proposalSha256": "366374787b6dd54aef4c435ab6ae6ca7fe2da1ddeaf3676abe6325163b29e333"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontSizeTitle",
+      "batch": 12,
+      "sourceSha256": "f725924f4289c4e3f9c75d483866dd05a62c7135075d8121ebcf7709e190c194",
+      "translationSha256": "f725924f4289c4e3f9c75d483866dd05a62c7135075d8121ebcf7709e190c194",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Dimensione del carattere",
+      "proposalSha256": "5f6d56e675e5890a818bb0c6e37812b8f764ef3e7c83beb6954490fb1d14bcf8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBold",
+      "batch": 12,
+      "sourceSha256": "06707103933ed7251a1d722075524ea9dd147b60c9bb04e00ab80b10ac70e4f3",
+      "translationSha256": "06707103933ed7251a1d722075524ea9dd147b60c9bb04e00ab80b10ac70e4f3",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "grassetto",
+      "proposalSha256": "434d20d5d5fe39143dfd5bc056c0ae957cec329844dc043363632a54a6f251cf"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontBoldTitle",
+      "batch": 12,
+      "sourceSha256": "08981db2072d0ed5b48e573404cbcd41d21aa44fba1a1b2eb7549db839533fb2",
+      "translationSha256": "08981db2072d0ed5b48e573404cbcd41d21aa44fba1a1b2eb7549db839533fb2",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Grassetto",
+      "proposalSha256": "7b71a18814d806fdb2414456ead64c16a729e716bc4d93363d662c2f4a18fa17"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalic",
+      "batch": 12,
+      "sourceSha256": "71ec72c4c1ad9d32c21dfefb45c87cdee759e3c7285462b0920782799679c925",
+      "translationSha256": "71ec72c4c1ad9d32c21dfefb45c87cdee759e3c7285462b0920782799679c925",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "corsivo",
+      "proposalSha256": "734e3a2b632fe5db36d7b0e8ae3dfee76d961230e012f01fb39376c3e5171e01"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontItalicTitle",
+      "batch": 12,
+      "sourceSha256": "a7c1cc3b344e7fe77b434984aaad7aaa83764e909f82b6f68021b196ed3a74b8",
+      "translationSha256": "a7c1cc3b344e7fe77b434984aaad7aaa83764e909f82b6f68021b196ed3a74b8",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Corsivo",
+      "proposalSha256": "9ca55ce31f0a6916b4d954e6255d08236ef8554bf70e5cf28f4c408174d3d43d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderline",
+      "batch": 12,
+      "sourceSha256": "bd980e2e392d07475a41cca971b5bf8485f1d0b1169bad51a6032b2700372a92",
+      "translationSha256": "bd980e2e392d07475a41cca971b5bf8485f1d0b1169bad51a6032b2700372a92",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "sottolineatura",
+      "proposalSha256": "6f38c14dbf7aea43c5b13d6a1fa6ca80eead1459db26acbfd59ad9dbb89e8cb5"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontUnderlineTitle",
+      "batch": 12,
+      "sourceSha256": "b9cb9b35f2859cf498963003bb877acea3efbda925f1d4a477ff594a240f4ff3",
+      "translationSha256": "b9cb9b35f2859cf498963003bb877acea3efbda925f1d4a477ff594a240f4ff3",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Sottolineatura",
+      "proposalSha256": "efdb2a65c79e2b29c9459e08565aec573e576404d3c55bd25914c81e97effb66"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethru",
+      "batch": 12,
+      "sourceSha256": "976f352fb17fb1aeadf4bd2812403fb14d479adc728090e8fef6580b92efa190",
+      "translationSha256": "976f352fb17fb1aeadf4bd2812403fb14d479adc728090e8fef6580b92efa190",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "barrato",
+      "proposalSha256": "a85b18562a1c8f105c81a2388b7d56b34418db545efa6131d1e7f46281a277a5"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontStrikethruTitle",
+      "batch": 12,
+      "sourceSha256": "331191d650240771341487be92402745406f537db3935ab8f28c2732a28e4605",
+      "translationSha256": "331191d650240771341487be92402745406f537db3935ab8f28c2732a28e4605",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Barrato",
+      "proposalSha256": "93a3db5966e668132845fd701ac4a371d73c049ecf3ae3c13189b73d6a2b2cc8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutline",
+      "batch": 12,
+      "sourceSha256": "a96c1beac1cc6bbae3d24fa876decb6c51e5d61b71fb9298e48d137fcf660485",
+      "translationSha256": "a96c1beac1cc6bbae3d24fa876decb6c51e5d61b71fb9298e48d137fcf660485",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "contorno del carattere",
+      "proposalSha256": "e9e6d7083e49d4d8eac1ac323c3b94294e870b90f2f4b6b421f7bc974abe1a03"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontOutlineTitle",
+      "batch": 12,
+      "sourceSha256": "4384a43968e497ac323e1c2fa36cd96b910744c3801818543e9a7ac19131dc86",
+      "translationSha256": "4384a43968e497ac323e1c2fa36cd96b910744c3801818543e9a7ac19131dc86",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Contorno del carattere",
+      "proposalSha256": "ec42e34a7a30d0fef62d37730ab9d93023f5ef9c0f17e46b24756812ca075286"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadow",
+      "batch": 12,
+      "sourceSha256": "302f75a4e52ee869f688c9b716081b6045832a0cd4ab64c6371837c62bf43c8d",
+      "translationSha256": "302f75a4e52ee869f688c9b716081b6045832a0cd4ab64c6371837c62bf43c8d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ombreggiatura del carattere",
+      "proposalSha256": "8adce582e09e5c05d5cc54d65dc1642804acb161665f5fc92f91980a7210a653"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.FontShadowTitle",
+      "batch": 12,
+      "sourceSha256": "b7d5a6ebbb08265d122770426ea4691b26141b2629b2c29494240f52de492767",
+      "translationSha256": "b7d5a6ebbb08265d122770426ea4691b26141b2629b2c29494240f52de492767",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ombreggiatura del carattere",
+      "proposalSha256": "2a1d3bf9a6b027b63bbcc13726a6fc8a13dfec45fba67017e10bf81cdee1d16a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidth",
+      "batch": 12,
+      "sourceSha256": "6fbb3710b489a450e4553eb83a73e3b0296c1f9242b1216d918054d13e8173ba",
+      "translationSha256": "6fbb3710b489a450e4553eb83a73e3b0296c1f9242b1216d918054d13e8173ba",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "larghezza massima",
+      "proposalSha256": "70e04d4a54a44618b6d5d04a2f41b4c2ede5c909be19b357acd56e06cad33984"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxWidthTitle",
+      "batch": 12,
+      "sourceSha256": "5489acac513039f02e106ed712f164529c26e23954e91c3101ed3925df0dead1",
+      "translationSha256": "5489acac513039f02e106ed712f164529c26e23954e91c3101ed3925df0dead1",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Larghezza massima",
+      "proposalSha256": "c8fd736b5af4712bb8eb23ff6bb227c1eba335f6af9cd3e7b046d5f473787b62"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeft",
+      "batch": 12,
+      "sourceSha256": "42e15e79ea29151dfba7343ff3f88701a911c302f5f6b868272eba188601c2b7",
+      "translationSha256": "42e15e79ea29151dfba7343ff3f88701a911c302f5f6b868272eba188601c2b7",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "posizione sinistra massima",
+      "proposalSha256": "d143ff7051fd067f3f448c4f777311f0a1918e75e5127da7472c9b8f0452e020"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxLeftTitle",
+      "batch": 12,
+      "sourceSha256": "e3f1d53c7a4b59b93cd500c1ebd5c3182e53f05e905dbd6188c038f950394a2a",
+      "translationSha256": "e3f1d53c7a4b59b93cd500c1ebd5c3182e53f05e905dbd6188c038f950394a2a",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "Posizione sinistra massima",
+      "proposalSha256": "9a48a652724f068beefca4484a1e67172541705d57d46341943fa3eadafe0ee5"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTop",
+      "batch": 12,
+      "sourceSha256": "26811a8b955dbcc670a8280e9643cdb46726a46ef00f441695c15b835be51e0a",
+      "translationSha256": "26811a8b955dbcc670a8280e9643cdb46726a46ef00f441695c15b835be51e0a",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "posizione superiore massima",
+      "proposalSha256": "d7a5e84e3cca5dc2a11e8151078e19131ead52e529507d3f8c0f9103f11699fe"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxTopTitle",
+      "batch": 12,
+      "sourceSha256": "d7e8f0e0499bb27c98964a73dfaa8e4be7543d6e42b8ecc21fba22132e9d881d",
+      "translationSha256": "d7e8f0e0499bb27c98964a73dfaa8e4be7543d6e42b8ecc21fba22132e9d881d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "Posizione superiore massima",
+      "proposalSha256": "44653f04e7fe9c1a6e5fb90b31e85096a174ec1c39d2b6ae70cad20a4affbecb"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenter",
+      "batch": 12,
+      "sourceSha256": "57afb0caad2390523d75eed7d10ae1df825a2c341a54e1740975ca809c7c7898",
+      "translationSha256": "57afb0caad2390523d75eed7d10ae1df825a2c341a54e1740975ca809c7c7898",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "centratura automatica",
+      "proposalSha256": "f90130fdcd514249b0de8818dbd97b2045d5a9c920f736bd4154c75e30a91d89"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoCenterTitle",
+      "batch": 12,
+      "sourceSha256": "8d105c0c8e9e4a28d3a98776958f684817e37fab6d5cd0a1c819ea6c9519a929",
+      "translationSha256": "8d105c0c8e9e4a28d3a98776958f684817e37fab6d5cd0a1c819ea6c9519a929",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Centratura automatica",
+      "proposalSha256": "ef76e443689e33d5561446d4a5678d1798056c8b310047ce8ed5872d7122719b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSize",
+      "batch": 12,
+      "sourceSha256": "b1a79dd81ccfa017f91fb7fc998d6acd70928c9d827acb513ee816d8b54f0e9a",
+      "translationSha256": "b1a79dd81ccfa017f91fb7fc998d6acd70928c9d827acb513ee816d8b54f0e9a",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "dimensionamento automatico",
+      "proposalSha256": "2d6eb7cb1dfdadf4f9f72d9bbb3218bed77196420d42d148e174ee87cd24ee26"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoSizeTitle",
+      "batch": 12,
+      "sourceSha256": "78a64afa9685570a31c5a4fd279e530291a064b99b64f5f8039cef4c1171f2f5",
+      "translationSha256": "78a64afa9685570a31c5a4fd279e530291a064b99b64f5f8039cef4c1171f2f5",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Dimensionamento automatico",
+      "proposalSha256": "cf064299942a5d38ef9b0344a90f0986ab998fd6ec8fccc984922fd91a88ed9c"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoRelease",
+      "batch": 12,
+      "sourceSha256": "eefcb30caaab6ffd4bdbe63b38e16f81ad6e1e498256791556da39b9d0ef5218",
+      "translationSha256": "eefcb30caaab6ffd4bdbe63b38e16f81ad6e1e498256791556da39b9d0ef5218",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "rilascio automatico",
+      "proposalSha256": "a8320acc63d769dfba0acc268228b5a4253ad668aad9c7188fe923f29eb5f45b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoReleaseTitle",
+      "batch": 12,
+      "sourceSha256": "debc98cc993e0f410e9c700642ba2439712685c4e244da6c1bc408d488ff0c96",
+      "translationSha256": "debc98cc993e0f410e9c700642ba2439712685c4e244da6c1bc408d488ff0c96",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Rilascio automatico",
+      "proposalSha256": "83ff4e13d45d4c0fd72e64895f3db070f14eb821f00f48559e57247941caed92"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScroll",
+      "batch": 12,
+      "sourceSha256": "74c9a9a56d6b9fabf1a77511d9599a3a95503b81d2ef98fdd9a4a77f5dcbb510",
+      "translationSha256": "74c9a9a56d6b9fabf1a77511d9599a3a95503b81d2ef98fdd9a4a77f5dcbb510",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "scorrimento continuo",
+      "proposalSha256": "996dc9800e7c6b0949dd87bd40cb0a9f78045bae0bbc51500343cd59989d9f3b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ContinuousScrollTitle",
+      "batch": 12,
+      "sourceSha256": "01777cfb0af8c60733723dea9e6758a75ed337f942853d3a03ab3fdddef350ff",
+      "translationSha256": "01777cfb0af8c60733723dea9e6758a75ed337f942853d3a03ab3fdddef350ff",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Scorrimento continuo",
+      "proposalSha256": "038f4b415c6d55d6da750bafdcdc076c956d830102fcd2da2b259bea29e593f4"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Dockable",
+      "batch": 12,
+      "sourceSha256": "3a3f7879d9988f7bae75c58c0f1884f8f09eb2e9c4618d4ec0dc9f79f11c96c1",
+      "translationSha256": "3a3f7879d9988f7bae75c58c0f1884f8f09eb2e9c4618d4ec0dc9f79f11c96c1",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ancorabile",
+      "proposalSha256": "3fe3dbbc8978ee5c42a4135715b4dfba847ea37b02d1713590751f898a1e3ee0"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DockableTitle",
+      "batch": 12,
+      "sourceSha256": "83edc99acad6f09f4b4221147dc3c75f03c63efe6123152b4ab244964db92cbc",
+      "translationSha256": "83edc99acad6f09f4b4221147dc3c75f03c63efe6123152b4ab244964db92cbc",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ancorabile",
+      "proposalSha256": "09d382a80fe20496c4f7e6b9e36984cb2185201d318941772d030e93d5af9bb4"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControls",
+      "batch": 12,
+      "sourceSha256": "8ccfed593ced1814375382054a8e629d01f494dd6147407b8b91027caa8342f6",
+      "translationSha256": "8ccfed593ced1814375382054a8e629d01f494dd6147407b8b91027caa8342f6",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ritaglia i controlli",
+      "proposalSha256": "8fa921e24d33afa53903d67bad9524d786f2b124c19c508a82074ba8b5a6d9d7"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClipControlsTitle",
+      "batch": 12,
+      "sourceSha256": "94744a602c6748080e419da831c18ad1d390677f070ee959fa509963e8d96d96",
+      "translationSha256": "94744a602c6748080e419da831c18ad1d390677f070ee959fa509963e8d96d96",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ritaglia i controlli",
+      "proposalSha256": "dd91ceab7f7920d8b96657b77f06b66ebddcdba35ab0ea757f92c1edfa3e151a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Sparse",
+      "batch": 12,
+      "sourceSha256": "d7af78c1f4c4a2defc54302095df328cc37c57ae94b7b45fb62a1a437eb3dcc3",
+      "translationSha256": "d7af78c1f4c4a2defc54302095df328cc37c57ae94b7b45fb62a1a437eb3dcc3",
+      "verdict": "revise",
+      "reason": "This localizable display label names the VFP Sparse property; the draft leaves it in English, but its behavior-specific Italian wording needs UI context review before proposing a replacement.",
+      "uncertainty": "high"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SparseTitle",
+      "batch": 12,
+      "sourceSha256": "92e5c493cc80a22f902f7a1fdcd999d10f59c86b6cb690e65bcaebb45dea722f",
+      "translationSha256": "92e5c493cc80a22f902f7a1fdcd999d10f59c86b6cb690e65bcaebb45dea722f",
+      "verdict": "revise",
+      "reason": "This localizable display label names the VFP Sparse property; the draft leaves it in English, but its behavior-specific Italian wording needs UI context review before proposing a replacement.",
+      "uncertainty": "high"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreen",
+      "batch": 12,
+      "sourceSha256": "988353ed6ef25580e1d10ba2a78f70d6f7dfe0f9a07d6953a41f536043b62b09",
+      "translationSha256": "988353ed6ef25580e1d10ba2a78f70d6f7dfe0f9a07d6953a41f536043b62b09",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "blocco dello schermo",
+      "proposalSha256": "395016e5e9e6d091a7f4b75301d05bf379d9344ce705759285f20c92673c9e4c"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockScreenTitle",
+      "batch": 12,
+      "sourceSha256": "6deb94ac6c8bcb412d268ea7b8e5a7e4c2b62e9bd78f385d7b547ea1a40c7f1a",
+      "translationSha256": "6deb94ac6c8bcb412d268ea7b8e5a7e4c2b62e9bd78f385d7b547ea1a40c7f1a",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Blocco dello schermo",
+      "proposalSha256": "dcf3092401324216fe5329a72fceee2455ca77234d863d344186293d1c833bd3"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelection",
+      "batch": 13,
+      "sourceSha256": "f16b6d2eb20b084240e0b38c9ea7e8bf64b3117666d059ae7b41230eec3eb982",
+      "translationSha256": "f16b6d2eb20b084240e0b38c9ea7e8bf64b3117666d059ae7b41230eec3eb982",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "consenti la selezione delle celle",
+      "proposalSha256": "34171a18492038c3ebe0fcbc57c840c16fac69d21424018618cec7450879910e"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelectionTitle",
+      "batch": 13,
+      "sourceSha256": "d50a65ac4f1bf81f7c7d0e6090a038fda86617a4f9e724aba44ddd52ebfda305",
+      "translationSha256": "d50a65ac4f1bf81f7c7d0e6090a038fda86617a4f9e724aba44ddd52ebfda305",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Consenti la selezione delle celle",
+      "proposalSha256": "2e5d0cab71bde848cb440e04bfcebc18dd4270a716f3f661d5719275f8d20e25"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HideSelection",
+      "batch": 13,
+      "sourceSha256": "4a694d15889a6648ce621773c22aef33528937f77fec4aaaa8c8a7f6b4a9b38b",
+      "translationSha256": "4a694d15889a6648ce621773c22aef33528937f77fec4aaaa8c8a7f6b4a9b38b",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "nascondi la selezione",
+      "proposalSha256": "f874e50fa202b835acd84d1a58c683a0c754f4d8d94b6beefc3c34622bca1e4b"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HideSelectionTitle",
+      "batch": 13,
+      "sourceSha256": "87200c8be50cec2dc5daa0c6aec3c49e37877663ceef37d0c321124135ab2132",
+      "translationSha256": "87200c8be50cec2dc5daa0c6aec3c49e37877663ceef37d0c321124135ab2132",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Nascondi la selezione",
+      "proposalSha256": "ff8bfd274f4bb7ebb4fe5c408f7359236903c13c1bf51121442881654a5a1371"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DeleteMark",
+      "batch": 13,
+      "sourceSha256": "209fbffbd798be6866a8e7d53b80fe2823661a0e1709a975b275731f7b9c62b6",
+      "translationSha256": "209fbffbd798be6866a8e7d53b80fe2823661a0e1709a975b275731f7b9c62b6",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "indicatore di eliminazione",
+      "proposalSha256": "7dc12c87d8cf109f9d3bb4b0663e36b733d32d396c50cceb75675d50d1634d96"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DeleteMarkTitle",
+      "batch": 13,
+      "sourceSha256": "948b60d28fccba31e596ad2918dc0d0c516a5c2ace76f2377a2c4de137ed82e3",
+      "translationSha256": "948b60d28fccba31e596ad2918dc0d0c516a5c2ace76f2377a2c4de137ed82e3",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "Indicatore di eliminazione",
+      "proposalSha256": "f8d2288993d053dd89df74e6158d550eab40f682899c74fcff2b4ba449975d5e"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordMark",
+      "batch": 13,
+      "sourceSha256": "ec0176654248a2274e24dbad48a425f7b4940ec4c169a90e9ca4ca0222dc6f45",
+      "translationSha256": "ec0176654248a2274e24dbad48a425f7b4940ec4c169a90e9ca4ca0222dc6f45",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "indicatore di record",
+      "proposalSha256": "c5e46b457b99e2884a2c6edf928ed3f7195df1391fce3d722f95326a0e0d0e88"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordMarkTitle",
+      "batch": 13,
+      "sourceSha256": "8541c6d1930629d160f21962ef4e67765a764fdaa426a4002b3a8cee017f758e",
+      "translationSha256": "8541c6d1930629d160f21962ef4e67765a764fdaa426a4002b3a8cee017f758e",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "Indicatore di record",
+      "proposalSha256": "d2ee93cd63ff34fb6758d77f659ca522e77cca55edb8a1c6bfdc0bf6ecdbfced"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SplitBar",
+      "batch": 13,
+      "sourceSha256": "d534ee021bdb2cdf82f36219d655defab1a345c19b4a4690834cb9741669451d",
+      "translationSha256": "d534ee021bdb2cdf82f36219d655defab1a345c19b4a4690834cb9741669451d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "barra di divisione",
+      "proposalSha256": "0166408dd6efcdf8739f08453d2d7576a7ff0d08095c2c91d246b05e5c56e5c4"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SplitBarTitle",
+      "batch": 13,
+      "sourceSha256": "65f9d58c5118d17b67e2218687fc5742b16105ce6aadc2dbc52ecd01192e053c",
+      "translationSha256": "65f9d58c5118d17b67e2218687fc5742b16105ce6aadc2dbc52ecd01192e053c",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Barra di divisione",
+      "proposalSha256": "3d247677271e974ba6136f7a064c56f56b2a8ddcb5ab2980eafd96f964cd1d5d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRow",
+      "batch": 13,
+      "sourceSha256": "4edcbe69b9ce90e94d76e064664771c6c453fcbff29abfbb08e41b941246cbb8",
+      "translationSha256": "4edcbe69b9ce90e94d76e064664771c6c453fcbff29abfbb08e41b941246cbb8",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "evidenzia la riga",
+      "proposalSha256": "86f8de3e2fed765c65fc09fcbfefa01f68c9addbea3945da90093868b9740c58"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightRowTitle",
+      "batch": 13,
+      "sourceSha256": "268bb6521c5f5a891e4e48dca81c62c3ffc4f8b5d8132e5722baf6656703fc59",
+      "translationSha256": "268bb6521c5f5a891e4e48dca81c62c3ffc4f8b5d8132e5722baf6656703fc59",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Evidenzia la riga",
+      "proposalSha256": "6ff3d2aae6490bf2af265e7e305d062ad86fac0122b7d30a41d5d1c1c8bfc781"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLink",
+      "batch": 13,
+      "sourceSha256": "39d5342be493c1be7bc6eeca67ea61c36aa3fba1a69185cd978f00cbe3dd3821",
+      "translationSha256": "39d5342be493c1be7bc6eeca67ea61c36aa3fba1a69185cd978f00cbe3dd3821",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "collegamento del pannello",
+      "proposalSha256": "6ea924aa72ee1d17a78769a33f9bca6126f523528fc6f346452cc799444c1b0d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PanelLinkTitle",
+      "batch": 13,
+      "sourceSha256": "9e6482f51a09b26817ed732d646d1b354e0f1b32225057c2d3fc3ddd3f25063d",
+      "translationSha256": "9e6482f51a09b26817ed732d646d1b354e0f1b32225057c2d3fc3ddd3f25063d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "Collegamento del pannello",
+      "proposalSha256": "771afec0d51a9a163c3dc5f7d70c0ca4af3c338292c11bf36eb6dfa1ea6cd0c2"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizing",
+      "batch": 13,
+      "sourceSha256": "464d4041c702b0212603370a34ca0683ca6c5e6969da494dc3b752cf9056536c",
+      "translationSha256": "464d4041c702b0212603370a34ca0683ca6c5e6969da494dc3b752cf9056536c",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "consenti il ridimensionamento delle intestazioni",
+      "proposalSha256": "79089f3e08553d6b3a67fc343092b2e2b666266bdbe95e76044ebb59de19cef9"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizingTitle",
+      "batch": 13,
+      "sourceSha256": "579fc6d8f2421cfb998e4a78a5f748d16585f1c7afe60ef2ad9ad7ae44f3190b",
+      "translationSha256": "579fc6d8f2421cfb998e4a78a5f748d16585f1c7afe60ef2ad9ad7ae44f3190b",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Consenti il ridimensionamento delle intestazioni",
+      "proposalSha256": "c12df57e912569903adcb21ba46b2ed1269cc2418f431f4acd230a8472b23963"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizing",
+      "batch": 13,
+      "sourceSha256": "e097a6012d420e74e093b0a530d36a528a70dc940abea45ed79dc1b5022e5b28",
+      "translationSha256": "e097a6012d420e74e093b0a530d36a528a70dc940abea45ed79dc1b5022e5b28",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "consenti il ridimensionamento delle righe",
+      "proposalSha256": "b71287b63893ef987daf2ab863cdbccf75d80a79944c4801caa6c21a0e2f4e79"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizingTitle",
+      "batch": 13,
+      "sourceSha256": "903c3c25ad0caf8ab18a06288676ce25fe7000ec8ca14cc94e5dc9e17d1ef66c",
+      "translationSha256": "903c3c25ad0caf8ab18a06288676ce25fe7000ec8ca14cc94e5dc9e17d1ef66c",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Consenti il ridimensionamento delle righe",
+      "proposalSha256": "762db0f4507dc9b8a6f8d7cd2aa4a98d5e6c3e326cba26b3dcc209994d9ee707"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Resizable",
+      "batch": 13,
+      "sourceSha256": "8bdcbfc1e826765a976efa3975864ad2b955a703129bf2fc66ca6c7f7a764ba0",
+      "translationSha256": "8bdcbfc1e826765a976efa3975864ad2b955a703129bf2fc66ca6c7f7a764ba0",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ridimensionabile",
+      "proposalSha256": "0e238b0ab666e7473b36591cae68d35e19424a401e3b30eeb0a1f54cda120a75"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ResizableTitle",
+      "batch": 13,
+      "sourceSha256": "b0c6f965d396f37bf0b6474739df1f618b7f27651f9c5b8023fe939c2762fa3a",
+      "translationSha256": "b0c6f965d396f37bf0b6474739df1f618b7f27651f9c5b8023fe939c2762fa3a",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ridimensionabile",
+      "proposalSha256": "256d09afc711dee88267e13b84cd5a25b56d59df7f4d33e196a936f280a593b3"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds",
+      "batch": 13,
+      "sourceSha256": "89420b625adfdc7fed157514fdcb24b85324c2132809e63b5b4deda79db1f11b",
+      "translationSha256": "89420b625adfdc7fed157514fdcb24b85324c2132809e63b5b4deda79db1f11b",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "aggiungi interruzioni di riga",
+      "proposalSha256": "f5d290e9b63c46fdd74a1895970432322022dc3be02f628c40a83b2a05cc4934"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AddLineFeedsTitle",
+      "batch": 13,
+      "sourceSha256": "e103b71106bd41233a6e3270325f4bb5c5a0d36300ec65e867efdcc0edf94e19",
+      "translationSha256": "e103b71106bd41233a6e3270325f4bb5c5a0d36300ec65e867efdcc0edf94e19",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Aggiungi interruzioni di riga",
+      "proposalSha256": "06d238042c65a638ed91b28d2296e61d4ef12922d1ab472b7725b688aed1449a"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTop",
+      "batch": 13,
+      "sourceSha256": "fc1fe7e1ee204465ff1aa8da2dddec2f32c47966cded86db8d924d0983a7075d",
+      "translationSha256": "fc1fe7e1ee204465ff1aa8da2dddec2f32c47966cded86db8d924d0983a7075d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "sempre in primo piano",
+      "proposalSha256": "92787919b567a5d17f59c083c8c0189f9168cf94f8c1f8b1a041c839fdfb782e"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTopTitle",
+      "batch": 13,
+      "sourceSha256": "4aeabfb9507f6075abc912b99f7394f3d83ef61edebcb5acc435d00a5058c83d",
+      "translationSha256": "4aeabfb9507f6075abc912b99f7394f3d83ef61edebcb5acc435d00a5058c83d",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Sempre in primo piano",
+      "proposalSha256": "d16ae35f31c64c72bc52ac81bd6e4234514ba726b633c5f6db74f8ac2943b081"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottom",
+      "batch": 13,
+      "sourceSha256": "142e75c1b0b8ff8a1a7122f9377ee09a0844b7a07646fbd1a89da37ee5b7ea07",
+      "translationSha256": "142e75c1b0b8ff8a1a7122f9377ee09a0844b7a07646fbd1a89da37ee5b7ea07",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "sempre in secondo piano",
+      "proposalSha256": "c0a0bb486f89d0d955deb27f8faf597efa8526503ffd23595e79b8e12f35e1dc"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottomTitle",
+      "batch": 13,
+      "sourceSha256": "37714625f0efbb752f3640a061351ec224a351bf3c5c78167f23d14ee5a979eb",
+      "translationSha256": "37714625f0efbb752f3640a061351ec224a351bf3c5c78167f23d14ee5a979eb",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Sempre in secondo piano",
+      "proposalSha256": "360e2e4022b8adca719e49c4dfdd1380af2ef8dadc6af10bfb4293a8725ecc93"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IntegralHeight",
+      "batch": 13,
+      "sourceSha256": "9c9c9cdce2d966da53e262befbc5c2e60177d4b1efe0510438c898e688616bfa",
+      "translationSha256": "9c9c9cdce2d966da53e262befbc5c2e60177d4b1efe0510438c898e688616bfa",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "altezza integrale",
+      "proposalSha256": "dda35b51b835f48436469c4802bbade5da544f88663d2820a78241740086a359"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IntegralHeightTitle",
+      "batch": 13,
+      "sourceSha256": "eaaec7f3f28b493aa51993e507685d2f3ef640b6299a5ad71617e7e6645dfc1c",
+      "translationSha256": "eaaec7f3f28b493aa51993e507685d2f3ef640b6299a5ad71617e7e6645dfc1c",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "medium",
+      "proposal": "Altezza integrale",
+      "proposalSha256": "bab98743e30320d0f79beaa3ae29ce0d89795da0cbdd14cbd8ef2126cbafa244"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IncrementalSearch",
+      "batch": 13,
+      "sourceSha256": "6a32dd9987b799c3ec6e42e842254388a8bced7ee33107eae029fe891b62a671",
+      "translationSha256": "6a32dd9987b799c3ec6e42e842254388a8bced7ee33107eae029fe891b62a671",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ricerca incrementale",
+      "proposalSha256": "5470636bbac641383dd295df109952aee05577e5750ce570616f21ef66a40ffa"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.IncrementalSearchTitle",
+      "batch": 13,
+      "sourceSha256": "e6d8513046bc99a1569558801cba969abaf179a89f9ab4fc9fdcee1a938a6cb8",
+      "translationSha256": "e6d8513046bc99a1569558801cba969abaf179a89f9ab4fc9fdcee1a938a6cb8",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ricerca incrementale",
+      "proposalSha256": "036c70dd25b80e61784e652df0e2059a7589c8c326fa1dab6021d95f783a15cd"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MultiSelect",
+      "batch": 13,
+      "sourceSha256": "294dcc0f3497360b42ee6e7d412b83da180688bf70d3a64bd42da56e14b82a80",
+      "translationSha256": "294dcc0f3497360b42ee6e7d412b83da180688bf70d3a64bd42da56e14b82a80",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "selezione multipla",
+      "proposalSha256": "a140c16bd5c4ff35dc4cbe17e1e689ca638fd84d5a0badcaf14fc8bafbb2cfa2"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MultiSelectTitle",
+      "batch": 13,
+      "sourceSha256": "e9f589e95e58f0cb287572a1e26dcf90838bd52d06193b1a6854cdc41549669b",
+      "translationSha256": "e9f589e95e58f0cb287572a1e26dcf90838bd52d06193b1a6854cdc41549669b",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Selezione multipla",
+      "proposalSha256": "c77addedf9381aa30deb063d718c46a23eb225e8b19f95acb0d0106cd4780fa5"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowHeight",
+      "batch": 13,
+      "sourceSha256": "81b4d0362eb3361c7c236ee0430a7012786aee4cf95e3c3f5b95aa5f5ac89a4a",
+      "translationSha256": "81b4d0362eb3361c7c236ee0430a7012786aee4cf95e3c3f5b95aa5f5ac89a4a",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "altezza della riga",
+      "proposalSha256": "5be480b26a3374fba9f448badac17f810dd9a32d5725126f67c573d8a26e052d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowHeightTitle",
+      "batch": 13,
+      "sourceSha256": "1011f0dac97f0041d8b5e241185f3135eeeb3caed8658dd935b8990a797c23c9",
+      "translationSha256": "1011f0dac97f0041d8b5e241185f3135eeeb3caed8658dd935b8990a797c23c9",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Altezza della riga",
+      "proposalSha256": "a9f858e65bf82326bb70ebcab1c3c623be22c9755994df40d857287367603eb6"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScaleMode",
+      "batch": 13,
+      "sourceSha256": "f28b02dff319e414653a7aaa087935fc88301f970eba2d19a7ed992bc1224b21",
+      "translationSha256": "f28b02dff319e414653a7aaa087935fc88301f970eba2d19a7ed992bc1224b21",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "modalità di scala",
+      "proposalSha256": "eac3ae1abd2e618a5cb8a1d64c2db4174e664ee2d16d538dd81d51ce7b039705"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScaleModeTitle",
+      "batch": 13,
+      "sourceSha256": "0c49602dc74f461101f0ec0beafbc8460232295c8dd137346216d70fdd9fd3a8",
+      "translationSha256": "0c49602dc74f461101f0ec0beafbc8460232295c8dd137346216d70fdd9fd3a8",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Modalità di scala",
+      "proposalSha256": "ddbb2610e25a666b98a38ccb328e3c5ecb1077513e35eab9234f0cf3401cadee"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StartingTabIndex",
+      "batch": 13,
+      "sourceSha256": "12d121a41a343083ae2dccaa18d3782cf3e6a59fcb1a2b933f428d5eeaa00ddc",
+      "translationSha256": "6e325ce3592b91a99ed21ae454e3338e8b708636d8842dfb4a551496bf2c7c47",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrder",
+      "batch": 13,
+      "sourceSha256": "c1471d6468b456fe767aa0ce3d71650dc0545a203a624c8d4ee6bb4413dfca66",
+      "translationSha256": "c1471d6468b456fe767aa0ce3d71650dc0545a203a624c8d4ee6bb4413dfca66",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "ordine di tabulazione",
+      "proposalSha256": "6b36c6c95691133a417551a10510c5842a7930e63a69d1937e27937b8973a55c"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrderTitle",
+      "batch": 13,
+      "sourceSha256": "a20e176e77b774761482baf844872461af7a5b3de5b430ee4efdced8828ca664",
+      "translationSha256": "a20e176e77b774761482baf844872461af7a5b3de5b430ee4efdced8828ca664",
+      "verdict": "revise",
+      "reason": "The source is a localized diagnostic/help label, separate from invariant CLI options and VFP property names; translate the display label into Italian.",
+      "uncertainty": "low",
+      "proposal": "Ordine di tabulazione",
+      "proposalSha256": "19977d8b71bdfeb66e178f9c69662f7b82178db4732c1a64568f92b2170e0d9d"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrientation",
+      "batch": 13,
+      "sourceSha256": "fce4f93885b311937548da6b4780f6494b6cef61cb19ec2cd8233d60d0e10501",
+      "translationSha256": "5a05ae531db6f0c7d938493dfa2f38290ea4ae567135b0408a572e610f840695",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabOrientationTitle",
+      "batch": 14,
+      "sourceSha256": "72122569e9eca3f209c34b4b5f0689073143c240815cca34059367175368a4b1",
+      "translationSha256": "769a91b4094ad8add176ea0b69516a8b39921a65b4039d95ce31e02accc546dc",
+      "verdict": "revise",
+      "reason": "The title must agree with the adjacent tab-orientation label; tab here refers to UI tabs, not keyboard tabulation.",
+      "uncertainty": "low",
+      "proposal": "Orientamento delle schede",
+      "proposalSha256": "6a49285bb63738b53ef807729b62f59f5604d34218e53957444d9324ce5e4a22"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabStop",
+      "batch": 14,
+      "sourceSha256": "1683523f1fc6ad678b9bfefa786988ffc1b9c17d4a385b0fad13aeb06f35c2e0",
+      "translationSha256": "ac001987868f7535c2c27cd2d3a9d649ff21127e41a0e8824907342d3d67aa82",
+      "verdict": "revise",
+      "reason": "TabStop controls keyboard focus by Tab, not insertion of a tab character.",
+      "uncertainty": "medium",
+      "proposal": "riceve il focus con Tab",
+      "proposalSha256": "4393a938f756fba87961e8611997c91a2e987a9b99f10c3ea9af7617fbfbd127"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TabStopTitle",
+      "batch": 14,
+      "sourceSha256": "df881063f74037030d3062143d36ef3166d965ebc9b6c855be10b6112a894c75",
+      "translationSha256": "3f56057e3320ca0dffac83c2a4e45398576d71d910aa52ad0cd3e0f951135da3",
+      "verdict": "revise",
+      "reason": "TabStop controls keyboard focus by Tab, not insertion of a tab character.",
+      "uncertainty": "medium",
+      "proposal": "Riceve il focus con Tab",
+      "proposalSha256": "5b86823b3a7ba8a5bb398d1d408cc9ee902e42aaee2825c863ddf8d6fd2cbf94"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarText",
+      "batch": 14,
+      "sourceSha256": "2dc92965d3666b2beca094824e96e8049e642a05ef9161d8bc9905ed9628e074",
+      "translationSha256": "2e8659fafebfb03a76b49a3fb697928e5c47b5b88bdc56953c8e540020e962e9",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle",
+      "batch": 14,
+      "sourceSha256": "d7b49b13fa2fe6ecfb9aa625efd22059db024c4975f16f0b765df0a80b0d07ae",
+      "translationSha256": "6ebc030389d6f365c2421df60678448b06e24a2cc997f358e84f9a6910d49440",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipText",
+      "batch": 14,
+      "sourceSha256": "6ad8aa19ab96e33e79ed5223bf59a666e39ee0b5eba3dc3a8569a875da17b8bf",
+      "translationSha256": "fa46518bba69055a51b4d1fa41ef8d9f3e51fe5af0ed75898933e118007af546",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle",
+      "batch": 14,
+      "sourceSha256": "209f2ad0b80e5c1e277af09f8e8c0defeaffb597514820c6398cf61104b763f2",
+      "translationSha256": "22932ba9b4b71379e03c3612c5b4d1f4d89ff0d7ef49b319d0ab91cf8a2d638c",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Visibility",
+      "batch": 14,
+      "sourceSha256": "7d2fb3da93a013ce41e4eb531e0bb78e245939e05984a6a8dea49113becc347c",
+      "translationSha256": "495cb92815e23f4f0eff8bec3464ef7d38e96e2f251860d429988869a9f7642a",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.VisibilityTitle",
+      "batch": 14,
+      "sourceSha256": "7448611d5f93aa8acac6a06d76c00b3f23d985bd7fbedbc771409a85ad4a23c5",
+      "translationSha256": "e96a4ba68672b95f69a6fb3f3d3f29946e71a494dfdb43f1de75e26fdae687b8",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButton",
+      "batch": 14,
+      "sourceSha256": "2c23b386fd05447b943472e59f70280e29bf6da3c0a997f80e3dbedce6c7b7d4",
+      "translationSha256": "89d56d5901547224c94c659fed1517167f37a1fd671391f0fdc4037380e589bd",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButtonTitle",
+      "batch": 14,
+      "sourceSha256": "3c66bc5b13b7d017cc3c0451c516766508cea8928e44143f72d4ed7443ecd7a3",
+      "translationSha256": "6e500f38233295be84f87c8aefb3054eb97adb99360d6ee8b2c65a1b32459b12",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelp",
+      "batch": 14,
+      "sourceSha256": "0e8e5b3e4b386056af1e33b7c312741ffa62262a5318067172af36d601c66ad0",
+      "translationSha256": "f7ee045651618f3d3a6fb558f2f93557d31dea7ddf6049866223ac08b1820a40",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId",
+      "batch": 14,
+      "sourceSha256": "fcc3ca44ad7d3e2168fe0673cc1b703d82e2348c59259ae24af5e3bc5699019b",
+      "translationSha256": "e3d5a84db33329826187f5ef79789249fb8b7083f89ff828236d5e81e936a170",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpIdTitle",
+      "batch": 14,
+      "sourceSha256": "3956ea93b0f70f60ede259b28d38caf917c748ec6e0c8c78e81c8eb586a0efea",
+      "translationSha256": "1eebebd30344c301851d4ed6e90c0c44bb2b38ab04b4699c8fd239b5a39744e2",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpTitle",
+      "batch": 14,
+      "sourceSha256": "8699153bb7697ad0834f5a617020ed28a0990ba9a10eea43e949c2dddd13de9d",
+      "translationSha256": "2eb69c2adf55d4d2d82e83a7d1d21fd9988aa3499ea83999a691c9fcc0d8a6f5",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Clear",
+      "batch": 14,
+      "sourceSha256": "913a4cb91be20332f3559f8070255d7ac3e6228bb423f4441551d3f783e7d4f4",
+      "translationSha256": "fb3ff2600e66a44f0f8848e92de17cafdef9d517777ab07e85e204d752e0b0a5",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Rename",
+      "batch": 14,
+      "sourceSha256": "9e84869d369b2a5336f6aa599b6e91116cc3d761827ef5f4b90841b8848ec35e",
+      "translationSha256": "4aafbfd3f06c562af6cb14ce71bdf5892f128b16e5646d994e241130d03f6ba5",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.PropertyCommand.Update",
+      "batch": 14,
+      "sourceSha256": "2937013f2181810606b2a799b05bda2849f3e369a20982a4138f0e0a55984ce4",
+      "translationSha256": "b4a97cf18c1c521d2eeb8b28ad3124cc77b95ae6a2e801f67cde7305c0a13c86",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.FieldValueOnlyWithGroupObject",
+      "batch": 14,
+      "sourceSha256": "c64c0329ad591d4e5de8ec2cfbdce43771af7bb83668472595a2a02adb83cbe4",
+      "translationSha256": "e223d3110648a0df1a4cdd8a511faadc01f8b9d528ccaa509fc3a7f4a38a0f8e",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.GroupedChildSelectorsOnlyWithGroupObject",
+      "batch": 14,
+      "sourceSha256": "12bd75ad832e6330e660d4cc65a6a0339d9bc090be30eb930f2e3bf335aafe29",
+      "translationSha256": "f40a57f3ab4440fc558009a1535c8fbf00c4624f0940e81a96c72d5110dddfd6",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.NoAssetPathProvided",
+      "batch": 14,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "80df692ae45dafa1c681c40ba754ccd5b8c97ecca2bebf934eb17b7228c1425a",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.PropertyCommandRequiresOption",
+      "batch": 14,
+      "sourceSha256": "c85c795f63c6ce8ad2a6a4a685cb81776892745d38b742dc16ae3105142bd7ba",
+      "translationSha256": "24577b063d1dd819fc362dcc749be934d8166e87c6a1e64a91505fe466057fb4",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode",
+      "batch": 14,
+      "sourceSha256": "ba8d2fb0cfa2583ca4793eea1783c1aaac6145abf13153094ad341c0971f169a",
+      "translationSha256": "4fc7141339992a9d4261e2ab9db309db1b743151f6f6d3be302f49a07d611c93",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector",
+      "batch": 14,
+      "sourceSha256": "fcc8798893c55415fdf0d6e35951e8b82517d1b1bd29f78c1710e19f02c0bc22",
+      "translationSha256": "d6237b4ec2c1249cf53a2cb0deba4b3eacdf3855bab0273022f83c8c9bc6d246",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
+      "batch": 14,
+      "sourceSha256": "a800c697ddfd2536efd153ecf0bedce8144bc74a7d282b5c9e64d64e98e3f92f",
+      "translationSha256": "63b88204b08c8e015233fa296b06636f98b3f495a6daeee4860549254ff6059d",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestRequiresOption",
+      "batch": 14,
+      "sourceSha256": "0e03babb0aed5b283156a35ba35f99814fa4f9d63ef4c254fb431b19cccf733b",
+      "translationSha256": "8481f7e73323d4812c40fdbc08d114950446e6192b02e10979df13ce0bca5fc7",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.RequestRequiresSelector",
+      "batch": 14,
+      "sourceSha256": "4c1f2276323cbecce1d3323a2e8dfaddd29f19f075959619c78d290dbbdaf370",
+      "translationSha256": "7494b67120d89cbfbd421bb5d7b7cca2709dd3e77e78bb7150a831c075691cba",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.DeletedStates",
+      "batch": 14,
+      "sourceSha256": "87bc6b9cc422bd56a19663f7fcb4f9cb8b5fcd1179c8e313a4e6e778e3b8c879",
+      "translationSha256": "db4f97bb96876c28bff3a9d3a2429fe05bcb363019f964fd6e9a4811b9272ded",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.DeletedStateTargetTitle",
+      "batch": 14,
+      "sourceSha256": "fc907dc88d8107cfd8145d7a4a30f49971f8e963336b6b66131635b14c76bd7d",
+      "translationSha256": "e391e016b8f78f62b4dcd234b13b314c6852f03df69e2dadf71025708af8f8af",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedState",
+      "batch": 14,
+      "sourceSha256": "b722e01b1b9745ec3821378377c59dba30f375140002ed1d84877db2587dddad",
+      "translationSha256": "3710618b70174c8d33ddb440fdeb45c7d420376434f38c1f537b666d63779b16",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle",
+      "batch": 14,
+      "sourceSha256": "ba2a353eaee148ac4ae5574a7b45ba6fa25cec1e3791dfd476ff0083dbeb79c5",
+      "translationSha256": "83bbedb1840a9b6bb61349d7cf48fb446b739a321f24229296bde9caeece5149",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Selector.Target",
+      "batch": 14,
+      "sourceSha256": "34a04005bcaf206eec990bd9637d9fdb6725e0a0c0d4aebf003f17f4c956eb5c",
+      "translationSha256": "7c2dbe898181f46bfd1a10643414849acd95007bbc1c74155270890b6e992d2d",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Selector.Root",
+      "batch": 14,
+      "sourceSha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2",
+      "translationSha256": "6f170763b789a25caeca324845f85d17fc1de5e68cab0ca2364ca12ea919d102",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Value.Value",
+      "batch": 14,
+      "sourceSha256": "cd42404d52ad55ccfa9aca4adc828aa5800ad9d385a0671fbcbf724118320619",
+      "translationSha256": "75c3046366b646293d7fe9474bd79a1c66b387893c0bf0428fdc7f269603b7a1",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SelectionContextValueRequired",
+      "batch": 14,
+      "sourceSha256": "f9cfe67f4ed0688fe38f5ee33b0442d49646fa7ac206592cc4bcab65ad2275ce",
+      "translationSha256": "5aba04b7abd186883fae3ca83300bf9b89a11ac34ba106d3e62bb8d6f0837879",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.SelectionContextAllowedValues",
+      "batch": 14,
+      "sourceSha256": "9b0485ba6c5b5feebac5c88499e8e52187daa1bf63686c80ae72484eead7ad07",
+      "translationSha256": "536405bd86ab3a9a2943c77bb6e89942c20e35b6adbf3d487600a08056870176",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SingleObjectCommand",
+      "batch": 14,
+      "sourceSha256": "6fd54f3be45c6b56ef5bc4fc66e62b3bcfe6f9e97aa05ed4027ffafc4290e2ec",
+      "translationSha256": "48053888f37506bf37fa5a42c947b402a9355f7a76a9c4364d2af4f0d1947cc2",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.SinglePropertyCommand",
+      "batch": 14,
+      "sourceSha256": "72fd5698c89f253060fdf5293f5689cc135dd71ba936289fefb589f1964cd0f8",
+      "translationSha256": "8e18c5ca6acbd2fc4d898af58203581be5455c4e45d3e093bd66359005f2beb6",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.TrueFalseValueRequired",
+      "batch": 14,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "b665f8b2775cf36a5ace776c1476db832f58ff0591a179551928124c8acb9150",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UndoModeValueRequired",
+      "batch": 14,
+      "sourceSha256": "127e744595ee8841e02cee3a5c047a56b54e05d9759597e18f55f3d97205a364",
+      "translationSha256": "bdf179305404c1b564551713dc769e55196207453f4578302707b8011f83d0a5",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnexpectedExtraPositionalArgument",
+      "batch": 15,
+      "sourceSha256": "1cbe2040f9996909f3b5dfa2e418553683ee6a3dd2553d8280728a8f7257b35f",
+      "translationSha256": "eac40fe78cb182858e40eec53f169b7f4f487b27b09c0a9d1d454740d0673bed",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnknownArgument",
+      "batch": 15,
+      "sourceSha256": "503e4bca64d33f07d3879c3b7a2ae3c5dba953e82e853eac9f5e008438df863a",
+      "translationSha256": "522e48c8714fb79844647fabadf6cfa49dae1abef3e28216a9be123a16821057",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.LaunchParse.Error.UnsignedIntegerValueRequired",
+      "batch": 15,
+      "sourceSha256": "10e420746ed852110133bcc009344708d9b9dd2539f1c840c78e844768883fb6",
+      "translationSha256": "225b0c2b233c07643b885c745e006d8a6716d8c77b74e78f7d8007e7e91729f0",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.BooleanValueRequired",
+      "batch": 15,
+      "sourceSha256": "00c8e61f565b1f15c959b3f0c7cc89ad23a937b7d24b18860d119ff0707c12ec",
+      "translationSha256": "b665f8b2775cf36a5ace776c1476db832f58ff0591a179551928124c8acb9150",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "96a1247ef1b2329090944a9258c14780a5a7b4e4be062c3ddffa14f23227f6cb",
+      "translationSha256": "649b1dff906c8bfeec57667dafd222dc2d6deba7454ac2bd6780aff63f734325",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.CopyBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "d37942d2eb2d4296fca35d680799e3e4343e751860f57a4ca24bbfd259ad3703",
+      "translationSha256": "1bf86085b8de37abebd80b5816b6c8ffd67e6f5142f781cb9b5c90d58db44311",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MissingValue",
+      "batch": 15,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "dafc75951656a1aec1ac6d45f4cd686b0a9079d8c57ef7d13c8c1dcc4e166714",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.MoveBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "f865e5b6ea06cc5ed606092d55e3079d808535892e0652d8857c1aa6f03b17c9",
+      "translationSha256": "01bd096f219e10d33475cb224671902384fa5d461e94e2afe13eaed0f574ad7b",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoAssetPath",
+      "batch": 15,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "8eb664b06a63b1d8bcb2afe97a14edca1d2a741d9b766163630b3743da46ee68",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyCopies",
+      "batch": 15,
+      "sourceSha256": "b67ea96839bffd4d5e696ecfd1623c8a7dd8bdd1fcc4f464c729744571279593",
+      "translationSha256": "574c681505c4c8d3cccb1a6eaa63465e0cbd3c1860e3b3c76f8f1dac3283c6a8",
+      "verdict": "revise",
+      "reason": "Fix the missing space in Èstata.",
+      "uncertainty": "low",
+      "proposal": "Non è stata fornita alcuna copia di proprietà.",
+      "proposalSha256": "519f3c56c9e9ab97d170798e985dea0d74fa746ad765bac10afd7a62f368036e"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyChanges",
+      "batch": 15,
+      "sourceSha256": "9a2e98e48e053c3d2a86b966e6cd7c8e92d835f17486071af159d931add14b53",
+      "translationSha256": "228477d8ddde0c38a83d83459c6c30d916ac6d577a6a53d6a9591deb578a13ed",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyClears",
+      "batch": 15,
+      "sourceSha256": "f17a0c0321c8d6962bae6bf201b34ae4bb96ab73e8d6027ac313f4312c88f257",
+      "translationSha256": "0b45bbac423494225d35490e188f0b668566b6e8dbb49fc90802fdc7e64f152c",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyMoves",
+      "batch": 15,
+      "sourceSha256": "16e3b0ce41dd25224c7b218bc2fdfac4885188c72aab809dfb00423da5770661",
+      "translationSha256": "0d23bb6f0ff9b1228ef4f3d84bbb98171232aaed537fa927838d32c72e10d4a6",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyName",
+      "batch": 15,
+      "sourceSha256": "4f5b0a7174fb1e86bb8895dfc65363c68440b38cc764bdaa6e4b232c89aa3664",
+      "translationSha256": "d791c7dc94dfd2a9c83d858b6ff08bbd3f80917e68953631f526896133b7e584",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyPlacement",
+      "batch": 15,
+      "sourceSha256": "7a966011a3f2b0e4d44104ba461135470e70a9661719a0290164959152a9b8fe",
+      "translationSha256": "78e34963ca38e6cc701a4e1475a2163e6a99755dbc60bff5a9555b0fb77afa7e",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyRenames",
+      "batch": 15,
+      "sourceSha256": "db546f7c4c32d82f20c808c0c8f1dd3a4767fd58d28ed74b3b58a93b985e910d",
+      "translationSha256": "542cf0dc5331dcb4becd0a233ca2913b36d392d7702b854df37ac1f4e3328217",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoPropertyReorders",
+      "batch": 15,
+      "sourceSha256": "48b94294209cb715c7e28e47e9bca96f9a7a7352ce16433f066985e3a775a215",
+      "translationSha256": "4a0bf8efe6955e8b990a98eabd7a486e3ee290f0025048585d4fe6a9705736bc",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
+      "batch": 15,
+      "sourceSha256": "50cdbbebad0d8904dd71213cff5fd08b5493b6856ea7fcfb9357366b2cf8a5be",
+      "translationSha256": "f0850caa69e37f87c69184b23ff180387b26e60b3f743280d71459d1dd7ddff9",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+      "batch": 15,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "8612f8bda0bbc8662044dbce6a25e5d20fb41c7ca66cb7cead3957ea485cc8cc",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "11ed816b858cfe455681ac561321f384d96f4ff43526d08e885206f539e38480",
+      "translationSha256": "a24fa2b7f0d0d0828fd4ff9c7711011e6f429484780edba9d325b2a8d971f833",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.ReorderBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "682ddf3820f2d4d37942ea4957794817ce914b309efb0d5196bdd09581d2bcb8",
+      "translationSha256": "c9b4db9dae649a3dc26bc9064e3560158804e4e4b448e3c615ab7d7d1da7b34a",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UnknownOption",
+      "batch": 15,
+      "sourceSha256": "971739255989bd4331f34c3c596c5a08f580272bd31a6442901369d94c8a11eb",
+      "translationSha256": "cf66afcabbc5325cbd2aca646f5d9fb52b3b78f6f961287404433d5f08e4bc69",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName",
+      "batch": 15,
+      "sourceSha256": "c2df53e466d8dc12718545c92236fbff7c7a08be11fb97cb7b19193fd785cd01",
+      "translationSha256": "30d7199d37bba08ad06bade84157e53192e906c1ca12b9f3c7ce459515b8cc20",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.MissingValue",
+      "batch": 15,
+      "sourceSha256": "ccd57fb3d645083d960f7270d924fc1604d3837029768355d84b7cc5cd47bc36",
+      "translationSha256": "dafc75951656a1aec1ac6d45f4cd686b0a9079d8c57ef7d13c8c1dcc4e166714",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoAssetPath",
+      "batch": 15,
+      "sourceSha256": "987ce8088b2f65ae9a91d3be28dce6f0804cf547866c9f98e5a8b806cb6a3735",
+      "translationSha256": "8eb664b06a63b1d8bcb2afe97a14edca1d2a741d9b766163630b3743da46ee68",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoDuplicateOperations",
+      "batch": 15,
+      "sourceSha256": "3652154de6350929b524bff7f5a52e6053063cf5d3d6191692c30189fb4f631e",
+      "translationSha256": "2ebc77c84d6b53d4eec7c4edae6ceda984fd5a7bc7b8073682603034692933c2",
+      "verdict": "revise",
+      "reason": "The source concerns missing duplicate operations, not an already duplicated object.",
+      "uncertainty": "low",
+      "proposal": "Non sono state specificate operazioni di duplicazione di oggetti visivi.",
+      "proposalSha256": "b2c060fe5527610d42ecb8473700f076dd193d1a17d7ac3fdf9f4d1221fc99d0"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoObjectPlacement",
+      "batch": 15,
+      "sourceSha256": "4d4faa8c4acaebd5e9d9991e5423fad7091ed99b4d2dab349220ecec01d7bbf1",
+      "translationSha256": "f6316993a273fff313d70cc99b5420836f3ea060866c4053ee2e6159abc5b896",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReparentOperations",
+      "batch": 15,
+      "sourceSha256": "e1aaeb076e5b0f3296b53d5c070ad36fff3130bcf6765707022c71dfcf885185",
+      "translationSha256": "0e79ebb7ed26673b9bd86f31529283675fd5112deb16b24161e37f05628dbc87",
+      "verdict": "revise",
+      "reason": "Reparenting changes an object parent/container; cambio del genitore is unnatural UI prose.",
+      "uncertainty": "medium",
+      "proposal": "Non sono state specificate operazioni di spostamento degli oggetti visivi in un altro contenitore.",
+      "proposalSha256": "e7dee1b3f941e7ea6e56397b621e07ea1ada107b1b73d2ee929b2067303663e3"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRenameOperations",
+      "batch": 15,
+      "sourceSha256": "879d97689a652a414ac75e74f1b2ea9733fb62adcd4c92c454d442bc1dc6c20d",
+      "translationSha256": "6dcbb61e664b11034fae4cb826ec71d33039c67efeac5ceea509daf280a8815f",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoReorderOperations",
+      "batch": 15,
+      "sourceSha256": "4f96db45b8ee0cdfa49f72cd2fec8cb3007c5848acd23170d15f582eb179d43f",
+      "translationSha256": "ca58729b5a21fb7e5fa3e88ee0c5220775d895921d89499ff5df0d4cbb66c084",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
+      "batch": 15,
+      "sourceSha256": "7ca227a11f73ec843c2bdd055f49793a0cdc2773a2837125b98926de3f6891d0",
+      "translationSha256": "d36004485c83313489c51ed639cbc117a64257b208c585181126299366839d0f",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
+      "batch": 15,
+      "sourceSha256": "aa1c0660c769c6ebe946164e1740832aaf069b34aadfc7626f220c8b0658f7bc",
+      "translationSha256": "461a83b5012d931086a03a361f4d86c7267b961f971662fb75348566fe5bf666",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NoUpdateOperations",
+      "batch": 15,
+      "sourceSha256": "87c8fbe619e55139dd56f61858d044affa2cf4d2caab3fc892bd542b058b2374",
+      "translationSha256": "8148edcb430e385d0b6201d7e18f24f819e93c1eb403ac82e713cb80eea96f4d",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+      "batch": 15,
+      "sourceSha256": "24bbcdbd62e32828b32a6d0ca4d2ab5dea0983da136d761ad0df30292fa47a7d",
+      "translationSha256": "8612f8bda0bbc8662044dbce6a25e5d20fb41c7ca66cb7cead3957ea485cc8cc",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "9a1ee3c7e177637fe94cf32dc6964027bb4cb19c723328f5479fb051ce2aace3",
+      "translationSha256": "73c9e95fed98f1635e3c2e1060265bf7a187e5a7104744398751f1d2e36025dc",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "77817e6827c1467aeaf0335ba20f9f093c5e307bb5bc4ba86dfd5a2bd74a6fa6",
+      "translationSha256": "4f85b4a9b1c7e565ac7efb282294ed2c67a2363dc3006ed3a3623c21469c165c",
+      "verdict": "revise",
+      "reason": "Reparenting changes the parent/container; avoid literal genitore and retain preceding-selector condition.",
+      "uncertainty": "medium",
+      "proposal": "Le opzioni di ogni operazione di spostamento in un altro contenitore richiedono un selettore dell'oggetto selezionato precedente.",
+      "proposalSha256": "7cc2edd469ea9d08048ae44d870f009ed2fcc1f331f208c2a5b8c7ae94be85ee"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "acc466d62b7f451bd0dca12a613a1cec44e3b47b38fc6a66f6da1b6565805bf8",
+      "translationSha256": "88fee0b2fad3796b89f51d695730c133fecd8c14230807cedb3b9b764945409b",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+      "batch": 15,
+      "sourceSha256": "6d87341b1a701d49656366b1a49fb53ed35c9bf884814964e788eb4807851d5f",
+      "translationSha256": "38f76560fe862f4f7f665aebf55fca2cb5814a569be4f639b4eb58ac4ceb80ba",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+      "batch": 15,
+      "sourceSha256": "f3aa5b8d836b69dfa0e847be619de325078fbc9e88e49dce4ff893836d9a4d7f",
+      "translationSha256": "19437cd9f07f75713bf0c207bc7434da67ca1ab88fa9583c3ecdb108be0f1268",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    },
+    {
+      "key": "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+      "batch": 15,
+      "sourceSha256": "b6578cda9f0c15e4cd1152ec8f956278da4effa3e6c8b111700d0f2c837d20e3",
+      "translationSha256": "d57c69e12b9ef803c42abc617cd036ffb474be18d1f82d6dba9fe9d8a88664a3",
+      "verdict": "accept",
+      "reason": "Natural Italian meaning in context; placeholders and protected CLI/VFP syntax are preserved.",
+      "uncertainty": "low"
+    }
+  ]
+}

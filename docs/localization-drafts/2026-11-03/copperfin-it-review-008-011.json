@@ -1,0 +1,1335 @@
+{
+  "locale": "it-IT",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-it-IT-008.json",
+      "/tmp/copperfin-it-IT-009.json",
+      "/tmp/copperfin-it-IT-010.json",
+      "/tmp/copperfin-it-IT-011.json"
+    ],
+    "entryCount": 160
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_es_revisions",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewedAtUtc": "2026-11-03T08:00:41.931931+00:00",
+  "uncertainty": "Text and source-context review only. No native Italian speaker sign-off or rendered UI/runtime validation. PictureSelectionDisplay semantics remain unresolved; long labels may clip. Verdicts apply only to exact hashed values.",
+  "counts": {
+    "accept": 142,
+    "revise": 18
+  },
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "batch": 8,
+      "sourceSha256": "14493f5f5470ed48c3f103d917ec52ae9005fa3913128031d0fac2a49ac3cc41",
+      "translationSha256": "981e260861d0eea8be1197e7109361ba2bb89f5c99b5bf7d6c1c31d224a82a3b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "batch": 8,
+      "sourceSha256": "a424e33d90931d1ed22f2af37a3f3491a5c9de0dfae079f6f3ff4edf0309e07f",
+      "translationSha256": "e3ddf6e22b5d88beb94b7aa300d13b20cc32396240bdc99214c2c64bd2e8a912",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "batch": 8,
+      "sourceSha256": "a199ab162e587e6965652c321a1d508697f5f456a39a7983d929125e6cbbffbe",
+      "translationSha256": "1fe8ab1b3095f396fb14b1490fc7c675761503cabc70b3a3a8e1968912ef0ee0",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "batch": 8,
+      "sourceSha256": "3b9e7d0cdf802cc344979561cd908c119c8e60afc2ff59384e1ea297672ea0bd",
+      "translationSha256": "3560458bfa4169abcd4953a04511ee729c0c9e32482e65d2a5dcdbf43759e6e9",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "batch": 8,
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "ad42b2fcc3466fbea017320ced59414eb6bac6c5145fd03037e1e989980507bd",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "batch": 8,
+      "sourceSha256": "771106e138bf45502e721967644044bce6d879fcef1c32802854ab971258b501",
+      "translationSha256": "d3edfb9818bdb972d4991b535b05d1b6abb27f00f564eb4004899449402d973f",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "batch": 8,
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "b0145defa97d0f3311a592f76f5cc480e3c0534e432129cb918b2bd5259a6be7",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "batch": 8,
+      "sourceSha256": "be3f4568a468a95196a9758d5473e6d1c1cb100f2196cb5ada562c35f0620897",
+      "translationSha256": "bcbe7c0a2de9c18ac88448d946059c9fb8276429fa0f63de9260f8b7d4346422",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "batch": 8,
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "1968b2680559b10ac7df01eb75867f695df8188ab256048761e20ada023ee266",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "batch": 8,
+      "sourceSha256": "965d4882983ce0028dfdf303430d74234d1e10637832c7e12dc7c0c8bda66263",
+      "translationSha256": "a0a334c460027453bb5f8bbb7aaf9be752ebfbad5cb5b7748fa48adc99b24fee",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "batch": 8,
+      "sourceSha256": "61a72e3085b7d2ecb4830c402af469e3ce622ee48dd0283402c54431a722a2a8",
+      "translationSha256": "cabf3dd48d92a67ba0011b237fc70688f4b0d8375b14d6e50ad51dc36a643d23",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "batch": 8,
+      "sourceSha256": "61a72e3085b7d2ecb4830c402af469e3ce622ee48dd0283402c54431a722a2a8",
+      "translationSha256": "ba6cbbb826a226e614487d07ffe0bbf91d6ba48709970d5bd205d78c87583f33",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "batch": 8,
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "88f79905fd7d49259e6b963b5389ba9f04814697ffaee2c318655afce788d08a",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "batch": 8,
+      "sourceSha256": "cae7277d7f4fcf72ee9f9617eaab66af145127acc4954ffdf9be8a25fd5823fd",
+      "translationSha256": "7e0d55bc804165ad3b4cec9d4c8ab2965c34f3e687ff1eaadd9c0f7a2c40091f",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "batch": 8,
+      "sourceSha256": "2cea274d0bedc39ec4ab6ba9e59ec889e3ed6fb56a1cf088a64d9b383378dc97",
+      "translationSha256": "63653ea6f637adcac877a6312644c18b7879c5b57a3ff00363d7c8a8ee8d7148",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "batch": 8,
+      "sourceSha256": "9a1c54f55e7cfb1cc2cdad2991525037bc475a509fa37262e123c44e958d2d36",
+      "translationSha256": "850b6f31035433ae199c59189f8ff27fbc870a26d726fbc44b91bd3d84980d2d",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "batch": 8,
+      "sourceSha256": "c49c0ee674cbe62f769d52c56d8605f1693190a1d181d833065b81eb7a57295d",
+      "translationSha256": "a2c878a068c362335bda56dc7d87255d804e137e44741b65f372e36460be0927",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "batch": 8,
+      "sourceSha256": "b19746aded0d23ce7ca1aa2e36601f369c634a6905deca4fa6b7cb8b79327156",
+      "translationSha256": "a2c878a068c362335bda56dc7d87255d804e137e44741b65f372e36460be0927",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "batch": 8,
+      "sourceSha256": "2df962d37ee229c547fb4ebef038a1eaecd0cd6f1c109746f4a9c1fa80329254",
+      "translationSha256": "017a9fe7abd8edcee445a53929e87141dbc3cd3356ee32589b87617504494865",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "batch": 8,
+      "sourceSha256": "4dbdd221e957eff27cc47796f3ed8447290f71c7ad8b95e5bd828b31c1858f15",
+      "translationSha256": "fc9fb33add86c56b9a4f15ff5e4d3b78d3f2c406bf467fd118a428fe9cf36196",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "batch": 8,
+      "sourceSha256": "4fed3970dcc0d31dccddbf69ef55b00f32d2ca787f1757894914bc0365ea7aa5",
+      "translationSha256": "9ca1265c7ab630b61969e3b0f7dd88a87107af1be675fe82cd858b2c647fecd7",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "batch": 8,
+      "sourceSha256": "72bb90897ab1eadc924fa1358773c5949372c1f06d8dd53d730bbfa3b0c5b695",
+      "translationSha256": "fb863b0b30216107f12cb037e2115373b3f84ca7beba9c736316987f9e28ba36",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "batch": 8,
+      "sourceSha256": "bc41763b9c1ab33018029e38603b6712ac13eb956e76645f327116d4ba1bedcc",
+      "translationSha256": "2031a539cabd0a5b6aa0b176a69a51496c6d59f1e2ce2b302ed6d7472dc8cfda",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "batch": 8,
+      "sourceSha256": "2916173840a7130564bf126fb4792b3bbbfb5f9a0aa4298558348bef321535c9",
+      "translationSha256": "e36c9206b672d8ecd73b529e059b37020869866b99bfb4e1920412a997e552ad",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "batch": 8,
+      "sourceSha256": "1ec33b64cb90d817458e2ef31a6a3cb8e690fdb1289e763e4dd94a970cb4e6fc",
+      "translationSha256": "ce3fbf7a71c8b244c40373e5c15d766303a9262693a86c940b203e402f82e3de",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "batch": 8,
+      "sourceSha256": "1615f896b9bda5ec622bd3b79326ca7163811206b317c3cf54098d203d8a5e97",
+      "translationSha256": "ff36f546cde0f8deba37501efe639dd5cee4acec9f0731e7dd5168d79acd6edc",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "batch": 8,
+      "sourceSha256": "50f01f1d98210e72ad86c6f10314248c5d084a9b0ec3568455f45ee14be412ec",
+      "translationSha256": "cecbc242c902168247218a8bf92cbd77204c7b4f5702d2dae306bdf7f89255cc",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "batch": 8,
+      "sourceSha256": "de3aa297ced2279e4e5389e5ea35670c90a2643d7af2adeddd5d58bf86005757",
+      "translationSha256": "9cd1519c293e0fecfa556d8b57436fc57a3d573aa28e5d90916fa2b61932ed0e",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "batch": 8,
+      "sourceSha256": "d205b025f04a3196ef59e884aaa7a6a91aedded28072e2be092abf8d0a805ea1",
+      "translationSha256": "5d2158120ad17f0058969652169e2f71424289c5ad5ea5457e6fb74927d44736",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "batch": 8,
+      "sourceSha256": "29467b793be1850ddc3d32968cb5aabbf78f7bfcbce0ab9b4f75ec4e75dd1c19",
+      "translationSha256": "57ff7c1dc5005e44e99b468c448867dd91f297f9585136519f8488685a133038",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "batch": 8,
+      "sourceSha256": "38917df282470a2e2f85b9d86a8cf4b381869264d1ac50130d713dfbb6e12067",
+      "translationSha256": "2d35cf63484a43e3e31d998748e5ffe48211920b4c9d363da8eee9245d8fa0fa",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "batch": 8,
+      "sourceSha256": "654bc12a6cd4d98d84731cce7880aa386ca9c51726f650c634e4f8429cd8e975",
+      "translationSha256": "d228f158f50ab182d19a9f9a89b41fbbf8b408eb0558d73607d5abef187bb22b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "batch": 8,
+      "sourceSha256": "12af2b925d300a376adc9506f674814fa94d680a3da65d8635d550e6c9ffcac1",
+      "translationSha256": "4a7dce46c15bc757fa439b18eb8e522a4bf7befe1cb4f21981be872558c73912",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "batch": 8,
+      "sourceSha256": "72465770ce2d927adc1d48e3448f6a21df77986fbee3c080af2cb5f26bc18be2",
+      "translationSha256": "437fb769c36bc8257298a947c41b61c5ee0f95336245042795bc69684916228d",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "batch": 8,
+      "sourceSha256": "85154c5a81f5cba33c2bc958805fe3d83e7ea923e4de5ec0720d889fab31e6c1",
+      "translationSha256": "c5681d12382de593140e5eb11413bf5484f5bbc0e10f8e4a95ac0d4eed06de2f",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "batch": 8,
+      "sourceSha256": "5626847a3e3afcb5ea6bf0d34b1588814677916a5fef92cf4760a6d1291a17ea",
+      "translationSha256": "566c53e64ef407bad0e0c352de4da8ab9b09d7b41362b3450c8beab1c6143936",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "batch": 8,
+      "sourceSha256": "f566c722fb27ed6934fdae56e8e5fe2263022518d9588a9285dded885a247fbe",
+      "translationSha256": "52c8590529dbe18856c4294f55a29e53733e8e850e307579f9ebd6ed0ddfdbd1",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "batch": 8,
+      "sourceSha256": "78d10bf593789a4e0f2a1debba7f22dd2d5d1237b1aa5c2be009ebfb957d573b",
+      "translationSha256": "f13e8d6cfac97d8b215463a4794bec3b83c03841a2f4754e94400dba07dde709",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "batch": 8,
+      "sourceSha256": "cb86eb2d914d37df6857c3cfe4827b5f770b01a86578120618b0b21572160be8",
+      "translationSha256": "e461bb21614d1cb7a77d5ccd980d7138f8ab030446d77dad0dde7a5a476535eb",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "batch": 8,
+      "sourceSha256": "7e744141b40ea5501412e42c8b40fd0b05f1608aa2e4073944ccccbd82f24ee8",
+      "translationSha256": "713eb6108d5d5137adb46200e59387cdd244f4a29ff90f3bfe2af6baf4f5a89e",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
+      "batch": 9,
+      "sourceSha256": "ce27de2de9dd0d5faa12b0ae163a40c9a411e5e0f4b7d0b23c2949f038f51100",
+      "translationSha256": "43449fa3da113a38b57228cd080b4f8e6ecf572d631cd4d0a3ede4851d6db25e",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle",
+      "batch": 9,
+      "sourceSha256": "adb88a45814bee08aaac918ace4305333d5acc9f80be049324544ab5e4bf6a36",
+      "translationSha256": "9972ee6075d80a98d493493f2d1271961899046a50b7b3b630b29bbe93b3b6b3",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumn",
+      "batch": 9,
+      "sourceSha256": "454454bdd567bf09ac659a2c1e6dd3b12db1f1418d5d54317cbe517b5eece322",
+      "translationSha256": "faf5fadd4fb19b38b5c4878751777ab027876d82b99344cb339b28d67f410d34",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LeftColumnTitle",
+      "batch": 9,
+      "sourceSha256": "702a3da532b910671a5f454697cd1f1c700fd932e8da5b4a9ab880d354230f62",
+      "translationSha256": "69a056bf5203f28e328301b487245c31b6e6f3e1fb755a8fe0dfb91d3b8a903c",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+      "batch": 9,
+      "sourceSha256": "0baeaa6ef801384ff09dbad3b5fe96cab284b83c5d9285ae4c9944f4f1e7eede",
+      "translationSha256": "2bb4eb4a6195649cd400513742befb7beaeaee52e935ae8e6dc2272399b272b7",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisplayValueTitle",
+      "batch": 9,
+      "sourceSha256": "a53eca16c1a1b17e2e0ff06bf5b894874235d1cbc6ca2e1c142f2f4fd9647c24",
+      "translationSha256": "2080cbeed8774da05348058691207261b8e848b620e6ac21d06b53c95da548be",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+      "batch": 9,
+      "sourceSha256": "054bd5dbac7b64512629c317a517cd0d7c568ff32be804e1f0c47f7032453c28",
+      "translationSha256": "11e4eb10cce19dd585e648c17cb24b854f532b53f6bc921a508e12ab48bbcaa4",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "bfde0831a997a43609484c06d20a480baa27e4c7f5721e400a4a0dcbbff89fce",
+      "translationSha256": "cb942d34493e425a41a01a3e83583a64042ba09893033debae5659020a1a3351",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+      "batch": 9,
+      "sourceSha256": "e5196af519ac45071921258c9e57337828d7d19c6e7628b64ac5c7a39100c1b9",
+      "translationSha256": "cfd3908c2f7f2afb7504ae690bd2ef4e7be6bf9cd846037bbdeaaf9dea18ca57",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano della selezione",
+      "proposalSha256": "6e5e20c6ba30de443fba5669611aaa3a0e563c587b063f6a634fcc8243135dac"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "6b94ee60c81f30b47f56de68a7c5756810dc3f11e12de785b7d5f86d0622c441",
+      "translationSha256": "52ad4ac84c3967a62b6402505eb22063a8024f741f05a860aa1066e698f69169",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano della selezione",
+      "proposalSha256": "8369419100407ddebe8de78911496c2229da7ef7b8209e2cf7e8ae20c1f94c17"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+      "batch": 9,
+      "sourceSha256": "4de423619f0df3af761a8a5886e421351d1669c8346c52b5e4a65a12b5d74cc1",
+      "translationSha256": "0fbdb0879f230985e5b9f379d04ca5673fd6c4f923b17069eecad5d70f4b1832",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "0fedcd8a4c644709a892103f8d7aba80e57810123469e7d5fbd9424ac73772f5",
+      "translationSha256": "5fa16672dd5f8c799bc69d443969932f0f941c4fcf9bb3a0d3f81ab835acf838",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+      "batch": 9,
+      "sourceSha256": "5c79febe70a68746314c7f1a101f66e59fe13a37ebcff4a8a4dbd82c3556c6e9",
+      "translationSha256": "5d93fe4894c286766ab0e137b46458103ad85e02f555597d428a4dfd868b8611",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano dell’elemento selezionato",
+      "proposalSha256": "04b657b418f25ad85066e132bc13068f23b8b60795b7830c47bc4f2d96938c27"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "f1d882ade25b3977a8d6fc68848b423a89e23d14235c94e6e9e3987509d50add",
+      "translationSha256": "4cffbb964770ce32b8ddad6bd3f90b98fe860ac90cac7d8f269a5d99b1da9bc7",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano dell’elemento selezionato",
+      "proposalSha256": "d75954f7d3d7ad7e5f0f62c652f7c5cc18ad0228aa74201cae6611df1fba6905"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+      "batch": 9,
+      "sourceSha256": "835408f4c3598b0104109c58dcd28411df1b87a013f8ff2bce22a327838605fe",
+      "translationSha256": "2c87567dae71158db7e0efe6d0a863f9c20eedda11caa136e36bf71d47296271",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "cc18d014cba048748078dd91d2bf48dc8679fce1acb4f00bab920e98b018b57b",
+      "translationSha256": "2e1507f481529ecc589371d977e2ceeb086f02a5472399e35fea4bcf4b60307a",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+      "batch": 9,
+      "sourceSha256": "b63c87cd1d1975a0d7a56da083e2f22f7d04c9de725dded42cb5a723726473e8",
+      "translationSha256": "563ce09da7fe2c6e38a7f5a1dec25814a55ca9dbdaa95db1574beedb8838955c",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano dell’elemento disabilitato",
+      "proposalSha256": "20b1fea856a746062cdf81cb24e697a4d09c50d94442e28e09adf736fb3ccea8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "e32bb3144d721dc8721edf1e65eff4bba61414f21b9e5a7c129eae13cdc58f1e",
+      "translationSha256": "29276bcee74ec078a4e007c05d8d4dcde9ce72aa808b726101c0b284410797d1",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano dell’elemento disabilitato",
+      "proposalSha256": "61dff0c7868c56fce16dd22bdcc34c737c6646c753297ab1acabcaa3225a5d85"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColor",
+      "batch": 9,
+      "sourceSha256": "5ecc07c94c4c3b134bfb263f61267bcd9e98a841a407a6fe7a299fd2eeb411b6",
+      "translationSha256": "a9f6b01d084c58037393af81845044adec0a90c5e9e0cc042e00ada19df6ef57",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "41b483a1b287bc5c82255feda67c67a112227142be1b74a594dd2677008ff2dc",
+      "translationSha256": "ebf1d78521c7554f8f06dfa543734934a8398466968867962ea15accab458a1d",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColor",
+      "batch": 9,
+      "sourceSha256": "f01f293e34b33fe0563e7cd932cfb9c713730a159146fe8519ca2c9524218fb1",
+      "translationSha256": "0c71b45ec881e0ab492fdad63f378320ee525fd44d31896a689758c4c21cca37",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano dell’elemento",
+      "proposalSha256": "abcb0695b05b7943832f0580edd6a7a2628f0e679282e88adb563c06ad734215"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ItemForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "dff3d8e2c66a38c0fd441664660442a58921377834317546d261663ff7bb1a5a",
+      "translationSha256": "2612ff05387a6e22c47edffc71b41bc96a8cef1d6a6052bf1fa8349fe90e7665",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano dell’elemento",
+      "proposalSha256": "9cb2987e50a94f6cca75529a00986d39c39cbddc5d36262f740178f4314c8dca"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor",
+      "batch": 9,
+      "sourceSha256": "38665025eb74534dd5be8301135ce33c2f37c5f9a37e4b013a028da6ffd1f290",
+      "translationSha256": "077bd816397c1de7a295a0b7edd1705c0d124fd2a03e031033d2ea266c08417f",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "27a99894a5440c9c73dbb2b519ee119d7dfc9504e83afc7aaffc77e8cf00cc40",
+      "translationSha256": "676f1b58028c5e61e00811bc831297f9497209e2d2b12b6fcb6bf844b7af3039",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor",
+      "batch": 9,
+      "sourceSha256": "48a31e8385c4b3e01d1aebd19f1c8b671b1c00b189193f950856d9d4c9e1c774",
+      "translationSha256": "da1780a1c5e1f0fd17c8710870db1331459750d6988f4cf51a806580e3b05ce5",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano dell’evidenziazione",
+      "proposalSha256": "8ee8c9504b239638f1b06db24f9ca0817d2348ad12777f05f519b840eba108f3"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "8e5c8f9aefee8e94db020fdadb779945be742374bb3accab0ab3a244dfc82d85",
+      "translationSha256": "78707dde88fb6bfe84495c78b2b2f69dfe43bf1fb6b744edf67409f0141ed5b6",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano dell’evidenziazione",
+      "proposalSha256": "7a0cd70eaafeb200599920cedb57c0b4c545509450e408bb05692dddbd301975"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+      "batch": 9,
+      "sourceSha256": "8dc6b8356589e0f5f3fee190722f2422db22a6476695b33ac817f075c2d3e1a3",
+      "translationSha256": "6cdb8044adcdeda9806eb9bed782153fe90f3b7d500170d9b2af954e8febbbbc",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackColorTitle",
+      "batch": 9,
+      "sourceSha256": "d1701cd37ba2b079230b26a3301bb236ae7dc11b36aca0b21568a0b4cb97b766",
+      "translationSha256": "942e518aefe42da4092c070c1b600292fa5b124c6d005a5dbf893591a6a62b49",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+      "batch": 9,
+      "sourceSha256": "7ab5bba143b00d1f60cf42b141d8bbd22d503d632d3d55d77f30da87b4d155d1",
+      "translationSha256": "efb4df45941973d7682af82f235256a2798a08f0d9059d866c74b919f12fd3ca",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano",
+      "proposalSha256": "76be1f841fffd1fc937415c6bbad68f8e715086f80f9d7f4e18d12aa3519c7cb"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "39247fc8d9b001be65247c08859d7678db77c6d1e3d645124cbf657dbf97a55a",
+      "translationSha256": "6d6f525ad3d4c45f5b88ec2eb85deaf3e70687c47d84e502739f48be4413aabe",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano",
+      "proposalSha256": "ba3a560e7411884088e0fb802360fa8fbae7b357975856818366a87cc54f0e75"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+      "batch": 9,
+      "sourceSha256": "2c295feede12610805a3ca63514f0f730b3e8d0401e71876d78672e3f431183f",
+      "translationSha256": "5cc864da62e5deaef02fe847b03deab4150903439028bc8029e850d00998298a",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "991b3a7b4f4480c84a4df600c975bfa78409e661873865e85a15fca8c0686e03",
+      "translationSha256": "a2269168c4fc0744545d2d812657941f3f86112849ac3e39b10827e60d2b3e0b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+      "batch": 9,
+      "sourceSha256": "782c06964ce188f0f765f0242dafd9671ca6771f2a9601107f74ba265711cfbc",
+      "translationSha256": "58444c45a73fa657b8df190948b883cbff36845e97a3f8f811406ea08c4de2a5",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano quando disabilitato",
+      "proposalSha256": "3a6bf0cef9a99910907bcf1a589f2be41d6d0d1a44f0695b3ff57d88d1b3566c"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "5db0ad82f9301b5f0215a2d24f618574da4fb48cd2887cd118ef0903ae455c0b",
+      "translationSha256": "80e202bf4bc1800f19ff028b2eba9301b847311f3a67a1516a55f864628e44ce",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano quando disabilitato",
+      "proposalSha256": "0027b12c7514fcd3706c24edb5c01cb2ed0a266cfc3b23eab573a8eb81175e18"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+      "batch": 9,
+      "sourceSha256": "0ba497bcaac024b53bb36829fae9e4bb5999a93edf44cb10d9c3eafa0b84dd53",
+      "translationSha256": "783e25c394e9ee30c9e4ade504107beab75454a6f26eae346bf3e7e2aa0ad065",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle",
+      "batch": 9,
+      "sourceSha256": "a1935c9fd202318f97f8ff8670382510fe91b8c2c431318cf9b1773c431d12f8",
+      "translationSha256": "6984861f18a1f1180139353c110f324ca6a9ec35e313ad88299a0c54f577b208",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+      "batch": 9,
+      "sourceSha256": "5563a9f02cb5508c682d05175cdcc1a871ef1932d731551249998d7058383b55",
+      "translationSha256": "11d4ff4f709b8b90bf7b3457367749c32b66320e02a28c0a8bc4f7ef5dc0724c",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "colore di primo piano dinamico",
+      "proposalSha256": "d8fe4d143bd84dc3e8d2c81a5d6e84dd92b23c857034c3a7a6d0503b9ac5dbb8"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle",
+      "batch": 9,
+      "sourceSha256": "41ef944040935aa7de9470ebe42a02902d865033dd6707ca9e83e8655d171581",
+      "translationSha256": "d51761c42205a7bea7146be15df6b2a86e267c0b757a0ded3769fe625c0cdf6d",
+      "verdict": "revise",
+      "reason": "ForeColor is a general VFP foreground-color property; „colore del testo“ narrows it to text and may misdescribe non-text controls.",
+      "proposal": "Colore di primo piano dinamico",
+      "proposalSha256": "af0e2d12d7fbddc5501dc8b5c9a531862e7ad01a179d9d088a7cbac5d46e93db"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Closable",
+      "batch": 9,
+      "sourceSha256": "b3d815b8871abe0dd22c84176a988b7add186044dcc093d564bbe0abbafb648b",
+      "translationSha256": "7f1586ec92f8036e9d8bcbff653a936af563db74602704537dc8d3605fc8d530",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+      "batch": 9,
+      "sourceSha256": "9e0d84c0b9ee841616fd69ae3f5a49097b805c5ddbe466b0155d213bb95cc500",
+      "translationSha256": "217c97e7bf4317c84a5ba129458b2ac7d9233e7765510c7cfad84549d2a85d16",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+      "batch": 10,
+      "sourceSha256": "bf2501139f0afd8187156370051c0101764676fb351043307220f09de7e63d96",
+      "translationSha256": "1c6c81529618310392ad0dd8d2861e3e52122a91b1686cd4c714521929571cd5",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+      "batch": 10,
+      "sourceSha256": "96dad78db84d8830aaebfd64cac0bf4d1c8d382e45f1844a797bf650e7c31338",
+      "translationSha256": "b7839316a47951c2eca3688cc83bc226caac4977dbeb085a05d08c5287da0514",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+      "batch": 10,
+      "sourceSha256": "c5a85da91776255cafd61fe57c199adf46e1251917b57fa1b1c5d8e95229c5fe",
+      "translationSha256": "1d08b817e04fa2f4d5d91342e517c3ab6549a75c4a8fb0c5026e2fa4db658463",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+      "batch": 10,
+      "sourceSha256": "a6382b2bdeab04ea630cd2e65656e2a56cb597a9e11185c605fe6f3ffc7a13d1",
+      "translationSha256": "8985ea829b0dc2236ba6eadf0195b9de7f26c62537e763193ddb5a1c8b2643ad",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+      "batch": 10,
+      "sourceSha256": "7f603664413d55c8bc9acf02d03a19ae2ec2738a82fb6944efc4bab48bea0a18",
+      "translationSha256": "ec4c3b29db6d1f5fc9c68214dccdfe9f6fb921ada25bddaf410d1f08e91b0740",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle",
+      "batch": 10,
+      "sourceSha256": "cdbb7fa30ae44aa6453fdb1b2de67d95dd951204f7d10fcce4edc423701f40f1",
+      "translationSha256": "8a5a025c2ec4d5d1020bcfdb0f32ef39a7c6034c05e22bc3f10c9c9d8e37c619",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu",
+      "batch": 10,
+      "sourceSha256": "46f31934f7a4b2410a882fff50d2bd8bd2830d99e2356183119c17bc55c99f70",
+      "translationSha256": "1261d83d5e0fbd6958e7f74944eb62644f3814fe8c5b3c7fb1f8440090fd9408",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle",
+      "batch": 10,
+      "sourceSha256": "c1b138a437b75b3d532934c531815b7e1f0a4dc107c810af2c723dd6b680575e",
+      "translationSha256": "3cc4466417142d71e5f10e8c80872789e9b29ab3de43b33253b7fb103ec9fce5",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+      "batch": 10,
+      "sourceSha256": "68693d02ab4fbb2331b8cc39915322e48e61f06d4d1b31e7d19913202857bc8a",
+      "translationSha256": "68693d02ab4fbb2331b8cc39915322e48e61f06d4d1b31e7d19913202857bc8a",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DesktopTitle",
+      "batch": 10,
+      "sourceSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "translationSha256": "9bd88f2485acbb9426ad3dd9e06842ede8c7516d0ba8559298675f09419681fa",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreview",
+      "batch": 10,
+      "sourceSha256": "fed2d82b6738c9c5e6ad021db6941f959c5e78caa00bc805df9f771957c1f81b",
+      "translationSha256": "d9b28c2d6da79173e864c4dfda88833513e6a3e68a1c489679d1fcc0a825cad5",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle",
+      "batch": 10,
+      "sourceSha256": "d9c8efe6ff9e1e5621863d21db10d6645e19ec5719028cab78ef7671b5633ef9",
+      "translationSha256": "062839ed9c5b51cb5865bceb52f182642d6120b85236ba6389bfebd1ab7bbfed",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+      "batch": 10,
+      "sourceSha256": "87ca5ee7de4c7947b0162a295bb7d0d6c909d13472e38ba6bd5236ca9cfc116d",
+      "translationSha256": "a2d1841db08022463a8777cb0ae7c39353614988a88ca59227793ec601581e28",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle",
+      "batch": 10,
+      "sourceSha256": "941efb4fd39c1ad0c8496fbff7d56496c89f4a4f543fd220eef3b0f5ec5bf0ce",
+      "translationSha256": "faf7a06c3937c1deb86c7050576446cb2d47384c405b6b99320dab0bb7cdb1ef",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+      "batch": 10,
+      "sourceSha256": "e232d03abcf3be121743dfdcaee54adc482895179c0fdcbde42f177e97f7192d",
+      "translationSha256": "74b6e3cdbd08486b724ebc393382bc190a0745f650748374ae3e6b64dce283f6",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle",
+      "batch": 10,
+      "sourceSha256": "275ffa4ac0448f38dea3e28f404e38d8727b3cde18238559042451a999545d5d",
+      "translationSha256": "2ca5de2432c55358aca4934b35bc46ce8b6308d5ea76dce1a44dd11ef29186b6",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+      "batch": 10,
+      "sourceSha256": "331a4a6f28b83963f2342e3a736a0c8125ba087ced05e64e000e26f393a6697f",
+      "translationSha256": "3b032e470846b67ce147ac7c96c396702e4888c2ff99787256010e52813734f7",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle",
+      "batch": 10,
+      "sourceSha256": "9eaf277597b73df97c83ae90e3b8ef688f0fd67d7170ce7e24b23d74627aa01f",
+      "translationSha256": "4c8ca3b7f252e59209c627042484e8ec3ed63b9273bc53452bb5143a09209b40",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+      "batch": 10,
+      "sourceSha256": "2079f071f86b8cafe7e0566e8c2d42cd893720ee4fb8a555d20a2b5c735de42a",
+      "translationSha256": "5ce3fbd66c086435500fda17d04ab151ea082f8a0794c1d42832f3c7f5d75e04",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle",
+      "batch": 10,
+      "sourceSha256": "595ad9a8aaa03755e38a412f7b873e2e9217c5026b64aef7fd54310fc26bfce2",
+      "translationSha256": "abd90dea0e6327c689bed0eb7763d8656101bb47794e2986c893521ea878aa16",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+      "batch": 10,
+      "sourceSha256": "baacc163cc2ac975a775aab6dc9a659fdac28672a966c23912903c383d18eba1",
+      "translationSha256": "357d110fdbbafe1f689be7ea3f29dfd37ee59a058f58a162ee3988b7ce543448",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle",
+      "batch": 10,
+      "sourceSha256": "02ba1c127c8f9c7ec64444b6e0dfa6ad6d8022ef655aa2dec224945ee2a7c6d0",
+      "translationSha256": "0a3200226fe2fd4487eeea596fb0de4925325e5228c83bac9bc321fa066deede",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+      "batch": 10,
+      "sourceSha256": "51f60edc63ca67071914d447b5d8d444b770a00a732cb6c4494daee0af6c713a",
+      "translationSha256": "c62cab50b08bce6484e8ffc0612342268178e7eb20c129baaba95092ad1fd179",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle",
+      "batch": 10,
+      "sourceSha256": "f6e8b915627e42f1f28aaeaf0541cc7c5321b3d32f327bbcda1e9d429aa67fe1",
+      "translationSha256": "d6de696a2fb6493a8768d6e7670906c62bc3410d55f3d5a9cf004b6c35531e23",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Movable",
+      "batch": 10,
+      "sourceSha256": "2b8589fcfcd770884a9bf6cee2495e3a3f6a93c6f366a703454ac750cb0cc79c",
+      "translationSha256": "7ffd25ad7847e92b94d22a3e7e1d71b643060b5289d253704c2dc4e5cd23de17",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MovableTitle",
+      "batch": 10,
+      "sourceSha256": "2a233986edba0c589621d8786750a1268848c24aab0d1723fcf2c6271956fad8",
+      "translationSha256": "db8c86a7d7468e6e1f337aa743c05159ba79a95ceb93464cec5b671fb1ae7dba",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption",
+      "batch": 10,
+      "sourceSha256": "7567116a53c573f8f89c25bfc4f95d43510d40915d30e275acdc1b5c1d96b9ed",
+      "translationSha256": "2cc3ff4a6e25f78dbcb75e79d25a5c153c3eb48b10168a0c16e9ca68f48ac88b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle",
+      "batch": 10,
+      "sourceSha256": "b9d73f354c1269b5b0f931960dc35768b0f93a719ed7f35dfc39b23fa6032434",
+      "translationSha256": "61ff720f4084c48c5f1559d25d16816d65aefda81a2622f34937b7b4d8eabcc9",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "95c2e2f80197cad1f1a90f01bfb0d52d1f4d65516511f4cbe63bb7212eee3485",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle",
+      "batch": 10,
+      "sourceSha256": "6aa63f53902b1d40203542716536f495b6fa43296b955ddf1d9b8c50ee89786d",
+      "translationSha256": "fd5d42e56230ab7714449e4e961566a85e0d3ae2d0f90d06b56c4b0485e2d8d1",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+      "batch": 10,
+      "sourceSha256": "8a7a132e8d5a70abeefd53ce3f9b03ac22b33cc5c52db4df1f86c7715c632988",
+      "translationSha256": "6949cd653e26600c7551921c7d3ea43343186e3ab2d7269e0e59a173597b1d36",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle",
+      "batch": 10,
+      "sourceSha256": "ae22ae112f95368b5fe120ceb3fb1065f12c9fc0b388a3ff86b085cfe2ecdc98",
+      "translationSha256": "d8c0e5a3939ac0af74da3a692e4a13c15eea19f344e01733be688a6038203a44",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+      "batch": 10,
+      "sourceSha256": "852d12ee4870f2267e514c49c11779f30d7e45b5fdfd1e0e886a62e5f4a9ce47",
+      "translationSha256": "3d0d3a97b66007b43cc7b35cc89fd5321f065f8db650e8fd4f232f91cd46af03",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle",
+      "batch": 10,
+      "sourceSha256": "aa596267318ae7fc4b12834ccc3b337343fba96332e222a7a8e935100198164c",
+      "translationSha256": "549cb48a5f42114165ff43ac79eaf8a5ed3299cde02f01fa317cb52ff1e76d86",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+      "batch": 10,
+      "sourceSha256": "385a872760e7ab4fcc48da36a57630f0b22dc7de39c0bcc8ebcf3c4c6b9b68ac",
+      "translationSha256": "7ceefdd6dab43849e9451e6c163083b04e20fafc898e21ac38184dcba47d4997",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle",
+      "batch": 10,
+      "sourceSha256": "46960bfe393bb7f3525fd96650e1901dfda2b8e3b548674a1c78a53e388e0d5b",
+      "translationSha256": "ede7c77146cb562191bd844049549baeddc8d1b63eaa4a0fce1076fe200b4ac0",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+      "batch": 10,
+      "sourceSha256": "37f8f3df7264202e68d8e966e67fecce603d2d598a3cb6dc1ded30e54e73c58d",
+      "translationSha256": "c378c48444b68e041d0912ebd8e694d92b8d7093c32970ae2f2740c619b913c9",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle",
+      "batch": 10,
+      "sourceSha256": "5598b8b46f6dee4030996bf7c6d956e707ed4525839897af96f3262894215d0f",
+      "translationSha256": "53e64d253d99682c6b0863ab473ff67565c57e45d3fbc22c43aff3c58e9f0598",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+      "batch": 10,
+      "sourceSha256": "5b159fe91e0009d47abf46665ef7829bc6f74a51335d815b1981829cd4f78b14",
+      "translationSha256": "42dca977f5a16cb9620046bd7af72d3a8c27dff66bb3de5bf41b8fb56a6f1ffc",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.SpecialEffectTitle",
+      "batch": 10,
+      "sourceSha256": "3588b1d5361ba2cf4f44c64ce38ffb3577b6a330bdee98dfc022e983e7bb742d",
+      "translationSha256": "f1e628e4b180e1b2e7404b99116019cefef08fa3830ae0e4fc91a8a8927c73bc",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBars",
+      "batch": 11,
+      "sourceSha256": "9dda07aa660121e91f394cf85a1f6018a8de3868bc7ac9e3b6c57eae4f4602cd",
+      "translationSha256": "44a4e660be86b2f9e32a24c9a7e04a843542cdcc3e0a60618ff13f7a57623ed4",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ScrollBarsTitle",
+      "batch": 11,
+      "sourceSha256": "70bef0cb1f91d7a91b2f9e80853b19ee93d3123da1bdb8063b1883708af7cd93",
+      "translationSha256": "0ad1ddf177ef0ccfba3bc593ac0bf6198293dc8b90c6cd4e506c21519ce4046d",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+      "batch": 11,
+      "sourceSha256": "a8ee23732a04abaa28ed119773cb8e624010d3fe33f2de02e45e090f5235a517",
+      "translationSha256": "3a834b54450cb6539576f9d69bdfae36b6b9ae3a5c3f28071a5bcb6d7f52c4ff",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.WindowStateTitle",
+      "batch": 11,
+      "sourceSha256": "058de4e9bab5748fc60c4c95e4ca8cccf40191a558cefea72c9a30d7a7bb95ee",
+      "translationSha256": "3ebfb154ec978998af921ec013812db56e4e3436cd9c01b1698e5972840e31d5",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindow",
+      "batch": 11,
+      "sourceSha256": "4ee0c5cae7662b168ec5859a29dc9e431960690640f9417fa760c224321e0848",
+      "translationSha256": "41b7f24c5b3f2fb98528172a52faf989224b6bf4e682accead2f5dcf8aa0ea55",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ShowWindowTitle",
+      "batch": 11,
+      "sourceSha256": "e21a9a6993c71d87eacddb971e234a9dc44072ec1c05ba130f0f392c0ace679d",
+      "translationSha256": "e5cac40ed26351b28764bde9d7c6fa7054b7ef0b91e65923a673fc0eb55c23e9",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBar",
+      "batch": 11,
+      "sourceSha256": "29a74ca8939d32319ac698a4c1ca814e0e12985f13319bcfe69ed1effb0d2195",
+      "translationSha256": "b3dc77f5f77c7e1b267ea8eca5a3318b47324a017bd059586dade39660a8f64b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.TitleBarTitle",
+      "batch": 11,
+      "sourceSha256": "de4297574458572ab9687908c7e969cda35dd126088cd929000566e0b118c3e6",
+      "translationSha256": "546a545df8f7df2fa1b292589b3f2c1d4ff6a7170c5da4c0f4a1622d24a3a086",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointer",
+      "batch": 11,
+      "sourceSha256": "a40f00aab9bbce3309b3c77f451820b735029d9777073546a50d5dbedf876595",
+      "translationSha256": "d872921b10ba5e9679f31680f6eb5a452ba1785816626b6707e3d327cb0b93aa",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MousePointerTitle",
+      "batch": 11,
+      "sourceSha256": "7ca7eac922cb390844243fb541fe1db3045fa8cea8e744210e8dbea69c7ed447",
+      "translationSha256": "19a1aa17781c6666cb097bceef2730692acfc159478409057387b4edeb794d7c",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMargin",
+      "batch": 11,
+      "sourceSha256": "7192e6e5c5ee8df4698d1c7d321c9c4bee99ddb089607cd312a16068b7210b68",
+      "translationSha256": "acef07a0a3531d66f9079c151053ed1d682d6a67bd0f288c1e5948404ce232fa",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureMarginTitle",
+      "batch": 11,
+      "sourceSha256": "599ae36435a7aef79613bc2b49df8859d3327f3cd5935f84fc8da43fe0d78467",
+      "translationSha256": "32b3824bcfa564bc11f4816b27de162ad6ca24280b78623c94dbee14ba1fd163",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePosition",
+      "batch": 11,
+      "sourceSha256": "98609cf77dff2225941c4954469259983eea2791e6b90dcef7e51c81bd64a90f",
+      "translationSha256": "2d95b3b1d3ae3dd8289524eeebee8f37f5981e935e41e084229226a6c8701ef3",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PicturePositionTitle",
+      "batch": 11,
+      "sourceSha256": "1fb4f389dbd852c691c710271d3ae18b8ec8a278f8d244453896d0288a212beb",
+      "translationSha256": "d94f966fcb895b3ec27c87e0ca51bb75cac85b474f2c33864cef48a8f129a399",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacing",
+      "batch": 11,
+      "sourceSha256": "11420290f455f7ca6da281293529a2c0b7a286491104d0ad3295e79d39b90846",
+      "translationSha256": "41466629cb52d322e1134b301d783f4b35c89936ccef8b7f81321869e6b53bbd",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSpacingTitle",
+      "batch": 11,
+      "sourceSha256": "42b71128c004de4cb958bfd4ec3ec20c7e44a3377f6240abaebedec3c77cad90",
+      "translationSha256": "150656afd70d64fb8e147a8461f801af7588ec449c45585a89ea173f64c7a290",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplay",
+      "batch": 11,
+      "sourceSha256": "115ea893c579f7278791868c151b0cc31addc30bb1f59c5e6249a33873253b88",
+      "translationSha256": "5d92ac70ffa0ef70152022cfb962276b9684b3f2379ffae0511a616812652b66",
+      "verdict": "revise",
+      "reason": "PictureSelectionDisplay is a VFP property; „visualizzazione della selezione dell’immagine“ ambiguously suggests selecting an image rather than displaying selection state. Domain terminology needs confirmation."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle",
+      "batch": 11,
+      "sourceSha256": "a1919037861df6ef1741a6db111abda0e13860daea3b3a0501377a82647ad1bb",
+      "translationSha256": "f8ccb649009d7f1a474962aa67042bdafe8ad62090902bda5510de424282267c",
+      "verdict": "revise",
+      "reason": "PictureSelectionDisplay is a VFP property; „visualizzazione della selezione dell’immagine“ ambiguously suggests selecting an image rather than displaying selection state. Domain terminology needs confirmation."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask",
+      "batch": 11,
+      "sourceSha256": "6f58b47998496f9d1ed24b9fa8c9192bfe23386add2346312bd1aa94712b139e",
+      "translationSha256": "597707a4f00374d4886fd8790881389549cfda1bb8e9b4e2c0d08c41e62052ad",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle",
+      "batch": 11,
+      "sourceSha256": "40f670a250d166555e4c537b4b6df74936724e362267af58af241473aa25a64a",
+      "translationSha256": "e6a0eb18ea2802973a1897f10ecf0a55e8de88158d49a976f1eedb4411edf89c",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight",
+      "batch": 11,
+      "sourceSha256": "26d10b6eec6e252ad2cfdbd7bc4ced1d408afeb0535a84dc0970825d8ecb9da9",
+      "translationSha256": "a747b02758d01dbd351cbab07adebc62a38a9c795018ecbea33597f3510ba384",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeightTitle",
+      "batch": 11,
+      "sourceSha256": "e0cda22217c83ed0afe05c9fa9ed902905ed8cb09d2415cba6f0f1fa446bbd60",
+      "translationSha256": "1637f900b9d90ee175ac4518e38f162c1a0a079a76b4a5087a0706284f77f5a3",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment",
+      "batch": 11,
+      "sourceSha256": "1eb2a51156d6e016fe35dbad9b119a40a1c645a24c85e9c342d5794e5945c1e3",
+      "translationSha256": "1eb956e784878fe91ca95fe0925b07b738f592d03315e2a066e61d22840b738b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignmentTitle",
+      "batch": 11,
+      "sourceSha256": "3473046877c0f09d8ff6f961e37fc54005dc6997f8fdda7d7ef56eef63a2fd85",
+      "translationSha256": "5933418dee9e40566c2d11b9ad1ba6a9cc2c8d2b959a4995eb22d9b6ff5fb978",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl",
+      "batch": 11,
+      "sourceSha256": "239574689d99e9d861e8af9c31513d5ed6869c004afc6a54d358bd3e9e6ca851",
+      "translationSha256": "543fb5fbef2cd5c62cb151c6cb94db2cb52a44c98765b4e9c5d874661e4cd4c6",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle",
+      "batch": 11,
+      "sourceSha256": "c8f2c673af00aa43301cdf5f02c0c95f10083dece6fc01cab7c25b41011cb94f",
+      "translationSha256": "5e37b64e0f9cb0b03221a23e8ebe5bd9bbb9862b61fb34f38ad5ba04e296c626",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontName",
+      "batch": 11,
+      "sourceSha256": "2eb5419b7acc68a603f997ed172f5c80e91723038d290de4a6aa467974626696",
+      "translationSha256": "8b80ff0ba79798d5766149a23fa56faaf74d76c528a170cb5fc6973071073b61",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle",
+      "batch": 11,
+      "sourceSha256": "9cc978f66a5e1c7f5a0d404087f79923feab34c42a4eec244aa10f3fa163221b",
+      "translationSha256": "bab8dfea6cbfa7e5c1da735c9fab03b2f98c0d64f9d8ad524d379a18b05abb40",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
+      "batch": 11,
+      "sourceSha256": "267375976644ada809c9f29ff32fa5dc9438ef8eeb0d1873f93ff8163f68ecf2",
+      "translationSha256": "a44aabe20524c5bc2b92c7a634849ae8cdb889f8021af9435d482d4f31c44f74",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
+      "batch": 11,
+      "sourceSha256": "e4882984cb9205050697e1bd188024772b95abd42cfaa39771864d8759f1348f",
+      "translationSha256": "bc659f0cc8d1ba3f9a5414bf662c33d01fc2fd299a5f1bf8f3c730570b68ad30",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold",
+      "batch": 11,
+      "sourceSha256": "144ddcd63948ef47aaafc34d81ea28876d711142efba9f8d02cb08b1164b376b",
+      "translationSha256": "9583e2caadaacf00bdaa95a3c353c1c3637838971e3134a77f45930b27f00243",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle",
+      "batch": 11,
+      "sourceSha256": "3ef55e67dc54885d7819efc52075802d23d41e6e614bc3d4a2c6da95837b9096",
+      "translationSha256": "e7e37bc642df7ec00211da9c2707f08e70595e68952cd63ad6cb1fe8049290b3",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic",
+      "batch": 11,
+      "sourceSha256": "5e6c6387beca686b110e2d8c2539f2362e8475184830f42aec1f529e0d9471ed",
+      "translationSha256": "5388a5d2c2bf76e3ff15387e902d65f869924f26368a8833cff3ee507f11bb69",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle",
+      "batch": 11,
+      "sourceSha256": "9706c06f5b2bd7c00ef841a6de3f3c08939b1514edc6b588f32d4bd8aad1d0b7",
+      "translationSha256": "996471672a4eff86c9c54ba3541cc245841a362d593ada9ee503f85a3bbef383",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline",
+      "batch": 11,
+      "sourceSha256": "4b9b5830ebaeb20173916bc27ac62b077626f09cb04cb5e9c3e8c288b691fc11",
+      "translationSha256": "38c41803ecc55b8c3f9360ea16c4843d4963fe0053ff36457908a2e7286d18e7",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle",
+      "batch": 11,
+      "sourceSha256": "e3a8e12efcf97680274877206d249b37e49b6e102367a875f46b5de0bac1624f",
+      "translationSha256": "ec384f87774bfe1e1dd30b239a1a49cae52b591816e21eba463c00951be1ba4b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru",
+      "batch": 11,
+      "sourceSha256": "1efc2ff5e3d98653541ab701889ed72c44ec661fd24b215c4ad20159ca65287b",
+      "translationSha256": "7151a710f4bdb34be813c7621496f47b187d9c7c522e6b3b1d68dc855e724e8a",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle",
+      "batch": 11,
+      "sourceSha256": "e164abde9bb4ed371a89223c8760ea4557ab86f4bfdde25514bb8c31e1c34c85",
+      "translationSha256": "5f418b762e3253b6cc9af0d5ecc35d68b38664a6f3011dcbc5eb59c89ce9d89b",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline",
+      "batch": 11,
+      "sourceSha256": "3bdccb833f8773d8aa7b817fac5ca5effa7eec7be54c6bef72724626a561611b",
+      "translationSha256": "cf7244fdba02da95618530799b41c19969f51fe10ccb17a24ac38b426d07f5b7",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle",
+      "batch": 11,
+      "sourceSha256": "5c4fe0ecb29a43ab8236c2b4af580183da8aa011a3b7fb3d1517d40e252f48f5",
+      "translationSha256": "c45cc687a509059c3fbd58202788031e228f2eeb6c3161ad58235d22f34f012d",
+      "verdict": "accept",
+      "reason": "Italian wording conveys the source meaning and preserves protected syntax in this text review."
+    }
+  ]
+}

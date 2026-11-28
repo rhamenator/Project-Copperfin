@@ -1,0 +1,1 @@
+- 2026-11-27: Route neutral Spanish through the full es-419 catalog before English, and require regional overlay evidence to name the nearest packaged fallback catalog.

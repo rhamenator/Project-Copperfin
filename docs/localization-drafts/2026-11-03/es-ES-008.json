@@ -1,0 +1,368 @@
+{
+  "session": "cb035766-a740-48ff-a9dd-aa6d7e58b611",
+  "locale": "es-ES",
+  "input": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "source": "locked",
+      "seed": "bloqueado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "source": "Locked",
+      "seed": "Bloqueado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "source": "mouse-icon",
+      "seed": "icono del mouse"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "source": "Mouse-icon",
+      "seed": "Icono del mouse"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "source": "OLE drag-mode",
+      "seed": "modo de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "source": "OLE drag-mode",
+      "seed": "Modo de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "source": "OLE drag-picture",
+      "seed": "imagen de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "source": "OLE drag-picture",
+      "seed": "Imagen de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "source": "OLE drop-effects",
+      "seed": "efectos de colocacion OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "source": "OLE drop-effects",
+      "seed": "Efectos de colocacion OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "source": "OLE drop-mode",
+      "seed": "modo de colocacion OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "source": "OLE drop-mode",
+      "seed": "Modo de colocacion OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "source": "OLE drop text-insertion",
+      "seed": "insercion de texto de colocacion OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "source": "OLE drop text-insertion",
+      "seed": "Insercion de texto de colocacion OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "source": "picture",
+      "seed": "imagen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "source": "Picture",
+      "seed": "Imagen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "source": "list-item-id",
+      "seed": "ID del elemento de lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "source": "List-item-id",
+      "seed": "ID del elemento de lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "source": "partition",
+      "seed": "partición"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "source": "Partition",
+      "seed": "Partición"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "source": "read-only",
+      "seed": "solo lectura"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "source": "Read-only",
+      "seed": "Solo lectura"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "source": "record-source-type",
+      "seed": "tipo de origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "source": "Record-source-type",
+      "seed": "Tipo de origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "source": "record source",
+      "seed": "origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "source": "Record-source",
+      "seed": "Origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "source": "row-source",
+      "seed": "origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "source": "Row-source",
+      "seed": "Origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "source": "row-source-type",
+      "seed": "tipo de origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "source": "Row-source-type",
+      "seed": "Tipo de origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "source": "bound-column",
+      "seed": "columna vinculada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "source": "Bound-column",
+      "seed": "Columna vinculada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "source": "column-widths",
+      "seed": "anchos de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "source": "Column-widths",
+      "seed": "Anchos de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "source": "column-lines",
+      "seed": "líneas de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "source": "Column-lines",
+      "seed": "Líneas de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "source": "column-count",
+      "seed": "cantidad de columnas"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "source": "Column-count",
+      "seed": "Cantidad de columnas"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "source": "style",
+      "seed": "estilo"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "source": "Style",
+      "seed": "Estilo"
+    }
+  ],
+  "entries": [
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Locked",
+      "translation": "bloqueado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+      "translation": "Bloqueado"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+      "translation": "icono del ratón"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+      "translation": "Icono del ratón"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+      "translation": "modo de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle",
+      "translation": "Modo de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPicture",
+      "translation": "imagen de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle",
+      "translation": "Imagen de arrastre OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects",
+      "translation": "efectos de colocación OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle",
+      "translation": "Efectos de colocación OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropMode",
+      "translation": "modo de colocación OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle",
+      "translation": "Modo de colocación OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion",
+      "translation": "inserción de texto de colocación OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle",
+      "translation": "Inserción de texto de colocación OLE"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Picture",
+      "translation": "imagen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PictureTitle",
+      "translation": "Imagen"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+      "translation": "ID del elemento de lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle",
+      "translation": "ID del elemento de lista"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Partition",
+      "translation": "partición"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.PartitionTitle",
+      "translation": "Partición"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnly",
+      "translation": "solo lectura"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ReadOnlyTitle",
+      "translation": "Solo lectura"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceType",
+      "translation": "tipo de origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle",
+      "translation": "Tipo de origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSource",
+      "translation": "origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle",
+      "translation": "Origen del registro"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSource",
+      "translation": "origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle",
+      "translation": "Origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+      "translation": "tipo de origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+      "translation": "Tipo de origen de fila"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+      "translation": "columna vinculada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+      "translation": "Columna vinculada"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+      "translation": "anchos de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle",
+      "translation": "Anchos de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+      "translation": "líneas de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+      "translation": "Líneas de columna"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+      "translation": "número de columnas"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+      "translation": "Número de columnas"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.Style",
+      "translation": "estilo"
+    },
+    {
+      "key": "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+      "translation": "Estilo"
+    }
+  ]
+}

@@ -29,7 +29,7 @@
           <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! Óþéñ Íñ Çóþþéŕƒíñ Šťúðíó !!]</ButtonText>
+          <ButtonText>[!! ÓÓþééñ ÍÍñ Çóóþþééŕƒííñ Šťúúðííóó !!]</ButtonText>
           <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
         </Strings>
       </Button>
@@ -48,7 +48,7 @@
           <LocCanonicalName>.Copperfin.OpenSelectedInStudio</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! Óþéñ Íñ Çóþþéŕƒíñ Šťúðíó !!]</ButtonText>
+          <ButtonText>[!! ÓÓþééñ ÍÍñ Çóóþþééŕƒííñ Šťúúðííóó !!]</ButtonText>
           <LocCanonicalName>.Copperfin.OpenSelectedInStudio</LocCanonicalName>
         </Strings>
       </Button>
@@ -67,7 +67,7 @@
           <LocCanonicalName>.Copperfin.BuildProject</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! ßúíĺð Çóþþéŕƒíñ Þŕóĵéçť !!]</ButtonText>
+          <ButtonText>[!! ßúúííĺð Çóóþþééŕƒííñ Þŕóóĵééçť !!]</ButtonText>
           <LocCanonicalName>.Copperfin.BuildProject</LocCanonicalName>
         </Strings>
       </Button>
@@ -86,7 +86,7 @@
           <LocCanonicalName>.Copperfin.RunProject</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! Ŕúñ Çóþþéŕƒíñ Þŕóĵéçť !!]</ButtonText>
+          <ButtonText>[!! Ŕúúñ Çóóþþééŕƒííñ Þŕóóĵééçť !!]</ButtonText>
           <LocCanonicalName>.Copperfin.RunProject</LocCanonicalName>
         </Strings>
       </Button>
@@ -105,7 +105,7 @@
           <LocCanonicalName>.Copperfin.DebugProject</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! Ðéƀúĝ Çóþþéŕƒíñ Þŕóĵéçť !!]</ButtonText>
+          <ButtonText>[!! Ðééƀúúĝ Çóóþþééŕƒííñ Þŕóóĵééçť !!]</ButtonText>
           <LocCanonicalName>.Copperfin.DebugProject</LocCanonicalName>
         </Strings>
       </Button>
@@ -124,7 +124,7 @@
           <LocCanonicalName>.Copperfin.ShowCommandWindow</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! Çóþþéŕƒíñ Çóṁṁåñð !!]</ButtonText>
+          <ButtonText>[!! Çóóþþééŕƒííñ Çóóṁṁååñð !!]</ButtonText>
           <LocCanonicalName>.Copperfin.ShowCommandWindow</LocCanonicalName>
         </Strings>
       </Button>
@@ -143,7 +143,7 @@
           <LocCanonicalName>.Copperfin.ShowTerminalWindow</LocCanonicalName>
         </Strings>
         <Strings Language="qps-ploc">
-          <ButtonText>[!! Çóþþéŕƒíñ Ťëŕṁïñåľ !!]</ButtonText>
+          <ButtonText>[!! Çóóþþééŕƒííñ Ťëŕṁïñååľ !!]</ButtonText>
           <LocCanonicalName>.Copperfin.ShowTerminalWindow</LocCanonicalName>
         </Strings>
       </Button>

@@ -118,7 +118,9 @@ internal static partial class Program
         try
         {
             Write("fr-FR", "{\"Studio.OpenDialogTitle\":\"Ouvrir un actif\"}");
+            Write("de", "{\"Studio.CloseMenu\":\"&Schließen\"}");
             Write("de-DE", "{\"Studio.OpenDialogTitle\":\"Asset öffnen\"}");
+            Write("de-AT", "{\"Studio.OpenDialogTitle\":\"Anlage öffnen\"}");
             Write("pt", "{\"Studio.CloseMenu\":\"&Fechar\"}");
             Write("pt-PT", "{\"Studio.OpenDialogTitle\":\"Abrir recurso\"}");
             Write("zh-Hant", "{\"Studio.CloseMenu\":\"關閉\"}");
@@ -128,6 +130,7 @@ internal static partial class Program
 
             var french = new CopperfinLocalization("fr-FR", root);
             var german = new CopperfinLocalization("de-DE", root);
+            var austrianGerman = new CopperfinLocalization("de-AT", root);
             var portugal = new CopperfinLocalization("pt-PT", root);
             var taiwan = new CopperfinLocalization("zh-Hant-TW", root);
             var spain = new CopperfinLocalization("es-ES", root);
@@ -150,6 +153,10 @@ internal static partial class Program
                 "#7071: a valid French regional catalog should load without a compiled locale branch");
             Expect(german.Locale == "de-DE" && german.Text("Studio.OpenDialogTitle") == "Asset öffnen",
                 "#7071: a valid German regional catalog should load without a compiled locale branch");
+            Expect(austrianGerman.Text("Studio.OpenDialogTitle") == "Anlage öffnen" &&
+                   austrianGerman.Text("Studio.CloseMenu") == "&Schließen" &&
+                   austrianGerman.Text("Studio.ExitMenu") == "E&xit",
+                "#2348: sparse German regional override should inherit neutral German and English per key");
             Expect(portugal.Locale == "pt-PT" &&
                    portugal.Text("Studio.OpenDialogTitle") == "Abrir recurso" &&
                    portugal.Text("Studio.CloseMenu") == "&Fechar" &&
@@ -170,7 +177,7 @@ internal static partial class Program
                    nativeSpanishHostStart.EnvironmentVariables["COPPERFIN_LOCALE"] == "es-419" &&
                    CopperfinLocalization.LocaleFallbackChain("es").SequenceEqual(
                        new[] { "es", "es-419", "en-US", "en" }),
-                "#7071: neutral Spanish should retain the shipped es-419 fallback");
+                "#7071/#7248: neutral Spanish should preserve its installed native fallback chain");
             Expect(neutralEnglish.Text("Studio.CloseMenu") == "English installed close" &&
                    britishEnglish.Text("Studio.CloseMenu") == "English installed close" &&
                    CopperfinLocalization.LocaleFallbackChain(null).SequenceEqual(

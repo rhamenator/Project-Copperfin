@@ -1,0 +1,370 @@
+{
+  "session": "/root/review_pt_revisions/es-ES-first-pass-000-003",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "es-ES",
+  "input": [
+    {
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "source": "Unrecognized license_type: {argument}",
+      "seed": "license_type no reconocido: {argument}"
+    },
+    {
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "source": "No source-side startup asset could be resolved for debugging.",
+      "seed": "No se pudo resolver el asset de inicio del lado fuente para depuracion."
+    },
+    {
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "source": ".NET launcher generation was requested but no .NET output profile is available.",
+      "seed": "Se solicito la generacion del launcher de .NET pero no hay un perfil de salida de .NET disponible."
+    },
+    {
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "source": "No PRG sources were discovered for the FXP token contract.",
+      "seed": "No se descubrieron fuentes PRG para el contrato de token FXP."
+    },
+    {
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "source": "No PRG routine exports were discovered for the library output contract.",
+      "seed": "No se descubrieron exportaciones de rutinas PRG para el contrato de salida de libreria."
+    },
+    {
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "source": "Missing project asset: {path}",
+      "seed": "Falta el asset del proyecto: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "source": "External include matches more than one trusted root: {path}",
+      "seed": "La inclusión externa coincide con más de una raíz de confianza: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "source": "Trusted external include root is unavailable: {path}",
+      "seed": "La raíz de inclusión externa de confianza no está disponible: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "source": "Include dependency could not be resolved from the project or trusted external roots: {path}",
+      "seed": "No se pudo resolver la dependencia de inclusión desde el proyecto ni desde las raíces externas de confianza: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "source": "Project workspace is not available.",
+      "seed": "El workspace del proyecto no esta disponible."
+    },
+    {
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "source": "Security was requested but no native security profile is available.",
+      "seed": "Se solicito seguridad pero no hay un perfil de seguridad nativo disponible."
+    },
+    {
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "source": "No startup source asset could be resolved.",
+      "seed": "No se pudo resolver ningun asset de origen de inicio."
+    },
+    {
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "source": "Unknown security role requested: {requestedRole}; defaulting to {defaultRole}.",
+      "seed": "Se solicito un rol de seguridad desconocido: {requestedRole}; se usara {defaultRole}."
+    },
+    {
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "source": "The new package was materialized, but the previous package backup could not be removed: {path}",
+      "seed": "El paquete nuevo se materializo, pero no se pudo eliminar la copia de seguridad del paquete anterior: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "source": "The new package is live, but its runtime and debug manifests could not be refreshed: {path}",
+      "seed": "El paquete nuevo está activo, pero no se pudieron actualizar sus manifiestos de ejecución y depuración: {path}"
+    },
+    {
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "source": "Builder launch command returned a non-zero exit code.",
+      "seed": "El comando de lanzamiento del builder devolvio un codigo de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "source": "Designer builder launch command returned a non-zero exit code.",
+      "seed": "El comando de lanzamiento del builder del diseniador devolvio un codigo de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "source": "One or more designer child executions failed.",
+      "seed": "Una o más ejecuciones secundarias del diseñador fallaron."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "source": "Designer editor action launch command returned a non-zero exit code.",
+      "seed": "El comando de lanzamiento de la accion del editor del diseniador devolvio un codigo de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "source": "Designer toolbox launch command returned a non-zero exit code.",
+      "seed": "El comando de lanzamiento de la caja de herramientas del diseniador devolvio un codigo de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "source": "Editor action launch command returned a non-zero exit code.",
+      "seed": "El comando de inicio de la acción del editor devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "source": "Toolbox launch command returned a non-zero exit code.",
+      "seed": "El comando de lanzamiento de la caja de herramientas devolvio un codigo de salida distinto de cero."
+    },
+    {
+      "key": "Command.Inspect",
+      "source": "Inspect",
+      "seed": "Inspeccionar"
+    },
+    {
+      "key": "Inspect.Prefix.Error",
+      "source": "error: ",
+      "seed": "error: "
+    },
+    {
+      "key": "Inspect.Prefix.Warning",
+      "source": "warning: ",
+      "seed": "advertencia: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Error",
+      "source": "error: ",
+      "seed": "error: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Warning",
+      "source": "warning: ",
+      "seed": "advertencia: "
+    },
+    {
+      "key": "StudioHost.Prefix.Error",
+      "source": "error: ",
+      "seed": "error: "
+    },
+    {
+      "key": "StudioHost.Prefix.Warning",
+      "source": "warning: ",
+      "seed": "advertencia: "
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "source": "status: ok",
+      "seed": "estado: correcto"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "source": "status: error",
+      "seed": "estado: error"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "source": "selection_context",
+      "seed": "contexto_seleccion"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "source": "toolbox_context",
+      "seed": "contexto_caja_herramientas"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "source": "asset_path",
+      "seed": "ruta_activo"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "source": "record_index",
+      "seed": "indice_registro"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "source": "object_name",
+      "seed": "nombre_objeto"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "source": "unique_id",
+      "seed": "id_unico"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "source": "item_count",
+      "seed": "cantidad_elementos"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "source": "item",
+      "seed": "elemento"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "source": "context_count",
+      "seed": "cantidad_contextos"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "translation": "license_type no reconocido: {argument}"
+    },
+    {
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "translation": "No se pudo identificar un recurso de inicio en el código fuente para la depuración."
+    },
+    {
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "translation": "Se solicitó generar un lanzador .NET, pero no hay disponible ningún perfil de salida .NET."
+    },
+    {
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "translation": "No se encontraron archivos fuente PRG para el contrato de tokens FXP."
+    },
+    {
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "translation": "No se encontraron exportaciones de rutinas PRG para el contrato de salida de la biblioteca."
+    },
+    {
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "translation": "Falta un recurso del proyecto: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "translation": "El archivo de inclusión externo coincide con más de una raíz de confianza: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "translation": "La ruta raíz de confianza para archivos de inclusión externos no está disponible: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "translation": "No se pudo resolver la dependencia de inclusión desde el proyecto ni desde las rutas raíz externas de confianza: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "translation": "El espacio de trabajo del proyecto no está disponible."
+    },
+    {
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "translation": "Se solicitó seguridad, pero no hay ningún perfil de seguridad nativo disponible."
+    },
+    {
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "translation": "No se pudo identificar ningún recurso de inicio en el código fuente."
+    },
+    {
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "translation": "Se solicitó un rol de seguridad desconocido: {requestedRole}; se usará {defaultRole}."
+    },
+    {
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "translation": "Se creó el nuevo paquete, pero no se pudo eliminar la copia de seguridad del paquete anterior: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "translation": "El paquete nuevo está activo, pero no se pudieron actualizar sus manifiestos de ejecución y depuración: {path}"
+    },
+    {
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "translation": "El comando de inicio del Builder devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "translation": "El comando de inicio del Builder del diseñador devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "translation": "Una o más ejecuciones secundarias del diseñador fallaron."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "translation": "El comando de inicio de la acción del editor del diseñador devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "translation": "El comando de inicio de la caja de herramientas del diseñador devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "translation": "El comando de inicio de la acción del editor devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "translation": "El comando de inicio de la caja de herramientas devolvió un código de salida distinto de cero."
+    },
+    {
+      "key": "Command.Inspect",
+      "translation": "Inspeccionar"
+    },
+    {
+      "key": "Inspect.Prefix.Error",
+      "translation": "error: "
+    },
+    {
+      "key": "Inspect.Prefix.Warning",
+      "translation": "advertencia: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Error",
+      "translation": "error: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Warning",
+      "translation": "advertencia: "
+    },
+    {
+      "key": "StudioHost.Prefix.Error",
+      "translation": "error: "
+    },
+    {
+      "key": "StudioHost.Prefix.Warning",
+      "translation": "advertencia: "
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "translation": "status: ok"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "translation": "status: error"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "translation": "selection_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "translation": "toolbox_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "translation": "asset_path"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "translation": "record_index"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "translation": "object_name"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "translation": "unique_id"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "translation": "item_count"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "translation": "item"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "translation": "context_count"
+    }
+  ]
+}

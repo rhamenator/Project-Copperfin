@@ -1,0 +1,330 @@
+{
+  "session": "/root/review_pt_revisions/it-IT-first-pass-000-003",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "it-IT",
+  "input": [
+    {
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "source": "Unrecognized license_type: {argument}"
+    },
+    {
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "source": "No source-side startup asset could be resolved for debugging."
+    },
+    {
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "source": ".NET launcher generation was requested but no .NET output profile is available."
+    },
+    {
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "source": "No PRG sources were discovered for the FXP token contract."
+    },
+    {
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "source": "No PRG routine exports were discovered for the library output contract."
+    },
+    {
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "source": "Missing project asset: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "source": "External include matches more than one trusted root: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "source": "Trusted external include root is unavailable: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "source": "Include dependency could not be resolved from the project or trusted external roots: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "source": "Project workspace is not available."
+    },
+    {
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "source": "Security was requested but no native security profile is available."
+    },
+    {
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "source": "No startup source asset could be resolved."
+    },
+    {
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "source": "Unknown security role requested: {requestedRole}; defaulting to {defaultRole}."
+    },
+    {
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "source": "The new package was materialized, but the previous package backup could not be removed: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "source": "The new package is live, but its runtime and debug manifests could not be refreshed: {path}"
+    },
+    {
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "source": "Builder launch command returned a non-zero exit code."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "source": "Designer builder launch command returned a non-zero exit code."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "source": "One or more designer child executions failed."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "source": "Designer editor action launch command returned a non-zero exit code."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "source": "Designer toolbox launch command returned a non-zero exit code."
+    },
+    {
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "source": "Editor action launch command returned a non-zero exit code."
+    },
+    {
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "source": "Toolbox launch command returned a non-zero exit code."
+    },
+    {
+      "key": "Command.Inspect",
+      "source": "Inspect"
+    },
+    {
+      "key": "Inspect.Prefix.Error",
+      "source": "error: "
+    },
+    {
+      "key": "Inspect.Prefix.Warning",
+      "source": "warning: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Error",
+      "source": "error: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Warning",
+      "source": "warning: "
+    },
+    {
+      "key": "StudioHost.Prefix.Error",
+      "source": "error: "
+    },
+    {
+      "key": "StudioHost.Prefix.Warning",
+      "source": "warning: "
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "source": "status: ok"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "source": "status: error"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "source": "selection_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "source": "toolbox_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "source": "asset_path"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "source": "record_index"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "source": "object_name"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "source": "unique_id"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "source": "item_count"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "source": "item"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "source": "context_count"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Licensing.Error.UnrecognizedLicenseType",
+      "translation": "license_type non riconosciuto: {argument}"
+    },
+    {
+      "key": "Runtime.Package.Warning.DebugStartupSourceUnresolved",
+      "translation": "Non è stato possibile individuare una risorsa di avvio nei sorgenti per il debug."
+    },
+    {
+      "key": "Runtime.Package.Warning.DotNetOutputProfileUnavailable",
+      "translation": "È stata richiesta la generazione di un programma di avvio .NET, ma non è disponibile alcun profilo di output .NET."
+    },
+    {
+      "key": "Runtime.Package.Warning.FxpSourcesUnresolved",
+      "translation": "Non sono stati trovati sorgenti PRG per il contratto dei token FXP."
+    },
+    {
+      "key": "Runtime.Package.Warning.LibraryExportsUnresolved",
+      "translation": "Non sono state trovate esportazioni di routine PRG per il contratto di output della libreria."
+    },
+    {
+      "key": "Runtime.Package.Warning.MissingProjectAsset",
+      "translation": "Risorsa del progetto mancante: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+      "translation": "Il file include esterno corrisponde a più di una radice attendibile: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+      "translation": "La radice attendibile per i file include esterni non è disponibile: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ExternalIncludeUnresolved",
+      "translation": "Impossibile risolvere la dipendenza include dal progetto o dalle radici esterne attendibili: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ProjectWorkspaceUnavailable",
+      "translation": "Lo spazio di lavoro del progetto non è disponibile."
+    },
+    {
+      "key": "Runtime.Package.Warning.SecurityProfileUnavailable",
+      "translation": "È stata richiesta la sicurezza, ma non è disponibile alcun profilo di sicurezza nativo."
+    },
+    {
+      "key": "Runtime.Package.Warning.StartupSourceUnresolved",
+      "translation": "Non è stato possibile individuare una risorsa sorgente di avvio."
+    },
+    {
+      "key": "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+      "translation": "Ruolo di sicurezza richiesto sconosciuto: {requestedRole}; verrà usato {defaultRole}."
+    },
+    {
+      "key": "Runtime.Package.Warning.PackageBackupCleanupFailed",
+      "translation": "Il nuovo pacchetto è stato creato, ma non è stato possibile rimuovere il backup del pacchetto precedente: {path}"
+    },
+    {
+      "key": "Runtime.Package.Warning.ManifestPairRewriteFailed",
+      "translation": "Il nuovo pacchetto è attivo, ma non è stato possibile aggiornare i relativi manifest dell'ambiente di esecuzione e di debug: {path}"
+    },
+    {
+      "key": "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit",
+      "translation": "Il comando di avvio del Builder ha restituito un codice di uscita diverso da zero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit",
+      "translation": "Il comando di avvio del Builder del Designer ha restituito un codice di uscita diverso da zero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ChildExecutionsFailed",
+      "translation": "Una o più esecuzioni secondarie del Designer non sono riuscite."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit",
+      "translation": "Il comando di avvio dell'azione dell'editor del Designer ha restituito un codice di uscita diverso da zero."
+    },
+    {
+      "key": "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit",
+      "translation": "Il comando di avvio della casella degli strumenti del Designer ha restituito un codice di uscita diverso da zero."
+    },
+    {
+      "key": "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit",
+      "translation": "Il comando di avvio dell'azione dell'editor ha restituito un codice di uscita diverso da zero."
+    },
+    {
+      "key": "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit",
+      "translation": "Il comando di avvio della casella degli strumenti ha restituito un codice di uscita diverso da zero."
+    },
+    {
+      "key": "Command.Inspect",
+      "translation": "Ispeziona"
+    },
+    {
+      "key": "Inspect.Prefix.Error",
+      "translation": "errore: "
+    },
+    {
+      "key": "Inspect.Prefix.Warning",
+      "translation": "avviso: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Error",
+      "translation": "errore: "
+    },
+    {
+      "key": "RuntimeHost.Prefix.Warning",
+      "translation": "avviso: "
+    },
+    {
+      "key": "StudioHost.Prefix.Error",
+      "translation": "errore: "
+    },
+    {
+      "key": "StudioHost.Prefix.Warning",
+      "translation": "avviso: "
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Ok",
+      "translation": "stato: ok"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Status.Error",
+      "translation": "stato: errore"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.SelectionContext",
+      "translation": "selection_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ToolboxContext",
+      "translation": "toolbox_context"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.AssetPath",
+      "translation": "asset_path"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.RecordIndex",
+      "translation": "record_index"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ObjectName",
+      "translation": "object_name"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.UniqueId",
+      "translation": "unique_id"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ItemCount",
+      "translation": "item_count"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.Item",
+      "translation": "item"
+    },
+    {
+      "key": "StudioHost.ToolboxPalette.Text.Label.ContextCount",
+      "translation": "context_count"
+    }
+  ]
+}

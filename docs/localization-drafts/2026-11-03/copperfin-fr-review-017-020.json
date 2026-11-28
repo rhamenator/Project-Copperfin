@@ -1,0 +1,1313 @@
+{
+  "locale": "fr-FR",
+  "scope": {
+    "batchFiles": [
+      "/tmp/copperfin-fr-FR-017.json",
+      "/tmp/copperfin-fr-FR-018.json",
+      "/tmp/copperfin-fr-FR-019.json",
+      "/tmp/copperfin-fr-FR-020.json"
+    ],
+    "entryCount": 160
+  },
+  "reviewerType": "independent AI",
+  "reviewer": "/root/review_pt_revisions",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewedAtUtc": "2026-11-03T08:11:39.693288+00:00",
+  "uncertainty": "Text and catalog review only. No native French speaker sign-off or rendered UI/runtime validation. Technical product terminology and long labels may still need domain/UI verification. Verdicts apply only to exact hashed values.",
+  "counts": {
+    "accept": 155,
+    "revise": 5
+  },
+  "entries": [
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Title",
+      "batch": 17,
+      "sourceSha256": "1e1ee8f223b86a9742a5bc9b41ec6ea1f4608e0659466b5b630a9747ccf2a125",
+      "translationSha256": "f605ae7fecf21cd61e90c22fa15f673612bfcb80ee0d31c06e174b5d69670e4e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.Debugger.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "de4e60b6c6509c56654f099868f971414a08318e57578e3a0042a672c85125c4",
+      "translationSha256": "92e63385d78a86b6ca7d27394a1cefd96b94b98b0c58ec14a4fd0eba866c8d43",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "6e19ce3baf39f3c9cfea9af934785645bd142d4c9bc4a55169e10af48ceee21e",
+      "translationSha256": "9f55d9ab72abf8aaf494ba6eacc7c433832c9395ff902c41a97bef5299077f3e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "7caef9e0b4168bee1b7bf857c994abcebfbeb1ca1876badb9c58c80773b96bff",
+      "translationSha256": "7b33a740b875a4f431060ff08682047fbbe868b8d9f62c396e7fc881304119c3",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "5e808972951bc92dee2a307cd562c8b6d9844a152f39be2914c0698b5d889b44",
+      "translationSha256": "a409a5405dffe04c34a3771df2c92644d478c9803d5dbd93835fabb9291a084b",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.FormsDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "20f95ba3650ec183ba9d9aed0f81f60a08e50f374f4ba8700767f9fe496a203e",
+      "translationSha256": "b65e0a4056e2af2891e0d25f8fd0978c8621c42d2f32b000ccaf653fd31fbff1",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "9f91c0b8e9be857b60b6830bc0b5bde068204ffa48c5e7c5087737ed5603efbb",
+      "translationSha256": "269edb4470631825d0def3bdea496aaa13f6fee17597531c03929b6f5c92b99e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.ParityScope",
+      "batch": 17,
+      "sourceSha256": "8f9d458f78a30e2c239249b418472e9c524268dac3cd6a4e3fe02f529b97de05",
+      "translationSha256": "06229bcb9de31924070922a13ec497ee9adf22b1b020545a8c896038aecc043d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Title",
+      "batch": 17,
+      "sourceSha256": "42590a56bac92a82cdcb131e71bdd11808adc7afd878847aef1a64988d898b10",
+      "translationSha256": "93c114319c8278dd0302d23077326b14d603a383e3a9cf868d9e7de7b3e06ed3",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.IdeShell.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "25282eeaa73e9ec25ea280758874682e3d5465c1018468ebea0995d431069539",
+      "translationSha256": "c59842536109e833a8687ea95f1adaaf8e80ab7bf096ee70a3d63144dd826a43",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "32c43abf38aeaf9a29875a532ae3b29487ad3a06baed0bae8fca3424f39ed25e",
+      "translationSha256": "2ab7d8437db63d6896df1ebee4b32dd020f17108146325ce96b65e759b76c3f9",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "c832efe30d83fb6f2995e30735b162e0f9dc2e9b89961a22159dce0bc9aa8c9c",
+      "translationSha256": "237ba75a110c63025d988642076c07ce229da6102fa0d53eb1a038fabc97b201",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "7ebf31e996ddf189fddf1af2f5c022519ceb7c9e1b5a50ce168ac10e13149b4c",
+      "translationSha256": "054a858a4afb6e422e3cb66e6b0e18cb0e1ca2d060373ca3a256ea72389fccbc",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.LabelDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "ef76094c3637f5a23287dc4580850c3fcce73f9112576606fea40fd6a845fb3d",
+      "translationSha256": "7d324264ccecf6ba331321abe900e47f6c194417fba4962fa2c0d9bfffec07c5",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "b43b0e24ba4e7f4ae9b3205c2e695048be8accf312e7e898e57ecb5d7131ae3d",
+      "translationSha256": "4a5112dfdd22e77737380980c80ac17ff507e49ff5efb57c557121127b00d76c",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "ca8a6e89e39707ebf8fae7e52cc4ef1a306e022be2d676c98e8b28a45d17e46c",
+      "translationSha256": "a1e1584f0907f482518ccac54cea9d1aeb1c028d6c60df1567ec78c504189a70",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "c3bfbd0513251b9ecff045d39412a77f536b85124fee6184403a60ac33a083d5",
+      "translationSha256": "3b1f5ecfdc043fddc0aa14c84ae3bd1c64806997280316880f0c446824602107",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.MenuDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "3f273f78926aac521a4a06b7bba1ffe373dc8358d05a134c13eacc5125a54374",
+      "translationSha256": "1451063414795d7dfbfe2bb67b293f5edcb42f210370d68837e0ec69ee830e06",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "b3700317753f1e58c9dfdd453437da8189e36002602ceaef437026d7b3e5beca",
+      "translationSha256": "dcfc68884effef35d7eab5de51296d2af25e1e1c7eeb2ee96b27f53254ed097a",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.ParityScope",
+      "batch": 17,
+      "sourceSha256": "acdf02e6ea6cd5ee0802f1fb3b8001b751262dcbd8695abc9196b3e14e82c015",
+      "translationSha256": "814b0ea9bde6e7d498bbb21c47546235a9129323f3984efcb8d9299efb735f0e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Title",
+      "batch": 17,
+      "sourceSha256": "2f75b00624f20f6572cc1dfdecd518afd73f1ac4445ca9aa22c04b96659b9b9a",
+      "translationSha256": "7e079d79ed36ae769853436506e4f3977b7871eee4bb06b302f61852e0575058",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "translationSha256": "772ccc345ae88444be159bec78149937764c978280d100f70b0095f9e413ad47",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "d0b5bb0a6dfbc735338985d149cbdb8d62a8c4356c0b2c69d5a161396c1953f0",
+      "translationSha256": "13f54e6aa34916a76577231b2b430fa5557585e995cdb84da563ac09dbf8581c",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.ParityScope",
+      "batch": 17,
+      "sourceSha256": "09f37fa008eec3832b61662b6a69888da768017e3a15e33831b89f90552a8478",
+      "translationSha256": "c607cf136c64d191f4cced011a36800d5c390c095d92d198b3cf6b122276ba2a",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Title",
+      "batch": 17,
+      "sourceSha256": "0a6f51e8898aea3073805197fb1ca622a908f7fac07e587e0c7c77aab295d86b",
+      "translationSha256": "f86fda1c2a3e3970130979edd8c597a85bf1f5e0201ba9cffb78f8b8e8f1cc58",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ProjectManager.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "252961594053466463df1784d06a495979772a7509f4190fd38a990e0e19f0ff",
+      "translationSha256": "342e8d479edf1beb02f70d9f10dd69e1a2989d888e1fbc9bf0bc49b51bd0a89d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "9804b701d3ab5e034373390dc093c4188e57dedeb0ad8554faea88b8143051db",
+      "translationSha256": "99ce99a4a36dc34258f1e8c4b93360f6d6d07f18c35697f2cc815ba185c73ae7",
+      "verdict": "revise",
+      "reason": "The source «outlines» means report structure/outlining panes; «plans» can mean plans or blueprints and obscures the UI feature.",
+      "proposal": "se rapprocher de SSRS et des outils de rapports actuels de Visual Studio, avec des volets de structure plus lisibles, des inspecteurs, une prévisualisation en direct et des volets de sections et de propriétés plus clairs",
+      "proposalSha256": "60df71042db6aa895d7261c9c24e46c0158190577d998a94d47dd6ac53c520b6"
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.ParityScope",
+      "batch": 17,
+      "sourceSha256": "9e0d6e49f2c18cc995c868645e5552b857d8e99115185a7ce28aac60c433c682",
+      "translationSha256": "a5703787e1cb38af301b426da8e9115b1063b36d82a0c2444ddb524efc9fd284",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Title",
+      "batch": 17,
+      "sourceSha256": "f27e1ad46e3707361967f7167ccc9fb48ac0c33dcad649aecfe67c62e2ae2a87",
+      "translationSha256": "77e6fdcfc07497413983842383b59bbb2f0999b0c9a1b0aada1c8207123acea6",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ReportDesigner.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "2dabfc6cc5700a40224fac76f25b0be620ef4836e7194eb1c2ab3a4b27506f38",
+      "translationSha256": "168fb827bfecf3890ec99653edb94076d46781d70f520f19db08250543529da4",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "54642c2f9fbab8537a7e5ced29c2377821ebc6425979e1fe56abaaabc29bf88e",
+      "translationSha256": "93df1a5c01daf5ac1aa341a724f78163f17efd02435b1fb8b1bf8841a146d28c",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.ParityScope",
+      "batch": 17,
+      "sourceSha256": "908d9499ecf4802a8509d247fc1093200c846ecc5c63ef63f9e32f356cf28023",
+      "translationSha256": "b8ea93cef4ff2d6bdede64794fe817195d3bad3a3308e8cfd9daf721a1af7f9c",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Title",
+      "batch": 17,
+      "sourceSha256": "636d4ce4f0f45cd661e259358c6c4f0f4a7691dd757d5c1aaca5dab05f05eb5a",
+      "translationSha256": "428cbbdf6f270e7291edb13330e5ee210bf5b13c0af9e79ee01bca8030e9eb4d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "7d9875022dae157558a7c1b8bec8905652f0c1dda7dc8cd7e7203ae64ce137d1",
+      "translationSha256": "88f151be57a5829fedd0ae2dcd81231b7c2a9688a096dc2319b78f09909949c7",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
+      "batch": 17,
+      "sourceSha256": "a2804a5f64150197b974af1367cd2aa7709fbd90993852f66c32bbdb2e0631b8",
+      "translationSha256": "e52cfe9aff8ae75ba0c35a49e1b9bd070508576f997e40861e29316f20db1508",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
+      "batch": 17,
+      "sourceSha256": "226127d056dbb17e13df5f62527b8e610f6b97f5839196872aaea554af890b43",
+      "translationSha256": "f91aa61dc4f62663087b3859b583ef01d1bbe247c2bf6d00a1481f59f2797ea1",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+      "batch": 17,
+      "sourceSha256": "daf2aefcbb4a0380c95917607d486f20abb87a79677a9e6aa224e9aa8960a9d5",
+      "translationSha256": "40795dfbf2fabce58cfb57f11220182be94d84885b9ecc2b9e068ba73d8a536c",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
+      "batch": 17,
+      "sourceSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "translationSha256": "d21272c75ba96f3a56b402a3b876f7ab600e95e331b5105bba24e6636bd197b3",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+      "batch": 17,
+      "sourceSha256": "1c250ab7269e501cae212d1386320398df4d44a5c2627c69bcfafcdc8fa626c5",
+      "translationSha256": "b4c64373e75f04cb97f5cd405dfca4c8ef31a54c529906309356ba9dba660b92",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.AccessMode",
+      "batch": 17,
+      "sourceSha256": "e0b65ecddeb40d97522f6ceff2f67fcd04b14e53335c98fbbddba51b6bb443f6",
+      "translationSha256": "9e17bdf388cebf8356fdfbb21281ae92cf2d4e07f4c41de5aed32e3591b67de0",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "e3c2bba50b691695d592f3be8054ddc7a8917d0818898bb9a2603e91dd4ceb52",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.Title",
+      "batch": 18,
+      "sourceSha256": "7522a108dbf13f9992389165b8c31d4ed5b47d6375fc79304f0e8e359d520480",
+      "translationSha256": "ca7899372455c25f1f6dcae1993f411adc44b5182cf925c54bca585a544edc16",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "53b20649598bb350322c286cf5e2bee5f309d688cc529c81a08c8e5fb18ea984",
+      "translationSha256": "abd0f752a4249eb1991712b9af5ed9d3b6b1fc68f36e0aa6a3912955a822b5fb",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.AccessMode",
+      "batch": 18,
+      "sourceSha256": "4824b03e88c6dc192397977381eb6e06f0c1248365edec447313d3bec82e823e",
+      "translationSha256": "a72a8cf497d1f458e47a499759fa21f1bb4031d5097343a2e9f55bda321046cf",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "43cc23fa52b87b4cc1d02b5b114154151d6adddb17c9fddc06b027fa99e24008",
+      "translationSha256": "43cc23fa52b87b4cc1d02b5b114154151d6adddb17c9fddc06b027fa99e24008",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.Title",
+      "batch": 18,
+      "sourceSha256": "821aed88e23d8f11362903e4aafaa7b9e6655dbf498c317907b90e1f78648f78",
+      "translationSha256": "20c520f7397d3681b468158f781bf6939d5f76af8786544ee5c64a7889c51159",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "879b46001d291d27e28f4ac406248265db418202bb43783d1fbb5d05d81138fe",
+      "translationSha256": "37a0ae31657750d1eefb51ac913786b937880ded4f43c3fd6dd2a14a49cbf2bd",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.AccessMode",
+      "batch": 18,
+      "sourceSha256": "754dab0b1ca26d7d4e5511a66bfe26eee1deb6577c6830e1f86188f785170243",
+      "translationSha256": "02182d6f13a79c8fb616b23803572d4e750ec44899b3c6aa5f8b1e8a563dfd37",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "43cc23fa52b87b4cc1d02b5b114154151d6adddb17c9fddc06b027fa99e24008",
+      "translationSha256": "43cc23fa52b87b4cc1d02b5b114154151d6adddb17c9fddc06b027fa99e24008",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.Title",
+      "batch": 18,
+      "sourceSha256": "92a9950945700704949417546946ed374aab7e9ef795665d2436575868814199",
+      "translationSha256": "ad1f72298964d6f2fda72e674f7c49223992f748297a7a32a7137ba91400bc66",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "4c786f674684a1aad8d5841fa7eed1dae6485c7f8551af94e0d0e8d4611d130a",
+      "translationSha256": "81a312cc6140aced0c081ca1cf17bde021a438280d6bbb8a0205648e87d1dc12",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.AccessMode",
+      "batch": 18,
+      "sourceSha256": "50a35133c1a343d9a44b037b24be7a6b0f9f2f1b7b7f6ecbbd449519c8e926bd",
+      "translationSha256": "9e27c7cb9f3f533e3139e893f4b47702b6b0aed15695127a358732f5ccbb2d20",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "e3c2bba50b691695d592f3be8054ddc7a8917d0818898bb9a2603e91dd4ceb52",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.Title",
+      "batch": 18,
+      "sourceSha256": "dc7620ebfc35d54ef34e32b9eb6f69f1bfe93f294370c2798d91147e34e7ad56",
+      "translationSha256": "dc7620ebfc35d54ef34e32b9eb6f69f1bfe93f294370c2798d91147e34e7ad56",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "2363b8a449ca650ecf6587de2e876913dbc8845023c7df4b1a611edbcaa2b54e",
+      "translationSha256": "d5953185081a4ce2a46734bd0cb75041381ac8c9b78d40717eeb32d8e17c8884",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.AccessMode",
+      "batch": 18,
+      "sourceSha256": "50a35133c1a343d9a44b037b24be7a6b0f9f2f1b7b7f6ecbbd449519c8e926bd",
+      "translationSha256": "9e27c7cb9f3f533e3139e893f4b47702b6b0aed15695127a358732f5ccbb2d20",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "e3c2bba50b691695d592f3be8054ddc7a8917d0818898bb9a2603e91dd4ceb52",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.Title",
+      "batch": 18,
+      "sourceSha256": "cc52d03280b7034c8e3653d2748ebd489a873ef4bbc89cb187fbfcabfbbf6873",
+      "translationSha256": "cc52d03280b7034c8e3653d2748ebd489a873ef4bbc89cb187fbfcabfbbf6873",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "f3c0e34d1b23b01666f126adf17754b4837aca547de8968942fade01c7101c9d",
+      "translationSha256": "d507e8d6237050b11b36fe91f39bef4c5d8744c5b6ffa771235245e565b9f4e5",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.AccessMode",
+      "batch": 18,
+      "sourceSha256": "94b1cd8c7de00c9d3743d86fd0c5ca0342724eaa43ccb2c594a117b07228cbc0",
+      "translationSha256": "17cf34b9e66168b840d80a24d1e39071d98aa360d44ba29817198e3741a24e7d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "e3c2bba50b691695d592f3be8054ddc7a8917d0818898bb9a2603e91dd4ceb52",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.Title",
+      "batch": 18,
+      "sourceSha256": "2d2eef3e092af52b5837160fe2e3954907a4bfed1469edd2e6422749a6b16b7a",
+      "translationSha256": "2d2eef3e092af52b5837160fe2e3954907a4bfed1469edd2e6422749a6b16b7a",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "8fadc1660fa85d6f013ace407bdcf4a4cf3d2fcb15aad63d63c99f8bb1e325a7",
+      "translationSha256": "180f27a8324c46c41b1cdb1387fbb6cdb7813bc0c72d70856a4f605180b7a816",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.AccessMode",
+      "batch": 18,
+      "sourceSha256": "50a35133c1a343d9a44b037b24be7a6b0f9f2f1b7b7f6ecbbd449519c8e926bd",
+      "translationSha256": "9e27c7cb9f3f533e3139e893f4b47702b6b0aed15695127a358732f5ccbb2d20",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "c6d2aa0de62b6d805ecd4f67033d09bcbfd94cf296c68445f1feab1e08f73868",
+      "translationSha256": "e3c2bba50b691695d592f3be8054ddc7a8917d0818898bb9a2603e91dd4ceb52",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.Title",
+      "batch": 18,
+      "sourceSha256": "c8d61c28ed91dffc0e511145863ebfefa0b08273ba54dca78d9bdf9b2e726b52",
+      "translationSha256": "c8d61c28ed91dffc0e511145863ebfefa0b08273ba54dca78d9bdf9b2e726b52",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "d37fd1089a7fef57edf37a48d42afa77bf28783e9795badf6224ef342bffa075",
+      "translationSha256": "d682bcc11280dea65c582970a9a07129dc21a3ff77351cc8e46f379832335610",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.AccessMode",
+      "batch": 18,
+      "sourceSha256": "1c477c171df5d88e83d139ec179708500de5710b2a3be2c8e7fd7a7bac7d3155",
+      "translationSha256": "690d929f97e758c14465ee9e892f9f97409eb484dbb72b99a64e66e40824de5e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.SchemaShape",
+      "batch": 18,
+      "sourceSha256": "b0d51c58c8b9c1f458fadf16c7d375630ef51da4df81915893b05c0fa4ed8bc6",
+      "translationSha256": "1eb276e130103a483d7c7dba5336c0f6772d9a9b35bac87dc577d6069b8ad60a",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.Title",
+      "batch": 18,
+      "sourceSha256": "5e4d4084edf485c5526dd9269ad8f7ff938d55f59069424074dae07af8f3c8fa",
+      "translationSha256": "c8e7c58c3ca10a2d19874091148f690eeded6d91e209413abcb5cd111e63ab50",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.TranslationStory",
+      "batch": 18,
+      "sourceSha256": "2ef70127473d2815e6ca9fc0a304cbb54da96fc7cd5ef92f89809314f4da9056",
+      "translationSha256": "cc16d4a45fd09f95cc2a70f07d7a02eba0576010240313dc61db5747207527d2",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.AiPlanningOptional",
+      "batch": 18,
+      "sourceSha256": "c408369a30988caf61f9593399cbf82bd2142928b0619905316c0070c989cbd2",
+      "translationSha256": "c11d3c15ceb8b56ce4129ad35d0cadc2013230f62164fe30cfd0e8a7705f6086",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.BrowseableSchemaHints",
+      "batch": 18,
+      "sourceSha256": "795f709b68d324b7a33f8ea1e525ca9d2481a0a238cdbe2af4358f54d7079a75",
+      "translationSha256": "2652676f07d52571ffdbfac2a205860beb874df9d12ec6121842648a3a1cb0a1",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.DeterministicTranslatorsFirst",
+      "batch": 18,
+      "sourceSha256": "3462236856744a08031677506f4dd624b72b793a6581cd03dc06cd6c7e9170d2",
+      "translationSha256": "65fdda405ebcfa200893813222e7c672c899c09521e14a390ef9999025e6c633",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.Guardrail.ExplainableConnectorFailures",
+      "batch": 18,
+      "sourceSha256": "fd232817d87ae56c4119287fd83f670cb1d4bedb94ebef0a585e5c04a61417c0",
+      "translationSha256": "1ce80b3cf0cac8034126fdce85cedc117934938b27890bc14377b0936b80bcfc",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Complexity",
+      "batch": 18,
+      "sourceSha256": "254b1be00be19fefad09cf9e64702c3a315bd51acd079d63dd5e77ad181332f3",
+      "translationSha256": "c88e173bee8186e021f85a588d3dda76bb9e7b7bbd2aa978f87dc6008e098962",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.SourceShape",
+      "batch": 18,
+      "sourceSha256": "c67d16a22d313e1ad1c79835bc1bbc24bb61cd6081871390a255a572e330c302",
+      "translationSha256": "da545284228e6973eb2ae04579824171260bb0e5e3ca5b73179eef2c0228cdbf",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Strategy",
+      "batch": 18,
+      "sourceSha256": "3563203164d3572758e5f8a341cbcf2203d9c9b2aee523348ee592ce9963ffad",
+      "translationSha256": "ed58525c43f4018358631a738ef6cc9f6889b3afc2c5dd179399349abb8566b2",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.TargetShape",
+      "batch": 18,
+      "sourceSha256": "b2f936ca651af86da00600063b0946b8b7e40ba41abafab9094c880c53a50d38",
+      "translationSha256": "44eaf0c52d612ced81ef975230b05998ef4ea52d9c50bba38c242bafa0513f59",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Title",
+      "batch": 18,
+      "sourceSha256": "ff19ec9f5089cea9272657a561877cc191565a80a40ea532589c5e1eeb990a96",
+      "translationSha256": "f673d05024e04acab64f36028228df2d51049702e5a144e79869a81521389003",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Complexity",
+      "batch": 19,
+      "sourceSha256": "978bd72178fe18bf321e4e127e22a02fb63ce480d7dd6ca7a1de292813fecd45",
+      "translationSha256": "f7cf068dac3e996ce5b52d4b9649e581c8af7d4dd0ba37f6c9fade55be88f437",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.SourceShape",
+      "batch": 19,
+      "sourceSha256": "c67d16a22d313e1ad1c79835bc1bbc24bb61cd6081871390a255a572e330c302",
+      "translationSha256": "da545284228e6973eb2ae04579824171260bb0e5e3ca5b73179eef2c0228cdbf",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Strategy",
+      "batch": 19,
+      "sourceSha256": "baeeb9ae0765acf59dcc4aebf1c58445f0dbd62b14932a66413e8c27309b4473",
+      "translationSha256": "b85453976aa826aa69b61c26312e4c5429a380c1d738530ff66b4908969f6bff",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.TargetShape",
+      "batch": 19,
+      "sourceSha256": "9c056493fc6f2c051d813bdf42917bc8aa275b92048a213e8cbfbb750473d963",
+      "translationSha256": "8d02ced426d34fdd51bcffbbf0a7f07cc550742e10be3d650da731bb6943698c",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlRelational.Title",
+      "batch": 19,
+      "sourceSha256": "5aedcf6a06c36bcf433a85c95f3677a14980ce48f37df56df884fd8d337db423",
+      "translationSha256": "3a3d33ad74da3f2671dc18eda7c43e40a42b810dc4c774c4c0b1b5ec918eea8a",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Complexity",
+      "batch": 19,
+      "sourceSha256": "6ef7c9b15ecdd69083724b84cfdc2100351963488b51b4ea2fcbddf493fbec94",
+      "translationSha256": "57a5fd0c158f38ccb80ba8f9bab1960370da99ee832278f723b39b23324bda64",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.SourceShape",
+      "batch": 19,
+      "sourceSha256": "17d06a6b23c8a7d7b0e99b7956825ada74936ee7e7c6e9494ff1ce5ea586e082",
+      "translationSha256": "c8fdc12fe01c9fd2ed3af4bc2d28fbac515f80b15320eeb6ebe8a0a3d6f54df2",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Strategy",
+      "batch": 19,
+      "sourceSha256": "8eab1688016b2979117926e8fdf7377bc4c5fcd16f8800f993af90d7732d1324",
+      "translationSha256": "77d85edd7d3dd1a7ab9b3434fb3ce9fb35cd6a97a8536cf355e2568da19948f6",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.TargetShape",
+      "batch": 19,
+      "sourceSha256": "d94d91dcc2efc7f187da19256a6addfe531a0c33b2f4f27e056dda9154c5f394",
+      "translationSha256": "96a2de503a2ea6b0178fe07e1e1a7306ba8e01ff7df5cad455fb022b5fee5519",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlVector.Title",
+      "batch": 19,
+      "sourceSha256": "eb6100f83ee6e834afd4108b0cbc19283d7909eb9ba7bb37596915ecc25f3dcd",
+      "translationSha256": "81e8f4260d2732d24647d482a85509a6117329a5644e08c31cb2d8eddea00ef2",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Complexity",
+      "batch": 19,
+      "sourceSha256": "c082456a7766e23a18db084cd34b6ff510baef506548b897cc80e9b7d3e121c8",
+      "translationSha256": "771785a4e44a198220bee7067c6cc34f1e79576a973a3f524c290db717e495b6",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.SourceShape",
+      "batch": 19,
+      "sourceSha256": "eaeac01e620dae875bd569183e36e55a0555fded8606dcad7204bb6f97feac59",
+      "translationSha256": "681ad633a6a2e01793c87e05a9530ee2592bdb0001bdcce5a8071ba07a977455",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Strategy",
+      "batch": 19,
+      "sourceSha256": "3a23bb4f14e7f807dba01614fe33db71aac513a98b2edad03ca55ea8563b50a3",
+      "translationSha256": "af6c7b1cd8855ef2add2f8236dd740d4a4624617bea26636afc21f193e5c799f",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.TargetShape",
+      "batch": 19,
+      "sourceSha256": "47c18ed07fa2545b2b7491dc505ab88a0d199d2b8efacb5b33e0d36829fa237e",
+      "translationSha256": "8c9a4a296389a5da190ab575e45d6ae6303970695e0df5fe5b0a744046ca3553",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbaseBrowseDocument.Title",
+      "batch": 19,
+      "sourceSha256": "e87c086e3552f91b09be49c6c3c5c3276b0bfec6395be22ec8ccbccc805aa0d9",
+      "translationSha256": "150ef88385b382368fde651c031a2e7e6c0822f7cf7c7148d12703d66783ce4e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Complexity",
+      "batch": 19,
+      "sourceSha256": "254b1be00be19fefad09cf9e64702c3a315bd51acd079d63dd5e77ad181332f3",
+      "translationSha256": "c88e173bee8186e021f85a588d3dda76bb9e7b7bbd2aa978f87dc6008e098962",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.SourceShape",
+      "batch": 19,
+      "sourceSha256": "2c81e560d41ceb67ebc8b7cb4b9368d7485e1579164317a9f502af18883c71ce",
+      "translationSha256": "22b0637cf0c99caa758911d12536a25801c35ff7bf2c19f60c763d95a93d4584",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Strategy",
+      "batch": 19,
+      "sourceSha256": "bb34d39e46b5560d90c5cd5b3628b94533f71dcf0ccd7edc159371fb4b574b01",
+      "translationSha256": "e43109b147ff334fab7cb04d5c2924b3b5e9e8afbb914cc1295ee9442f0999a5",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.TargetShape",
+      "batch": 19,
+      "sourceSha256": "031eefd66f1b07e455292816dad42cacd95fe4de436f54107c9147105a7abe70",
+      "translationSha256": "11dd921541f0c472947e4efc5f55f3609a873317fae22afcb70fc9897086cc98",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Database.QueryPath.XbasePolyglot.Title",
+      "batch": 19,
+      "sourceSha256": "fd0ca63245394674ea2afa0e0994c79131357749df90b277f0536a406cd20a04",
+      "translationSha256": "0484739eb83243974859735b95b79a7289577444b0c3d9da042634b8e9eed31d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Description",
+      "batch": 19,
+      "sourceSha256": "0973d9c642961c3b9d492b78d4fcb0ab0b6df60df53a5fae325b9d319bef8757",
+      "translationSha256": "8ec89ca6c7dc6a23911623e429f6c8c168a121f3e945039d33606a32af1c60da",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.Title",
+      "batch": 19,
+      "sourceSha256": "a08b348e3e06fc784d8c2c7d0eb3986fdf27ee9f4e88dd4417289d865855b07a",
+      "translationSha256": "94e5d4e517bb4edb5ffff18f6fb65722348c3db38367543f92047a652748e53e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiAssist.TrustBoundary",
+      "batch": 19,
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "610319ec674785a9821ddb346cd47ce25ca9f8dbccc5ba3efcf5a957f4bd9d72",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Description",
+      "batch": 19,
+      "sourceSha256": "83b9088396de340fe141c48e638f5eceba07f47193e3ae8d004eddda6870e8f0",
+      "translationSha256": "c1dc72583969a1a486216d7e4d3260fdebd1a357fe1fc379d862f67c250c0591",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.Title",
+      "batch": 19,
+      "sourceSha256": "7f33439042211d2730f3f1021bb21dcc90de1b1dd12d5acc54cea29437400169",
+      "translationSha256": "547fa07f5147727fcb052cee51d703dbae4a38d64cd0c8c048c0490ce2f2bca0",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.AiDebugAssist.TrustBoundary",
+      "batch": 19,
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "610319ec674785a9821ddb346cd47ce25ca9f8dbccc5ba3efcf5a957f4bd9d72",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Description",
+      "batch": 19,
+      "sourceSha256": "9052d866ec9e8aad5cd458e769d0efe26f1f8972ae23d8f170618750fd32328e",
+      "translationSha256": "4c74a6433d38bea44fc4a584bf451776dc829299cab6527bdb094d50efbcdb19",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.Title",
+      "batch": 19,
+      "sourceSha256": "c233bfd7e3539d60c7c389b59e547c640ca29ffed1f5a11129b7e98bebc91c43",
+      "translationSha256": "b8bfd55557e9bf29fcde5cc4d8fab1a24675fc3ec52ab2bdea3085e89288d524",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.LocalModels.TrustBoundary",
+      "batch": 19,
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "610319ec674785a9821ddb346cd47ce25ca9f8dbccc5ba3efcf5a957f4bd9d72",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.Description",
+      "batch": 19,
+      "sourceSha256": "9d196f52dbf5b18f973674d818688228a36d15b3c311b5df0c38edef28db9ef3",
+      "translationSha256": "a93173cc36d57c75266937a2c2ed93e3ebe51447d72835b9a043375367e46279",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.Title",
+      "batch": 19,
+      "sourceSha256": "43c209eccf53f06f1d6aa7b453ce49be66b250189a61259e3c4d5a27e87bf077",
+      "translationSha256": "2d31d9c798a7dabf1cd85fe8f7014006eac4affb5235c3dc7272182c91254a87",
+      "verdict": "revise",
+      "reason": "The source names an MCP host facility; «Fonction» suggests a single callable function rather than a product capability.",
+      "proposal": "Fonctionnalité d’hôte MCP",
+      "proposalSha256": "a990bc2b31503bd1b43084bc80c4dcdcfc81d321385bbb85c48162c0c9f6301d"
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.McpHost.TrustBoundary",
+      "batch": 19,
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "610319ec674785a9821ddb346cd47ce25ca9f8dbccc5ba3efcf5a957f4bd9d72",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Description",
+      "batch": 19,
+      "sourceSha256": "eb61b18ae9f8ea95a3103e0be35e9936af2e4d4020d11628c5be7f2762b63493",
+      "translationSha256": "df8aaf84605b87034bce600a32b19c7f3306e51f289a74e0bd4558f90b6cf206",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.Title",
+      "batch": 19,
+      "sourceSha256": "d55a57524422eee65a07d849ed5e611a4b55085512d9a20719ab9ad6b20235ab",
+      "translationSha256": "5c81edaa9916aaa154be29c6fa9663190c19d3497bf88cc7a0cc85dbe090b949",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.AiFeature.ModelSelection.TrustBoundary",
+      "batch": 19,
+      "sourceSha256": "4e5d8ff4155115770fe91af03c3df03a4d81bbec4c558d072ee2002996e0c759",
+      "translationSha256": "610319ec674785a9821ddb346cd47ce25ca9f8dbccc5ba3efcf5a957f4bd9d72",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetOutput.PrimaryStory",
+      "batch": 19,
+      "sourceSha256": "5b108f1aa9e5a095a3380d49f0651f93373cc1909f977a2e1f7b6a0a165b5a30",
+      "translationSha256": "0e2343fccc941c730c1e10920c6bfbd364e0d51678ebd2b4f590cc7fbe3b1887",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy",
+      "batch": 19,
+      "sourceSha256": "cfffdbfdbe422fb0d5fe3a531d08d4be1d22c2fc9cb197d28a89013332a272c9",
+      "translationSha256": "e09f00063d33e04d43500caf5820faf0a55859d30e6e16a2a79178dc6471c94e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired",
+      "batch": 19,
+      "sourceSha256": "b20a3195135c7cc4cca70a5ab137671d3b3e479171a54977d385be8c7e1d603a",
+      "translationSha256": "ff6920a39387017654c52a9fb1635cea44249fab2b50d56fafdfa72d4430cee7",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired",
+      "batch": 19,
+      "sourceSha256": "0f4b6561fd971ceaddbd1d398fafc49f5d8b3b0878fb21f3fc2c79938cf30ac6",
+      "translationSha256": "c7b7674ef1e5c248079380d48bd166c70c728888375c88533033b817fbd552a2",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied",
+      "batch": 19,
+      "sourceSha256": "8e4883e8f2a464a2def6919562686d756d6cde29bd62243b4a4cae94c41772b5",
+      "translationSha256": "f789c95b4be203df64f37e918bcfcf1f1376fca4b9f72476f5b9afaf488f281b",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed",
+      "batch": 20,
+      "sourceSha256": "14c6b8ab751adf43013e90f87724fec005c143d0b3299fd213ed2e0b57bd6a8b",
+      "translationSha256": "1c392532ecc81dd0b89c50263e4ae32253374afc665366bcc61158a55994d39f",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable",
+      "batch": 20,
+      "sourceSha256": "d2540de95566d73dcb6b268309dbbb561c7ed5aa56c46b78889bfcc08561469e",
+      "translationSha256": "74e5a7e9f57b7319e551f31f5925563a6d78bd756800442d1b423e3b0e087cff",
+      "verdict": "revise",
+      "reason": "An audit sink is a destination/collector, not necessarily a human «destinataire». Preserve the policy requirement.",
+      "proposal": "la destination d’audit exigée par la politique n’est pas disponible",
+      "proposalSha256": "93f79002e09792d4dbb099762ada8fa4eed5ba2b64e5c91f6d41926abc5d59e5"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy",
+      "batch": 20,
+      "sourceSha256": "867c77402382d28151fca1402c358991724593e8463393285cffecb00b090dd4",
+      "translationSha256": "0ca5328c1dc59c0d123db0309a1ea06052397375d376904583f31740935db405",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired",
+      "batch": 20,
+      "sourceSha256": "48869af3090d90f295832a09d137e3405ad5c2add05b247285d9a79acd341075",
+      "translationSha256": "a452e3bb7a878f914e4a5528c95b99285bab11876db079326bd5b99b6fa11f04",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist",
+      "batch": 20,
+      "sourceSha256": "1605372d6d20c476db5c3c314d0d646462fcd047b4267727512f3224e40c99a9",
+      "translationSha256": "ca79be2af131eb98611b62a5d794e145c12689fe377c03d0caadc73e4ded2c3e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.CapabilityOutsideActorScope",
+      "batch": 20,
+      "sourceSha256": "40a34a7e8e445da27aed2e042d1cbb0ca4e5a452d1ad0e7fe5bedc80a1d3cbd5",
+      "translationSha256": "800a2bf4e84f2cc84342b002ae1b4684a7703409698a1676fc7869f27687fe3f",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable",
+      "batch": 20,
+      "sourceSha256": "a5434c0b53dbba8f5b382f667bf9ad3a074070641473c051a1e50d89644d3b3d",
+      "translationSha256": "e1f1466a690cac462a1f07063d6273505244d7a4857d860eeda7938e69605924",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget",
+      "batch": 20,
+      "sourceSha256": "9fde687cdcf75bce233e47dcfdfc517c224768b4672e882a8503bf20ee36ace1",
+      "translationSha256": "1d3c0b937d7a41cdcddc62d2224f6081345055e66b8370816b1400675b60af61",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ExternalIoDenied",
+      "batch": 20,
+      "sourceSha256": "a6f939ac631101ccb893cf54c9f80d183166c3fa032fc1eaeed38cbe83457cb3",
+      "translationSha256": "e1c99e4d5627c604d80ee98d155e2270e682956c4994eaf37b1c3173227d6280",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.PolicyContextUnverified",
+      "batch": 20,
+      "sourceSha256": "8d36caa7cf151b4d353205c4117f55db4eda14432c5a28e4c5d77fb9e1e53626",
+      "translationSha256": "d8ab19cee5a61bddb1347b8b6eba406e7bec9e1da15ad97506d6416051960c72",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied",
+      "batch": 20,
+      "sourceSha256": "923ebca35234950ddb9e9412c13a2528f689635770e71e4de073f8b787397b8e",
+      "translationSha256": "9bfa89dd9c7e0add0c98f713a1458538aeb32a5d312c09d57db341f5c4088d07",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetInteropDecision.SecretAccessDenied",
+      "batch": 20,
+      "sourceSha256": "cb50911a7eb8075fed57b22041705f928df65e46ad039fc3aa635e71e3d677c1",
+      "translationSha256": "d869e4a70fc545174901a151d0e8ee9694ae423d07fdc3e0cab601baf2e07f80",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Rationale",
+      "batch": 20,
+      "sourceSha256": "5b752a4466612cfad31a817dc37b9909f6c8fb9e9960affe6162907812a93fcd",
+      "translationSha256": "51d4cd6f406aea8ce6b61a9c7df0d26b61f877082eb9a7afcfca9360ce69ea62",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CollectionHelpers.Title",
+      "batch": 20,
+      "sourceSha256": "24e2af2593c3ce7942199c277f672906c30c2eda03db147838e90e545b9edfa5",
+      "translationSha256": "72aaa9239236df3413274aabe940702f200c42d8691149513c876bb40c082e7d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Rationale",
+      "batch": 20,
+      "sourceSha256": "84ec86932efc69309d1b56b375edffe0a276e9e0b28a4205b5e5ba12d12f9783",
+      "translationSha256": "bfa0bded7f207965980bdea23c6b4c8b8cbc0cbfa98df3fbe950ce9a3ce768aa",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.CryptoSafeHelpers.Title",
+      "batch": 20,
+      "sourceSha256": "2a9cfc0c7a2e39af4c2dee6a578b202b93694f36aa78195054f52a8624274a8a",
+      "translationSha256": "59d26300d1875e6ce277c86d38ee083370675d6ac7a482c647bd6b47e9c91ddd",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Rationale",
+      "batch": 20,
+      "sourceSha256": "e6043b7e9943b3dc483c6f6c464c1ba507c02be21ce2b4e1cc932569e4036167",
+      "translationSha256": "8d6051d883f3dd9f29a931e71335b13eda1b94e3006cee9816750981ec8f17d0",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Title",
+      "batch": 20,
+      "sourceSha256": "df6ababcfed00a21f554966b3f6318938ef029d268b983e8e6ecb0c70f944ff6",
+      "translationSha256": "8ed1846bc1217ec424d82a9ff94cb5b9634a7a69d220ef867bcb8000db8a2010",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Rationale",
+      "batch": 20,
+      "sourceSha256": "e09d637678fef252dadbad2122803b5bf3b596ddefdc2de4cc7c80486975a962",
+      "translationSha256": "3918cf9bf9b1ee60328e2c5233ae92d93bb81646ec501f93d934dae8152f1abe",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.JsonHelpers.Title",
+      "batch": 20,
+      "sourceSha256": "de61f7f7020f786671993a3a34a285737c710c55eaa737c5100a1409a8d12066",
+      "translationSha256": "12ad49d9dd39c26723b767836758b07bd2c6c1a087b31922d603d597f7d34265",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Rationale",
+      "batch": 20,
+      "sourceSha256": "61fa1a2d7461188e5138b724b0f272586cbf64c0783be5fdf366d5c3175ab008",
+      "translationSha256": "493994be89351ab9c44e483726f09d01369d1bdcf9aa33ad8c06c9bb0a369230",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.LegacyCasInterop.Title",
+      "batch": 20,
+      "sourceSha256": "1322306de82705180a88030b783f7661b9da47f2b0cd73e897061a613bebe8fe",
+      "translationSha256": "83b18c4efe1485812bff3cc84e7996428b170eb7feb0b011bf4b098874ac8387",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Rationale",
+      "batch": 20,
+      "sourceSha256": "898d56a298ab563e27f0eb16ed577088378cd0dccf0c2ac76907501d4e924e27",
+      "translationSha256": "181ce116b55ebb41a68e878fcda9024a80324bbb2b81934ea3379173f8c76f8f",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.RegexHelpers.Title",
+      "batch": 20,
+      "sourceSha256": "1147192bbbe1c642223bef8607162adbb3e98f6da5bf2b2f6ace94e79c384224",
+      "translationSha256": "72046649fe6499cd6d5cc24b453164d7395d154e94a6e23338b17a1e2c46821e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Rationale",
+      "batch": 20,
+      "sourceSha256": "0fac8b5330fccc058e69a2bd07da941f6835d95cad3de461c020425d501ddc50",
+      "translationSha256": "6e9bb7552d457d2701bb8292b5f42d1bf5c66448f7bee6d74bc7e751f90143e3",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.SafeHttpHelpers.Title",
+      "batch": 20,
+      "sourceSha256": "532eaec0b446e71bfd103eff4a08f97a72c5c8450c15fbf22c985d804c1e6428",
+      "translationSha256": "059ada64543c1f517231653faee6a29c871d1e14795fd2c45e1854b48d9bea37",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale",
+      "batch": 20,
+      "sourceSha256": "620e4fb48f56f4a4ccaea3b8308b04438f47fb30153e4a7b507564bbe0a95831",
+      "translationSha256": "36fe42b132173ada4e8f4a073e069d60a34e00e1e83017ac4017be9beae4e43d",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.TaskPrimitives.Title",
+      "batch": 20,
+      "sourceSha256": "250fcb1afba42c7551e0927b228c60916c9c4515ee3dd285f671e92e6d896cd0",
+      "translationSha256": "700599a370e3516177b11de5e78ad46c3501efcb6108effd40925c42e1e6f595",
+      "verdict": "revise",
+      "reason": "Task/Async are technical primitive names in the source title; translating both loses their exact identifiers.",
+      "proposal": "Primitives Task/Async",
+      "proposalSha256": "2f2372150f7a1667544673b3af027dc61dd39e49eaf7edfb8ea02383edb3116f"
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Rationale",
+      "batch": 20,
+      "sourceSha256": "3858ab2715e412f17d5f23027b4ad5716e2baedd8419cf87be63b81511d1f9cb",
+      "translationSha256": "fcafcf71640c93887d50197011502471a2a4f3dde6e51be30c68ef62a69a7ece",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Title",
+      "batch": 20,
+      "sourceSha256": "c8fe78f792d2a624927850d8cd5edc90a9ab548c921c8fd15e8f8e147edf5b9f",
+      "translationSha256": "e3a8acf8382b21e659c13f618908ddaedef3cf41ad67179d9fde0094f659125f",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.AiToolingOptIn",
+      "batch": 20,
+      "sourceSha256": "d6962ef08771482cccc9efdd74104e87fc4373bccd044d15554fba2130e51822",
+      "translationSha256": "aaf12a3576939f9715114f2d42ff9ae5b4c040c74112b5b1e4b6d8c091d6cea9",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.DotNetPolicyControlled",
+      "batch": 20,
+      "sourceSha256": "8fa2d123bd35cc5de292ddd2e77d5512252d08e5b263275f987cdfa5a5b494bf",
+      "translationSha256": "12ef93bb228ee1505471df7e82e98f1d18b9bc7db77d97fd693df2058b0315d2",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.NativeFirstCore",
+      "batch": 20,
+      "sourceSha256": "a174c6966d60b5b2f2ae44d2e3405bc45bfded2805c460ce17f1ef7540b0d626",
+      "translationSha256": "f9806df22a642ec2c778f71dd7f3f62a6c837c2c8f61d4ff395b241835eb147e",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.ReleaseOutputDotNetStory",
+      "batch": 20,
+      "sourceSha256": "722596d8fc0097e9c921846133fe27aa48c488bd1a157fd9abd3383ba29fc5a7",
+      "translationSha256": "de8acf077f65cc64f7b0d3c2fe9877752349c5e5f54a531ac985b10a039ab646",
+      "verdict": "revise",
+      "reason": "The source refers to release outputs and a clear .NET consumption path; «versions publiées ... utilisables» loses the output-artifact and integration-path nuance.",
+      "proposal": "Les sorties de publication doivent offrir une voie claire d’utilisation depuis .NET, même lorsque l’exécutable est natif.",
+      "proposalSha256": "0e34ea627d0250b1950b39355ac4e381d2388632a7d2058248d509c1ca87f659"
+    },
+    {
+      "key": "Platform.Extensibility.Guardrail.SidecarLanguages",
+      "batch": 20,
+      "sourceSha256": "0e4f50a51725a29d9183628da7b799c1a3549424c563c26f385e6fbca045f816",
+      "translationSha256": "dbcf30abe215f6809310106e5ce89303919ddbd55a83c1f5c273ee56d8020813",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.IntegrationMode",
+      "batch": 20,
+      "sourceSha256": "dba415ccf149d3d9bd3f4b0d41dd222021a73ec82b3f94af3e17adce5496acd1",
+      "translationSha256": "f8fa7eb9f1cdb9c8f2bf0ac497d45eaf2435d1b2c5c99f77376e5138d3be20fc",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.OutputStory",
+      "batch": 20,
+      "sourceSha256": "0b4c7bcd4081200d50779eed947e76ad62b0741e4ecdeaefc51d1f3c0f2f48d0",
+      "translationSha256": "24e612a2c60d5ffaa22d39f845b9d2b2d96c88832c9b55b60a7fa10e3f700691",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.Title",
+      "batch": 20,
+      "sourceSha256": "e2b682a51db55d49c20bb5f2ec414af7206d19c3b6262978f313253159320c99",
+      "translationSha256": "329d26970beb3d2902c8b63f924460a9de0086326a40f2add8ca0c3351b194d4",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Language.CAbi.TrustBoundary",
+      "batch": 20,
+      "sourceSha256": "e1342a1c4888a52ef07b0de2b4c070a00587cfed0e2296c426e83ee1b12a23c8",
+      "translationSha256": "e437d8538ff0a7f0bb2c549702f18bcc26ec4257e363a532cc7532b093365346",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    },
+    {
+      "key": "Platform.Extensibility.Language.DotNet.IntegrationMode",
+      "batch": 20,
+      "sourceSha256": "3fea772be8cb7922a71e777d1f457a2db8f56aba43f62530bb6fc3f49a68a3c9",
+      "translationSha256": "e2caef0d92b123506899144e8959de084932670a9339a01b380551f5fd768f27",
+      "verdict": "accept",
+      "reason": "French wording conveys the source meaning and preserves protected syntax in this text review."
+    }
+  ]
+}

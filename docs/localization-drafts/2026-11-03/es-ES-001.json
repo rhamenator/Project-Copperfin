@@ -1,0 +1,370 @@
+{
+  "session": "/root/review_pt_revisions/es-ES-first-pass-000-003",
+  "model": "Codex separate instance (exact model ID not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "es-ES",
+  "input": [
+    {
+      "key": "VSIX.Package.Description",
+      "source": "Launches Copperfin Studio for Visual FoxPro-style assets and prepares the path toward native asset designers.",
+      "seed": "Inicia Copperfin Studio para activos de estilo Visual FoxPro y prepara el camino hacia diseñadores de activos nativos."
+    },
+    {
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "source": "Build plan creation failed.",
+      "seed": "No se pudo crear el plan de compilación."
+    },
+    {
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "source": "Invalid build configuration: {configuration}. Expected debug or release.",
+      "seed": "Configuración de compilación no válida: {configuration}. Se esperaba debug o release."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "source": "dotnet publish denied by external process policy: {error}",
+      "seed": "dotnet publish fue denegado por la política de procesos externos: {error}"
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailed",
+      "source": "dotnet publish failed for generated launcher.",
+      "seed": "dotnet publish falló para el iniciador generado."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailedToStart",
+      "source": "dotnet publish failed to start: {error}",
+      "seed": "dotnet publish no pudo iniciarse: {error}"
+    },
+    {
+      "key": "BuildHost.Error.GeneratedLauncherMissing",
+      "source": "Generated launcher executable was not found after publish.",
+      "seed": "No se encontró el ejecutable del iniciador generado después de la publicación."
+    },
+    {
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "source": "Security-enabled release builds require {environmentVariable} ({environmentValue}).",
+      "seed": "Los builds release con seguridad habilitada requieren {environmentVariable} ({environmentValue})."
+    },
+    {
+      "key": "BuildHost.Error.RequiredProjectAndOutput",
+      "source": "{projectOption} and {outputDirOption} are required.",
+      "seed": "Se requieren {projectOption} y {outputDirOption}."
+    },
+    {
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "source": "Security policy denied {permission} for role '{role}'.",
+      "seed": "La política de seguridad denegó {permission} para el rol '{role}'."
+    },
+    {
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "source": "Signing key reference validation failed: {error}",
+      "seed": "Falló la validación de la referencia de la clave de firma: {error}"
+    },
+    {
+      "key": "BuildHost.Error.UnknownOrIncompleteArgument",
+      "source": "Unknown or incomplete argument: {argument}",
+      "seed": "Argumento desconocido o incompleto: {argument}"
+    },
+    {
+      "key": "BuildHost.Prefix.Error",
+      "source": "error: ",
+      "seed": "error: "
+    },
+    {
+      "key": "BuildHost.Prefix.Warning",
+      "source": "warning: ",
+      "seed": "advertencia: "
+    },
+    {
+      "key": "BuildHost.Usage",
+      "source": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{externalIncludeRootOption} <directory>] [{runtimeHostOption} {runtimeHostValue}]",
+      "seed": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{externalIncludeRootOption} <directory>] [{runtimeHostOption} {runtimeHostValue}]"
+    },
+    {
+      "key": "BuildHost.Usage.LicenseStatus",
+      "source": "   or: {commandName} {licenseStatusOption}",
+      "seed": "   o: {commandName} {licenseStatusOption}"
+    },
+    {
+      "key": "BuildHost.Warning.ProcessHardening",
+      "source": "warning: {message}",
+      "seed": "advertencia: {message}"
+    },
+    {
+      "key": "Licensing.Error.ExpectedTopLevelObject",
+      "source": "Expected a top-level JSON object.",
+      "seed": "Se esperaba un objeto JSON de nivel superior."
+    },
+    {
+      "key": "Licensing.Error.NoFields",
+      "source": "The license file has no fields.",
+      "seed": "El archivo de licencia no tiene campos."
+    },
+    {
+      "key": "Licensing.Error.ExpectedJsonKey",
+      "source": "Expected a JSON key string.",
+      "seed": "Se esperaba una cadena de clave JSON."
+    },
+    {
+      "key": "Licensing.Error.ExpectedColonAfterKey",
+      "source": "Expected ':' after the JSON key.",
+      "seed": "Se esperaba ':' después de la clave JSON."
+    },
+    {
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "source": "The license payload object is malformed.",
+      "seed": "El objeto de datos de la licencia tiene un formato incorrecto."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureAlgorithmField",
+      "source": "The signature_algorithm field is malformed.",
+      "seed": "El campo signature_algorithm tiene un formato incorrecto."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureField",
+      "source": "The signature field is malformed.",
+      "seed": "El campo signature tiene un formato incorrecto."
+    },
+    {
+      "key": "Licensing.Error.UnexpectedTopLevelKey",
+      "source": "Unexpected top-level key: {argument}",
+      "seed": "Clave de nivel superior inesperada: {argument}"
+    },
+    {
+      "key": "Licensing.Error.ExpectedCommaOrObjectEnd",
+      "source": "Expected ',' or '}' in the license file.",
+      "seed": "Se esperaba ',' o '}' en el archivo de licencia."
+    },
+    {
+      "key": "Licensing.Error.MissingRequiredField",
+      "source": "A required license field is missing.",
+      "seed": "Falta un campo requerido de la licencia."
+    },
+    {
+      "key": "Licensing.Error.FileNotFoundAtConfiguredPath",
+      "source": "The license file was not found at the explicitly configured path.",
+      "seed": "No se encontró el archivo de licencia en la ruta configurada explícitamente."
+    },
+    {
+      "key": "Licensing.Error.FileOpenFailed",
+      "source": "The license file exists but could not be opened.",
+      "seed": "El archivo de licencia existe, pero no se pudo abrir."
+    },
+    {
+      "key": "Licensing.Error.UnsupportedSignatureAlgorithm",
+      "source": "Unsupported signature algorithm: {argument}",
+      "seed": "Algoritmo de firma no compatible: {argument}"
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidSignerKeyId",
+      "source": "The signer_key_id field is missing or invalid.",
+      "seed": "Falta el campo signer_key_id o no es válido."
+    },
+    {
+      "key": "Licensing.Error.UnknownSignerKeyId",
+      "source": "Unknown signer_key_id: {argument}",
+      "seed": "signer_key_id desconocido: {argument}"
+    },
+    {
+      "key": "Licensing.Error.InvalidSignatureEncoding",
+      "source": "The signature is not valid base64 containing 64 bytes.",
+      "seed": "La firma no es una cadena base64 válida que contenga 64 bytes."
+    },
+    {
+      "key": "Licensing.Error.SignatureVerificationFailed",
+      "source": "Signature verification failed.",
+      "seed": "Falló la verificación de la firma."
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidLicenseType",
+      "source": "The license_type field is missing or invalid.",
+      "seed": "Falta el campo license_type o no es válido."
+    },
+    {
+      "key": "Licensing.Error.IntegerFieldOutOfRange",
+      "source": "The integer license field is out of range: {argument}",
+      "seed": "El campo entero de licencia está fuera de rango: {argument}"
+    },
+    {
+      "key": "Licensing.Error.PerpetualVersionMissing",
+      "source": "The perpetual license is missing perpetual_max_major_version.",
+      "seed": "A la licencia perpetua le falta perpetual_max_major_version."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryMissing",
+      "source": "The subscription license is missing subscription_expires.",
+      "seed": "A la licencia de suscripción le falta subscription_expires."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryInvalid",
+      "source": "The subscription license has an invalid subscription_expires value.",
+      "seed": "La licencia de suscripción tiene un valor subscription_expires no válido."
+    },
+    {
+      "key": "Licensing.Error.CurrentDateInvalid",
+      "source": "The current date is not canonical YYYY-MM-DD.",
+      "seed": "La fecha actual no tiene el formato canónico YYYY-MM-DD."
+    }
+  ],
+  "entries": [
+    {
+      "key": "VSIX.Package.Description",
+      "translation": "Inicia Copperfin Studio para recursos al estilo de Visual FoxPro y prepara el camino hacia diseñadores nativos de recursos."
+    },
+    {
+      "key": "BuildHost.Error.BuildPlanCreationFailed",
+      "translation": "No se pudo crear el plan de compilación."
+    },
+    {
+      "key": "BuildHost.Error.InvalidConfiguration",
+      "translation": "Configuración de compilación no válida: {configuration}. Se esperaba debug o release."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishDenied",
+      "translation": "dotnet publish fue denegado por la política de procesos externos: {error}"
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailed",
+      "translation": "dotnet publish falló para el lanzador generado."
+    },
+    {
+      "key": "BuildHost.Error.DotnetPublishFailedToStart",
+      "translation": "dotnet publish no pudo iniciarse: {error}"
+    },
+    {
+      "key": "BuildHost.Error.GeneratedLauncherMissing",
+      "translation": "No se encontró el ejecutable del lanzador generado después de la publicación."
+    },
+    {
+      "key": "BuildHost.Error.ReleaseSigningKeyRequired",
+      "translation": "Las compilaciones de versión final con seguridad habilitada requieren {environmentVariable} ({environmentValue})."
+    },
+    {
+      "key": "BuildHost.Error.RequiredProjectAndOutput",
+      "translation": "Se requieren {projectOption} y {outputDirOption}."
+    },
+    {
+      "key": "BuildHost.Error.SecurityPolicyDenied",
+      "translation": "La política de seguridad denegó {permission} para el rol '{role}'."
+    },
+    {
+      "key": "BuildHost.Error.SigningKeyValidationFailed",
+      "translation": "Falló la validación de la referencia de la clave de firma: {error}"
+    },
+    {
+      "key": "BuildHost.Error.UnknownOrIncompleteArgument",
+      "translation": "Argumento desconocido o incompleto: {argument}"
+    },
+    {
+      "key": "BuildHost.Prefix.Error",
+      "translation": "error: "
+    },
+    {
+      "key": "BuildHost.Prefix.Warning",
+      "translation": "advertencia: "
+    },
+    {
+      "key": "BuildHost.Usage",
+      "translation": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{externalIncludeRootOption} <directory>] [{runtimeHostOption} {runtimeHostValue}]"
+    },
+    {
+      "key": "BuildHost.Usage.LicenseStatus",
+      "translation": "   o: {commandName} {licenseStatusOption}"
+    },
+    {
+      "key": "BuildHost.Warning.ProcessHardening",
+      "translation": "advertencia: {message}"
+    },
+    {
+      "key": "Licensing.Error.ExpectedTopLevelObject",
+      "translation": "Se esperaba un objeto JSON de nivel superior."
+    },
+    {
+      "key": "Licensing.Error.NoFields",
+      "translation": "El archivo de licencia no tiene campos."
+    },
+    {
+      "key": "Licensing.Error.ExpectedJsonKey",
+      "translation": "Se esperaba una cadena de texto para la clave JSON."
+    },
+    {
+      "key": "Licensing.Error.ExpectedColonAfterKey",
+      "translation": "Se esperaba ':' después de la clave JSON."
+    },
+    {
+      "key": "Licensing.Error.MalformedPayloadObject",
+      "translation": "El objeto de datos de la licencia tiene un formato incorrecto."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureAlgorithmField",
+      "translation": "El campo signature_algorithm tiene un formato incorrecto."
+    },
+    {
+      "key": "Licensing.Error.MalformedSignatureField",
+      "translation": "El campo signature tiene un formato incorrecto."
+    },
+    {
+      "key": "Licensing.Error.UnexpectedTopLevelKey",
+      "translation": "Clave inesperada en el nivel superior: {argument}"
+    },
+    {
+      "key": "Licensing.Error.ExpectedCommaOrObjectEnd",
+      "translation": "Se esperaba ',' o '}' en el archivo de licencia."
+    },
+    {
+      "key": "Licensing.Error.MissingRequiredField",
+      "translation": "Falta un campo obligatorio de la licencia."
+    },
+    {
+      "key": "Licensing.Error.FileNotFoundAtConfiguredPath",
+      "translation": "No se encontró el archivo de licencia en la ruta configurada explícitamente."
+    },
+    {
+      "key": "Licensing.Error.FileOpenFailed",
+      "translation": "El archivo de licencia existe, pero no se pudo abrir."
+    },
+    {
+      "key": "Licensing.Error.UnsupportedSignatureAlgorithm",
+      "translation": "Algoritmo de firma no compatible: {argument}"
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidSignerKeyId",
+      "translation": "Falta el campo signer_key_id o no es válido."
+    },
+    {
+      "key": "Licensing.Error.UnknownSignerKeyId",
+      "translation": "signer_key_id desconocido: {argument}"
+    },
+    {
+      "key": "Licensing.Error.InvalidSignatureEncoding",
+      "translation": "La firma no es una cadena base64 válida que contenga 64 bytes."
+    },
+    {
+      "key": "Licensing.Error.SignatureVerificationFailed",
+      "translation": "Falló la verificación de la firma."
+    },
+    {
+      "key": "Licensing.Error.MissingOrInvalidLicenseType",
+      "translation": "Falta el campo license_type o no es válido."
+    },
+    {
+      "key": "Licensing.Error.IntegerFieldOutOfRange",
+      "translation": "El campo entero de licencia está fuera de rango: {argument}"
+    },
+    {
+      "key": "Licensing.Error.PerpetualVersionMissing",
+      "translation": "A la licencia perpetua le falta perpetual_max_major_version."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryMissing",
+      "translation": "A la licencia de suscripción le falta subscription_expires."
+    },
+    {
+      "key": "Licensing.Error.SubscriptionExpiryInvalid",
+      "translation": "La licencia de suscripción tiene un valor subscription_expires no válido."
+    },
+    {
+      "key": "Licensing.Error.CurrentDateInvalid",
+      "translation": "La fecha actual no tiene el formato canónico YYYY-MM-DD."
+    }
+  ]
+}

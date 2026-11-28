@@ -1,0 +1,330 @@
+{
+  "session": "codex:/root/review_es_revisions/fr-FR-first-pass-018-2026-11-03-a6561dd7-b42a-4e74-9cf0-813f609d844c",
+  "model": "Codex (GPT-6 family; exact runtime variant not exposed)",
+  "reviewStatus": "unreviewed",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "Platform.Database.Connector.Dbf.SchemaShape",
+      "source": "tabular"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.Title",
+      "source": "DBF/CDX/FPT Native Storage"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.TranslationStory",
+      "source": "Copperfin should treat legacy xBase storage as a first-class runtime and design-time store."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.AccessMode",
+      "source": "remote service"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.SchemaShape",
+      "source": "document"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.Title",
+      "source": "HTTP/JSON Data APIs"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.TranslationStory",
+      "source": "JSON-backed services need schema discovery and dynamic projection to feel browseable through xBase-style commands."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.AccessMode",
+      "source": "network document engine"
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.SchemaShape",
+      "source": "document"
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.Title",
+      "source": "MongoDB/JSON Document Stores"
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.TranslationStory",
+      "source": "Document stores need projection and predicate translation from FoxPro-style queries into dynamic document pipelines."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.AccessMode",
+      "source": "network SQL engine"
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.SchemaShape",
+      "source": "tabular"
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.Title",
+      "source": "Oracle"
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.TranslationStory",
+      "source": "Oracle stays in the first-class relational path even when syntax normalization is required."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.AccessMode",
+      "source": "network SQL engine"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.SchemaShape",
+      "source": "tabular"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.Title",
+      "source": "PostgreSQL"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.TranslationStory",
+      "source": "FoxPro-style SQL can map to PostgreSQL with a deterministic relational translator and optional extensions such as pgvector."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.AccessMode",
+      "source": "embedded SQL engine"
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.SchemaShape",
+      "source": "tabular"
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.Title",
+      "source": "SQLite"
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.TranslationStory",
+      "source": "FoxPro-style SQL can be translated through a deterministic SQL dialect mapper for straightforward relational workloads."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.AccessMode",
+      "source": "network SQL engine"
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.SchemaShape",
+      "source": "tabular"
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.Title",
+      "source": "SQL Server"
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.TranslationStory",
+      "source": "FoxPro-style SQL can map to SQL Server through a deterministic relational translator with stored procedure and security-policy support."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.AccessMode",
+      "source": "service or extension"
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.SchemaShape",
+      "source": "vector"
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.Title",
+      "source": "Vector/Embedding Stores"
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.TranslationStory",
+      "source": "Vector stores need semantic-search operators, embedding pipelines, and optional AI-assisted query planning around deterministic connector rules."
+    },
+    {
+      "key": "Platform.Database.Guardrail.AiPlanningOptional",
+      "source": "AI-assisted query planning stays optional, policy-controlled, and outside the trusted execution core."
+    },
+    {
+      "key": "Platform.Database.Guardrail.BrowseableSchemaHints",
+      "source": "Document and vector backends should expose browseable schema hints even when the source is dynamic or sparse."
+    },
+    {
+      "key": "Platform.Database.Guardrail.DeterministicTranslatorsFirst",
+      "source": "Deterministic translators come first for relational backends and other straightforward mappings."
+    },
+    {
+      "key": "Platform.Database.Guardrail.ExplainableConnectorFailures",
+      "source": "Connector failures must be explainable so developers know when Copperfin translated a query directly and when it needed a planner."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Complexity",
+      "source": "medium-to-high"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.SourceShape",
+      "source": "FoxPro-style SQL"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Strategy",
+      "source": "Lower simple selects and filters deterministically, then allow optional AI assistance for ambiguous nested-document reshaping."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.TargetShape",
+      "source": "document database pipeline"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Title",
+      "source": "Fox SQL To Document Query Plan"
+    }
+  ],
+  "entries": [
+    {
+      "key": "Platform.Database.Connector.Dbf.SchemaShape",
+      "translation": "tabulaire"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.Title",
+      "translation": "Stockage natif DBF/CDX/FPT"
+    },
+    {
+      "key": "Platform.Database.Connector.Dbf.TranslationStory",
+      "translation": "Copperfin doit traiter le stockage xBase hérité comme un stockage de premier plan à l’exécution et lors de la conception."
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.AccessMode",
+      "translation": "service distant"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.SchemaShape",
+      "translation": "document"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.Title",
+      "translation": "API de données HTTP/JSON"
+    },
+    {
+      "key": "Platform.Database.Connector.JsonApi.TranslationStory",
+      "translation": "Les services reposant sur JSON ont besoin de découvrir les schémas et de projeter les données dynamiquement pour être explorables au moyen de commandes de type xBase."
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.AccessMode",
+      "translation": "moteur de documents en réseau"
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.SchemaShape",
+      "translation": "document"
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.Title",
+      "translation": "Stockages de documents MongoDB/JSON"
+    },
+    {
+      "key": "Platform.Database.Connector.Mongodb.TranslationStory",
+      "translation": "Les stockages de documents nécessitent la traduction des projections et des prédicats des requêtes de type FoxPro en pipelines de documents dynamiques."
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.AccessMode",
+      "translation": "moteur SQL en réseau"
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.SchemaShape",
+      "translation": "tabulaire"
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.Title",
+      "translation": "Oracle"
+    },
+    {
+      "key": "Platform.Database.Connector.Oracle.TranslationStory",
+      "translation": "Oracle conserve une prise en charge relationnelle de premier plan, même lorsqu’une normalisation de la syntaxe est nécessaire."
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.AccessMode",
+      "translation": "moteur SQL en réseau"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.SchemaShape",
+      "translation": "tabulaire"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.Title",
+      "translation": "PostgreSQL"
+    },
+    {
+      "key": "Platform.Database.Connector.Postgresql.TranslationStory",
+      "translation": "Le SQL de type FoxPro peut être adapté à PostgreSQL au moyen d’un traducteur relationnel déterministe et d’extensions facultatives comme pgvector."
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.AccessMode",
+      "translation": "moteur SQL intégré"
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.SchemaShape",
+      "translation": "tabulaire"
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.Title",
+      "translation": "SQLite"
+    },
+    {
+      "key": "Platform.Database.Connector.Sqlite.TranslationStory",
+      "translation": "Le SQL de type FoxPro peut être traduit par un adaptateur déterministe de dialectes SQL pour les charges de travail relationnelles simples."
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.AccessMode",
+      "translation": "moteur SQL en réseau"
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.SchemaShape",
+      "translation": "tabulaire"
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.Title",
+      "translation": "SQL Server"
+    },
+    {
+      "key": "Platform.Database.Connector.SqlServer.TranslationStory",
+      "translation": "Le SQL de type FoxPro peut être adapté à SQL Server par un traducteur relationnel déterministe prenant en charge les procédures stockées et les politiques de sécurité."
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.AccessMode",
+      "translation": "service ou extension"
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.SchemaShape",
+      "translation": "vectoriel"
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.Title",
+      "translation": "Stockages vectoriels et d’embeddings"
+    },
+    {
+      "key": "Platform.Database.Connector.Vector.TranslationStory",
+      "translation": "Les stockages vectoriels nécessitent des opérateurs de recherche sémantique, des pipelines d’embeddings et une planification facultative des requêtes assistée par l’IA, dans le respect des règles déterministes des connecteurs."
+    },
+    {
+      "key": "Platform.Database.Guardrail.AiPlanningOptional",
+      "translation": "La planification des requêtes assistée par l’IA reste facultative, contrôlée par des politiques et extérieure au noyau d’exécution de confiance."
+    },
+    {
+      "key": "Platform.Database.Guardrail.BrowseableSchemaHints",
+      "translation": "Les backends de documents et de vecteurs doivent exposer des indications de schéma explorables, même lorsque la source est dynamique ou clairsemée."
+    },
+    {
+      "key": "Platform.Database.Guardrail.DeterministicTranslatorsFirst",
+      "translation": "Les traducteurs déterministes ont la priorité pour les backends relationnels et les autres correspondances simples."
+    },
+    {
+      "key": "Platform.Database.Guardrail.ExplainableConnectorFailures",
+      "translation": "Les échecs des connecteurs doivent être explicables pour que les développeurs sachent quand Copperfin a traduit une requête directement et quand un planificateur était nécessaire."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Complexity",
+      "translation": "moyenne à élevée"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.SourceShape",
+      "translation": "SQL de type FoxPro"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Strategy",
+      "translation": "Traduire de manière déterministe les requêtes SELECT et les filtres simples en requêtes documentaires, puis autoriser une aide facultative de l’IA pour les restructurations ambiguës de documents imbriqués."
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.TargetShape",
+      "translation": "pipeline de base de données documentaire"
+    },
+    {
+      "key": "Platform.Database.QueryPath.FoxSqlDocument.Title",
+      "translation": "De Fox SQL à un plan de requête documentaire"
+    }
+  ]
+}

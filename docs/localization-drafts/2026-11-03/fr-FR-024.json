@@ -1,0 +1,328 @@
+{
+  "session": "b8577a1b-569e-4722-affe-c8bc50af4cec",
+  "locale": "fr-FR",
+  "input": [
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+      "source": "The provider cannot safely push down these predicates"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+      "source": "Some predicates require local residual evaluation"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.None",
+      "source": "No bitmap fallback was selected"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+      "source": "Fewer than two usable bitmap candidates were available"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate",
+      "source": "A bitmap candidate uses an unsupported predicate"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.DuplicateOrder",
+      "source": "Bitmap candidates reuse the same order"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+      "source": "Bitmap predicates cannot be combined safely"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown",
+      "source": "Bitmap memory risk could not be bounded"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
+      "source": "Bitmap candidates exceed the memory budget"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+      "source": "Pattern field '{fieldName}' matched order '{orderName}'"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "source": "Pattern not recognized for optimization"
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.ManifestMissing",
+      "source": "Copperfin manifest was not found beside the launcher."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+      "source": "Copperfin runtime host was not found beside the launcher."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
+      "source": "Copperfin runtime host could not be started."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ManifestMissing",
+      "source": "Copperfin launcher verification metadata was not found."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryMissing",
+      "source": "Copperfin launcher verification metadata has no artifact inventory."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryInvalid",
+      "source": "Copperfin launcher verification metadata is invalid: {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryIncomplete",
+      "source": "Copperfin launcher verification metadata is incomplete."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ArtifactRejected",
+      "source": "Copperfin launcher artifact was rejected before execution: {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.DigestMismatch",
+      "source": "Copperfin launcher artifact failed integrity verification: {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.PublicIdentityMismatch",
+      "source": "Copperfin launcher public identity does not match its verification metadata."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustRequired",
+      "source": "Copperfin launcher trust metadata was not found or is incomplete."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+      "source": "Copperfin launcher trust metadata was rejected before execution: {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner",
+      "source": "Copperfin launcher trust metadata names an unknown signer."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustInvalid",
+      "source": "Copperfin launcher trust metadata failed signature verification."
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+      "source": "Manual port required for FoxPro xAsset method: {methodIdentity}"
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+      "source": "Unsupported FoxPro statement: {statementText}"
+    },
+    {
+      "key": "Runtime.Package.Error.CopyFileFailed",
+      "source": "Unable to copy file to: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ContentDestinationRejected",
+      "source": "Package asset destination must be a direct path inside the content root: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ContentRootRejected",
+      "source": "Package content root must be the direct content directory inside the package root: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousProjectAssetPath",
+      "source": "Multiple case-insensitive project asset paths match: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.DuplicateStagedAssetPath",
+      "source": "Multiple project assets resolve to the same package destination: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousCompanionPath",
+      "source": "Multiple case-insensitive companion files match: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateContentRootFailed",
+      "source": "Unable to create content root."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateDirectoryFailed",
+      "source": "Unable to create directory: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateFileFailed",
+      "source": "Unable to create file: {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateLauncherDirectoryFailed",
+      "source": "Unable to create launcher directory."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+      "source": "Unable to create native wrapper build directory."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+      "source": "Unable to create native wrapper directory."
+    },
+    {
+      "key": "Runtime.Package.Error.CreatePackageRootFailed",
+      "source": "Unable to create package root."
+    }
+  ],
+  "entries": [
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+      "translation": "Le fournisseur ne peut pas déléguer ces prédicats en toute sécurité"
+    },
+    {
+      "key": "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+      "translation": "Certains prédicats nécessitent une évaluation résiduelle locale"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.None",
+      "translation": "Aucun repli bitmap n'a été sélectionné"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+      "translation": "Moins de deux candidats bitmap exploitables étaient disponibles"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate",
+      "translation": "Un candidat bitmap utilise un prédicat non pris en charge"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.DuplicateOrder",
+      "translation": "Des candidats bitmap réutilisent le même ordre"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+      "translation": "Les prédicats bitmap ne peuvent pas être combinés en toute sécurité"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown",
+      "translation": "Le risque lié à la mémoire bitmap n'a pas pu être borné"
+    },
+    {
+      "key": "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
+      "translation": "Les candidats bitmap dépassent le budget mémoire"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+      "translation": "Le champ de motif '{fieldName}' correspond à l'ordre '{orderName}'"
+    },
+    {
+      "key": "Runtime.IndexSeek.PlanDecision.PatternNotRecognized",
+      "translation": "Motif non reconnu pour l'optimisation"
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.ManifestMissing",
+      "translation": "Le manifeste Copperfin est introuvable à côté du lanceur."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+      "translation": "L'hôte d'exécution Copperfin est introuvable à côté du lanceur."
+    },
+    {
+      "key": "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
+      "translation": "Impossible de démarrer l'hôte d'exécution Copperfin."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ManifestMissing",
+      "translation": "Les métadonnées de vérification du lanceur Copperfin sont introuvables."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryMissing",
+      "translation": "Les métadonnées de vérification du lanceur Copperfin ne contiennent aucun inventaire des artefacts."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryInvalid",
+      "translation": "Les métadonnées de vérification du lanceur Copperfin sont non valides : {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.InventoryIncomplete",
+      "translation": "Les métadonnées de vérification du lanceur Copperfin sont incomplètes."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.ArtifactRejected",
+      "translation": "L'artefact du lanceur Copperfin a été rejeté avant l'exécution : {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.DigestMismatch",
+      "translation": "L'artefact du lanceur Copperfin a échoué à la vérification d'intégrité : {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.PublicIdentityMismatch",
+      "translation": "L'identité publique du lanceur Copperfin ne correspond pas à ses métadonnées de vérification."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustRequired",
+      "translation": "Les métadonnées de confiance du lanceur Copperfin sont introuvables ou incomplètes."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+      "translation": "Les métadonnées de confiance du lanceur Copperfin ont été rejetées avant l'exécution : {path}"
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner",
+      "translation": "Les métadonnées de confiance du lanceur Copperfin désignent un signataire inconnu."
+    },
+    {
+      "key": "Runtime.Package.LauncherGuard.Error.TrustInvalid",
+      "translation": "Les métadonnées de confiance du lanceur Copperfin ont échoué à la vérification de signature."
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+      "translation": "Portage manuel requis pour la méthode xAsset FoxPro : {methodIdentity}"
+    },
+    {
+      "key": "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+      "translation": "Instruction FoxPro non prise en charge : {statementText}"
+    },
+    {
+      "key": "Runtime.Package.Error.CopyFileFailed",
+      "translation": "Impossible de copier le fichier vers : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ContentDestinationRejected",
+      "translation": "La destination de la ressource du package doit être un chemin direct à l'intérieur de la racine du contenu : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.ContentRootRejected",
+      "translation": "La racine du contenu du package doit être le répertoire de contenu direct à l'intérieur de la racine du package : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousProjectAssetPath",
+      "translation": "Plusieurs chemins de ressources du projet correspondent sans tenir compte de la casse : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.DuplicateStagedAssetPath",
+      "translation": "Plusieurs ressources du projet se résolvent vers la même destination de package : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.AmbiguousCompanionPath",
+      "translation": "Plusieurs fichiers associés correspondent sans tenir compte de la casse : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateContentRootFailed",
+      "translation": "Impossible de créer la racine du contenu."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateDirectoryFailed",
+      "translation": "Impossible de créer le répertoire : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateFileFailed",
+      "translation": "Impossible de créer le fichier : {path}"
+    },
+    {
+      "key": "Runtime.Package.Error.CreateLauncherDirectoryFailed",
+      "translation": "Impossible de créer le répertoire du lanceur."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+      "translation": "Impossible de créer le répertoire de build de l'enveloppe native."
+    },
+    {
+      "key": "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+      "translation": "Impossible de créer le répertoire de l'enveloppe native."
+    },
+    {
+      "key": "Runtime.Package.Error.CreatePackageRootFailed",
+      "translation": "Impossible de créer la racine du package."
+    }
+  ]
+}
