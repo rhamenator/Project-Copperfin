@@ -273,6 +273,12 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
         result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidKeyExpression");
         return result;
     }
+    if (std::all_of(key_expression.begin(), key_expression.end(), [](unsigned char ch) {
+            return std::isspace(ch) != 0;
+        })) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.EmptyKeyExpression");
+        return result;
+    }
 
     // cdx_header.cpp's own reader treats key_length == 0 or > page_size
     // as unparseable (it can't locate a tag directory at all in that

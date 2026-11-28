@@ -3120,6 +3120,7 @@ void test_create_vfp_cdx_single_tag_index_file_rejects_unreadable_key_expression
         embedded_nul_expression,
         std::string("NAME\x01", 5U),
         std::string("NAME\x7F", 5U),
+        " \t\r\n\v\f",
     };
     for (const std::string& expression : rejected_expressions) {
         {

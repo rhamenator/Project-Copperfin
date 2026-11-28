@@ -26,17 +26,22 @@ bytes that its strict reader rejects. The current working tree validates writer
 expressions with the reader's byte rules, preserves high-bit code-page bytes,
 adds localized errors, and verifies rejection leaves preexisting CDX bytes and
 the DBF production-index flag unchanged. Four-locale JSON parsing and the
-localization test pass with the new writer diagnostic.
+localization test pass with the new writer diagnostic. Review #6 on exact
+pushed head `99c563538` found whitespace-only key expressions were still
+accepted although reader trimming reduces them to empty. The current repair
+rejects expressions that are all whitespace under the same `std::isspace`
+rule, with a regression requiring the sentinel CDX and clear DBF index flag
+to remain unchanged.
 
-Release build: `/tmp/copperfin-cdx-5620-release`. Both review repairs build and
-`test_vfp_assets` passes 1/1 on each repaired tree; the current expression
-repair passes `test_vfp_assets` and `test_localization` 2/2. The preceding tree passed
+Release build: `/tmp/copperfin-cdx-5620-release`. All three review repairs
+build and `test_vfp_assets` passes 1/1 on each repaired tree; the preceding
+expression-byte repair passes `test_vfp_assets` and `test_localization` 2/2. The earlier tree passed
 `test_vfp_assets`, `test_prg_engine_ordered_iteration`,
 `test_prg_engine_seek_index`, `test_prg_engine_numeric_behavior`, and
 `test_localization` 5/5. Changelog validation reports 281 fragments valid and
 `git diff --check` passes. Review, repair, and test evidence is retained in
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
-(SHA-256 `03dc99985221921232896e2291f7c7e7acc38f28dde7a7c7406dbf89743c9316`).
+(SHA-256 `6009a67ebde9fbf5ca9edc506aa12c9202b4008d46e1baa2173af0b297f6606f`).
 
 This is metadata recovery only; no runtime `SET ORDER`, ordered scan, or `SEEK`
 claim is established. After #5620 review/merge, continue to #6334 using the
