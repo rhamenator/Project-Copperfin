@@ -1,93 +1,49 @@
 # Agent Handoff
 
-## Active slice — compound CDX metadata containment (2026-11-27)
+## Active slice — compound CDX metadata containment (#5620, PR #7354)
 
-Continue in `/home/rich/.codex/worktrees/cdx-compound-fail-closed-5620/Project-Copperfin`
-on `fix/cdx-compound-fail-closed-5620`, based on origin/main
-`b569a70d1957fc9a326039d74feed9ee0aca0a97`. Owner-prioritized issue #5620 is
-the first step before order/SEEK #6334 and print-expression #6413. Against the
-committed real VFP9 fixture `tests/fixtures/vfp9-descending-observation-output/`
-(CDX SHA-256 `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`,
-DBF SHA-256 `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`),
-the current parser exposed three bogus names rather than the two VFP9 tags.
-The bounded fix rejects a multi-entry root directory with invalid or duplicate
-page associations or a declared pointer array that cannot fit on its page,
-localizes the diagnostic, and keeps DBF reading available while omitting the
-untrusted index descriptor. It does not decode
-the tag directory or resolve ordered scans/SEEK. Production, focused test,
-locale, documentation, traceability and changelog edits are complete. GNU
-15.2 Debug `test_vfp_assets` passes, including the retained real-fixture
-rejection and companion-warning assertions. The PR branch includes the focused
-overfull-root regression and the required traceability/changelog updates. PR
-#7353 is a separate unmerged fixture-evidence PR at
-`d5bb564e9e877b774da0e021b5a4caec58689d05`; its Windows MSVC shard failed
-`test_access_saveastext_export`, its inventory artifact was missing at the last
-diagnosis, and it remains separate from this slice. The signed+DCO
-implementation commit is `f38bea136fd39f2080a9f6e2ce9bc051c126dedc`; the
-signed+DCO overfull-root fix is `1601897c4bff90e3af373ff52d5ff690179fd244`,
-both pushed to PR #7354 based on
-`b569a70d1957fc9a326039d74feed9ee0aca0a97`. The owner requested and posted a
-local Claude Code review note on #7354. Its possible over-rejection remains an
-unverified lead: this bounded PR intentionally qualifies unsupported or
-unbound metadata as incomplete rather than guessing tag descriptors, while
-the existing synthetic two-tag test proves the positively bound layout still
-parses. The page-fit check now describes only its proven page-boundary limit;
-the unknown tag-name tail layout is not inferred. This review repair also
-strengthens the fixture test to assert the exact localized error, derives the
-root offset from the CDX file header, and restores alphabetical catalog-key
-order. Signed+DCO review-correction commit
-`fb2efdd61aa796dbd28a78f9f958685dcb5c1089` is pushed as the latest product and
-test head. Constrained GNU 15.2 Debug build and focused `test_vfp_assets` pass
-1/1 (3.31s); `test_localization` passes 1/1 (14.56s); all four locale JSON
-files parse and `git diff --check` is clean. GitHub confirms PR #7354 is at
-`fb2efdd61aa796dbd28a78f9f958685dcb5c1089`; its new hosted checks are in
-progress. The owner-authorized `@codex review` trigger was posted as comment
-`7231336882`; no exact-head review is recorded yet. The earlier checks on
-`1601897c4bff90e3af373ff52d5ff690179fd244` do not qualify this updated head.
-PR #7353's failing Windows test is under separate diagnosis:
-`test_access_saveastext_export` failed three assertions around its
-missing-database subprocess; the inventory-coverage failure is downstream of
-that shard missing its after-inventory artifact. The same test passed on PR
-#7354 at 31.64 seconds, so the cause remains unresolved. Finish #7354's
-exact-head adversarial review and hosted checks, resolve actual review threads,
-and merge before splitting off a bounded #7353 failure investigation; owner
-also queued PRs #7247 and #7248 after #7353–#7354 merge.
-Local build/test evidence is in this worktree's `build/` and
-`build/Testing/Temporary/LastTest.log`; fixture hashes are retained above.
-This work stage took approximately 25 minutes. NEXT: preserve this status at
-the next checkpoint; obtain the clean Codex review and green hosted checks for
-the then-current exact head, resolve all actual review threads, and merge only
-after those gates pass. Keep issue #5620 open and prioritize structural
-compound-tag
-decoding before claiming a promo-video baseline; #6334 ordered
-`SET ORDER`/scan/SEEK and #6413 print-expression remain queued. Preserve the
-PR #7353 checkout.
+Continue in /home/rich/.codex/worktrees/cdx-compound-fail-closed-5620/Project-Copperfin
+on fix/cdx-compound-fail-closed-5620, now updated from base
+b569a70d1957fc9a326039d74feed9ee0aca0a97 to
+origin/main merge f13f960e863ea3c1860b564d057827b214864b72. Owner-prioritized
+#5620 is first, followed by order/SEEK #6334 and print-expression #6413.
+Against the retained real VFP9 fixture
+tests/fixtures/vfp9-descending-observation-output/ (CDX SHA-256
+6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520,
+DBF SHA-256
+fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab), the
+bounded fix rejects an unbound multi-entry root directory, localizes its
+diagnostic, and keeps DBF reading available while omitting the untrusted index
+descriptor. It does not decode the tag directory or resolve ordered scans/SEEK.
+Focused GNU 15.2 Debug test_vfp_assets and test_localization pass; four
+locale catalogs parse. PR #7354's prior head
+7772af86c1cb7efc2c83c800a7821c079271e584 had all hosted checks green and a
+clean exact-head Codex review. The owner-authorized PR #7353 evidence change
+merged as f13f960e863ea3c1860b564d057827b214864b72; this update resolves the
+resulting agent-handoff.md conflict. That merge changes the PR #7354 head, so
+prior review and CI evidence do not qualify the new head. NEXT: push this
+conflict resolution, request Codex review on the exact new head, require all
+hosted checks green and zero unresolved conversations, then merge. Keep issue
+#5620 open and do not claim a promo-video baseline until structural compound-
+tag decoding is implemented and replayed; #6334 and #6413 remain queued.
 
-## Active slice — explicit empty WHERE mutation admission (2026-11-13)
+## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 
-Continue in
-`/home/rich/.codex/worktrees/empty-where-admission-7254/Project-Copperfin`
-on `fix/empty-where-admission-7254`, based on origin/main
-`50babe2d2839b8bcba4396534f4b9599cf262bc0`. Under admitted issue #7254,
-the parser now preserves explicit `WHERE` presence for `UPDATE` and
-`DELETE FROM`, and dispatch raises catchable syntax error 10 before target resolution
-or mutation when the clause is empty. Bare all-row and populated-filter forms
-remain unchanged. Public PRG tests verify retained multirow state, successful
-filtered and bare controls, and the absence of success events for rejected
-commands. The focused GNU Debug mutation and runtime-pipeline targets pass
-2/2 in 79.52s. Issue-intake, contributor-signoff, changelog assembler,
-changelog-fragment, and native-isolation contracts pass; the exact-tree safety
-traceability contract passes in 329.19s. Retained VFP9 evidence also audits the
-sibling `FOR` forms, but VFP9
-rejects populated and empty variants alike; their documented Copperfin
-extension policy is therefore deliberately unchanged. Signed+DCO commit
-`6f085b109cc3ad3bf253e0cb25bcb737ef37edbe` opened PR #7325; hosted checks
-started and the verified `@claude review` trigger was posted after the owner's
-reauthorization. NEXT: obtain a clean Claude-first exact-head review and
-strict-green hosted checks, resolve every conversation, merge, synchronize
-origin/main, and clean up. If hosted review stalls,
-use the owner's authorized local Codex adversarial fallback rather than
-waiting indefinitely.
+PR #7353 merged at f13f960e863ea3c1860b564d057827b214864b72 from exact head
+d5bb564e9e877b774da0e021b5a4caec58689d05; required checks passed, Codex
+reviewed that head cleanly, and no review conversations remained. Its fixture
+tests/fixtures/vfp9-index-order-recovery/ preserves a real VFP9 three-record
+DBF/CDX capture, capture PRG, native ORDER()/scan/SEEK() results, hashes, and
+changelog evidence. It is linked to #5618 and #6334; #5619 remains related
+but this capture does not establish its expression-binding failure. The
+captured VFP9 ordering is CHARLIE, BRAVO, ALPHA for DESCTAG and starts at ALPHA
+for ASCTAG. Copperfin still needs a replay against this exact fixture after the
+bounded #5620 descriptor-containment fix and later #6334 ordering/navigation
+work. The VFP9 VM is shut down.
+
+
+The following older slice records are retained as historical evidence; verify
+their live issue/PR state before treating any as active work.
 
 ## Active slice — primary DBF regular-file admission (2026-11-07)
 
