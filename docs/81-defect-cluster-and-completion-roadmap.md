@@ -687,10 +687,11 @@ ORDER`/ordered scan/`SEEK` behavior, then #6413's multi-expression print
 behavior. Do not present the video baseline as established before these
 checks pass on a fresh build of public `main`.
 
-The only open pull requests at this snapshot are #7247 and #7248. #7248 is
-stacked on #7247, so resolve and merge #7247 before treating #7248 as
-independently mergeable. These localization PRs remain the current in-flight
-work; the issue priority order below applies after that work is resolved.
+The pre-existing open pull requests at this snapshot are #7247 and #7248,
+excluding this roadmap-refresh PR. #7248 is stacked on #7247, so resolve and
+merge #7247 before treating #7248 as independently mergeable. These
+localization PRs remain the current in-flight work; the issue priority order
+below applies after that work is resolved.
 
 ### Reassigned existing long-tail issues
 
