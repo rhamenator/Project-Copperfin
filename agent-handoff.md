@@ -11,53 +11,36 @@ paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
 and independent `indexed_demo.cdx`
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 
-Implementation through pushed head `867473dc1` restores structural parsing of both
-real files (`ASCTAG`/`DESCTAG`, `name`, ascending/descending), validates tag
-roots and bindings, preserves the fingerprinted empty-leaf writer format,
-migrates shared runtime test fixtures to structural layouts, and round-trips
-printable writer-profile names through 480 bytes. The writer rejects control-
-byte names and empty key expressions before touching either file, and parser
-expressions preserve high-bit VFP code-page bytes. Local Codex review #4 on
-exact pushed head `55b260aae` found a tag root could alias the compound
-directory page and be published as metadata; pushed commit `95b07c880` rejects
-that association and adds a fail-closed regression. Review #5 on exact pushed
-head `95b07c880` found the writer accepted embedded-NUL/control/DEL expression
-bytes that its strict reader rejects. The current working tree validates writer
-expressions with the reader's byte rules, preserves high-bit code-page bytes,
-adds localized errors, and verifies rejection leaves preexisting CDX bytes and
-the DBF production-index flag unchanged. Four-locale JSON parsing and the
-localization test pass with the new writer diagnostic. Review #6 on exact
-pushed head `99c563538` found whitespace-only key expressions were still
-accepted although reader trimming reduces them to empty. The current repair
-rejects expressions that are all whitespace under the same `std::isspace`
-rule, with a regression requiring the sentinel CDX and clear DBF index flag
-to remain unchanged. Local Codex review #7 found no actionable regressions on
-exact pushed head `289906dcf` against `origin/main`. Review #8 on exact pushed
-head `0b2047e40` found distinct tag headers could share a valid root page; the
-repair in pushed head `867473dc1` tracks root offsets and rejects duplicates
-before any tag descriptor is published, with a synthetic two-tag regression.
-Local Codex review #9 found no actionable regressions on exact pushed head
-`867473dc1` against `origin/main`.
+PR #7356 is open at hosted head `58d2de1e8b46661fd56a8f2f2fb4df6d53ee82a4`.
+The structural parser recovers both real VFP9 tags (`ASCTAG`/`DESCTAG`,
+expression `name`, ascending/descending), validates distinct names, headers and
+root bindings, rejects root aliasing/duplication, and preserves the
+fingerprinted single-tag writer profile. The writer rejects empty,
+whitespace-only, embedded-NUL, disallowed-control, and DEL key expressions
+before touching either file while preserving high-bit code-page bytes.
+Independent local Codex review #10 was clean on exact hosted head `58d2de1e8`.
 
-Release build: `/tmp/copperfin-cdx-5620-release`. All three review repairs
-build and `test_vfp_assets` passes 1/1 on each repaired tree; the preceding
-expression-byte repair passes `test_vfp_assets` and `test_localization` 2/2.
-The earlier tree passed
-`test_vfp_assets`, `test_prg_engine_ordered_iteration`,
-`test_prg_engine_seek_index`, `test_prg_engine_numeric_behavior`, and
-`test_localization` 5/5. Changelog validation reports 281 fragments valid and
-`git diff --check` passes. Review, repair, and test evidence is retained in
+Hosted `migration (pr)` failed on `test_dbf_table` because its synthetic
+two-tag CDX helper still used the old heuristic layout. The parser correctly
+returned no tags for that obsolete fixture. The current working tree rewrites
+only that helper as a structurally bound compact leaf; production behavior and
+the expected relation-inference result are unchanged. GNU15.2 Release
+`test_dbf_table` passes 1/1 after the repair, and the full focused set
+(`test_vfp_assets`, `test_dbf_table`, ordered iteration, `SEEK`, numeric
+behavior, localization) passes 6/6. Changelog validation reports 281
+fragments valid; `git diff --check` passes. Exact review, failure, and repair
+evidence is retained in
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
-(SHA-256 `1e80ef4f6dbd274d096c20f2ee38057ad44536d3a354ad043e85bb84e5bbb398`).
+(SHA-256 `ae8de0944f01b646c4314d8c598bbbc53429c776c87d3d1833003762f687f259`).
 
 This is metadata recovery only; no runtime `SET ORDER`, ordered scan, or `SEEK`
 claim is established. After #5620 review/merge, continue to #6334 using the
 owner-requested large, varied VFP9-tested data set for prefix compression, duplicate
 ties, ascending/descending order, exact/missing/boundary `SEEK`, preserving
 native observations and hashes. Then #6413 print-expression aggregation. NEXT:
-commit and push this handoff checkpoint, repeat local Codex review on the
-resulting exact pushed head, then open a PR if clean. Require green hosted
-checks and resolved review conversations before merge.
+commit and push the migration-fixture correction, update PR #7356's verification
+text, and obtain a clean local Codex review on the exact new pushed head.
+Recheck hosted reviews/checks and resolve every conversation before merge.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 
