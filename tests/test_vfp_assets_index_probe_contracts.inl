@@ -129,6 +129,19 @@ void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
     expect(!duplicate_root_result.ok && duplicate_root_result.probe.tags.empty(),
            "distinct tag headers cannot ambiguously share one root page");
 
+    auto empty_declared_for_expression = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "NOT DELETED()",
+         .root_page = 9U}
+    });
+    constexpr std::size_t tag_header_offset = 3U * 512U;
+    const std::size_t for_expression_offset = tag_header_offset + 512U +
+        std::string_view("field_name").size() + 1U;
+    empty_declared_for_expression[for_expression_offset] = 0U;
+    const auto empty_declared_for_result = copperfin::vfp::parse_index_probe(
+        empty_declared_for_expression, empty_declared_for_expression.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!empty_declared_for_result.ok && empty_declared_for_result.probe.tags.empty(),
+           "a multi-byte FOR-expression span containing only NUL bytes must fail closed without partial tags");
+
     auto invalid_pointer = make_synthetic_structural_cdx({
         {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
     });
@@ -144,7 +157,6 @@ void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
     auto expression_as_root = make_synthetic_structural_cdx({
         {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
     });
-    constexpr std::size_t tag_header_offset = 3U * 512U;
     write_le_u32(expression_as_root, tag_header_offset, 4U * 512U);
     const auto expression_as_root_result = copperfin::vfp::parse_index_probe(
         expression_as_root, expression_as_root.size(), copperfin::vfp::IndexKind::cdx);

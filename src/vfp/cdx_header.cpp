@@ -1226,6 +1226,12 @@ bool parse_structural_tag_directory(
                 bytes, for_expression_offset, for_expression_length, for_expression)) {
             return false;
         }
+        // The retained real VFP9 captures encode no FOR clause as a single
+        // NUL terminator. Longer declared spans that decode to no text are
+        // incomplete metadata and must not be exposed as an unfiltered tag.
+        if (for_expression_length > 1U && for_expression.empty()) {
+            return false;
+        }
 
         decoded_tags.push_back({
             .name_hint = name,

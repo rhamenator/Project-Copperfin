@@ -11,7 +11,8 @@ paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
 and independent `indexed_demo.cdx`
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 
-PR #7356 is open at hosted head `58d2de1e8b46661fd56a8f2f2fb4df6d53ee82a4`.
+PR #7356 is open at hosted head `877f585b8baa811dbb2534932f650e9a71792ba9`
+(verify the live PR head before acting).
 The structural parser recovers both real VFP9 tags (`ASCTAG`/`DESCTAG`,
 expression `name`, ascending/descending), validates distinct names, headers and
 root bindings, rejects root aliasing/duplication, and preserves the
@@ -19,6 +20,24 @@ fingerprinted single-tag writer profile. The writer rejects empty,
 whitespace-only, embedded-NUL, disallowed-control, and DEL key expressions
 before touching either file while preserving high-bit code-page bytes.
 Independent local Codex review #10 was clean on exact hosted head `58d2de1e8`.
+
+The refreshed local Codex review on `877f585b8baa811dbb2534932f650e9a71792ba9`
+found that a declared FOR-expression span longer than the native terminator-only
+form could decode empty and be exposed as unfiltered. Both retained real VFP9
+fixtures were checked: each encodes no FOR clause as a one-byte NUL at header
+pages 1536 and 3072. The current uncommitted fix rejects only spans longer than
+one byte that decode empty, and adds a multi-byte all-NUL regression while the
+real fixtures remain positive controls. Release `test_vfp_assets` passes 1/1;
+the first broader test attempt caught the need to preserve the observed one-byte
+encoding, then the narrowed regression passed. Changelog assembly validates
+281 fragments and `git diff --check` passes. Record exact test/build details in
+the retained evidence file (SHA-256
+`ca769531c54f98c105d80777fa45ce17293a38b4c830b6630cf0f7d21610eee0`). The
+repair is currently based on pre-fix head `877f585b8baa811dbb2534932f650e9a71792ba9`;
+the fix commit, if not already on the branch, is the next source action. After
+push, record its exact hash in the retained evidence and obtain a fresh local
+Codex review on that exact head; update PR verification text. Hosted checks
+must be green on that same head before merge.
 
 Hosted `migration (pr)` failed on `test_dbf_table` because its synthetic
 two-tag CDX helper still used the old heuristic layout. The parser correctly
