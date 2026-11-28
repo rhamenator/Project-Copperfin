@@ -27,6 +27,9 @@ struct CdxTagDescriptor {
     std::string name_hint;
     std::string key_expression_hint;
     std::string for_expression_hint;
+    // The directory leaf points at this per-tag header. The header then
+    // points at the tag's own key tree; these are distinct CDX pages.
+    std::uint32_t tag_header_offset_hint = 0;
     std::uint32_t tag_page_offset_hint = 0;
     std::uint32_t name_offset_hint = 0;
     std::uint32_t key_expression_offset_hint = 0;
@@ -44,13 +47,11 @@ struct CdxTagDescriptor {
     // See docs/32-recovered-requirements-traceability.md for the recorded
     // evidence.
     //
-    // Scope note: reliably populated only for single-tag structural CDX
-    // files (one tag per .cdx, the common "INDEX ... TAG name OF file.cdx"
-    // case), where the tag's own header page can be found from
-    // root_node_offset + page_size. Real multi-tag (entry_count > 1)
-    // compound CDX files' per-entry page association has not been
-    // recovered, so this defaults to false (not guessed) for those.
+    // A successful structural CDX parse has a validated per-tag header
+    // association and direction word. Unknown direction is represented by
+    // direction_known == false; it is never silently promoted to ascending.
     bool descending_hint = false;
+    bool direction_known = false;
 };
 
 struct CdxParseResult {

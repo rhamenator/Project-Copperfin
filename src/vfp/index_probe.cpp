@@ -341,12 +341,14 @@ IndexParseResult parse_cdx_family_probe(
             .normalization_hint = normalization_hint,
             .collation_hint = collation_hint,
             .tag_sort_marker_hint = tag_sort_marker_hint,
+            .tag_header_offset_hint = tag.tag_header_offset_hint,
             .tag_page_offset_hint = tag.tag_page_offset_hint,
             .name_offset_hint = tag.name_offset_hint,
             .key_expression_offset_hint = tag.key_expression_offset_hint,
             .for_expression_offset_hint = tag.for_expression_offset_hint,
             .inferred_name = tag.inferred_name,
-            .descending_hint = tag.descending_hint
+            .descending_hint = tag.descending_hint,
+            .direction_known = tag.direction_known
         });
     }
     if (!probe.tags.empty()) {

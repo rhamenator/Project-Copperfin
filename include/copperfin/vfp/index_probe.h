@@ -27,6 +27,7 @@ struct IndexTagProbe {
     std::string normalization_hint;
     std::string collation_hint;
     std::string tag_sort_marker_hint;
+    std::uint32_t tag_header_offset_hint = 0;
     std::uint32_t tag_page_offset_hint = 0;
     std::uint32_t name_offset_hint = 0;
     std::uint32_t key_expression_offset_hint = 0;
@@ -38,6 +39,7 @@ struct IndexTagProbe {
     // Persisted ASCENDING/DESCENDING creation direction (issue #5358).
     // See CdxTagDescriptor::descending_hint for how this is derived.
     bool descending_hint = false;
+    bool direction_known = false;
 };
 
 struct IndexProbe {

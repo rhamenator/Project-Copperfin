@@ -1,31 +1,47 @@
 # Agent Handoff
 
-## Active slice — compound CDX metadata containment (#5620, PR #7354)
+## Active slice — structural compound CDX tag metadata (#5620)
 
-Continue in /home/rich/.codex/worktrees/cdx-compound-fail-closed-5620/Project-Copperfin
-on fix/cdx-compound-fail-closed-5620, now updated from base
-b569a70d1957fc9a326039d74feed9ee0aca0a97 to
-origin/main merge f13f960e863ea3c1860b564d057827b214864b72. Owner-prioritized
-#5620 is first, followed by order/SEEK #6334 and print-expression #6413.
-Against the retained real VFP9 fixture
-tests/fixtures/vfp9-descending-observation-output/ (CDX SHA-256
-6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520,
-DBF SHA-256
-fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab), the
-bounded fix rejects an unbound multi-entry root directory, localizes its
-diagnostic, and keeps DBF reading available while omitting the untrusted index
-descriptor. It does not decode the tag directory or resolve ordered scans/SEEK.
-Focused GNU 15.2 Debug test_vfp_assets and test_localization pass; four
-locale catalogs parse. PR #7354's prior head
-7772af86c1cb7efc2c83c800a7821c079271e584 had all hosted checks green and a
-clean exact-head Codex review. The owner-authorized PR #7353 evidence change
-merged as f13f960e863ea3c1860b564d057827b214864b72; this update resolves the
-resulting agent-handoff.md conflict. That merge changes the PR #7354 head, so
-prior review and CI evidence do not qualify the new head. NEXT: push this
-conflict resolution, request Codex review on the exact new head, require all
-hosted checks green and zero unresolved conversations, then merge. Keep issue
-#5620 open and do not claim a promo-video baseline until structural compound-
-tag decoding is implemented and replayed; #6334 and #6413 remain queued.
+Continue in `/home/rich/.codex/worktrees/cdx-directory-structural-5620/Project-Copperfin`
+on `fix/cdx-directory-structural-5620`, based on `origin/main`
+`0f3addaae04e949b8edfc87e21ee8901d13d43eb` (fetched and confirmed current on
+2026-11-28). Issue #5620 is owner-authored, open, and labeled
+`agent-approved`. This advances the previously merged #7354 fail-closed guard:
+the parser now binds compact-leaf directory tuples to distinct tag header,
+expression, and root pages and recovers names, key/FOR expressions, and
+persisted direction. It retains a narrowly fingerprinted read path for
+Copperfin's existing documented six-page single-tag writer format.
+
+Real fixture inputs remain frozen: `descending.CDX` SHA-256
+`6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`, paired
+`descending.dbf` SHA-256
+`fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`, and
+independent `indexed_demo.cdx` SHA-256
+`9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
+Release build dir is `/tmp/copperfin-cdx-5620-release`. The focused
+`test_vfp_assets` and `test_localization` pass 2/2 after the synthetic CDX
+builders were converted to structural entries, ambiguous bindings fail closed,
+and writer compatibility was restored. `python3 scripts/assemble_changelog.py
+--check` validates 281 fragments and `git diff --check` is clean. Direct
+`copperfin_inspect` outputs show both real captures as `status: ok` with
+`ASCTAG`/`DESCTAG`, expression `name`, and persisted ascending/descending
+direction (also asserted directly by the test). Companion DBF inspection
+reports `has_structural_cdx: true` and the CDX at `index[1]`. Durable docs and
+changelog are updated in this same slice. Exact commands, outputs, and frozen-
+input hashes are retained at
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/`.
+
+This is metadata recovery only: no ordered runtime scan or `SEEK` claim yet.
+After #5620 review/merge, proceed to #6334, using the user's requested varied
+VFP9-tested dataset: enough distinct and duplicate values to exercise prefix
+compression, equal-key tie behavior, ascending/descending order, exact/missing
+SEEK, and boundary keys; preserve the native VFP9 observations and hashes.
+Then #6413 print-expression aggregation. Do not call the promo video a current
+baseline until runtime behavior is verified on public main. NEXT: finish
+final diff review, commit with the configured signed commit and DCO sign-off,
+push and open a PR. Request Claude review first; if unavailable, owner-
+authorized local Codex review is allowed. Require exact-head clean review,
+green required checks, and resolved conversations before merging.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 

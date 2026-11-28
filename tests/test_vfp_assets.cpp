@@ -37,92 +37,112 @@ namespace {
 
 using namespace copperfin::tests::vfp_assets_support;
 
-std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_tag, bool include_for_expression) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, include_second_tag ? 2U : 1U);
+struct SyntheticCdxTag {
+    std::string name;
+    std::string key_expression;
+    std::string for_expression;
+    std::size_t root_page = 9U;
+    std::uint16_t root_flags = 0x0003U;
+    std::uint16_t root_entries = 1U;
+    bool descending = false;
+    std::size_t header_page = 0U;
+};
 
-    if (include_second_tag) {
-        write_le_u32(bytes, 1028U, 11U * 512U);
-        write_le_u32(bytes, 1032U, 4U * 512U);
-        write_le_u16(bytes, 11U * 512U, 0x0001U);
-        write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-        write_le_u16(bytes, 4U * 512U, 0x0003U);
-        write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-        write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
-        write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
-        write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
-        write_ascii(bytes, (11U * 512U) + 24U, "customer_id");
-    } else {
-        write_le_u32(bytes, 1028U, 4U * 512U);
-        write_le_u16(bytes, 4U * 512U, 0x0003U);
-        write_le_u16(bytes, (4U * 512U) + 2U, 1U);
-        write_ascii(bytes, (3U * 512U) - 10U, "NAME");
-        write_ascii(bytes, (4U * 512U) + 24U, "UPPER(NAME)");
+std::vector<std::uint8_t> make_synthetic_structural_cdx(const std::vector<SyntheticCdxTag>& tags) {
+    constexpr std::size_t page_size = 512U;
+    constexpr std::size_t directory_offset = 2U * page_size;
+    constexpr std::size_t key_length = 10U;
+    constexpr std::size_t bytes_per_directory_entry = 3U;
+    std::vector<std::uint8_t> bytes(16U * page_size, 0U);
+    write_le_u32(bytes, 0U, static_cast<std::uint32_t>(directory_offset));
+    write_le_u32(bytes, 4U, 0xFFFFFFFFU);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(key_length));
+    bytes[14U] = 0xE0U;
+    bytes[15U] = 0x01U;
+
+    write_le_u16(bytes, directory_offset, 0x0003U);
+    write_le_u16(bytes, directory_offset + 2U, static_cast<std::uint16_t>(tags.size()));
+    write_le_u32(bytes, directory_offset + 4U, 0xFFFFFFFFU);
+    write_le_u32(bytes, directory_offset + 8U, 0xFFFFFFFFU);
+    const std::size_t entry_data_end = 24U + tags.size() * bytes_per_directory_entry;
+    std::size_t key_cursor = page_size;
+    for (std::size_t index = 0U; index < tags.size(); ++index) {
+        const SyntheticCdxTag& tag = tags[index];
+        const std::size_t header_page = tag.header_page == 0U ? 3U + (index * 2U) : tag.header_page;
+        const std::size_t header_offset = header_page * page_size;
+        const std::size_t root_offset = tag.root_page * page_size;
+        const std::size_t key_chars = tag.name.size();
+        const std::size_t trailing_count = key_length - key_chars;
+        const std::size_t entry_offset = directory_offset + 24U + (index * bytes_per_directory_entry);
+        const std::uint32_t packed = static_cast<std::uint32_t>(header_offset) |
+            (static_cast<std::uint32_t>(trailing_count) << 20U);
+        bytes[entry_offset] = static_cast<std::uint8_t>(packed & 0xFFU);
+        bytes[entry_offset + 1U] = static_cast<std::uint8_t>((packed >> 8U) & 0xFFU);
+        bytes[entry_offset + 2U] = static_cast<std::uint8_t>((packed >> 16U) & 0xFFU);
+        key_cursor -= key_chars;
+        write_ascii(bytes, directory_offset + key_cursor, tag.name.c_str());
+
+        write_le_u32(bytes, header_offset, static_cast<std::uint32_t>(root_offset));
+        write_le_u16(bytes, header_offset + 502U, tag.descending ? 1U : 0U);
+        const std::uint16_t key_length_with_terminator = static_cast<std::uint16_t>(
+            tag.key_expression.empty() ? 0U : tag.key_expression.size() + 1U);
+        const std::uint16_t for_length_with_terminator = static_cast<std::uint16_t>(
+            tag.for_expression.empty() ? 0U : tag.for_expression.size() + 1U);
+        write_le_u16(bytes, header_offset + 506U, for_length_with_terminator);
+        write_le_u16(bytes, header_offset + 510U, key_length_with_terminator);
+        const std::size_t expression_offset = header_offset + page_size;
+        if (!tag.key_expression.empty()) {
+            write_ascii(bytes, expression_offset, tag.key_expression.c_str());
+        }
+        if (!tag.for_expression.empty()) {
+            write_ascii(bytes, expression_offset + key_length_with_terminator, tag.for_expression.c_str());
+        }
+        write_le_u16(bytes, root_offset, tag.root_flags);
+        write_le_u16(bytes, root_offset + 2U, tag.root_entries);
     }
-
-    if (include_for_expression) {
-        write_ascii(bytes, 5U * 512U, "DELETED() = .F.");
-    }
-
+    write_le_u16(bytes, directory_offset + 12U, static_cast<std::uint16_t>(
+        page_size - entry_data_end - (page_size - key_cursor)));
+    write_le_u32(bytes, directory_offset + 14U, 0x0000FFFFU);
+    bytes[directory_offset + 18U] = 0x0FU;
+    bytes[directory_offset + 19U] = 0x0FU;
+    bytes[directory_offset + 20U] = 16U;
+    bytes[directory_offset + 21U] = 4U;
+    bytes[directory_offset + 22U] = 4U;
+    bytes[directory_offset + 23U] = static_cast<std::uint8_t>(bytes_per_directory_entry);
     return bytes;
 }
 
+std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_tag, bool include_for_expression) {
+    if (include_second_tag) {
+        return make_synthetic_structural_cdx({
+            {"CUSTOMER_I", "customer_id", "", 11U, 0x0001U, 1U, false},
+            {"COMPANY_NA", "UPPER(company_name)", include_for_expression ? "DELETED() = .F." : "", 12U, 0x0003U, 2U, false}
+        });
+    }
+    return make_synthetic_structural_cdx({
+        {"NAME", "UPPER(NAME)", include_for_expression ? "DELETED() = .F." : "", 9U, 0x0003U, 1U, false}
+    });
+}
+
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_decoys() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-
-    write_ascii(bytes, (3U * 512U) - 10U, "CUSTOMER_I");
-    write_ascii(bytes, (3U * 512U) + 24U, "customer_invoice_id");
-    write_ascii(bytes, (4U * 512U) + 24U, "invoice_deleted = .F.");
-    write_ascii(bytes, (11U * 512U) + 24U, "customer_id");
-    write_ascii(bytes, (12U * 512U) + 16U, "DELETED() = .F.");
-
+    auto bytes = make_synthetic_structural_cdx({
+        {"CUSTOMER_I", "customer_id", "DELETED() = .F.", 11U, 0x0001U, 1U, false}
+    });
+    write_ascii(bytes, 13U * 512U, "customer_invoice_id");
+    write_ascii(bytes, 12U * 512U + 16U, "invoice_deleted = .F.");
     return bytes;
 }
 
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_descriptive_tag_name() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 4U * 512U);
-
-    write_ascii(bytes, (3U * 512U) - 10U, "FULLNAME");
-    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(LAST+FIRST)");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {"FULLNAME", "UPPER(LAST+FIRST)", "", 9U, 0x0003U, 1U, false}
+    });
 }
 
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_plain_field_expression() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 4U * 512U);
-
-    write_ascii(bytes, (3U * 512U) - 10U, "NAME");
-    write_ascii(bytes, (4U * 512U) + 24U, "NAME");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {"NAME", "NAME", "", 9U, 0x0003U, 1U, false}
+    });
 }
 
 std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
@@ -4924,25 +4944,12 @@ void test_export_database_as_sql_still_preserves_blank_numeric_as_null() {
 // those existing tests only exercise CDX-format parsing in isolation,
 // decoupled from any real DBF field-name constraint.
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_for_postgresql_index_test() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, "CUST_ID");
-    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_N");
-    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
-    write_ascii(bytes, (11U * 512U) + 24U, "cust_id");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {.name = "CUST_ID", .key_expression = "cust_id", .for_expression = "", .root_page = 11U,
+         .root_flags = 0x0001U, .root_entries = 1U},
+        {.name = "COMPANY_N", .key_expression = "UPPER(company_name)", .for_expression = "", .root_page = 12U,
+         .root_flags = 0x0003U, .root_entries = 2U}
+    });
 }
 
 void test_export_database_as_postgresql_sql_maps_types_and_creates_indexes() {
@@ -5386,25 +5393,10 @@ void test_export_database_as_sqlite_sql_accepts_zero_with_oversized_exponent() {
 // containing at least one uppercase letter) to be recognized at all.
 std::vector<std::uint8_t> make_synthetic_single_tag_cdx_bytes(
     const std::string& tag_name, const std::string& key_expression) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, tag_name.c_str());
-    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_N");
-    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
-    write_ascii(bytes, (11U * 512U) + 24U, key_expression.c_str());
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {.name = tag_name, .key_expression = key_expression, .for_expression = "",
+         .root_page = 9U, .root_flags = 0x0001U, .root_entries = 1U}
+    });
 }
 
 void test_export_database_as_sqlite_sql_disambiguates_indexes_across_tables() {
@@ -5555,25 +5547,10 @@ void test_export_database_as_postgresql_sql_omits_indexes_without_cdx() {
 // rejects a second CREATE INDEX for an already-existing relation name,
 // leaving an otherwise advertised runnable export incomplete.
 std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_two_tags_on_same_column() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, "SKU_ASC");
-    write_ascii(bytes, (3U * 512U) - 10U, "SKU_DESC");
-    write_ascii(bytes, (4U * 512U) + 24U, "sku");
-    write_ascii(bytes, (11U * 512U) + 24U, "sku");
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {"SKU_ASC", "sku", "", 11U, 0x0001U, 1U, false},
+        {"SKU_DESC", "sku", "", 12U, 0x0003U, 2U, false}
+    });
 }
 
 // Parameterized sibling of make_synthetic_cdx_bytes_with_two_tags_on_same_column()
@@ -5584,25 +5561,10 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_two_tags_on_same_column(
 // common prefix.
 std::vector<std::uint8_t> make_synthetic_two_tag_cdx_bytes(
     const std::string& tag1_name, const std::string& tag2_name, const std::string& key_expression) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 11U * 512U);
-    write_le_u32(bytes, 1032U, 4U * 512U);
-    write_le_u16(bytes, 11U * 512U, 0x0001U);
-    write_le_u16(bytes, (11U * 512U) + 2U, 1U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 2U);
-    write_ascii(bytes, (3U * 512U) - 20U, tag1_name.c_str());
-    write_ascii(bytes, (3U * 512U) - 10U, tag2_name.c_str());
-    write_ascii(bytes, (4U * 512U) + 24U, key_expression.c_str());
-    write_ascii(bytes, (11U * 512U) + 24U, key_expression.c_str());
-    return bytes;
+    return make_synthetic_structural_cdx({
+        {tag1_name, key_expression, "", 11U, 0x0001U, 1U, false},
+        {tag2_name, key_expression, "", 12U, 0x0003U, 2U, false}
+    });
 }
 
 // #5559 review (chatgpt-codex-connector): PostgreSQL silently truncates
@@ -9003,7 +8965,9 @@ int main() {
     test_export_database_as_json_inaccessible_path_returns_structured_failure();
 #endif
     test_parse_index_probe_for_cdx();
-    test_parse_real_vfp9_compound_cdx_without_page_associations_fails_closed();
+    test_parse_synthetic_vfp9_compound_cdx_preserves_tag_tuples();
+    test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings();
+    test_parse_real_vfp9_compound_cdx_recovers_directory_metadata();
     test_parse_cdx_compound_directory_with_unfit_entry_count_fails_closed();
     test_parse_cdx_header_root_offset_beyond_16_bits();
     test_parse_index_probe_for_dcx();
