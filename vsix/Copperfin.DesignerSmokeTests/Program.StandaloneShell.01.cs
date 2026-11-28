@@ -324,7 +324,7 @@ internal static partial class Program
         Application.DoEvents();
 
         Expect(form.CommandWindowTranscriptText.Contains("> ? x", StringComparison.Ordinal) &&
-               form.CommandWindowTranscriptText.Contains("No hay una sesion de depuracion activa de Copperfin.", StringComparison.Ordinal),
+               form.CommandWindowTranscriptText.Contains("No hay ninguna sesión de depuración activa de Copperfin.", StringComparison.Ordinal),
             "standalone Command window should record supported input and localize the no-session response");
         var transcriptAfterCommand = form.CommandWindowTranscriptText;
         form.SubmitCommandForTest("   ");
@@ -412,7 +412,7 @@ internal static partial class Program
             Application.DoEvents();
             Expect(form.IsCommandWindowVisible && !form.IsCommandWindowFloating,
                 "standalone Command window should re-dock without recreating the tool");
-            Expect(form.FloatCommandWindowMenuText == "Flotar ventana de comandos",
+            Expect(form.FloatCommandWindowMenuText == "Hacer flotante la ventana de comandos",
                 "docked Command window should expose the localized float command");
 
             form.SetTerminalWindowFloatingForTest(true);

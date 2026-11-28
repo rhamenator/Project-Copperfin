@@ -2,46 +2,44 @@
 
 ## Active slice — localization review gate (#7247; queued #7248)
 
-The owner-authorized #7353 and #7354 blockers are merged: #7353 at
-f13f960e863ea3c1860b564d057827b214864b72 and #7354 at
-f38b3ab0292ec0815ce4412318e9e72b29c9665e. Current `origin/main` is
-f38b3ab0292ec0815ce4412318e9e72b29c9665e. Resume the queued localization
-work in `/home/rich/.codex/worktrees/locale-full-review/Project-Copperfin`
-on `feat/locale-full-review` (PR #7247). The source head is
-bd5c4dd2dc3bc775df512149dab6d5a0651c91c4. The local signed+DCO merge commit
-`5407001dd698c9ee1593000e831f26759c866dd6` has parents #7247 head
-`bd5c4dd2dc3bc775df512149dab6d5a0651c91c4` and current main
-`f38b3ab0292ec0815ce4412318e9e72b29c9665e`; it is not pushed. Six former
-conflicts were combined while retaining main's locale path-safety changes and
-the feature's all-declared-locale review gate, protected-syntax validation,
-English catalog, and review evidence. Two current en-US source strings were
-added unchanged to en-GB and its per-entry ledger refreshed; two entries remain
-unreviewed. The review-status script safely creates a missing ledger folder
-without following linked directories. Managed en-GB lookup checks installed
-en-US values before embedded fallback; this fixes the failing `#7071`
-managed language-service assertion without relaxing it. Two tracked locale
-review ledgers have uncommitted metadata-key-order normalization matching the
-script's writer; no translation or review-status content changed.
+The owner-authorized #7353 and #7354 blockers are merged; current `origin/main`
+is `f38b3ab0292ec0815ce4412318e9e72b29c9665e`. Continue in
+`/home/rich/.codex/worktrees/locale-full-review/Project-Copperfin` on
+`feat/locale-full-review`, PR #7247, exact remote head
+`cf8d6e81218f4426eb9b7f393fae396582da39b9`, based on `main`. The PR's fresh
+CI exposed stale managed/native expectations for the revised reviewed catalogs.
+The worktree now contains test-only expected-text updates, including the
+reported native and Mono/Xvfb cases; production localization code and catalogs
+are unchanged. On this exact working tree, the focused GNU Debug build and
+CTest command
+`ctest --test-dir build -R '^(test_platform_models|test_runtime_pipeline|test_prg_engine_control_flow|test_prg_engine_index_seek_optimization|test_security_controls|test_prg_engine_cast_byte_numeric|test_prg_engine_cast_uint64_numeric|test_xasset_methods|test_runtime_host_binding|test_localization)$' --output-on-failure`
+passed 10/10 in 253.86 seconds. The consolidated log is
+`build/Testing/Temporary/LastTest.log` (SHA-256
+`30c2b1063e6c6ecc0047f88ab323717c0284d7224967a121cef911f065553575`). The
+managed UI failure evidence from exact old head `cf8d6e8` is retained under
+`build/evidence/old-head-managed-ui-46117753585/`; the standalone smoke log
+(SHA-256 `b4301105492a9033ef1ffca57788c3b5e173ef4be8a2b8100a6cd3fda51fc357`)
+showed four stale Spanish expectations, all now corrected. Local execution of
+that Mono/Xvfb suite is unavailable because this host has no Mono; a local
+net472 compile is also unavailable because its targeting pack is absent, so
+fresh hosted UI checks remain required. Other old-head failures are retained
+in runs `46117753773` (audit containment) and `46117753611` (sanitizer/stress);
+their localized expectation failures are covered by the passing focused tests.
+The old-head DCO passed, but every check/review must refresh after the fix push.
 
-Focused checks pass: `tests/test_locale_review_status.py`,
-`tests/test_locale_review_gate.py`, `scripts/check_locale_review_status.py`,
-`dotnet run --no-restore --project
-vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj`,
-`python3 scripts/assemble_changelog.py --check` (286 fragments),
-`python3 scripts/agent_channel.py verify`, and `git diff --cached --check`.
-The strict `--release` review command correctly remains red: en-GB has 2
-unreviewed entries, and the es-419/pt-BR accepted-review totals are 2,929/3,148
-and 2,853/3,148. This PR does not establish localization release readiness.
-PR #7247 is still based on the closed, unmerged #7246 branch; its remote head is
-still `bd5c4dd2dc3bc775df512149dab6d5a0651c91c4`, where required CI is green.
-A local Claude Code comment on that old head lists four explicitly unverified
-review leads; they are not review-thread approvals or verified defects.
-NEXT: preserve the normalization, amend/verify the signed merge checkpoint,
-push the updated #7247 branch, retarget from the closed #7246 base to `main`,
-then obtain a fresh exact-head Codex review and green required checks with zero
-unresolved threads before merge. Update stacked #7248 onto the new main and
-repeat exact-head review/checks; afterward resume VFP9 order/SEEK #6334, then
-print-expression #6413. This checkpoint turn took about 6 minutes.
+Current worktree has 16 modified tracked files; no fix commit has been made.
+The tests-and-changelog diff (excluding this handoff) has SHA-256
+`e9aeeb758f1671741aef1ed14635229353b9987604f7c534e829ccb4f98e5544`, and
+`git diff --check` passes. The earlier whole-machine backup has ended; latest
+I/O PSI averages are 0.00, with about 43 GiB available RAM. NEXT: run the
+changelog/agent-channel gates and final diff audit, then make the signed+DCO
+fix commit, push, request a new exact-head Codex review, and require every
+hosted check green plus all review conversations resolved.
+PR #7248 remains stacked on #7247 and is `DIRTY`; do not retarget/rebase it
+until #7247 merges. Then update #7248, obtain fresh review and checks, and only
+afterward resume queued VFP9 order/SEEK #6334 and print-expression #6413.
+The CI-triage, test correction, and focused verification stage took about 17
+minutes on 2026-11-28.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 

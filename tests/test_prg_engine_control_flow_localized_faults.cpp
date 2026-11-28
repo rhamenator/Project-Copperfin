@@ -307,7 +307,7 @@ void test_dispatch_array_and_object_target_runtime_errors_localize() {
         "SCATTER NAME 'bad path'\n");
     expect(!scatter_invalid_object.completed, "#2722: pt-BR SCATTER NAME with an invalid object target should fail");
     expect(
-        scatter_invalid_object.message == "SCATTER NAME: destino de objeto invalido",
+        scatter_invalid_object.message == "SCATTER NAME: destino de objeto inválido",
         "#2722: pt-BR SCATTER NAME helper error should localize the invalid-object-target text");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);

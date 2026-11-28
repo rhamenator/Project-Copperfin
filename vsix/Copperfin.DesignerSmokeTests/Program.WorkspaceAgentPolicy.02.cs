@@ -58,7 +58,7 @@ internal static partial class Program
         Expect(form.WorkspaceAgentPolicyErrorTextForTest(missingHost) ==
                "No se encontró el host de Copperfin Studio. Defina COPPERFIN_STUDIO_HOST_PATH o coloque/compile el host junto al shell administrado o bajo la salida de compilación del repositorio." &&
                form.WorkspaceAgentPolicyErrorTextForTest(timedOutHost) ==
-               "Tiempo de espera agotado esperando el host de Copperfin Studio.",
+               "Se agotó el tiempo de espera del host de Copperfin Studio.",
             "standalone Studio should select safe catalog-owned host guidance by diagnostic code");
 
         using var loaderStarted = new ManualResetEventSlim(false);
@@ -100,8 +100,8 @@ internal static partial class Program
 
         dialog.SelectModeForTest("unrestricted_local");
         Expect(dialog.SelectedModeName == "unrestricted_local" &&
-               dialog.DetailsText.Contains("Habilitar acceso local sin restricciones para el agente?", StringComparison.Ordinal) &&
-               dialog.DetailsText.Contains("El inicio de sesion con el proveedor no concede este acceso.", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("¿Habilitar el acceso local sin restricciones para el agente?", StringComparison.Ordinal) &&
+               dialog.DetailsText.Contains("El inicio de sesión con el proveedor no concede este acceso.", StringComparison.Ordinal) &&
                dialog.DetailsText.Contains("Entiendo los riesgos y deseo habilitar el acceso sin restricciones.", StringComparison.Ordinal) &&
                !dialog.DetailsText.Contains("[!! localized", StringComparison.Ordinal) &&
                dialog.DetailsText.Contains("Elevar privilegios: Falso", StringComparison.Ordinal),

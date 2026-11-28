@@ -638,7 +638,7 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
         "#2605: PRG1002 should resolve through the es-419 catalog");
     expect(
         portuguese_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message") ==
-            "Falha ao analisar o codigo-fonte PRG: nao foi possivel abrir o arquivo.",
+            "Falha ao analisar o código-fonte PRG: não foi possível abrir o arquivo.",
         "#2605: PRG0001 should resolve through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message") ==
@@ -693,7 +693,7 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
     expect(
         spanish_infinite_loop_warning != spanish_diagnostics.end() &&
             spanish_infinite_loop_warning->message ==
-                "Bucle probablemente infinito: la condicion DO WHILE siempre es verdadera y no se encontro ninguna ruta EXIT/RETURN.",
+                "Probable bucle infinito: la condición de DO WHILE siempre es verdadera y no se encontró ninguna ruta EXIT/RETURN.",
         "#2605: PRG1001 should refresh to es-419 when the runtime locale changes in-process");
     set_env_value("COPPERFIN_LOCALE", "en-US", true);
 
@@ -728,7 +728,7 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
         });
     expect(
         portuguese_missing_enddo_error != portuguese_missing_enddo_diagnostics.end() &&
-            portuguese_missing_enddo_error->message == "O bloco DO WHILE esta sem ENDDO.",
+            portuguese_missing_enddo_error->message == "O bloco DO WHILE está sem ENDDO.",
         "#2605: PRG1002 should refresh to pt-BR when the runtime locale changes in-process");
     set_env_value("COPPERFIN_LOCALE", "en-US", true);
 

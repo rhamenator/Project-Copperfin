@@ -163,8 +163,8 @@ void public_cases(const std::string& mode,int selected) {
         public_case(path,mode,selected,cast("'x'"),{},std::string{},1);
         for(const auto& row:std::vector<std::pair<std::string,std::string>>{
                 {"en-US","Function argument value, type, or count is invalid."},
-                {"es-419","El valor, tipo o numero de un argumento de funcion no es valido."},
-                {"pt-BR","O valor, tipo ou numero de um argumento de funcao e invalido."},
+                {"es-419","El valor, tipo o cantidad del argumento de la función no es válido."},
+                {"pt-BR","O valor, o tipo ou a quantidade de argumentos da função é inválido."},
                 {"qps-ploc","[!! Füñçţïøñ årĝümëñţ vålüë, ţÿþë, ør çøüñţ ïš ïñvålïð. !!]"}}) {
             set_env_value("COPPERFIN_LOCALE",row.first,true);
             public_case(path,mode,selected,cast("1E300"),{},row.second);
