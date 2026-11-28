@@ -1129,6 +1129,7 @@ bool parse_structural_tag_directory(
 
     std::set<std::string> seen_names;
     std::set<std::uint32_t> seen_headers;
+    std::set<std::uint32_t> seen_tag_roots;
     std::vector<CdxTagDescriptor> decoded_tags;
     decoded_tags.reserve(directory_entries.size());
     for (const CompactLeafEntry& directory_entry : directory_entries) {
@@ -1186,6 +1187,7 @@ bool parse_structural_tag_directory(
         }
 
         if (tag_root_offset == directory_offset ||
+            !seen_tag_roots.insert(tag_root_offset).second ||
             !looks_like_tag_page_offset(tag_root_offset, header.page_size, bytes.size()) ||
             static_cast<std::uint64_t>(tag_root_offset) + header.page_size > file_size ||
             static_cast<std::uint64_t>(tag_root_offset) + header.page_size > bytes.size()) {

@@ -120,6 +120,15 @@ void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
     expect(!duplicate_header_result.ok && duplicate_header_result.probe.tags.empty(),
            "distinct tags cannot bind to the same header page");
 
+    const auto duplicate_roots = make_synthetic_structural_cdx({
+        {.name = "FIRST_TAG", .key_expression = "first_key", .for_expression = "", .root_page = 11U},
+        {.name = "SECOND_TAG", .key_expression = "second_key", .for_expression = "", .root_page = 11U}
+    });
+    const auto duplicate_root_result = copperfin::vfp::parse_index_probe(
+        duplicate_roots, duplicate_roots.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!duplicate_root_result.ok && duplicate_root_result.probe.tags.empty(),
+           "distinct tag headers cannot ambiguously share one root page");
+
     auto invalid_pointer = make_synthetic_structural_cdx({
         {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
     });
