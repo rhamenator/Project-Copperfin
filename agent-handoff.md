@@ -1,30 +1,28 @@
 # Agent Handoff
 
-## Active slice — explicit empty WHERE mutation admission (2026-11-13)
+## Active bounded slice — VFP9 CDX tag and order evidence (#7353)
 
-Continue in
-`/home/rich/.codex/worktrees/empty-where-admission-7254/Project-Copperfin`
-on `fix/empty-where-admission-7254`, based on origin/main
-`50babe2d2839b8bcba4396534f4b9599cf262bc0`. Under admitted issue #7254,
-the parser now preserves explicit `WHERE` presence for `UPDATE` and
-`DELETE FROM`, and dispatch raises catchable syntax error 10 before target resolution
-or mutation when the clause is empty. Bare all-row and populated-filter forms
-remain unchanged. Public PRG tests verify retained multirow state, successful
-filtered and bare controls, and the absence of success events for rejected
-commands. The focused GNU Debug mutation and runtime-pipeline targets pass
-2/2 in 79.52s. Issue-intake, contributor-signoff, changelog assembler,
-changelog-fragment, and native-isolation contracts pass; the exact-tree safety
-traceability contract passes in 329.19s. Retained VFP9 evidence also audits the
-sibling `FOR` forms, but VFP9
-rejects populated and empty variants alike; their documented Copperfin
-extension policy is therefore deliberately unchanged. Signed+DCO commit
-`6f085b109cc3ad3bf253e0cb25bcb737ef37edbe` opened PR #7325; hosted checks
-started and the verified `@claude review` trigger was posted after the owner's
-reauthorization. NEXT: obtain a clean Claude-first exact-head review and
-strict-green hosted checks, resolve every conversation, merge, synchronize
-origin/main, and clean up. If hosted review stalls,
-use the owner's authorized local Codex adversarial fallback rather than
-waiting indefinitely.
+PR #7353 is open from branch `docs/vfp9-index-order-evidence`, based on
+`origin/main` `b569a70d1957fc9a326039d74feed9ee0aca0a97`. Evidence commit
+`dfd7c54ccb2ae4fac270ca9ba4113a5d3a6ab64e` preserves a synthetic
+three-record DBF and structural CDX written with real VFP9, the capture PRG,
+native `ORDER()`/scan/`SEEK()` results, hashes, and a changelog fragment. Native
+VFP9 selects `DESCTAG`, scans `CHARLIE`, `BRAVO`, `ALPHA`, and seeks CHARLIE;
+`ASCTAG` scans from ALPHA. The owner reports the video build decodes different
+tag names and mishandles order selection/navigation; Copperfin has not yet been
+replayed against this exact fixture. Evidence is linked to admitted issues
+#5618 and #6334; #5619 remains related but this capture does not establish its
+expression-binding failure. Claude-first review was requested for evidence
+commit `dfd7c54`; CI then had 9 successes, one accepted neutral, and 21 checks
+in progress. This handoff update changes the PR tree, so the PR head shown by
+live GitHub metadata is authoritative for the new full-tree SHA; refresh Claude
+review and CI after pushing it. NEXT: address any actionable result, require an
+actual clean authorized review on the final head, all required checks green and
+zero unresolved conversations, then merge and clean up. The VFP9 VM is shut
+down.
+
+The following older slice records are retained as historical evidence; verify
+their live issue/PR state before treating any as active work.
 
 ## Active slice — primary DBF regular-file admission (2026-11-07)
 
