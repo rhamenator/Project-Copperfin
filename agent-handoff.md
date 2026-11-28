@@ -11,37 +11,36 @@ paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
 and independent `indexed_demo.cdx`
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 
-PR #7356 is open at hosted head `877f585b8baa811dbb2534932f650e9a71792ba9`
-(verify the live PR head before acting).
-The structural parser recovers both real VFP9 tags (`ASCTAG`/`DESCTAG`,
-expression `name`, ascending/descending), validates distinct names, headers and
-root bindings, rejects root aliasing/duplication, and preserves the
+PR #7356 is open at hosted head `bd76564cc99369963747f25714c1b5b46ccdd623`
+(verify the live PR head before acting). The parser recovers both retained real
+VFP9 tags (`ASCTAG`/`DESCTAG`, expression `name`, ascending/descending), binds
+names, headers, roots, and NUL-terminated expression spans, and preserves the
 fingerprinted single-tag writer profile. The writer rejects empty,
 whitespace-only, embedded-NUL, disallowed-control, and DEL key expressions
 before touching either file while preserving high-bit code-page bytes.
-Independent local Codex review #10 was clean on exact hosted head `58d2de1e8`.
+Independent local Codex review was clean on `58d2de1e8`; reviews on `877f585b8`
+and `daf1cfd` found empty-declared-FOR and unterminated-expression gaps,
+respectively. Both are fixed in pushed commits `daf1cfd22295103f696fb4e2ea7234f652de8c9d`
+and `bd76564cc99369963747f25714c1b5b46ccdd623`, with positive real-fixture
+coverage preserving VFP9's one-byte NUL no-FOR encoding.
 
-The refreshed local Codex review on `877f585b8baa811dbb2534932f650e9a71792ba9`
-found that a declared FOR-expression span longer than the native terminator-only
-form could decode empty and be exposed as unfiltered. Both retained real VFP9
-fixtures were checked: each encodes no FOR clause as a one-byte NUL at header
-pages 1536 and 3072. The first attempted guard rejected that valid native form;
-the narrowed rule rejects only longer spans that decode empty and preserves the
-one-byte NUL case. A second exact-head local Codex review on
-`daf1cfd22295103f696fb4e2ea7234f652de8c9d` found that declared expression
-spans lacking their NUL terminator could be exposed as truncated text. The
-current uncommitted patch requires a terminator for every nonzero span and adds
-key/FOR truncation regressions, with the real fixtures as positive controls.
-GNU 15.2 Release `test_vfp_assets` passes 1/1 (0.49 sec); changelog assembly
-validates 281 fragments and `git diff --check` passes. Retained exact-stage
-evidence is
+The exact-head review of `bd76564cc99369963747f25714c1b5b46ccdd623` found two
+remaining legacy synthetic DCX generators in
+`tests/test_prg_engine_database_lifecycle.cpp` and
+`tests/test_runtime_host_debug_output_support.h`. They used the former
+heuristic directory shape, so OPEN DATABASE would fail before those tests' own
+behavior. The current uncommitted patch changes both to the existing structural
+`write_synthetic_cdx` helper and adds `prg_engine_test_support.cpp` to the
+runtime-host audit test target. GNU 15.2 Release built `test_vfp_assets`,
+`test_prg_engine_database_lifecycle`, and `test_runtime_host_audit_stream`;
+focused CTest passed 3/3 in 6.63 seconds. Changelog validation reports 281
+fragments valid and `git diff --check` is clean. Retained stage evidence is
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
-(SHA-256 `d4105cd0313680e2235effc4ee1a8bf0b42c5240ad2551e9cbf305bdb22d18a4`).
-Current uncommitted code is based on pushed head
-`daf1cfd22295103f696fb4e2ea7234f652de8c9d`. NEXT: signed+DCO commit and push,
-then obtain a fresh local Codex review on the exact pushed head, update PR
-verification text, and require all hosted checks green on that same head before
-merge.
+(SHA-256 `929dc774659c12c92ca4f23276c159bb4b80673c4edbcf15967ab6115b61bc02`).
+NEXT: signed+DCO commit and push; then fresh local Codex review on the exact
+pushed head, update PR verification text, and require all hosted checks green
+on that same head before merge. Runtime order/SCAN/SEEK behavior is not claimed;
+#6334 remains queued behind this merge.
 
 Hosted `migration (pr)` failed on `test_dbf_table` because its synthetic
 two-tag CDX helper still used the old heuristic layout. The parser correctly

@@ -27,22 +27,7 @@ struct DatabaseFixture {
 };
 
 void write_synthetic_database_index(const std::filesystem::path& path) {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    write_le_u16(bytes, 1026U, 1U);
-    write_le_u32(bytes, 1028U, 4U * 512U);
-    write_le_u16(bytes, 4U * 512U, 0x0003U);
-    write_le_u16(bytes, (4U * 512U) + 2U, 1U);
-    const std::string tag_name = "NAME";
-    std::copy(tag_name.begin(), tag_name.end(), bytes.begin() + static_cast<std::ptrdiff_t>((3U * 512U) - 10U));
-    const std::string expression = "UPPER(NAME)";
-    std::copy(expression.begin(), expression.end(), bytes.begin() + static_cast<std::ptrdiff_t>((4U * 512U) + 24U));
-    write_text(path, std::string(bytes.begin(), bytes.end()));
+    write_synthetic_cdx(path, "NAME", "UPPER(NAME)");
 }
 
 DatabaseFixture create_database_fixture(
