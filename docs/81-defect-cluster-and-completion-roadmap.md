@@ -12,9 +12,9 @@ this repo, neither of which tracks the other:
   below — deliberately without citing individual issue numbers. It answers
   "what does v1 completion look like."
 - **The micro layer** — this document — tracks the actual open,
-  `agent-approved` bug/gap backlog (**971 open issues, 970 carrying
-  `agent-approved`, as of 2026-09-26; up from ~280 when this tracking
-  started 2026-09-19**) as thematic
+  owner-authored `agent-approved` bug/gap backlog (**1,294 open issues,
+  1,287 carrying `agent-approved`, as of 2026-11-28; up from ~280 when this
+  tracking started 2026-09-19**) as thematic
   *clusters*, since most bugs in this backlog share a root cause with
   several siblings, and fixing the shared cause or a shared helper often
   closes multiple issues for the cost of one. It answers "which issue to
@@ -51,16 +51,16 @@ going forward.
 
 ## Scale reality
 
-**Refreshed 2026-09-26** against the live GitHub backlog: 971 issues are
-open, 970 carry `agent-approved`, and only #4905 is intentionally outside the
-implementation intake. The prior 30 clusters still describe the broad backlog,
-but their cited ranges were representative rather than a membership registry.
-The live refresh below assigns the previously unassigned operational issues to
-existing clusters where the root cause fits, adds clusters 31–33 for three
-coherent new seams, and records intentional multi-cluster membership. The
-remaining unclustered open records are top-level lane and product umbrellas
-(#1–#57, #108–#114, #137–#141), plus #4905's owner-policy decision; they are
-not prompt-sized defect work. Their execution children are assigned below.
+**Refreshed 2026-11-28** against live GitHub metadata: 1,294 issues are open;
+1,287 are open, owner-authored, and carry `agent-approved`. Seven open issues
+do not carry that label; do not select them through unattended issue intake.
+The cited issue lists below are representative, not a complete membership
+registry. This refresh adds cluster 34 for a newly visible shared
+regular-file-admission seam and records its overlap with existing path-race,
+resource-bound, and subsystem clusters. The old statement that #4905 was the
+only open issue outside intake approval is stale. Validate each issue's live
+author, state, and label before selecting it; this document remains a dated
+planning snapshot, not an authorization source.
 
 `#98`/`#105`/`#106`/`#107`/`#271` now belong to cluster 9 (`SET` state).
 `#223`, `#227`, and `#232`–`#235` are malformed-DBF work in cluster 4;
@@ -69,13 +69,13 @@ This means the roadmap no longer treats active
 operational work as an undifferentiated long tail merely because it arrived
 after the 2026-09-23 sweep.
 
-As clusters get exhausted, or periodically regardless, re-run
-`gh issue list --label agent-approved --state open --limit 1000
---json number,title,labels,createdAt` and diff against every cluster's
-cited numbers, since new waves of `agent-approved` labeling land
-periodically and this categorization decays the same way the original
-12-cluster list did between 2026-09-19 and
-2026-09-23. The lettered-lane root issues cited in `docs/05-roadmap.md`'s
+As clusters get exhausted, or periodically regardless, re-run a paginated
+GitHub issue query and diff it against every cluster's cited numbers. The
+`gh issue list --limit 1000` ceiling is below the current approved backlog and
+cannot be used as a complete inventory. New waves of `agent-approved` labeling
+land periodically, and this categorization decays the same way the original
+12-cluster list did between 2026-09-19 and 2026-09-23. The lettered-lane root
+issues cited in `docs/05-roadmap.md`'s
 Lettered Lane History table (see [Lane Status](#lane-status) below for
 the exact per-lane roots, e.g. Lane A `#7`-`#12`, Lane H `#113`) are the
 top-level structural bucket every cluster above rolls up under —
@@ -83,9 +83,10 @@ excluded from the counts above since they're long-lived umbrellas, not
 closeable bugs. Use that table, not a guessed issue range, as the
 categorization axis for any future sweep.
 
-Only #4905, the owner-policy revenue-sharing issue, currently lacks
-`agent-approved`. The Agent Issue Intake Boundary is therefore not a backlog
-bottleneck; the implementation and evidence backlog is intake-cleared.
+The Agent Issue Intake Boundary remains mandatory: an approved-issue count
+does not authorize work outside a directly authorized issue or an admitted
+owner-authored issue. The seven open issues without `agent-approved` are not
+treated as implementation intake by this snapshot.
 
 ## Lane Status
 
@@ -567,7 +568,7 @@ work at all). Predates cluster 3 (SQL federation, which is about
 *translating* VFP SQL to other backends) — this is the *native* VFP SQL
 engine's own foundational gaps.
 
-## Live assignment refresh (2026-09-26)
+## Assignment updates from the 2026-09-26 sweep
 
 The following assignments close the operational gap left by the
 representative-range sweep. An issue can appear in more than one cluster when
@@ -644,6 +645,53 @@ They also retain their cluster-15 resource-bound overlap where applicable.
 The invariant is that malformed or unbounded PRG source must fail before it
 changes execution or compilation state.
 
+### 34. Nonblocking regular-file admission for path inputs — `NOT STARTED`
+
+Recent owner-approved issues expose a shared boundary: path-based readers,
+validators, and runtime commands may block on an unpaired POSIX FIFO or process
+an unexpected special file before checking its type. Current verified examples
+include #7351 (CDX/index probes), #7350 (audit-chain verification), #7333 and
+#7332 (locale review/registry validation), #7327 (polyglot artifact admission),
+#7326 (`APPEND FROM`), #7309 (Studio PRG static analysis), #7293 (`FOPEN`),
+#7268 (DBF memo sidecar), #7271 (Access LVAL), and #7289 (SQLite federation).
+This is a representative cross-subsystem list, not a complete issue registry;
+revalidate each issue before work.
+
+The shared acceptance seam is to make the open/type-check/read sequence
+nonblocking and identity-safe for the supported platform, then reject an
+unsupported non-regular input before an unbounded read or allocation. It
+overlaps cluster 14 when a path can be replaced or redirected between checks,
+cluster 15 when input size or structure is unbounded, and the owning format or
+runtime cluster for compatibility behavior. Keep the failure policy specific
+to each caller; do not turn this cluster into one invented global policy.
+
+## Live work and video-baseline refresh (2026-11-28)
+
+The live public default branch is `main` at
+`f38b3ab0292ec0815ce4412318e9e72b29c9665e`. PR #7353 merged at
+`f13f960e863ea3c1860b564d057827b214864b72`, and PR #7354 merged at the current
+`main` head. The compact `agent-handoff.md` still describes #7354 as awaiting a
+push and review; that portion is stale and must not be used as live PR status.
+Issue #5620 remains open, as do the directly related #6334 and #6413; all three
+were verified open, owner-authored, and `agent-approved` at this refresh.
+
+The owner supplied a fresh-build report from the current `main` commit that
+the real VFP9 multi-tag fixture is rejected by the #7354 change. This report
+has not yet been independently reproduced, so it is a **verification lead**,
+not a confirmed regression or an accepted fail-closed result. The next VFP9
+slice must positively parse the real fixture and a synthetic valid multi-tag
+CDX, then demonstrate the VFP9 tag names (`ASCTAG`, `DESCTAG`), descending
+scan order, and `SEEK` result against the fixture's README oracle. Keep #5620
+open until its acceptance evidence passes. Follow with #6334's `SET
+ORDER`/ordered scan/`SEEK` behavior, then #6413's multi-expression print
+behavior. Do not present the video baseline as established before these
+checks pass on a fresh build of public `main`.
+
+The only open pull requests at this snapshot are #7247 and #7248. #7248 is
+stacked on #7247, so resolve and merge #7247 before treating #7248 as
+independently mergeable. These localization PRs remain the current in-flight
+work; the issue priority order below applies after that work is resolved.
+
 ### Reassigned existing long-tail issues
 
 - #6499 and #6576–#6578 → cluster 1; #6548 and #391 → cluster 23; #6558 →
@@ -712,20 +760,47 @@ otherwise clustered above):
 
 ## Recommended order
 
-1. Finish the active cluster-31 text-interchange slices, beginning with the
-   current #6611 DateTime SDF work and then the shared SDF/CSV parser and
-   formatter seams it exposes.
-2. Return to cluster 1's reopened generation/cancellation siblings (#6576–
-   #6578 and #6499), then cluster 2's four shutdown residues.
-3. Use cluster 32 for the shared file-command operand/parser seam and
-   cluster 33 for malformed PRG source admission before treating either set as
-   isolated command defects.
-4. Cluster 24 (with the typed-NULL design of #6506) is implemented apart from the gaps
-   its traceability rows list; work clusters 4, 13, and 18 where their DBF/DBC/migration invariants share
-   evidence.
-5. Treat clusters 14–15 as cross-cutting safety work, cluster 17 by function
-   family, clusters 7–8 as larger feature work, and cluster 26
-   opportunistically when build reliability blocks validation.
+Prioritize shared reach and dependencies while preserving the owner's current
+PR queue and video-baseline requirements. Revalidate all issue and PR state
+immediately before acting.
+
+1. **Finish the in-flight localization PR chain:** #7247, then its stacked
+   child #7248. They are open at this snapshot; #7247 is the base of #7248.
+   Do not count either as resolved from earlier review or check evidence on a
+   different head.
+2. **Establish the VFP9 promotional baseline:** first reproduce or refute the
+   reported #7354 real-fixture rejection with a positive real and synthetic
+   multi-tag test; continue #5620 until tag decoding is accepted, then #6334
+   for tag selection, descending order and `SEEK`, then #6413 for multi-value
+   print output. These are the owner's explicit VFP9 priority chain, not a
+   claim that any behavior is fixed.
+3. **Land high-reach input-boundary work:** cluster 34 (nonblocking regular
+   file admission), cluster 14 (path identity and TOCTOU), and cluster 15
+   (size/depth bounds). Prefer shared open-and-validate helpers where the
+   same invariant truly applies; preserve caller-specific compatibility
+   semantics and avoid duplicating cluster membership as separate work.
+4. **Protect data and format fidelity:** clusters 4, 13, and 16, with
+   cluster 19's concurrent DBF mutation safeguards. These cover hostile DBF
+   parsing, import/export translation, index structure, and shared storage
+   invariants; select slices where one change protects multiple consumers.
+5. **Unblock language and command reuse:** clusters 32 and 33 for path
+   operands and PRG lexical admission, then clusters 1, 2, and 24 for shared
+   runtime lifecycle, shutdown, and type/coercion invariants. Cross-link
+   cluster 17 only when a shared function-family mechanism is evidenced;
+   otherwise split by function family as already specified there.
+6. **Continue backend and toolchain foundations:** clusters 3, 18, 20, 21,
+   26, 27, and 30 according to downstream dependency reach; prioritize a
+   prerequisite that unlocks several surfaces over a broad but independent
+   feature family.
+7. **Schedule larger product-surface work:** clusters 5–12, 22–23, and
+   28–29, including Studio/designer, interactive UI, menu, and runtime-surface
+   feature gaps. Split each into testable acceptance slices before starting.
+
+Within any step, sort candidates by (a) number of distinct consumers blocked,
+(b) data-loss/security/runtime-containment severity, (c) availability of
+independent compatibility evidence and a shared regression test, then (d)
+implementation cost. This is a planning heuristic, not permission to combine
+independent issues or weaken a governing requirement.
 
 Re-survey the full backlog periodically (see [Scale reality](#scale-reality)
 for the exact command) — this categorization will itself go stale the

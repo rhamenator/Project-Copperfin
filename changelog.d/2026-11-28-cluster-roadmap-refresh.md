@@ -1,0 +1,1 @@
+- 2026-11-28: Refresh the issue-cluster roadmap from live GitHub state, add the cross-cutting regular-file admission cluster, and reprioritize remaining work around current PR dependencies, broad input-boundary fixes, and the VFP9 video baseline.
