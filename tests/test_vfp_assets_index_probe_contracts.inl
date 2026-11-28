@@ -63,6 +63,23 @@ void test_parse_synthetic_vfp9_compound_cdx_preserves_tag_tuples() {
     }
 }
 
+void test_parse_cdx_expression_preserves_code_page_bytes() {
+    std::string expression = "UPPER('CAF";
+    expression.push_back(static_cast<char>(static_cast<unsigned char>(0xE9U)));
+    expression += "')";
+    const auto bytes = make_synthetic_structural_cdx({
+        {.name = "ACCENTED", .key_expression = expression, .for_expression = "", .root_page = 9U}
+    });
+    const auto result = copperfin::vfp::parse_index_probe(
+        bytes, bytes.size(), copperfin::vfp::IndexKind::cdx);
+    expect(result.ok && result.probe.tags.size() == 1U,
+           "a CDX expression with a high-bit code-page byte should remain parseable");
+    if (result.ok && result.probe.tags.size() == 1U) {
+        expect(result.probe.tags.front().key_expression_hint == expression,
+               "CDX expression bytes should be preserved exactly instead of filtered by the host locale");
+    }
+}
+
 void test_parse_vfp9_cdx_directory_name_width_is_independent_of_key_length() {
     auto bytes = make_synthetic_structural_cdx({
         {.name = "WIDE_TAG", .key_expression = "UPPER(customer_name)",

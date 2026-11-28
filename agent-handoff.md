@@ -4,67 +4,40 @@
 
 Continue in `/home/rich/.codex/worktrees/cdx-directory-structural-5620/Project-Copperfin`
 on `fix/cdx-directory-structural-5620`, based on `origin/main`
-`0f3addaae04e949b8edfc87e21ee8901d13d43eb` (fetched and confirmed current on
-2026-11-28). Issue #5620 is owner-authored, open, and labeled
-`agent-approved`. This advances the previously merged #7354 fail-closed guard:
-the parser now binds compact-leaf directory tuples to distinct tag header,
-expression, and root pages and recovers names, key/FOR expressions, and
-persisted direction. It retains a narrowly fingerprinted read path for
-Copperfin's existing documented six-page single-tag writer format.
-
-Real fixture inputs remain frozen: `descending.CDX` SHA-256
-`6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`, paired
-`descending.dbf` SHA-256
-`fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`, and
-independent `indexed_demo.cdx` SHA-256
+`0f3addaae04e949b8edfc87e21ee8901d13d43eb`. Issue #5620 is owner-authored,
+open, and `agent-approved`. The exact frozen VFP9 inputs are `descending.CDX`
+SHA-256 `6c9a2288e99193832f365140349cc4806c325a73ea7107bab03c1e8f4eab4520`,
+paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
+and independent `indexed_demo.cdx`
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
-Release build dir is `/tmp/copperfin-cdx-5620-release`. The focused
-Implementation commits `c4ab47c95b7032a1f7dd668954a18c0e0a329403` and
-`49c4f4d5f` are signed with verified GPG signatures and DCO trailers. A final adversarial pass found
-and corrected an over-restriction that coupled the directory’s fixed 10-byte
-tag-name width to the header key-length hint. VFP9 documentation allows CDX
-keys up to 240 characters; a regression now sets the hint to 240 and verifies
-that the 10-byte tag name and its expression still decode independently. Local
-Codex reviews found and corrected five issues across pushed heads `849f6a0ca`,
-`cbb014671`, and `22682d0e1`: empty writer leaves, arbitrary in-range pages
-accepted as tag roots, legacy runtime test fixtures rejected by structural
-parsing, extended printable names written by Copperfin but rejected by its
-own reader, and empty key expressions accepted by the writer but rejected by
-the reader.
-The current fixes allow empty leaves only in the fingerprinted writer path,
-validate root-page flags and entry counts, migrate shared and local test
-fixtures to structural directory pages, and preserve printable writer-profile
-names up to 480 bytes while rejecting control bytes at write time. A review of
-`22682d0e1` then found that the writer accepted empty key expressions while the
-parser rejected them. The writer now rejects empty expressions before touching
-the CDX or DBF, with a localized diagnostic and a sentinel-file regression.
-Release
-`test_vfp_assets`, `test_prg_engine_ordered_iteration`,
-`test_prg_engine_seek_index`, and `test_prg_engine_numeric_behavior` pass 4/4;
-changelog validation passes 281 fragments and `git diff --check` is clean.
-`python3 scripts/assemble_changelog.py --check` validates 281 fragments and
-`git diff --check` is clean. Direct
-`copperfin_inspect` outputs show both real captures as `status: ok` with
-`ASCTAG`/`DESCTAG`, expression `name`, and persisted ascending/descending
-direction (also asserted directly by the test). Companion DBF inspection
-reports `has_structural_cdx: true` and the CDX at `index[1]`. Durable docs and
-changelog are updated in this same slice. Exact commands, outputs, frozen-input
-hashes, and evidence-file SHA-256 `b44de512ccd77a026fa32520b4aef86db7ae37a2ab92ab63a7ab13be4e79b665` are retained in `evidence.txt` at
-`/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/`;
-current `evidence.txt` SHA-256 is
-`d673917d214f04e3fca3ba7ffad69c2d584d0dceae1e3436f0fad92bef0e21b5`.
 
-This is metadata recovery only: no ordered runtime scan or `SEEK` claim yet.
-After #5620 review/merge, proceed to #6334, using the user's requested varied
-VFP9-tested dataset: enough distinct and duplicate values to exercise prefix
-compression, equal-key tie behavior, ascending/descending order, exact/missing
-SEEK, and boundary keys; preserve the native VFP9 observations and hashes.
-Then #6413 print-expression aggregation. Do not call the promo video a current
-baseline until runtime behavior is verified on public main. NEXT: refresh retained evidence, make a signed+DCO commit, push, repeat the
-local Codex review on the exact pushed head, then open the PR. The owner-authorized local Codex
-fallback is used while Claude Code review remains unavailable. Require exact-head clean review, green required checks, and resolved
-conversations before merging. NEXT: commit/push the empty-expression fix,
-repeat local Codex review on the exact pushed head, then open the PR if clean.
+Implementation through pushed head `f73000dc6b5917bb687dda6c25650ea417c9c48f`
+restores structural parsing of both real files (`ASCTAG`/`DESCTAG`, `name`,
+ascending/descending), validates tag roots and bindings, preserves the
+fingerprinted empty-leaf writer format, migrates shared runtime test fixtures
+to structural layouts, and round-trips printable writer-profile names through
+480 bytes. The writer rejects control-byte names and empty key expressions
+before touching either file. A local Codex review of `f73000dc6` found one
+remaining issue: host-locale printability could reject high-bit bytes in
+VFP code-page expressions. The current working tree preserves those bytes and
+a synthetic `0xE9` expression test proves exact retention.
+
+Release build: `/tmp/copperfin-cdx-5620-release`. Current tests after the
+code-page fix: `test_vfp_assets`, `test_prg_engine_ordered_iteration`,
+`test_prg_engine_seek_index`, `test_prg_engine_numeric_behavior`, and
+`test_localization` pass 5/5; 281 changelog fragments validate; `git diff --check`
+passes. Exact results and all local review findings are retained in
+`/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
+(SHA-256 `3696c04268fac6409fedb3f869e38ff7b2528473264b4572b51816b69a996acd`).
+
+This is metadata recovery only; no runtime `SET ORDER`, ordered scan, or `SEEK`
+claim is established. After #5620 review/merge, continue to #6334 using the
+owner-requested varied VFP9-tested data set for prefix compression, duplicate
+ties, ascending/descending order, exact/missing/boundary `SEEK`, preserving
+native observations and hashes. Then #6413 print-expression aggregation. NEXT:
+commit and push the code-page-byte fix, repeat local Codex review on the exact
+pushed head, then open a PR if clean. Require green hosted checks and resolved
+review conversations before merge.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 

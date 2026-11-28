@@ -1093,7 +1093,9 @@ bool read_cdx_pool_text(
             saw_terminator = true;
             continue;
         }
-        if (saw_terminator || (std::isprint(ch) == 0 && std::isspace(ch) == 0)) {
+        const bool allowed_ascii_control = ch == '\t' || ch == '\n' || ch == '\v' ||
+            ch == '\f' || ch == '\r';
+        if (saw_terminator || (ch < 0x20U && !allowed_ascii_control) || ch == 0x7FU) {
             return false;
         }
         text.push_back(static_cast<char>(ch));
