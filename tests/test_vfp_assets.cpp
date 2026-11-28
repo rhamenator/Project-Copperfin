@@ -2976,6 +2976,27 @@ void test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_prod
         dbf_header_result.header.has_production_index(),
         "create_vfp_cdx_single_tag_index_file should set the DBF's has_production_index flag");
 
+    const fs::path empty_dbf_path = temp_dir / "empty_fruit.dbf";
+    const fs::path empty_cdx_path = temp_dir / "empty_fruit.cdx";
+    const std::vector<std::vector<std::string>> empty_records;
+    const auto empty_dbf_create = copperfin::vfp::create_dbf_table_file(
+        empty_dbf_path.string(), fields, empty_records);
+    expect(empty_dbf_create.ok,
+           "empty-index compatibility test: DBF fixture should be created: " + empty_dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> empty_entries;
+    const auto empty_write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        empty_cdx_path.string(), empty_dbf_path.string(), "emptyfruit", "NAME", 10U, empty_entries);
+    expect(empty_write_result.ok,
+           "the existing CDX writer should accept an empty index for an empty table: " + empty_write_result.error);
+    const auto empty_probe_result = copperfin::vfp::parse_index_probe_from_file(empty_cdx_path.string());
+    expect(empty_probe_result.ok,
+           "the parser should preserve readable metadata for the writer's empty leaf: " + empty_probe_result.error);
+    if (empty_probe_result.ok && !empty_probe_result.probe.tags.empty()) {
+        expect(empty_probe_result.probe.tags.front().name_hint == "EMPTYFRUIT" &&
+                   empty_probe_result.probe.tags.front().key_expression_hint == "NAME",
+               "the empty writer index should still expose its tag name and key expression");
+    }
+
     fs::remove_all(temp_dir, ignored);
 }
 

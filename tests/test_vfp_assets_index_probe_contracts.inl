@@ -114,6 +114,25 @@ void test_parse_synthetic_vfp9_compound_cdx_rejects_ambiguous_bindings() {
         invalid_pointer, invalid_pointer.size(), copperfin::vfp::IndexKind::cdx);
     expect(!invalid_pointer_result.ok && invalid_pointer_result.probe.tags.empty(),
            "an unaligned or out-of-range tag-header association must not yield a partial descriptor");
+
+    auto expression_as_root = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    constexpr std::size_t tag_header_offset = 3U * 512U;
+    write_le_u32(expression_as_root, tag_header_offset, 4U * 512U);
+    const auto expression_as_root_result = copperfin::vfp::parse_index_probe(
+        expression_as_root, expression_as_root.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!expression_as_root_result.ok && expression_as_root_result.probe.tags.empty(),
+           "a tag header pointing at its expression-pool page must not publish a tag root");
+
+    auto unused_page_as_root = make_synthetic_structural_cdx({
+        {.name = "VALIDTAG", .key_expression = "field_name", .for_expression = "", .root_page = 9U}
+    });
+    write_le_u32(unused_page_as_root, tag_header_offset, 14U * 512U);
+    const auto unused_page_as_root_result = copperfin::vfp::parse_index_probe(
+        unused_page_as_root, unused_page_as_root.size(), copperfin::vfp::IndexKind::cdx);
+    expect(!unused_page_as_root_result.ok && unused_page_as_root_result.probe.tags.empty(),
+           "an unused in-range page without CDX root attributes must not be published as a tag root");
 }
 
 void test_parse_real_vfp9_compound_cdx_recovers_directory_metadata() {

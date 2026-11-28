@@ -1144,8 +1144,7 @@ bool parse_structural_tag_directory(
             const std::size_t writer_root_offset = header_offset + (header.page_size * 2U);
             if (writer_root_offset > bytes.size() ||
                 header.page_size > bytes.size() - writer_root_offset ||
-                read_le_u16(bytes, writer_root_offset) != 0x0007U ||
-                read_le_u16(bytes, writer_root_offset + 2U) == 0U) {
+                read_le_u16(bytes, writer_root_offset) != 0x0007U) {
                 return false;
             }
             std::string key_expression;
@@ -1173,6 +1172,17 @@ bool parse_structural_tag_directory(
         if (!looks_like_tag_page_offset(tag_root_offset, header.page_size, bytes.size()) ||
             static_cast<std::uint64_t>(tag_root_offset) + header.page_size > file_size ||
             static_cast<std::uint64_t>(tag_root_offset) + header.page_size > bytes.size()) {
+            return false;
+        }
+        const std::size_t tag_root_page_offset = static_cast<std::size_t>(tag_root_offset);
+        const std::uint16_t tag_root_attributes = read_le_u16(bytes, tag_root_page_offset);
+        const std::uint16_t tag_root_entry_count = read_le_u16(bytes, tag_root_page_offset + 2U);
+        constexpr std::uint16_t cdx_root_flag = 0x0001U;
+        constexpr std::uint16_t known_cdx_page_flags = 0x0007U;
+        constexpr std::size_t maximum_page_entries = (512U - 24U) / 2U;
+        if ((tag_root_attributes & cdx_root_flag) == 0U ||
+            (tag_root_attributes & static_cast<std::uint16_t>(~known_cdx_page_flags)) != 0U ||
+            tag_root_entry_count > maximum_page_entries) {
             return false;
         }
 

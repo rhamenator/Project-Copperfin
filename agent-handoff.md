@@ -24,17 +24,20 @@ Implementation commits `c4ab47c95b7032a1f7dd668954a18c0e0a329403` and
 and corrected an over-restriction that coupled the directory’s fixed 10-byte
 tag-name width to the header key-length hint. VFP9 documentation allows CDX
 keys up to 240 characters; a regression now sets the hint to 240 and verifies
-that the 10-byte tag name and its expression still decode independently. The
-structural-entry builders, ambiguous-binding failures, and writer compatibility
-are covered by the focused suite. `test_vfp_assets` and `test_localization` pass
-2/2 on the corrected tree. `python3 scripts/assemble_changelog.py
+that the 10-byte tag name and its expression still decode independently. A local
+Codex adversarial review of pushed head `849f6a0ca` found two issues: empty
+writer leaves were rejected, and arbitrary in-range pages could be accepted as
+tag roots. The working tree now permits the empty leaf only in the fingerprinted
+writer path and validates root-page flags and bounded entry count; focused
+regressions cover both. Release `test_vfp_assets` and `test_localization` pass
+2/2, changelog validation passes 281 fragments, and `git diff --check` is clean. `python3 scripts/assemble_changelog.py
 --check` validates 281 fragments and `git diff --check` is clean. Direct
 `copperfin_inspect` outputs show both real captures as `status: ok` with
 `ASCTAG`/`DESCTAG`, expression `name`, and persisted ascending/descending
 direction (also asserted directly by the test). Companion DBF inspection
 reports `has_structural_cdx: true` and the CDX at `index[1]`. Durable docs and
 changelog are updated in this same slice. Exact commands, outputs, frozen-input
-hashes, and evidence-file SHA-256 `54ed3b8d4dd8415905ab96cc95da0b164038a3cba90aa3cb67533674e9bdf0b6` are retained in `evidence.txt` at
+hashes, and evidence-file SHA-256 `b44de512ccd77a026fa32520b4aef86db7ae37a2ab92ab63a7ab13be4e79b665` are retained in `evidence.txt` at
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/`.
 
 This is metadata recovery only: no ordered runtime scan or `SEEK` claim yet.
@@ -43,10 +46,9 @@ VFP9-tested dataset: enough distinct and duplicate values to exercise prefix
 compression, equal-key tie behavior, ascending/descending order, exact/missing
 SEEK, and boundary keys; preserve the native VFP9 observations and hashes.
 Then #6413 print-expression aggregation. Do not call the promo video a current
-baseline until runtime behavior is verified on public main. NEXT: perform the
-final commit/diff audit, push the implementation commit, and open a PR. Request
-Claude review first; if unavailable, owner-authorized local Codex review is
-allowed. Require exact-head clean review, green required checks, and resolved
+baseline until runtime behavior is verified on public main. NEXT: refresh retained evidence, make a signed+DCO commit, push, repeat the
+local Codex review on the exact pushed head, then open the PR. The owner-authorized local Codex
+fallback is used while Claude Code review remains unavailable. Require exact-head clean review, green required checks, and resolved
 conversations before merging.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)

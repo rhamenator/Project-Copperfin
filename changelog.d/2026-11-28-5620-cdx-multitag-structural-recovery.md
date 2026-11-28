@@ -1,1 +1,1 @@
-- 2026-11-28: Recover compound CDX tag metadata from structurally bound directory entries, including both retained real VFP9 fixtures, while preserving fail-closed handling and the existing single-tag writer format.
+- 2026-11-28: Recover compound CDX tag metadata from structurally bound directory entries, including both retained real VFP9 fixtures, while preserving fail-closed handling and the populated or empty single-tag writer output.
