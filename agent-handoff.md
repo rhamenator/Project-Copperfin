@@ -11,35 +11,41 @@ paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
 and independent `indexed_demo.cdx`
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 
-Implementation at pushed head `55b260aae` restores structural parsing of both
+Implementation through pushed head `95b07c880` restores structural parsing of both
 real files (`ASCTAG`/`DESCTAG`, `name`, ascending/descending), validates tag
 roots and bindings, preserves the fingerprinted empty-leaf writer format,
 migrates shared runtime test fixtures to structural layouts, and round-trips
 printable writer-profile names through 480 bytes. The writer rejects control-
 byte names and empty key expressions before touching either file, and parser
 expressions preserve high-bit VFP code-page bytes. Local Codex review #4 on
-exact pushed head `55b260aae` found one P2 defect: a tag root could alias the
-compound directory page and be published as metadata. The working-tree repair
-rejects this association before reading the root and adds an explicit
-fail-closed regression with no partial descriptors.
+exact pushed head `55b260aae` found a tag root could alias the compound
+directory page and be published as metadata; pushed commit `95b07c880` rejects
+that association and adds a fail-closed regression. Review #5 on exact pushed
+head `95b07c880` found the writer accepted embedded-NUL/control/DEL expression
+bytes that its strict reader rejects. The current working tree validates writer
+expressions with the reader's byte rules, preserves high-bit code-page bytes,
+adds localized errors, and verifies rejection leaves preexisting CDX bytes and
+the DBF production-index flag unchanged. Four-locale JSON parsing and the
+localization test pass with the new writer diagnostic.
 
-Release build: `/tmp/copperfin-cdx-5620-release`. The directory-alias repair
-builds and `test_vfp_assets` passes 1/1; the preceding tree passed
+Release build: `/tmp/copperfin-cdx-5620-release`. Both review repairs build and
+`test_vfp_assets` passes 1/1 on each repaired tree; the current expression
+repair passes `test_vfp_assets` and `test_localization` 2/2. The preceding tree passed
 `test_vfp_assets`, `test_prg_engine_ordered_iteration`,
 `test_prg_engine_seek_index`, `test_prg_engine_numeric_behavior`, and
 `test_localization` 5/5. Changelog validation reports 281 fragments valid and
 `git diff --check` passes. Review, repair, and test evidence is retained in
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
-(SHA-256 `ddf8dbb5a8e9f9288eefd1ccbaa4b53750beb6b1fd8eee11378d59254afe9b17`).
+(SHA-256 `03dc99985221921232896e2291f7c7e7acc38f28dde7a7c7406dbf89743c9316`).
 
 This is metadata recovery only; no runtime `SET ORDER`, ordered scan, or `SEEK`
 claim is established. After #5620 review/merge, continue to #6334 using the
 owner-requested large, varied VFP9-tested data set for prefix compression, duplicate
 ties, ascending/descending order, exact/missing/boundary `SEEK`, preserving
 native observations and hashes. Then #6413 print-expression aggregation. NEXT:
-commit and push the directory-alias review repair, repeat local Codex review on
-the exact pushed head, then open a PR if clean. Require green hosted checks and
-resolved review conversations before merge.
+commit and push the writer-expression review repair, repeat local Codex review
+on the exact pushed head, then open a PR if clean. Require green hosted checks
+and resolved review conversations before merge.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 

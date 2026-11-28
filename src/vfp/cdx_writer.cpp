@@ -263,6 +263,17 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
         return result;
     }
 
+    const bool key_expression_is_reader_compatible = std::all_of(
+        key_expression.begin(), key_expression.end(), [](unsigned char ch) {
+            const bool allowed_ascii_control = ch == '\t' || ch == '\n' || ch == '\v' ||
+                ch == '\f' || ch == '\r';
+            return ch != 0U && (ch >= 0x20U || allowed_ascii_control) && ch != 0x7FU;
+        });
+    if (!key_expression_is_reader_compatible) {
+        result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidKeyExpression");
+        return result;
+    }
+
     // cdx_header.cpp's own reader treats key_length == 0 or > page_size
     // as unparseable (it can't locate a tag directory at all in that
     // case), so a file built with such a value would be silently

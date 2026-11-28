@@ -3098,6 +3098,55 @@ void test_create_vfp_cdx_single_tag_index_file_rejects_empty_key_expression_with
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_create_vfp_cdx_single_tag_index_file_rejects_unreadable_key_expression_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_unreadable_expression_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"APPLE"}});
+    expect(dbf_create.ok, "CDX writer unreadable-expression test: DBF fixture should be created: " + dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "APPLE"}};
+
+    std::string embedded_nul_expression = "NAME";
+    embedded_nul_expression.push_back('\0');
+    embedded_nul_expression += " + 'TAIL'";
+    const std::vector<std::string> rejected_expressions{
+        embedded_nul_expression,
+        std::string("NAME\x01", 5U),
+        std::string("NAME\x7F", 5U),
+    };
+    for (const std::string& expression : rejected_expressions) {
+        {
+            std::ofstream existing_cdx(cdx_path, std::ios::binary | std::ios::trunc);
+            existing_cdx << "preserve";
+        }
+        const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+            cdx_path.string(), dbf_path.string(), "NAME_TAG", expression, 10U, entries);
+        expect(!write_result.ok, "the CDX writer should reject an expression its reader cannot parse");
+        expect(!write_result.error.empty(), "unreadable-expression rejection should report a localized error");
+        expect(fs::file_size(cdx_path) == 8U,
+               "unreadable-expression rejection must preserve the existing CDX size");
+        {
+            std::ifstream existing_cdx(cdx_path, std::ios::binary);
+            char contents[8]{};
+            existing_cdx.read(contents, 8);
+            expect(std::string(contents, 8U) == "preserve",
+                   "unreadable-expression rejection must preserve existing CDX contents");
+        }
+        const auto dbf_header = copperfin::vfp::parse_dbf_header_from_file(dbf_path.string());
+        expect(dbf_header.ok && !dbf_header.header.has_production_index(),
+               "unreadable-expression rejection must leave the DBF production-index flag unchanged");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_create_vfp_cdx_single_tag_index_file_rejects_key_exceeding_declared_length() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_key_too_long_tests";
@@ -9118,6 +9167,7 @@ int main() {
     test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name();
     test_create_vfp_cdx_single_tag_index_file_rejects_control_tag_name();
     test_create_vfp_cdx_single_tag_index_file_rejects_empty_key_expression_without_mutation();
+    test_create_vfp_cdx_single_tag_index_file_rejects_unreadable_key_expression_without_mutation();
     test_create_vfp_cdx_single_tag_index_file_rejects_key_exceeding_declared_length();
     test_create_vfp_cdx_single_tag_index_file_rejects_key_longer_than_compression_encoding_limit();
     test_create_vfp_cdx_single_tag_index_file_rejects_record_number_out_of_range();
