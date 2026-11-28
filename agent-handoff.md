@@ -5,41 +5,35 @@
 The owner-authorized #7353 and #7354 blockers are merged; current `origin/main`
 is `f38b3ab0292ec0815ce4412318e9e72b29c9665e`. Continue in
 `/home/rich/.codex/worktrees/locale-full-review/Project-Copperfin` on
-`feat/locale-full-review`, PR #7247, exact remote head
-`cf8d6e81218f4426eb9b7f393fae396582da39b9`, based on `main`. The PR's fresh
-CI exposed stale managed/native expectations for the revised reviewed catalogs.
-The worktree now contains test-only expected-text updates, including the
-reported native and Mono/Xvfb cases; production localization code and catalogs
-are unchanged. On this exact working tree, the focused GNU Debug build and
-CTest command
-`ctest --test-dir build -R '^(test_platform_models|test_runtime_pipeline|test_prg_engine_control_flow|test_prg_engine_index_seek_optimization|test_security_controls|test_prg_engine_cast_byte_numeric|test_prg_engine_cast_uint64_numeric|test_xasset_methods|test_runtime_host_binding|test_localization)$' --output-on-failure`
-passed 10/10 in 253.86 seconds. The consolidated log is
+`feat/locale-full-review`, PR #7247, based on `main`. Signed+DCO fix commit
+`7bf9be608a18552dd41c94a3ccfd072c14d8f51d` updates only test expectations to
+match revised reviewed locale catalogs; it does not change production code,
+catalogs, or test assertions. It also addresses Codex thread
+`PRRT_kwDOR7wYLc69A3mI` (comment 4725792956), which must be replied to and
+resolved after confirming the final pushed head.
+
+The GNU Debug focused CTest selection passed 10/10 in 253.86 seconds on the
+source changes; the consolidated log is
 `build/Testing/Temporary/LastTest.log` (SHA-256
 `30c2b1063e6c6ecc0047f88ab323717c0284d7224967a121cef911f065553575`). The
-managed UI failure evidence from exact old head `cf8d6e8` is retained under
-`build/evidence/old-head-managed-ui-46117753585/`; the standalone smoke log
+managed UI failure from old head `cf8d6e8` is retained at
+`build/evidence/old-head-managed-ui-46117753585/`; its standalone smoke log
 (SHA-256 `b4301105492a9033ef1ffca57788c3b5e173ef4be8a2b8100a6cd3fda51fc357`)
-showed four stale Spanish expectations, all now corrected. Local execution of
-that Mono/Xvfb suite is unavailable because this host has no Mono; a local
-net472 compile is also unavailable because its targeting pack is absent, so
-fresh hosted UI checks remain required. Other old-head failures are retained
-in runs `46117753773` (audit containment) and `46117753611` (sanitizer/stress);
-their localized expectation failures are covered by the passing focused tests.
-The old-head DCO passed, but every check/review must refresh after the fix push.
+identified four stale Spanish expectations, now corrected. Mono is absent and
+the .NET Framework 4.7.2 targeting pack is unavailable locally; fresh hosted
+managed UI checks are required. Old-head audit/sanitizer/stress evidence remains
+in runs `46117753773` and `46117753611`; new CI must establish final-head
+results. The source/test/changelog patch SHA-256 before the handoff update was
+`e9aeeb758f1671741aef1ed14635229353b9987604f7c534e829ccb4f98e5544`.
 
-Current worktree has 16 modified tracked files; no fix commit has been made.
-The tests-and-changelog diff (excluding this handoff) has SHA-256
-`e9aeeb758f1671741aef1ed14635229353b9987604f7c534e829ccb4f98e5544`, and
-`git diff --check` passes. The earlier whole-machine backup has ended; latest
-I/O PSI averages are 0.00, with about 43 GiB available RAM. NEXT: run the
-changelog/agent-channel gates and final diff audit, then make the signed+DCO
-fix commit, push, request a new exact-head Codex review, and require every
-hosted check green plus all review conversations resolved.
-PR #7248 remains stacked on #7247 and is `DIRTY`; do not retarget/rebase it
-until #7247 merges. Then update #7248, obtain fresh review and checks, and only
-afterward resume queued VFP9 order/SEEK #6334 and print-expression #6413.
-The CI-triage, test correction, and focused verification stage took about 17
-minutes on 2026-11-28.
+NEXT: push this handoff checkpoint, then request Codex review on the resulting
+exact PR head, reply to and resolve the addressed thread, and block on all fresh
+required hosted checks. Merge only after a clean exact-head authorized review,
+all required checks green, and zero unresolved conversations. PR #7248 remains
+stacked on #7247 and `DIRTY`; do not retarget or rebase it until #7247 merges.
+Then update #7248, obtain fresh review/checks, and afterward resume queued VFP9
+order/SEEK #6334 and print-expression #6413. The correction/build/CTest/commit
+stage took about 17 minutes on 2026-11-28.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
 
