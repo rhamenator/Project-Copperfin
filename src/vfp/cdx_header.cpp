@@ -899,6 +899,13 @@ bool is_cdx_tag_name(std::string_view name) {
     });
 }
 
+bool is_copperfin_writer_tag_name(std::string_view name) {
+    return !name.empty() && name.size() <= (512U - 32U) &&
+        std::all_of(name.begin(), name.end(), [](unsigned char ch) {
+            return ch >= 0x20U && ch <= 0x7EU;
+        });
+}
+
 bool decode_compact_leaf_page(
     const std::vector<std::uint8_t>& bytes,
     std::size_t page_offset,
@@ -1042,7 +1049,8 @@ bool decode_copperfin_single_tag_directory(
 
     std::string name(bytes.begin() + static_cast<std::ptrdiff_t>(actual_name_start),
                      bytes.begin() + static_cast<std::ptrdiff_t>(page_offset + page_size));
-    if (!is_cdx_tag_name(name) || !looks_like_tag_page_offset(tag_header_offset, page_size, bytes.size())) {
+    if (!is_copperfin_writer_tag_name(name) ||
+        !looks_like_tag_page_offset(tag_header_offset, page_size, bytes.size())) {
         return false;
     }
     entries = {{.key = std::move(name), .value = tag_header_offset,
@@ -1122,15 +1130,8 @@ bool parse_structural_tag_directory(
     std::vector<CdxTagDescriptor> decoded_tags;
     decoded_tags.reserve(directory_entries.size());
     for (const CompactLeafEntry& directory_entry : directory_entries) {
-        std::string name = directory_entry.key;
-        while (!name.empty() && name.back() == ' ') {
-            name.pop_back();
-        }
-        const std::string normalized_name = uppercase_copy(name);
         const std::uint32_t tag_header_offset = directory_entry.value;
-        if (!seen_names.insert(normalized_name).second ||
-            !seen_headers.insert(tag_header_offset).second ||
-            !looks_like_tag_page_offset(tag_header_offset, header.page_size, bytes.size()) ||
+        if (!looks_like_tag_page_offset(tag_header_offset, header.page_size, bytes.size()) ||
             static_cast<std::uint64_t>(tag_header_offset) + (header.page_size * 2U) > file_size ||
             static_cast<std::uint64_t>(tag_header_offset) + (header.page_size * 2U) > bytes.size()) {
             return false;
@@ -1140,6 +1141,19 @@ bool parse_structural_tag_directory(
         const std::uint32_t tag_root_offset = read_le_u32(bytes, header_offset);
         const bool copperfin_writer_tag = directory_entries.size() == 1U &&
             is_copperfin_single_tag_stats_page(bytes, header_offset, header.key_length_hint);
+        std::string name = directory_entry.key;
+        if (!copperfin_writer_tag) {
+            while (!name.empty() && name.back() == ' ') {
+                name.pop_back();
+            }
+            if (!is_cdx_tag_name(name)) {
+                return false;
+            }
+        }
+        if (!seen_names.insert(uppercase_copy(name)).second ||
+            !seen_headers.insert(tag_header_offset).second) {
+            return false;
+        }
         if (copperfin_writer_tag) {
             const std::size_t writer_root_offset = header_offset + (header.page_size * 2U);
             if (writer_root_offset > bytes.size() ||

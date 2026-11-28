@@ -105,7 +105,11 @@ tag name, uppercased, right-aligned to the page end with no fixed slot
         width -- CONFIRMED via two additional real fixtures with
         different name lengths: "IDX1" (4 chars) occupies exactly
         bytes [508:512), "SHORTIX"/"CKEYTAG" (7 chars) occupy exactly
-        [505:512). The name occupies `[512 - len(name):512)`.
+        [505:512). The name occupies `[512 - len(name):512)`. The
+        Copperfin writer accepts printable ASCII bytes only and caps the
+        name at 480 bytes; its profile-specific reader preserves those
+        names even though native VFP tag identifiers use a narrower
+        structural format.
 ```
 
 ### Tag statistics page (page 3)

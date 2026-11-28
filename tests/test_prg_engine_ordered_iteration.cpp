@@ -125,13 +125,8 @@ void test_active_order_drives_locate_scan_report_and_copy()
     fs::remove_all(temp_root, ignored);
 }
 
-// Builds a synthetic two-tag CDX matching what collect_directory_leaf_tags()
-// (src/vfp/cdx_header.cpp) expects: a single leaf+directory node listing
-// both tags' 10-byte name slots in its tail region and a 4-byte page-hint
-// offset per entry, each pointing to that tag's own dedicated header page
-// where its expression text and persisted descending byte (offset 502)
-// live. Mirrors write_synthetic_cdx()'s single-tag layout, extended to two
-// entries -- not a general-purpose helper, so kept local to this test.
+// Builds a structural compact-leaf directory with separate tag headers,
+// expression pools, and root pages for both tags.
 void write_synthetic_two_tag_cdx(
     const std::filesystem::path &path,
     const std::string &first_tag_name,
@@ -141,52 +136,10 @@ void write_synthetic_two_tag_cdx(
     const std::string &second_expression,
     bool second_descending)
 {
-    std::vector<std::uint8_t> bytes(4096U, 0U);
-    write_le_u16(bytes, 0U, 1024U);
-    write_le_u16(bytes, 12U, 10U);
-    write_le_u16(bytes, 14U, 480U);
-    write_le_u16(bytes, 1024U, 0x0003U);
-    write_le_u16(bytes, 1026U, 2U);
-    write_le_u32(bytes, 1028U, 2048U);
-    write_le_u32(bytes, 1032U, 2560U);
-
-    if (first_expression.size() > 512U || second_expression.size() > 512U)
-    {
-        throw std::length_error("write_synthetic_two_tag_cdx: expression too long for synthetic fixture buffer");
-    }
-    for (std::size_t index = 0; index < first_expression.size(); ++index)
-    {
-        bytes[2048U + index] = static_cast<std::uint8_t>(first_expression[index]);
-    }
-    if (first_descending)
-    {
-        bytes[2048U + 502U] = 0x01U;
-    }
-    for (std::size_t index = 0; index < second_expression.size(); ++index)
-    {
-        bytes[2560U + index] = static_cast<std::uint8_t>(second_expression[index]);
-    }
-    if (second_descending)
-    {
-        bytes[2560U + 502U] = 0x01U;
-    }
-
-    const std::size_t tail_start = 1024U + 512U - (2U * 10U);
-    if (first_tag_name.size() > 10U || second_tag_name.size() > 10U)
-    {
-        throw std::length_error("write_synthetic_two_tag_cdx: tag name too long for its 10-byte slot");
-    }
-    for (std::size_t index = 0; index < first_tag_name.size(); ++index)
-    {
-        bytes[tail_start + index] = static_cast<std::uint8_t>(first_tag_name[index]);
-    }
-    for (std::size_t index = 0; index < second_tag_name.size(); ++index)
-    {
-        bytes[tail_start + 10U + index] = static_cast<std::uint8_t>(second_tag_name[index]);
-    }
-
-    std::ofstream output(path, std::ios::binary);
-    output.write(reinterpret_cast<const char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    write_synthetic_cdx_tags(path, {
+        {first_tag_name, first_expression, first_descending},
+        {second_tag_name, second_expression, second_descending}
+    });
 }
 
 // #5358 two-argument form: DESCENDING(cCDXFileName, nTagNumber) reports the

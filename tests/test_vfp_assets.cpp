@@ -2939,6 +2939,20 @@ void test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_prod
         expect(probe_result.probe.tags.front().name_hint == "FRUITNAME", "the written CDX should expose the tag name, uppercased");
     }
 
+    const fs::path extended_name_cdx_path = temp_dir / "extended_name.cdx";
+    const auto extended_name_write = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        extended_name_cdx_path.string(), dbf_path.string(), "tag-with-punct", "NAME", 10U, entries);
+    expect(extended_name_write.ok,
+           "the documented writer profile should accept printable punctuation and names longer than ten bytes: " +
+               extended_name_write.error);
+    const auto extended_name_probe = copperfin::vfp::parse_index_probe_from_file(extended_name_cdx_path.string());
+    expect(extended_name_probe.ok,
+           "the reader should parse a writer-profile tag name longer than ten bytes: " + extended_name_probe.error);
+    if (extended_name_probe.ok && !extended_name_probe.probe.tags.empty()) {
+        expect(extended_name_probe.probe.tags.front().name_hint == "TAG-WITH-PUNCT",
+               "the reader should preserve the full uppercased writer-profile tag name");
+    }
+
     std::vector<std::uint8_t> raw_cdx_bytes(static_cast<std::size_t>(fs::file_size(cdx_path)), 0U);
     {
         std::ifstream input(cdx_path, std::ios::binary);
@@ -3021,6 +3035,28 @@ void test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name() {
     expect(!write_result.ok, "create_vfp_cdx_single_tag_index_file should reject an empty tag name");
     expect(!write_result.error.empty(), "an empty-tag-name rejection should carry a localized error message");
     expect(!fs::exists(cdx_path), "create_vfp_cdx_single_tag_index_file should not create a file when the tag name is rejected");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_create_vfp_cdx_single_tag_index_file_rejects_control_tag_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_cdx_writer_control_tag_name_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "fruit.dbf";
+    const fs::path cdx_path = temp_dir / "fruit.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}};
+    const auto dbf_create = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, {{"APPLE"}});
+    expect(dbf_create.ok, "CDX writer control-name test: DBF fixture should be created: " + dbf_create.error);
+    const std::vector<copperfin::vfp::CdxIndexEntry> entries{{.record_number = 1U, .key_field_value = "APPLE"}};
+    const auto write_result = copperfin::vfp::create_vfp_cdx_single_tag_index_file(
+        cdx_path.string(), dbf_path.string(), std::string("TAG\x01", 4U), "NAME", 10U, entries);
+    expect(!write_result.ok, "the CDX writer should reject control bytes in its profile-specific tag name");
+    expect(!fs::exists(cdx_path), "the CDX writer should not emit a file for a control-byte tag name");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -9042,6 +9078,7 @@ int main() {
     test_scan_access_saved_queries_reports_ok_with_no_queries();
     test_create_vfp_cdx_single_tag_index_file_writes_readable_tag_and_sets_production_index_flag();
     test_create_vfp_cdx_single_tag_index_file_rejects_empty_tag_name();
+    test_create_vfp_cdx_single_tag_index_file_rejects_control_tag_name();
     test_create_vfp_cdx_single_tag_index_file_rejects_key_exceeding_declared_length();
     test_create_vfp_cdx_single_tag_index_file_rejects_key_longer_than_compression_encoding_limit();
     test_create_vfp_cdx_single_tag_index_file_rejects_record_number_out_of_range();

@@ -30,6 +30,14 @@ void write_simple_dbf(const std::filesystem::path& path, const std::vector<std::
 void write_people_dbf(
     const std::filesystem::path& path,
     const std::vector<std::pair<std::string, int>>& records);
+struct SyntheticCdxTag {
+    std::string name;
+    std::string expression;
+    bool descending = false;
+};
+void write_synthetic_cdx_tags(
+    const std::filesystem::path& path,
+    const std::vector<SyntheticCdxTag>& tags);
 void write_synthetic_cdx(
     const std::filesystem::path& path,
     const std::string& tag_name,

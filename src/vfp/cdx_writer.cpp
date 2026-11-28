@@ -250,7 +250,10 @@ CdxWriteResult create_vfp_cdx_single_tag_index_file(
     // required header fields (docs/77's "Tag-table page" layout). A name
     // longer than kPageSize - 32 would overlap and corrupt those fields.
     constexpr std::size_t kTagTableHeaderSize = 32U;
-    if (tag_name.empty() || tag_name.size() > (kPageSize - kTagTableHeaderSize)) {
+    if (tag_name.empty() || tag_name.size() > (kPageSize - kTagTableHeaderSize) ||
+        !std::all_of(tag_name.begin(), tag_name.end(), [](unsigned char ch) {
+            return ch >= 0x20U && ch <= 0x7EU;
+        })) {
         result.error = cdx_writer_text("Vfp.CdxWriter.Error.InvalidTagName");
         return result;
     }
