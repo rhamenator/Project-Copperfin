@@ -11,7 +11,7 @@ paired DBF `fe081cf8cdf8c462a192962763f46c0d22a477bbe2e6dcd911a5aa097bb80eab`,
 and independent `indexed_demo.cdx`
 `9ca9c39ab716aab76fbd2c5d1af7cd38d37a30fdd65d9df97872a38fb447e946`.
 
-Implementation through pushed head `0b2047e40` restores structural parsing of both
+Implementation through pushed head `867473dc1` restores structural parsing of both
 real files (`ASCTAG`/`DESCTAG`, `name`, ascending/descending), validates tag
 roots and bindings, preserves the fingerprinted empty-leaf writer format,
 migrates shared runtime test fixtures to structural layouts, and round-trips
@@ -34,8 +34,10 @@ rule, with a regression requiring the sentinel CDX and clear DBF index flag
 to remain unchanged. Local Codex review #7 found no actionable regressions on
 exact pushed head `289906dcf` against `origin/main`. Review #8 on exact pushed
 head `0b2047e40` found distinct tag headers could share a valid root page; the
-working-tree repair tracks root offsets and rejects duplicates before any tag
-descriptor is published, with a synthetic two-tag regression.
+repair in pushed head `867473dc1` tracks root offsets and rejects duplicates
+before any tag descriptor is published, with a synthetic two-tag regression.
+Local Codex review #9 found no actionable regressions on exact pushed head
+`867473dc1` against `origin/main`.
 
 Release build: `/tmp/copperfin-cdx-5620-release`. All three review repairs
 build and `test_vfp_assets` passes 1/1 on each repaired tree; the preceding
@@ -46,15 +48,15 @@ The earlier tree passed
 `test_localization` 5/5. Changelog validation reports 281 fragments valid and
 `git diff --check` passes. Review, repair, and test evidence is retained in
 `/home/rich/.codex/defect-discovery/project-copperfin/probes/cdx-directory-structural-5620/evidence.txt`
-(SHA-256 `1f109383eca005ba9c11057941355d073a4f0dbb76048c841432e832ab0e6d4f`).
+(SHA-256 `1e80ef4f6dbd274d096c20f2ee38057ad44536d3a354ad043e85bb84e5bbb398`).
 
 This is metadata recovery only; no runtime `SET ORDER`, ordered scan, or `SEEK`
 claim is established. After #5620 review/merge, continue to #6334 using the
 owner-requested large, varied VFP9-tested data set for prefix compression, duplicate
 ties, ascending/descending order, exact/missing/boundary `SEEK`, preserving
 native observations and hashes. Then #6413 print-expression aggregation. NEXT:
-commit and push the shared-root repair/checkpoint, repeat local Codex review on
-the resulting exact pushed head, then open a PR if clean. Require green hosted
+commit and push this handoff checkpoint, repeat local Codex review on the
+resulting exact pushed head, then open a PR if clean. Require green hosted
 checks and resolved review conversations before merge.
 
 ## Last shipped slice — VFP9 CDX tag and order evidence (#7353)
